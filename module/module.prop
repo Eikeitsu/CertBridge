@@ -1,0 +1,9 @@
+id=CACertStore
+name=CA 证书管理
+version=v1.0.0
+versionCode=10000
+author=许小墨
+description=[ 检测中 ] 将 Reqable / ProxyPin / 自定义 CA 安装到系统 CA 信任库。支持 Magisk / KernelSU WebUI，Android 14+ 自动 APEX 注入。
+updateJson=https://eikeitsu.github.io/CACertStore/update.json
+minApi=24
+maxApi=36

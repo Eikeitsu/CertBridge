@@ -1,0 +1,28 @@
+# 功能介绍
+
+## 做什么
+
+CACertStore（CA 证书管理）把指定 CA 证书写入 Android **系统信任库**，让 HTTPS 抓包 / 中间人调试时，系统与应用能信任这些证书。
+
+## 主要能力
+
+| 能力 | 说明 |
+|------|------|
+| Reqable CA | 内置 `833e2479.0`，可开关 |
+| ProxyPin CA | 内置 `243f0bfb.0`，可开关 |
+| 自定义证书 | 上传 / 删除 `xxxxxxxx.0` |
+| APEX 注入 | Android 14+（API 34+）自动挂载到 Conscrypt |
+| 开机再注入 | `service.sh` 在开机完成后按需重新注入 |
+| WebUI | KernelSU / 支持 WebUI 的管理器中配置 |
+| Action | 管理器 Action 按钮：同步证书并 reinject |
+
+## 适用场景
+
+- Reqable / ProxyPin / Charles / mitmproxy 等需要系统 CA 的抓包
+- Android 14 及以上系统 CA 放在 APEX 内、普通模块覆盖无效时
+
+## 不做什么
+
+- 不提供抓包代理本身（请使用 Reqable、ProxyPin 等 App）
+- 不修改 SELinux 策略以外的系统安全机制
+- 不会自动从用户凭据区「搬家」任意证书（请用 WebUI 上传或放入 `certs/custom/`）

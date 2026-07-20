@@ -1,0 +1,179 @@
+name: Release Module
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '版本号（如 1.0.0 或 v1.0.0）'
+        required: true
+        type: string
+      release_name:
+        description: 'Release 标题（可空，默认用 Tag）'
+        required: false
+        type: string
+        default: ''
+      prerelease:
+        description: '标记为预发布'
+        required: false
+        type: boolean
+        default: false
+      draft:
+        description: '保存为草稿（不正式发布）'
+        required: false
+        type: boolean
+        default: false
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve tag
+        id: meta
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            RAW="${{ inputs.version }}"
+            RAW="${RAW#v}"
+            CUSTOM_NAME="${{ inputs.release_name }}"
+            echo "prerelease=${{ inputs.prerelease }}" >> "$GITHUB_OUTPUT"
+            echo "draft=${{ inputs.draft }}" >> "$GITHUB_OUTPUT"
+          else
+            TAG_NAME="${GITHUB_REF_NAME}"
+            RAW="${TAG_NAME#v}"
+            CUSTOM_NAME=""
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+            echo "draft=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          eval "$(
+            RAW="$RAW" python3 - <<'PY'
+          import os, re
+          raw = os.environ["RAW"].strip().lstrip("vV")
+          m = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)", raw)
+          if not m:
+              raise SystemExit(f"unsupported version (expect MAJOR.MINOR.PATCH): {raw}")
+          major, minor, patch = map(int, m.groups())
+          if major > 214 or minor > 99 or patch > 99:
+              raise SystemExit(f"version out of range for versionCode: {raw}")
+          code = major * 10000 + minor * 100 + patch
+          if code > 2147483647:
+              raise SystemExit(f"versionCode {code} exceeds int32 max")
+          version = f"v{major}.{minor}.{patch}"
+          print(f"version={version}")
+          print(f"version_code={code}")
+          PY
+          )"
+
+          TAG="${version}"
+          if [ -n "$CUSTOM_NAME" ]; then
+            NAME="$CUSTOM_NAME"
+          else
+            NAME="$TAG"
+          fi
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "raw=$version" >> "$GITHUB_OUTPUT"
+          echo "version_code=$version_code" >> "$GITHUB_OUTPUT"
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "Resolved release: $NAME ($TAG) versionCode=$version_code"
+
+      - name: Sync module.prop version
+        shell: bash
+        run: |
+          RAW="${{ steps.meta.outputs.raw }}"
+          CODE="${{ steps.meta.outputs.version_code }}"
+          PROP="module/module.prop"
+          sed -i "s/^version=.*/version=${RAW}/" "$PROP"
+          sed -i "s/^versionCode=.*/versionCode=${CODE}/" "$PROP"
+          if ! grep -q '^updateJson=' "$PROP"; then
+            echo "updateJson=https://eikeitsu.github.io/CACertStore/update.json" >> "$PROP"
+          else
+            sed -i "s|^updateJson=.*|updateJson=https://eikeitsu.github.io/CACertStore/update.json|" "$PROP"
+          fi
+          echo "---- module.prop ----"
+          cat "$PROP"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build:module
+
+      - name: Upload zip artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: magisk-module-${{ steps.meta.outputs.tag }}
+          path: release/*.zip
+          if-no-files-found: error
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: ${{ steps.meta.outputs.name }}
+          draft: ${{ steps.meta.outputs.draft }}
+          prerelease: ${{ steps.meta.outputs.prerelease }}
+          generate_release_notes: true
+          files: release/*.zip
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update update.json on default branch
+        if: ${{ steps.meta.outputs.draft != 'true' && steps.meta.outputs.prerelease != 'true' }}
+        shell: bash
+        run: |
+          RAW="${{ steps.meta.outputs.raw }}"
+          CODE="${{ steps.meta.outputs.version_code }}"
+          TAG="${{ steps.meta.outputs.tag }}"
+          REPO="${{ github.repository }}"
+          ZIP="CACertStore_${RAW}.zip"
+          DEFAULT_BRANCH="${{ github.event.repository.default_branch }}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin "$DEFAULT_BRANCH"
+          git checkout -B "$DEFAULT_BRANCH" "origin/$DEFAULT_BRANCH"
+
+          python3 - <<PY
+          import json, pathlib
+          data = {
+            "version": "${RAW}",
+            "versionCode": int("${CODE}"),
+            "zipUrl": f"https://github.com/${REPO}/releases/download/${TAG}/${ZIP}",
+            "changelog": f"https://raw.githubusercontent.com/${REPO}/main/changelog.md",
+          }
+          text = json.dumps(data, ensure_ascii=False, indent=2) + "\n"
+          pathlib.Path("update.json").write_text(text, encoding="utf-8")
+          pathlib.Path("docs/public").mkdir(parents=True, exist_ok=True)
+          pathlib.Path("docs/public/update.json").write_text(text, encoding="utf-8")
+          print(text)
+          PY
+
+          PROP="module/module.prop"
+          sed -i "s/^version=.*/version=${RAW}/" "$PROP"
+          sed -i "s/^versionCode=.*/versionCode=${CODE}/" "$PROP"
+          if ! grep -q '^updateJson=' "$PROP"; then
+            echo "updateJson=https://eikeitsu.github.io/CACertStore/update.json" >> "$PROP"
+          else
+            sed -i "s|^updateJson=.*|updateJson=https://eikeitsu.github.io/CACertStore/update.json|" "$PROP"
+          fi
+
+          git add update.json docs/public/update.json module/module.prop
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "chore: bump update.json to ${TAG} (versionCode ${CODE})"
+          git push origin "HEAD:$DEFAULT_BRANCH"

@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="zh-CN" data-layout="classic" class="monet-on">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#f2f4f7" />
+    <meta name="color-scheme" content="light dark" />
+    <title>CA 证书管理</title>
+    <script>
+      (function () {
+        try {
+          var mode = localStorage.getItem('cas_theme_mode') || 'system';
+          var dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var resolved = mode === 'light' || mode === 'dark' ? mode : dark ? 'dark' : 'light';
+          document.documentElement.setAttribute('data-theme', resolved);
+          document.documentElement.style.colorScheme = mode === 'system' ? 'light dark' : resolved;
+          var monet = localStorage.getItem('cas_monet');
+          var monetOn = monet === null ? true : monet === '1';
+          document.documentElement.classList.toggle('monet-on', monetOn);
+          document.documentElement.classList.toggle('monet-off', !monetOn);
+          var layout = localStorage.getItem('cas_layout') || 'classic';
+          document.documentElement.setAttribute('data-layout', layout === 'dock' ? 'dock' : 'classic');
+        } catch (e) {}
+      })();
+    </script>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <header class="topbar" id="topbar">
+      <div class="topbar-left">
+        <h1>CA 证书管理</h1>
+        <div class="subtitle" id="deviceName">加载中...</div>
+      </div>
+    </header>
+    <div class="topbar-spacer" id="topbarSpacer" aria-hidden="true"></div>
+    <div class="page-gap"></div>
+
+    <section class="card" id="statusCard" data-page="home">
+      <div class="status-grid">
+        <div class="status-item">
+          <div class="status-value" id="statActive">--</div>
+          <div class="status-label">启用证书</div>
+        </div>
+        <div class="status-item">
+          <div class="status-value" id="statCustom">--</div>
+          <div class="status-label">自定义</div>
+        </div>
+      </div>
+      <div class="status-badge" id="statusBadge">状态加载中...</div>
+      <div class="status-desc" id="statusDesc">
+        将 Reqable / ProxyPin / 自定义 CA 安装到系统信任库，Android 14+ 自动 APEX 注入。
+      </div>
+      <div class="status-actions">
+        <button type="button" class="text-btn" id="refreshStatusBtn">刷新状态</button>
+      </div>
+    </section>
+
+    <div class="small-title dock-only" data-page="home">运行详情</div>
+    <section class="card dock-only" data-page="home">
+      <div class="mini-grid">
+        <div class="mini-item">
+          <div class="mv" id="homeAndroid">--</div>
+          <div class="ml">Android</div>
+        </div>
+        <div class="mini-item">
+          <div class="mv" id="homeRoot">--</div>
+          <div class="ml">Root</div>
+        </div>
+        <div class="mini-item">
+          <div class="mv" id="homeApex">--</div>
+          <div class="ml">APEX</div>
+        </div>
+        <div class="mini-item">
+          <div class="mv" id="homeVersion">--</div>
+          <div class="ml">版本</div>
+        </div>
+      </div>
+      <div class="kv-list">
+        <div class="kv-row"><span class="k">最近刷新</span><span class="v" id="homeUpdatedAt">--</span></div>
+      </div>
+    </section>
+
+    <div class="small-title" data-page="home">快捷操作</div>
+    <section class="card" data-page="home">
+      <div class="pref" id="reinjectRow">
+        <div class="pref-body">
+          <div class="pref-title">重新注入 APEX</div>
+          <div class="pref-desc">Android 14+ 强制重新挂载证书</div>
+        </div>
+        <div class="pref-right">
+          <button type="button" class="chip chip-btn" id="reinjectBtn">执行</button>
+        </div>
+      </div>
+      <div class="pref" id="syncRow">
+        <div class="pref-body">
+          <div class="pref-title">同步证书池</div>
+          <div class="pref-desc">按开关重建 system 挂载目录</div>
+        </div>
+        <div class="pref-right">
+          <button type="button" class="chip chip-btn" id="syncBtn">同步</button>
+        </div>
+      </div>
+      <div class="pref" id="rebootRow">
+        <div class="pref-body">
+          <div class="pref-title">重启设备</div>
+          <div class="pref-desc">应用挂载变更建议重启</div>
+        </div>
+        <div class="pref-right">
+          <button type="button" class="chip chip-btn" id="rebootBtn">重启</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="small-title" data-page="certs">内置证书</div>
+    <section class="card" data-page="certs">
+      <div class="pref">
+        <div class="pref-body">
+          <div class="pref-title">Reqable CA</div>
+          <div class="pref-desc" id="reqableSub">833e2479.0</div>
+        </div>
+        <div class="pref-right">
+          <label class="hyper-switch">
+            <input type="checkbox" id="reqableEnabled" />
+            <span class="track"></span>
+            <span class="thumb"></span>
+          </label>
+        </div>
+      </div>
+      <div class="pref">
+        <div class="pref-body">
+          <div class="pref-title">ProxyPin CA</div>
+          <div class="pref-desc" id="proxypinSub">243f0bfb.0</div>
+        </div>
+        <div class="pref-right">
+          <label class="hyper-switch">
+            <input type="checkbox" id="proxypinEnabled" />
+            <span class="track"></span>
+            <span class="thumb"></span>
+          </label>
+        </div>
+      </div>
+      <div class="pref">
+        <div class="pref-body">
+          <div class="pref-title">开机自动注入</div>
+          <div class="pref-desc">Android 14+ service 阶段重新挂载</div>
+        </div>
+        <div class="pref-right">
+          <label class="hyper-switch">
+            <input type="checkbox" id="autoReinject" />
+            <span class="track"></span>
+            <span class="thumb"></span>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <div class="small-title" data-page="certs">自定义证书</div>
+    <section class="card" data-page="certs">
+      <div class="expand-inner" style="padding: var(--space-expand-pad)">
+        <div class="info-box">
+          文件名须为 OpenSSL hash 格式：<b>8 位十六进制.0</b><br />
+          例如 <code>243f0bfb.0</code>。可用 <code>openssl x509 -subject_hash_old -in cert.pem</code> 计算。
+        </div>
+        <input type="file" id="certFile" accept=".0,.pem,.crt,.cer" style="display: none" />
+        <button type="button" class="chip chip-btn" id="pickCertBtn" style="margin-bottom: 10px">选择证书文件</button>
+        <div class="field-hint" id="pickedFileHint">未选择文件</div>
+        <div id="customList" class="kv-list" style="margin-top: 8px"></div>
+      </div>
+    </section>
+
+    <div class="small-title dock-only" data-page="certs">使用提示</div>
+    <section class="card dock-only" data-page="certs">
+      <div class="expand-inner" style="padding: var(--space-expand-pad)">
+        <div class="field-hint">· 开关变更后会立即同步并尝试注入</div>
+        <div class="field-hint">· Android 14+ 若抓包仍失败，点「重新注入」或重启</div>
+        <div class="field-hint">· 设置 → 安全 → 可信凭据 可查看系统 CA</div>
+      </div>
+    </section>
+
+    <div class="small-title" data-page="log">日志</div>
+    <section class="card" data-page="log">
+      <div class="pref" data-expand="log">
+        <div class="pref-body">
+          <div class="pref-title">安装 / 注入日志</div>
+          <div class="pref-desc" id="logSub">点击展开查看</div>
+        </div>
+        <div class="pref-right">
+          <span class="expand-arrow open" id="arrow-log">▾</span>
+          <button type="button" class="chip chip-btn" id="refreshLogBtn">刷新</button>
+        </div>
+      </div>
+      <div class="expand-body open" id="expand-log">
+        <div class="log-toolbar">
+          <button type="button" class="chip chip-btn" id="clearLogBtn">清空</button>
+        </div>
+        <div class="expand-inner">
+          <div class="log-box" id="logBox">暂无日志</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="small-title" data-page="more">显示</div>
+    <section class="card" data-page="more">
+      <div class="pref" data-expand="theme">
+        <div class="pref-body">
+          <div class="pref-title">外观主题</div>
+          <div class="pref-desc" id="themeDesc">跟随系统</div>
+        </div>
+        <div class="pref-right">
+          <span class="expand-arrow" id="arrow-theme">▾</span>
+        </div>
+      </div>
+      <div class="expand-body" id="expand-theme">
+        <div class="expand-inner">
+          <div class="chips" id="themeChips"></div>
+          <div class="field-hint">浅色 / 深色 / 跟随系统</div>
+        </div>
+      </div>
+
+      <div class="pref">
+        <div class="pref-body">
+          <div class="pref-title">莫奈取色</div>
+          <div class="pref-desc" id="monetDesc">背景跟随系统莫奈取色</div>
+        </div>
+        <div class="pref-right">
+          <label class="hyper-switch" onclick="event.stopPropagation()">
+            <input type="checkbox" id="monetEnabled" checked />
+            <span class="track"></span>
+            <span class="thumb"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="pref">
+        <div class="pref-body">
+          <div class="pref-title">悬浮分页</div>
+          <div class="pref-desc" id="dockDesc">单页长列表</div>
+        </div>
+        <div class="pref-right">
+          <label class="hyper-switch" onclick="event.stopPropagation()">
+            <input type="checkbox" id="dockEnabled" />
+            <span class="track"></span>
+            <span class="thumb"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="pref">
+        <div class="pref-body">
+          <div class="pref-title">卡片紧凑</div>
+          <div class="pref-desc" id="compactDesc">舒展间距，便于阅读</div>
+        </div>
+        <div class="pref-right">
+          <label class="hyper-switch" onclick="event.stopPropagation()">
+            <input type="checkbox" id="compactEnabled" />
+            <span class="track"></span>
+            <span class="thumb"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="pref" data-expand="fontSize">
+        <div class="pref-body">
+          <div class="pref-title">字体大小</div>
+          <div class="pref-desc" id="fontSizeDesc">标准 (1.0x)</div>
+        </div>
+        <div class="pref-right">
+          <span class="expand-arrow" id="arrow-fontSize">▾</span>
+        </div>
+      </div>
+      <div class="expand-body" id="expand-fontSize">
+        <div class="expand-inner">
+          <div class="font-slider-row">
+            <span class="font-label" style="font-size: calc(0.7rem * var(--font-scale))">A</span>
+            <input type="range" class="font-slider" id="fontSlider" min="0.8" max="1.5" step="0.02" value="1" />
+            <span class="font-label" style="font-size: calc(1.1rem * var(--font-scale))">A</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="small-title dock-only" data-page="more">使用指南</div>
+    <section class="card dock-only" data-page="more">
+      <div class="expand-inner" style="padding: 14px 16px 16px">
+        <div class="info-box">
+          <b>推荐流程</b><br />
+          1. 刷入模块并重启<br />
+          2. 打开 WebUI 确认 Reqable / ProxyPin 已启用<br />
+          3. 需要其它抓包工具时，上传对应 hash.0 证书
+        </div>
+        <div class="info-box">
+          <b>路径</b><br />
+          配置：<code>config/certs.conf</code><br />
+          日志：<code>data/install.log</code><br />
+          自定义：<code>certs/custom/</code>
+        </div>
+      </div>
+    </section>
+
+    <div class="small-title" data-page="more">关于</div>
+    <div class="about-note" data-page="more">
+      CACertStore 由许小墨开发。模块内置 Reqable、ProxyPin 的 CA 证书，便于配合对应抓包软件使用。
+    </div>
+    <section class="card" data-page="more">
+      <div class="pref" data-url="https://github.com/Eikeitsu/CACertStore">
+        <div class="pref-body">
+          <div class="pref-title">本仓库</div>
+          <div class="pref-desc">GitHub · Releases</div>
+        </div>
+        <div class="pref-right"><span class="link-arrow">›</span></div>
+      </div>
+      <div class="pref" data-url="https://reqable.com">
+        <div class="pref-body">
+          <div class="pref-title">Reqable 官网</div>
+          <div class="pref-desc">reqable.com</div>
+        </div>
+        <div class="pref-right"><span class="link-arrow">›</span></div>
+      </div>
+      <div class="pref" data-url="https://github.com/wanghongenpin/proxypin">
+        <div class="pref-body">
+          <div class="pref-title">ProxyPin 官网</div>
+          <div class="pref-desc">github.com/wanghongenpin/proxypin</div>
+        </div>
+        <div class="pref-right"><span class="link-arrow">›</span></div>
+      </div>
+    </section>
+
+    <nav class="dock-nav" id="dockNav" hidden></nav>
+
+    <div class="snackbar" id="snackbar">
+      <span class="snackbar-icon">✓</span>
+      <span id="snackbarText"></span>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/nav.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>

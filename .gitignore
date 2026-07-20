@@ -1,6 +1,8 @@
 node_modules/
 .build/
 release/
+docs/.vitepress/dist/
+docs/.vitepress/cache/
 .DS_Store
 *.log
 .idea/

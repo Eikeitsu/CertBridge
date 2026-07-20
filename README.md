@@ -4,7 +4,18 @@
 
 - **仓库**：[Eikeitsu/CACertStore](https://github.com/Eikeitsu/CACertStore)
 - **文档**：[eikeitsu.github.io/CACertStore](https://eikeitsu.github.io/CACertStore/)
+- **酷安**：[许小墨](https://www.coolapk.com/u/7602666)
 - **模块 ID**：`CACertStore`
+
+## WebUI 预览
+
+| 概览 | 证书 |
+|:---:|:---:|
+| ![概览](docs/public/screenshots/webui-overview.png) | ![证书](docs/public/screenshots/webui-certs.png) |
+
+| 日志 | 更多 |
+|:---:|:---:|
+| ![日志](docs/public/screenshots/webui-log.png) | ![更多](docs/public/screenshots/webui-more.png) |
 
 ## 功能概览
 
@@ -28,6 +39,7 @@
 module/          # Magisk 模块本体
   webroot/       # WebUI 源码
 docs/            # VitePress 用户文档
+  public/screenshots/  # WebUI 截图
 tooling/         # 构建脚本
 .github/         # CI 工作流
 ```

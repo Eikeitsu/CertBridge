@@ -15,6 +15,8 @@
 
 支持管理器在线更新：`module.prop` 的 `updateJson` 指向文档站上的 `update.json`。
 
+![概览](/screenshots/webui-overview.png)
+
 ## 模块目录（设备上）
 
 ```text

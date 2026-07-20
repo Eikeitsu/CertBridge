@@ -4,6 +4,16 @@
 
 CACertStore（CA 证书管理）把指定 CA 证书**增量挂载**到 Android **系统信任库**（不修改系统分区；开机现场合并原厂 CA + 追加证书），让 HTTPS 抓包 / 中间人调试时，系统与应用能信任这些证书。
 
+## WebUI 预览
+
+| 概览 | 证书 |
+|:---:|:---:|
+| ![概览](/screenshots/webui-overview.png) | ![证书](/screenshots/webui-certs.png) |
+
+| 日志 | 更多 |
+|:---:|:---:|
+| ![日志](/screenshots/webui-log.png) | ![更多](/screenshots/webui-more.png) |
+
 ## 主要能力
 
 | 能力 | 说明 |

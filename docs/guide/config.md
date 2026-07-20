@@ -18,6 +18,8 @@ auto_reinject=1
 
 也可在 WebUI「证书」页用开关修改，保存后会同步并尝试注入。
 
+![证书页](/screenshots/webui-certs.png)
+
 ## 自定义证书
 
 1. 文件名必须是 **8 位十六进制 + `.0`**（OpenSSL `subject_hash_old`）

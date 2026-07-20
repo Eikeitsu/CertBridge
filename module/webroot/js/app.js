@@ -235,11 +235,21 @@ const CasApp = {
         .join(':');
     }
 
+    if (document.getElementById('statusDesc') && s.desc_body) {
+      document.getElementById('statusDesc').textContent = s.desc_body;
+    }
+
     if (badge) {
       badge.className = 'status-badge';
+      const short = s.desc_short || '';
       if (s.disabled === '1') {
-        badge.textContent = '模块已禁用';
+        badge.textContent = short || '模块已禁用';
         badge.classList.add('disabled');
+      } else if (short) {
+        badge.textContent = short;
+        if (short.includes('待注入') || short.includes('未启用')) {
+          badge.classList.add(short.includes('待注入') ? 'stopped' : 'disabled');
+        }
       } else if (s.apex_ok === '1' || s.apex_ok === '2') {
         badge.textContent = `正常 · ${s.active_count || 0} 张证书已启用`;
       } else {

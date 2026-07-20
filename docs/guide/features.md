@@ -2,7 +2,7 @@
 
 ## 做什么
 
-CACertStore（CA 证书管理）把指定 CA 证书写入 Android **系统信任库**，让 HTTPS 抓包 / 中间人调试时，系统与应用能信任这些证书。
+CACertStore（CA 证书管理）把指定 CA 证书**增量**写入 Android **系统信任库**（保留系统自带 CA，仅追加 Reqable / ProxyPin / 自定义证书），让 HTTPS 抓包 / 中间人调试时，系统与应用能信任这些证书。
 
 ## 主要能力
 

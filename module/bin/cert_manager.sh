@@ -11,40 +11,36 @@ cmd_status() {
   [ -f "$MODDIR/disable" ] && disabled=1
 
   sync_active_certs
-  active=$(ls -1 "$ACTIVE_DIR"/*.0 2>/dev/null | wc -l)
-  active=$(echo "$active" | tr -d ' ')
+  addons=$(count_addon_certs)
+  total=$(count_certs "$ACTIVE_DIR")
+  base_n=$(count_certs "$SYSTEM_BASE_DIR")
   custom=$(ls -1 "$CUSTOM_DIR"/*.0 2>/dev/null | wc -l)
   custom=$(echo "$custom" | tr -d ' ')
-
-  apex_ok=0
-  if [ "$api" -ge 34 ]; then
-    first=$(ls -1 "$ACTIVE_DIR"/*.0 2>/dev/null | head -1)
-    if [ -n "$first" ] && [ -f "$APEX_CACERTS/$(basename "$first")" ]; then
-      apex_ok=1
-    fi
-  else
-    apex_ok=2
-  fi
 
   reqable_en=$(read_conf reqable 1)
   proxypin_en=$(read_conf proxypin 1)
   reqable_file=0
   proxypin_file=0
-  [ -f "$ACTIVE_DIR/833e2479.0" ] && reqable_file=1
-  [ -f "$ACTIVE_DIR/243f0bfb.0" ] && proxypin_file=1
+  [ -f "$ACTIVE_DIR/833e2479.0" ] && [ "$reqable_en" = "1" ] && reqable_file=1
+  [ -f "$ACTIVE_DIR/243f0bfb.0" ] && [ "$proxypin_en" = "1" ] && proxypin_file=1
 
-  root_impl=Magisk
-  [ "$KSU" = "true" ] && root_impl=KernelSU
-  [ "$APATCH" = "true" ] && root_impl=APatch
+  root_impl=$(detect_root_impl)
+  apex_ok=$(check_apex_injected)
+  status_tag=$(compute_status_tag)
+  update_module_description "$status_tag"
 
   echo "module_ok=1"
   echo "disabled=$disabled"
   echo "api=$api"
   echo "release=$release"
   echo "root=$root_impl"
-  echo "active_count=$active"
+  echo "active_count=$addons"
+  echo "total_count=$total"
+  echo "base_count=$base_n"
   echo "custom_count=$custom"
   echo "apex_ok=$apex_ok"
+  echo "desc_short=$status_tag"
+  echo "desc_body=$DESC_BODY"
   echo "reqable_enabled=$reqable_en"
   echo "reqable_active=$reqable_file"
   echo "proxypin_enabled=$proxypin_en"
@@ -69,6 +65,7 @@ cmd_toggle() {
       write_conf "$name" "$value"
       sync_active_certs
       sh "$BINDIR/apex_inject.sh" inject
+      refresh_module_description >/dev/null
       log_msg "toggle $name=$value"
       ;;
     *) return 1 ;;
@@ -89,6 +86,7 @@ cmd_install_custom() {
   rm -f "$tmp"
   sync_active_certs
   sh "$BINDIR/apex_inject.sh" inject
+  refresh_module_description >/dev/null
   log_msg "install_custom $filename"
   echo "ok=1"
 }
@@ -102,6 +100,7 @@ cmd_remove_custom() {
   rm -f "$CUSTOM_DIR/$filename"
   sync_active_certs
   sh "$BINDIR/apex_inject.sh" inject
+  refresh_module_description >/dev/null
   log_msg "remove_custom $filename"
   echo "ok=1"
 }
@@ -109,6 +108,7 @@ cmd_remove_custom() {
 cmd_reinject() {
   sync_active_certs
   sh "$BINDIR/apex_inject.sh" inject
+  refresh_module_description >/dev/null
   log_msg "manual reinject"
   echo "ok=1"
 }
@@ -116,6 +116,7 @@ cmd_reinject() {
 cmd_sync() {
   sync_active_certs
   sh "$BINDIR/apex_inject.sh" inject
+  refresh_module_description >/dev/null
   echo "ok=1"
 }
 

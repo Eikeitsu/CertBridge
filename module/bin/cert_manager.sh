@@ -12,8 +12,6 @@ cmd_status() {
 
   sync_active_certs
   addons=$(count_addon_certs)
-  total=$(count_certs "$ACTIVE_DIR")
-  base_n=$(count_certs "$SYSTEM_BASE_DIR")
   custom=$(ls -1 "$CUSTOM_DIR"/*.0 2>/dev/null | wc -l)
   custom=$(echo "$custom" | tr -d ' ')
 
@@ -35,8 +33,6 @@ cmd_status() {
   echo "release=$release"
   echo "root=$root_impl"
   echo "active_count=$addons"
-  echo "total_count=$total"
-  echo "base_count=$base_n"
   echo "custom_count=$custom"
   echo "apex_ok=$apex_ok"
   echo "desc_short=$status_tag"

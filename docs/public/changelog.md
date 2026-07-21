@@ -1,5 +1,12 @@
 # 更新日志
 
+## v1.0.2
+
+- 紧急修复 KernelSU Magic Mount 将系统 CA 目录遮蔽为仅剩 Reqable、ProxyPin 两张证书的问题
+- 移除模块包内的 `system/etc/security/cacerts` 覆盖目录，注入失败时保持系统 CA 原样可见
+- 将当前启用证书迁移到模块私有 `certs/active` 目录，不修改系统分区
+- 增加 PID 1、Zygote 与系统设置进程的挂载结果验证，失败时记录真实错误并回滚
+
 ## v1.0.1
 
 - 项目更名为证书桥（CertBridge），模块显示名调整为「系统 CA 证书」

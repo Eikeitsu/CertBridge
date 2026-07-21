@@ -28,12 +28,14 @@
 ├── bin/                 # common / apex 注入 / CLI
 ├── certs/
 │   ├── builtin/         # Reqable、ProxyPin
-│   └── custom/          # 用户自定义
+│   ├── custom/          # 用户自定义
+│   └── active/          # 当前启用的追加证书
 ├── config/certs.conf    # 开关配置
 ├── data/install.log     # 日志
-├── system/etc/security/cacerts/  # 实际挂载内容
 └── webroot/             # WebUI
 ```
+
+模块包不会创建 `system/etc/security/cacerts` 覆盖目录。系统 CA 与追加证书会在开机时合并到临时目录，验证完整后再挂载。
 
 ## 卸载
 

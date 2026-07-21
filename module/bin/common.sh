@@ -8,7 +8,7 @@ DATADIR="$MODDIR/data"
 CERT_POOL="$MODDIR/certs"
 BUILTIN_DIR="$CERT_POOL/builtin"
 CUSTOM_DIR="$CERT_POOL/custom"
-ACTIVE_DIR="$MODDIR/system/etc/security/cacerts"
+ACTIVE_DIR="$CERT_POOL/active"
 CONF="$CONFDIR/certs.conf"
 LOG_FILE="$DATADIR/install.log"
 TEMP_APEX="/data/local/tmp/certbridge-apex-ca"
@@ -194,7 +194,8 @@ check_apex_injected() {
     echo 2
     return 0
   fi
-  if [ -f "$APEX_CACERTS/$probe" ]; then
+  if [ -f "$APEX_CACERTS/$probe" ] || \
+     nsenter --mount=/proc/1/ns/mnt -- test -f "$APEX_CACERTS/$probe" 2>/dev/null; then
     echo 1
   else
     echo 0

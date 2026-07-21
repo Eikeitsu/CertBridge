@@ -6,12 +6,15 @@ ui_print " CertBridge "
 ui_print "********************************"
 
 mkdir -p "$MODPATH/bin" "$MODPATH/config" "$MODPATH/data" "$MODPATH/webroot"
-mkdir -p "$MODPATH/certs/builtin/reqable" "$MODPATH/certs/builtin/proxypin" "$MODPATH/certs/custom"
-mkdir -p "$MODPATH/system/etc/security/cacerts"
+mkdir -p "$MODPATH/certs/builtin/reqable" "$MODPATH/certs/builtin/proxypin"
+mkdir -p "$MODPATH/certs/custom" "$MODPATH/certs/active"
 
-ACTIVE_DIR="$MODPATH/system/etc/security/cacerts"
+# 证书只能放在模块私有目录。创建 module/system/.../cacerts 会触发
+# Magisk / KernelSU Magic Mount 覆盖整个系统 CA 目录。
+rm -rf "$MODPATH/system" 2>/dev/null
+ACTIVE_DIR="$MODPATH/certs/active"
 
-# 模块目录只放追加证书；增量合并在开机 post-fs-data / service 现场完成
+# active 只保存追加证书；系统目录仅在运行时完成增量 bind mount
 rm -f "$ACTIVE_DIR"/*.0 2>/dev/null
 [ -f "$MODPATH/certs/builtin/reqable/833e2479.0" ] && cp -f "$MODPATH/certs/builtin/reqable/833e2479.0" "$ACTIVE_DIR/"
 [ -f "$MODPATH/certs/builtin/proxypin/243f0bfb.0" ] && cp -f "$MODPATH/certs/builtin/proxypin/243f0bfb.0" "$ACTIVE_DIR/"
@@ -34,7 +37,6 @@ set_perm_recursive "$MODPATH/bin" root root 0755 0755
 set_perm_recursive "$MODPATH/config" root root 0755 0644
 set_perm_recursive "$MODPATH/data" root root 0755 0777
 set_perm_recursive "$MODPATH/certs" root root 0755 0644
-set_perm_recursive "$MODPATH/system/etc/security/cacerts" 0 0 0755 0644
 set_perm_recursive "$MODPATH/webroot" root root 0755 0644
 for s in post-fs-data.sh service.sh action.sh uninstall.sh customize.sh; do
   [ -f "$MODPATH/$s" ] && set_perm "$MODPATH/$s" root root 0755

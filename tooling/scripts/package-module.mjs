@@ -92,19 +92,6 @@ copyDirFromModule('META-INF');
 copyDirFromModule('config');
 copyDirFromModule('bin');
 copyDirFromModule('certs');
-copyDirFromModule('system');
-
-// 打包时同步内置证书到挂载目录，保证刷入后立即可用
-const stagingCacerts = join(staging, 'system', 'etc', 'security', 'cacerts');
-mkdirSync(stagingCacerts, { recursive: true });
-const builtinPairs = [
-  ['certs/builtin/reqable/833e2479.0', '833e2479.0'],
-  ['certs/builtin/proxypin/243f0bfb.0', '243f0bfb.0']
-];
-for (const [srcRel, name] of builtinPairs) {
-  const src = join(moduleRoot, srcRel);
-  if (existsSync(src)) cpSync(src, join(stagingCacerts, name));
-}
 
 if (!existsSync(builtWebDir)) {
   throw new Error('missing .build/webroot — run npm run build:web first');

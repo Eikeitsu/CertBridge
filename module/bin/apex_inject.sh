@@ -1,121 +1,197 @@
 #!/system/bin/sh
-# 系统 CA 基线增量注入
-# 始终使用「完整系统基线 + 模块追加证书」，禁止从已挂载目录反复取种子
+# Bind one validated, immutable boot generation over the active CA store.
+# The generation is rebuilt from the live store only before the first bind.
 
 MODDIR=${MODDIR:-${0%/*}/..}
 . "$MODDIR/bin/common.sh"
 
-prepare_merged_tmpfs() {
-  target_path="$1"
-  tmpfs_path="$2"
-
-  base_n=$(count_certs "$SYSTEM_BASE_DIR")
-  if [ "$base_n" -lt "$MIN_SAFE_CERTS" ]; then
-    log_msg "inject: system_base too small ($base_n), refuse mount"
-    return 1
-  fi
-
-  umount "$tmpfs_path" 2>/dev/null
-  rm -rf "$tmpfs_path" 2>/dev/null
-  mkdir -p "$tmpfs_path" || return 1
-
-  if ! mount -t tmpfs tmpfs "$tmpfs_path"; then
-    log_msg "inject: tmpfs mount failed ($tmpfs_path)"
-    return 1
-  fi
-
-  cp -f "$SYSTEM_BASE_DIR"/*.0 "$tmpfs_path/" 2>/dev/null
-  install_addon_certs_into "$tmpfs_path"
-
-  chown -R 0:0 "$tmpfs_path"
-  chmod 755 "$tmpfs_path"
-  chmod 644 "$tmpfs_path"/*.0 2>/dev/null
-  set_selinux_context "$target_path" "$tmpfs_path"
-
-  merged=$(count_certs "$tmpfs_path")
-  if [ "$merged" -lt "$MIN_SAFE_CERTS" ]; then
-    log_msg "inject: merged $merged < $MIN_SAFE_CERTS, refuse bind"
-    umount "$tmpfs_path" 2>/dev/null
-    return 1
-  fi
-
-  log_msg "inject: prepared target=$target_path base=$base_n merged=$merged"
-  return 0
+current_mount_id() {
+  target="$1"
+  awk -v target="$target" '
+    $5 == target && ($1 + 0) > max { max=$1 }
+    END { if (max) print max }
+  ' /proc/self/mountinfo 2>/dev/null
 }
 
-bind_merged() {
-  src="$1"
-  dest="$2"
+pid_mount_id() {
+  pid="$1"
+  target="$2"
+  nsenter --mount=/proc/"$pid"/ns/mnt -- awk -v target="$target" '
+    $5 == target && ($1 + 0) > max { max=$1 }
+    END { if (max) print max }
+  ' /proc/self/mountinfo 2>/dev/null
+}
 
-  mount --bind "$src" "$dest" 2>/dev/null
-  log_msg "inject: current bind $dest status=$?"
+rollback_current_owned() {
+  target="$1"
+  mount_id="$2"
+  source_id="$3"
+  [ "$(current_mount_id "$target")" = "$mount_id" ] || return 1
+  [ "$(path_identity "$target")" = "$source_id" ] || return 1
+  umount "$target" 2>/dev/null
+}
 
-  nsenter --mount=/proc/1/ns/mnt -- mount --bind "$src" "$dest" 2>/dev/null
-  log_msg "inject: PID 1 bind $dest status=$?"
+rollback_pid_owned() {
+  pid="$1"
+  target="$2"
+  mount_id="$3"
+  source_id="$4"
+  [ "$(pid_mount_id "$pid" "$target")" = "$mount_id" ] || return 1
+  [ "$(namespace_path_identity "$pid" "$target")" = "$source_id" ] || return 1
+  nsenter --mount=/proc/"$pid"/ns/mnt -- umount "$target" 2>/dev/null
+}
 
-  for zygote in zygote zygote64; do
-    for pid in $(pidof "$zygote" 2>/dev/null); do
-      nsenter --mount=/proc/"$pid"/ns/mnt -- mount --bind "$src" "$dest" 2>/dev/null
-      log_msg "inject: $zygote pid=$pid bind $dest status=$?"
+source_for_pid() {
+  pid="$1"
+  if nsenter --mount=/proc/"$pid"/ns/mnt -- test -d "$GEN_CERTS" 2>/dev/null; then
+    echo "$GEN_CERTS"
+  elif nsenter --mount=/proc/"$pid"/ns/mnt -- test -d "/proc/1/root$GEN_CERTS" 2>/dev/null; then
+    echo "/proc/1/root$GEN_CERTS"
+  else
+    return 1
+  fi
+}
+
+source_visible_for_pid() {
+  pid="$1"
+  src=$(source_for_pid "$pid") || return 1
+  expected=$(count_certs "$GEN_CERTS")
+  n=$(nsenter --mount=/proc/"$pid"/ns/mnt -- sh -c \
+    "ls -1 '$src'/*.* 2>/dev/null | wc -l" 2>/dev/null | tr -d ' ')
+  [ "${n:-0}" -ge "$expected" ]
+}
+
+bind_current_once() {
+  target="$1"
+  verify_direct_store "$target" && {
+    source_id=$(path_identity "$GEN_CERTS")
+    if [ -n "$source_id" ] && [ "$(path_identity "$target")" = "$source_id" ]; then
+      mount -o remount,bind,ro "$target" 2>/dev/null || {
+        log_msg "inject: current namespace read-only remount failed"
+        return 1
+      }
+      log_msg "inject: current namespace already owned and valid"
+    else
+      log_msg "inject: compatible external CA layer already valid; leave ownership unchanged"
+    fi
+    return 0
+  }
+  source_id=$(path_identity "$GEN_CERTS")
+  [ -n "$source_id" ] || return 1
+  mount --bind "$GEN_CERTS" "$target" 2>/dev/null || {
+    log_msg "inject: current namespace bind failed ($target)"
+    return 1
+  }
+  mount_id=$(current_mount_id "$target")
+  if [ -z "$mount_id" ] || [ "$(path_identity "$target")" != "$source_id" ]; then
+    log_msg "inject: current namespace ownership verification failed"
+    return 1
+  fi
+  if ! mount -o remount,bind,ro "$target" 2>/dev/null; then
+    log_msg "inject: current namespace read-only remount failed"
+    rollback_current_owned "$target" "$mount_id" "$source_id" >/dev/null 2>&1
+    return 1
+  fi
+  verify_direct_store "$target" || {
+    log_msg "inject: current namespace verification failed"
+    rollback_current_owned "$target" "$mount_id" "$source_id" >/dev/null 2>&1
+    return 1
+  }
+  log_msg "inject: current namespace injected ($target)"
+}
+
+bind_pid_once() {
+  pid="$1"
+  label="$2"
+  target="$3"
+  [ -d "/proc/$pid/ns" ] || return 0
+  verify_namespace_store "$pid" "$target" && {
+    source_id=$(path_identity "$GEN_CERTS")
+    if [ -n "$source_id" ] && [ "$(namespace_path_identity "$pid" "$target")" = "$source_id" ]; then
+      nsenter --mount=/proc/"$pid"/ns/mnt -- mount -o remount,bind,ro "$target" 2>/dev/null || {
+        log_msg "inject: $label pid=$pid read-only remount failed"
+        return 1
+      }
+      log_msg "inject: $label pid=$pid already owned and valid"
+    else
+      log_msg "inject: $label pid=$pid compatible external CA layer valid"
+    fi
+    return 0
+  }
+  source_visible_for_pid "$pid" || {
+    log_msg "inject: $label pid=$pid cannot see complete generation"
+    return 1
+  }
+  src=$(source_for_pid "$pid") || return 1
+  source_id=$(path_identity "$GEN_CERTS")
+  [ -n "$source_id" ] || return 1
+  nsenter --mount=/proc/"$pid"/ns/mnt -- mount --bind "$src" "$target" 2>/dev/null || {
+    log_msg "inject: $label pid=$pid bind failed"
+    return 1
+  }
+  mount_id=$(pid_mount_id "$pid" "$target")
+  if [ -z "$mount_id" ] || [ "$(namespace_path_identity "$pid" "$target")" != "$source_id" ]; then
+    log_msg "inject: $label pid=$pid ownership verification failed"
+    return 1
+  fi
+  if ! nsenter --mount=/proc/"$pid"/ns/mnt -- mount -o remount,bind,ro "$target" 2>/dev/null; then
+    log_msg "inject: $label pid=$pid read-only remount failed"
+    rollback_pid_owned "$pid" "$target" "$mount_id" "$source_id" >/dev/null 2>&1
+    return 1
+  fi
+  verify_namespace_store "$pid" "$target" || {
+    log_msg "inject: $label pid=$pid verification failed"
+    rollback_pid_owned "$pid" "$target" "$mount_id" "$source_id" >/dev/null 2>&1
+    return 1
+  }
+  log_msg "inject: $label pid=$pid injected"
+}
+
+inject_boot_namespaces() {
+  target=$(get_target_store)
+  [ -d "$target" ] || { log_msg "inject: target missing ($target)"; return 1; }
+  generation_valid || { log_msg "inject: generation invalid"; return 1; }
+  [ -s "$APPLIED_MAP" ] || {
+    log_msg "inject: no enabled addon, keep original store"
+    return 0
+  }
+
+  rc=0
+  bind_current_once "$target" || rc=1
+  if command -v nsenter >/dev/null 2>&1; then
+    bind_pid_once 1 init "$target" || rc=1
+  else
+    log_msg "inject: nsenter unavailable"
+    rc=1
+  fi
+  return "$rc"
+}
+
+inject_app_namespaces() {
+  target=$(get_target_store)
+  generation_valid || return 1
+  [ -s "$APPLIED_MAP" ] || return 0
+  command -v nsenter >/dev/null 2>&1 || return 1
+
+  rc=0
+  bind_pid_once 1 init "$target" || rc=1
+  for process in zygote zygote64; do
+    for pid in $(pidof "$process" 2>/dev/null); do
+      bind_pid_once "$pid" "$process" "$target" || rc=1
     done
   done
-
   for pid in $(pidof com.android.settings 2>/dev/null); do
-    nsenter --mount=/proc/"$pid"/ns/mnt -- mount --bind "$src" "$dest" 2>/dev/null
-    log_msg "inject: settings pid=$pid bind $dest status=$?"
+    bind_pid_once "$pid" settings "$target" || rc=1
   done
+  return "$rc"
 }
 
-inject_apex() {
-  api=$(get_api)
-  [ "$api" -ge 34 ] || return 0
-
-  if [ ! -d "$APEX_CACERTS" ]; then
-    log_msg "inject: APEX path missing"
-    return 1
-  fi
-
-  sync_active_certs || return 1
-
-  addons=$(count_addon_certs)
-  if [ "$addons" -eq 0 ]; then
-    log_msg "inject: no addon certs, skip APEX"
-    return 0
-  fi
-
-  prepare_merged_tmpfs "$APEX_CACERTS" "$TEMP_APEX" || return 1
-  bind_merged "$TEMP_APEX" "$APEX_CACERTS"
-  log_msg "inject: APEX bind done"
-  return 0
-}
-
-inject_system_merge() {
-  sync_active_certs || return 1
-
-  addons=$(count_addon_certs)
-  if [ "$addons" -eq 0 ]; then
-    log_msg "inject: no addon certs, skip system"
-    return 0
-  fi
-
-  if [ ! -d "$SYSTEM_CACERTS" ]; then
-    log_msg "inject: system cacerts missing"
-    return 1
-  fi
-
-  prepare_merged_tmpfs "$SYSTEM_CACERTS" "$TEMP_SYSTEM" || return 1
-  bind_merged "$TEMP_SYSTEM" "$SYSTEM_CACERTS"
-  log_msg "inject: system bind done"
-  return 0
-}
-
-case "${1:-inject}" in
-  inject)
-    inject_apex
-    inject_system_merge
-    ;;
+case "${1:-boot}" in
+  boot) inject_boot_namespaces ;;
+  namespaces) inject_app_namespaces ;;
+  verify) [ "$(check_store_injected)" != "0" ] ;;
   *)
-    inject_apex
-    inject_system_merge
+    echo "usage: apex_inject.sh {boot|namespaces|verify}"
+    exit 1
     ;;
 esac

@@ -1,18 +1,11 @@
 #!/system/bin/sh
+# 仅卸载带 CertBridge 会话标记的临时层；开机持久层仍由重启统一清理。
+
 MODDIR=${0%/*}
-TEMP_APEX="/data/local/tmp/certbridge-apex-ca"
-TEMP_SYSTEM="/data/local/tmp/certbridge-system-ca"
-APEX_CACERTS="/apex/com.android.conscrypt/cacerts"
-SYSTEM_CACERTS="/system/etc/security/cacerts"
-
-for target in "$APEX_CACERTS" "$SYSTEM_CACERTS"; do
-  umount "$target" 2>/dev/null
-  nsenter --mount=/proc/1/ns/mnt -- umount "$target" 2>/dev/null
-  for process in zygote zygote64 com.android.settings; do
-    for pid in $(pidof "$process" 2>/dev/null); do
-      nsenter --mount=/proc/"$pid"/ns/mnt -- umount "$target" 2>/dev/null
-    done
-  done
-done
-
-rm -rf "$TEMP_APEX" "$TEMP_SYSTEM" "${TEMP_APEX}".* "${TEMP_SYSTEM}".* 2>/dev/null
+LOG_FILE="$MODDIR/data/install.log"
+if [ -x "$MODDIR/bin/hot_mount.sh" ]; then
+  sh "$MODDIR/bin/hot_mount.sh" unmount >>"$LOG_FILE" 2>&1 || \
+    echo "uninstall: temporary session could not be fully removed; reboot required" >>"$LOG_FILE"
+fi
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] uninstall: module removed; reboot required to clear mounts" >>"$LOG_FILE" 2>/dev/null
+rm -rf /data/local/tmp/certbridge-* 2>/dev/null

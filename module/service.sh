@@ -8,24 +8,32 @@ while [ "$(getprop sys.boot_completed)" != "1" ] && [ $count -lt 90 ]; do
   count=$((count + 1))
 done
 
-sleep 3
-chmod 0755 "$BINDIR"/*.sh 2>/dev/null
-chmod 0644 "$CONF" 2>/dev/null
-[ -d "$MODDIR/webroot" ] && find "$MODDIR/webroot" -type f -exec chmod 0644 {} \;
-
 if [ -f "$MODDIR/t_module" ] && ! grep -q '^# ##$' "$MODDIR/module.prop" 2>/dev/null; then
   cp "$MODDIR/t_module" "$MODDIR/module.prop"
   chmod 0644 "$MODDIR/module.prop"
 fi
 
-if [ "$(read_conf auto_reinject 1)" != "1" ]; then
+log_msg "service: verify app namespaces after boot (${count}s)"
+if ! acquire_write_lock; then
+  echo "应用命名空间证书检查繁忙，请稍后在 WebUI 刷新" >"$STATEDIR/inject-error"
+  log_msg "service: lifecycle lock timeout"
   refresh_module_description >/dev/null
-  log_msg "service: auto_reinject disabled"
-  exit 0
+  exit 1
 fi
-
-log_msg "service: reinject after boot (${count}s)"
-sync_active_certs
-sh "$MODDIR/bin/apex_inject.sh" inject
+if hot_session_active; then
+  rc=0
+  log_msg "service: hot session active, skip persistent namespace overlay"
+elif sh "$MODDIR/bin/apex_inject.sh" namespaces; then
+  rc=0
+else
+  rc=1
+fi
+release_write_lock
+if [ "$rc" -eq 0 ]; then
+  rm -f "$STATEDIR/inject-error"
+else
+  echo "应用命名空间证书注入失败，请查看日志" >"$STATEDIR/inject-error"
+  log_msg "service: namespace injection failed"
+fi
 refresh_module_description >/dev/null
 log_msg "service done"

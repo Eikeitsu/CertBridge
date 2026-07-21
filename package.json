@@ -1,13 +1,13 @@
 {
   "name": "certbridge",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.1.0",
   "type": "module",
   "scripts": {
     "dev:web": "serve module/webroot -l 5174",
     "build:web": "node tooling/scripts/build-web.mjs",
-    "package:module": "node tooling/scripts/package-module.mjs",
-    "build:module": "npm run build:web && npm run package:module",
+    "package:module": "npm run build:web && node tooling/scripts/package-module.mjs",
+    "build:module": "npm run package:module",
     "dev:docs": "vitepress dev docs",
     "build:docs": "vitepress build docs",
     "preview:docs": "vitepress preview docs"

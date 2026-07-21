@@ -8,16 +8,17 @@ DATADIR="$MODDIR/data"
 CERT_POOL="$MODDIR/certs"
 BUILTIN_DIR="$CERT_POOL/builtin"
 CUSTOM_DIR="$CERT_POOL/custom"
-ACTIVE_DIR="$CERT_POOL/active"
+SYSTEM_BASE_DIR="$CERT_POOL/system_base"
+ACTIVE_DIR="$MODDIR/system/etc/security/cacerts"
 CONF="$CONFDIR/certs.conf"
 LOG_FILE="$DATADIR/install.log"
 TEMP_APEX="/data/local/tmp/certbridge-apex-ca"
 TEMP_SYSTEM="/data/local/tmp/certbridge-system-ca"
 APEX_CACERTS="/apex/com.android.conscrypt/cacerts"
 SYSTEM_CACERTS="/system/etc/security/cacerts"
-# 与 reqable 一致：合并结果过少则拒绝 bind，避免误覆盖
+# Magic Mount 会整目录替换；基线或合并结果过少时拒绝覆盖
 MIN_SAFE_CERTS=10
-DESC_BODY="将 Reqable / ProxyPin / 自定义 CA 增量挂载到系统 CA 信任库。支持 Magisk / KernelSU WebUI，Android 14+ 自动 APEX 注入。"
+DESC_BODY="将 Reqable / ProxyPin / 自定义 CA 增量安装到系统 CA 信任库（保留系统原有证书）。支持 Magisk / KernelSU WebUI，Android 14+ 自动 APEX 注入。"
 
 log_msg() {
     mkdir -p "$DATADIR" 2>/dev/null
@@ -103,6 +104,47 @@ find_system_cacerts_mirror() {
   return 1
 }
 
+copy_certs_from() {
+  src="$1"
+  dest="$2"
+  [ -d "$src" ] || return 1
+  n=$(count_certs "$src")
+  [ "$n" -ge "$MIN_SAFE_CERTS" ] || return 1
+  mkdir -p "$dest" 2>/dev/null
+  rm -f "$dest"/*.0 2>/dev/null
+  cp -f "$src"/*.0 "$dest/" 2>/dev/null || return 1
+  return 0
+}
+
+ensure_system_base() {
+  mkdir -p "$SYSTEM_BASE_DIR" 2>/dev/null
+  base_n=$(count_certs "$SYSTEM_BASE_DIR")
+  if [ "$base_n" -ge "$MIN_SAFE_CERTS" ]; then
+    return 0
+  fi
+
+  log_msg "ensure_system_base: refreshing (had $base_n)"
+
+  if copy_certs_from "$APEX_CACERTS" "$SYSTEM_BASE_DIR"; then
+    log_msg "ensure_system_base: from APEX ($(count_certs "$SYSTEM_BASE_DIR"))"
+    return 0
+  fi
+
+  mirror=$(find_system_cacerts_mirror)
+  if [ -n "$mirror" ] && copy_certs_from "$mirror" "$SYSTEM_BASE_DIR"; then
+    log_msg "ensure_system_base: from mirror $mirror ($(count_certs "$SYSTEM_BASE_DIR"))"
+    return 0
+  fi
+
+  if copy_certs_from "$SYSTEM_CACERTS" "$SYSTEM_BASE_DIR"; then
+    log_msg "ensure_system_base: from system ($(count_certs "$SYSTEM_BASE_DIR"))"
+    return 0
+  fi
+
+  log_msg "ensure_system_base: FAILED to capture stock CA store"
+  return 1
+}
+
 install_addon_certs_into() {
   dest="$1"
   mkdir -p "$dest" 2>/dev/null
@@ -135,15 +177,27 @@ count_addon_certs() {
   echo "$n"
 }
 
-# 模块目录只放「要追加」的证书（与 reqable / ProxyPin 相同）
-# 真正增量生效靠 apex_inject.sh：现场拷贝目标路径全部 CA + 追加 → bind
+# 系统基线 + 模块追加证书。ACTIVE_DIR 本身始终是完整信任库，
+# 因此即使 APEX 注入失败，Magic Mount 也不会只暴露两张追加证书。
 sync_active_certs() {
-  mkdir -p "$ACTIVE_DIR" "$CUSTOM_DIR" 2>/dev/null
+  mkdir -p "$ACTIVE_DIR" "$CUSTOM_DIR" "$SYSTEM_BASE_DIR" 2>/dev/null
+  ensure_system_base
+
+  base_n=$(count_certs "$SYSTEM_BASE_DIR")
+  if [ "$base_n" -lt "$MIN_SAFE_CERTS" ]; then
+    log_msg "sync_active_certs: abort — system_base too small ($base_n)"
+    return 1
+  fi
+
   rm -f "$ACTIVE_DIR"/*.0 2>/dev/null
+  cp -f "$SYSTEM_BASE_DIR"/*.0 "$ACTIVE_DIR/" 2>/dev/null
   install_addon_certs_into "$ACTIVE_DIR"
   fix_cert_permissions "$ACTIVE_DIR"
   set_selinux_context "$SYSTEM_CACERTS" "$ACTIVE_DIR"
-  log_msg "sync_active_certs: addon=$(count_addon_certs)"
+
+  total=$(count_certs "$ACTIVE_DIR")
+  addons=$(count_addon_certs)
+  log_msg "sync_active_certs: total=$total base=$base_n addon=$addons"
 }
 
 list_active_hashes() {
@@ -205,6 +259,11 @@ check_apex_injected() {
 compute_status_tag() {
   if [ -f "$MODDIR/disable" ]; then
     echo "模块已禁用"
+    return 0
+  fi
+  base_n=$(count_certs "$SYSTEM_BASE_DIR")
+  if [ "$base_n" -lt "$MIN_SAFE_CERTS" ]; then
+    echo "系统 CA 基线缺失"
     return 0
   fi
   addons=$(count_addon_certs)

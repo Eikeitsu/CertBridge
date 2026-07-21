@@ -29,13 +29,14 @@
 ├── certs/
 │   ├── builtin/         # Reqable、ProxyPin
 │   ├── custom/          # 用户自定义
-│   └── active/          # 当前启用的追加证书
+│   └── system_base/     # 安装时保存的完整系统 CA 基线
 ├── config/certs.conf    # 开关配置
 ├── data/install.log     # 日志
+├── system/etc/security/cacerts/  # 系统基线与追加证书的完整合并结果
 └── webroot/             # WebUI
 ```
 
-模块包不会创建 `system/etc/security/cacerts` 覆盖目录。系统 CA 与追加证书会在开机时合并到临时目录，验证完整后再挂载。
+安装时必须成功抓取至少 10 张系统 CA 才会继续。模块使用完整系统基线与追加证书生成挂载目录，不会只用 Reqable、ProxyPin 覆盖系统信任库。
 
 ## 卸载
 

@@ -1,150 +1,69 @@
 #!/system/bin/sh
-# 现场增量挂载：
-# tmpfs 合并目录 = 当前目标路径全部 CA + 模块追加 → bind mount
-# 模块包不再声明 system/cacerts，注入失败也不会遮蔽系统原有证书
+# 系统 CA 基线增量注入
+# 始终使用「完整系统基线 + 模块追加证书」，禁止从已挂载目录反复取种子
 
 MODDIR=${MODDIR:-${0%/*}/..}
 . "$MODDIR/bin/common.sh"
 
-prepare_merged_dir() {
+prepare_merged_tmpfs() {
   target_path="$1"
-  merge_path="$2"
-  seed_path="$3"
-  PREPARED_DIR="$merge_path"
+  tmpfs_path="$2"
 
-  # 只卸载源路径上的旧 tmpfs。已经 bind 到目标的旧 tmpfs 会继续保持内容，
-  # 因而可作为本次重建的 seed，不会因清理源目录而被一并清空。
-  umount "$merge_path" 2>/dev/null
-  rm -rf "$merge_path" 2>/dev/null
-  mkdir -p "$merge_path" || return 1
-  if ! mount -t tmpfs tmpfs "$merge_path"; then
-    log_msg "inject: tmpfs mount failed ($merge_path)"
-    rm -rf "$merge_path" 2>/dev/null
+  base_n=$(count_certs "$SYSTEM_BASE_DIR")
+  if [ "$base_n" -lt "$MIN_SAFE_CERTS" ]; then
+    log_msg "inject: system_base too small ($base_n), refuse mount"
     return 1
   fi
 
-  seed_n=$(count_certs "$seed_path")
-  if [ "$seed_n" -lt "$MIN_SAFE_CERTS" ]; then
-    log_msg "inject: seed too small ($seed_n) from $seed_path, refuse bind"
-    umount "$merge_path" 2>/dev/null
+  umount "$tmpfs_path" 2>/dev/null
+  rm -rf "$tmpfs_path" 2>/dev/null
+  mkdir -p "$tmpfs_path" || return 1
+
+  if ! mount -t tmpfs tmpfs "$tmpfs_path"; then
+    log_msg "inject: tmpfs mount failed ($tmpfs_path)"
     return 1
   fi
 
-  cp -a "$seed_path"/. "$merge_path/" 2>/dev/null
-  install_addon_certs_into "$merge_path"
+  cp -f "$SYSTEM_BASE_DIR"/*.0 "$tmpfs_path/" 2>/dev/null
+  install_addon_certs_into "$tmpfs_path"
 
-  chown -R 0:0 "$merge_path"
-  chmod 755 "$merge_path"
-  chmod 644 "$merge_path"/*.0 2>/dev/null
-  set_selinux_context "$target_path" "$merge_path"
+  chown -R 0:0 "$tmpfs_path"
+  chmod 755 "$tmpfs_path"
+  chmod 644 "$tmpfs_path"/*.0 2>/dev/null
+  set_selinux_context "$target_path" "$tmpfs_path"
 
-  merged=$(count_certs "$merge_path")
+  merged=$(count_certs "$tmpfs_path")
   if [ "$merged" -lt "$MIN_SAFE_CERTS" ]; then
     log_msg "inject: merged $merged < $MIN_SAFE_CERTS, refuse bind"
-    umount "$merge_path" 2>/dev/null
+    umount "$tmpfs_path" 2>/dev/null
     return 1
   fi
 
-  log_msg "inject: target=$target_path seed=$seed_n merged=$merged"
+  log_msg "inject: prepared target=$target_path base=$base_n merged=$merged"
   return 0
-}
-
-verify_current_target() {
-  dest="$1"
-  [ "$(count_certs "$dest")" -ge "$MIN_SAFE_CERTS" ] || return 1
-  for cert in "$ACTIVE_DIR"/*.0; do
-    [ -f "$cert" ] || continue
-    [ -f "$dest/$(basename "$cert")" ] || return 1
-  done
-  return 0
-}
-
-verify_namespace_target() {
-  pid="$1"
-  dest="$2"
-  n=$(nsenter --mount=/proc/"$pid"/ns/mnt -- sh -c \
-    "ls -1 '$dest'/*.0 2>/dev/null | wc -l" 2>/dev/null)
-  n=$(echo "$n" | tr -d ' ')
-  [ "${n:-0}" -ge "$MIN_SAFE_CERTS" ] || return 1
-  for cert in "$ACTIVE_DIR"/*.0; do
-    [ -f "$cert" ] || continue
-    name=$(basename "$cert")
-    nsenter --mount=/proc/"$pid"/ns/mnt -- sh -c \
-      "[ -f '$dest/$name' ]" 2>/dev/null || return 1
-  done
-  return 0
-}
-
-bind_for_pid() {
-  pid="$1"
-  src="$2"
-  dest="$3"
-  nsenter --mount=/proc/"$pid"/ns/mnt -- mount --bind "$src" "$dest" 2>/dev/null || return 1
-  verify_namespace_target "$pid" "$dest"
 }
 
 bind_merged() {
   src="$1"
   dest="$2"
 
-  current_ok=0
-  global_ok=0
+  mount --bind "$src" "$dest" 2>/dev/null
+  log_msg "inject: current bind $dest status=$?"
 
-  if mount --bind "$src" "$dest" 2>/dev/null && verify_current_target "$dest"; then
-    current_ok=1
-  else
-    log_msg "inject: current namespace bind failed ($dest)"
-  fi
-
-  if bind_for_pid 1 "$src" "$dest"; then
-    global_ok=1
-  else
-    log_msg "inject: PID 1 namespace bind failed ($dest)"
-  fi
+  nsenter --mount=/proc/1/ns/mnt -- mount --bind "$src" "$dest" 2>/dev/null
+  log_msg "inject: PID 1 bind $dest status=$?"
 
   for zygote in zygote zygote64; do
     for pid in $(pidof "$zygote" 2>/dev/null); do
-      bind_for_pid "$pid" "$src" "$dest" || \
-        log_msg "inject: $zygote namespace bind failed pid=$pid ($dest)"
+      nsenter --mount=/proc/"$pid"/ns/mnt -- mount --bind "$src" "$dest" 2>/dev/null
+      log_msg "inject: $zygote pid=$pid bind $dest status=$?"
     done
   done
 
   for pid in $(pidof com.android.settings 2>/dev/null); do
-    bind_for_pid "$pid" "$src" "$dest" || \
-      log_msg "inject: settings namespace bind failed pid=$pid ($dest)"
+    nsenter --mount=/proc/"$pid"/ns/mnt -- mount --bind "$src" "$dest" 2>/dev/null
+    log_msg "inject: settings pid=$pid bind $dest status=$?"
   done
-
-  verified=0
-  if command -v nsenter >/dev/null 2>&1; then
-    [ "$global_ok" -eq 1 ] && verified=1
-  else
-    [ "$current_ok" -eq 1 ] && verified=1
-  fi
-
-  if [ "$verified" -ne 1 ]; then
-    umount "$dest" 2>/dev/null
-    nsenter --mount=/proc/1/ns/mnt -- umount "$dest" 2>/dev/null
-    log_msg "inject: no verified namespace bind ($dest)"
-    return 1
-  fi
-
-  log_msg "inject: bind verified target=$dest current=$current_ok global=$global_ok"
-  return 0
-}
-
-pick_system_seed() {
-  # Magic Mount 可能让 /system/.../cacerts 看起来只剩模块证书；
-  # 优先用尚未被我们 bind 的 APEX，其次 Magisk mirror，最后才用当前路径
-  if [ -d "$APEX_CACERTS" ] && [ "$(count_certs "$APEX_CACERTS")" -ge "$MIN_SAFE_CERTS" ]; then
-    echo "$APEX_CACERTS"
-    return 0
-  fi
-  mirror=$(find_system_cacerts_mirror)
-  if [ -n "$mirror" ] && [ "$(count_certs "$mirror")" -ge "$MIN_SAFE_CERTS" ]; then
-    echo "$mirror"
-    return 0
-  fi
-  echo "$SYSTEM_CACERTS"
 }
 
 inject_apex() {
@@ -156,7 +75,7 @@ inject_apex() {
     return 1
   fi
 
-  sync_active_certs
+  sync_active_certs || return 1
 
   addons=$(count_addon_certs)
   if [ "$addons" -eq 0 ]; then
@@ -164,16 +83,14 @@ inject_apex() {
     return 0
   fi
 
-  # 开机后 APEX 仍是原厂完整库，直接现场合并
-  prepare_merged_dir "$APEX_CACERTS" "$TEMP_APEX" "$APEX_CACERTS" || return 1
-  bind_merged "$PREPARED_DIR" "$APEX_CACERTS" || return 1
-  APEX_MERGED_DIR="$PREPARED_DIR"
+  prepare_merged_tmpfs "$APEX_CACERTS" "$TEMP_APEX" || return 1
+  bind_merged "$TEMP_APEX" "$APEX_CACERTS"
   log_msg "inject: APEX bind done"
   return 0
 }
 
 inject_system_merge() {
-  sync_active_certs
+  sync_active_certs || return 1
 
   addons=$(count_addon_certs)
   if [ "$addons" -eq 0 ]; then
@@ -186,32 +103,19 @@ inject_system_merge() {
     return 1
   fi
 
-  api=$(get_api)
-  if [ "$api" -ge 34 ] && [ -n "$APEX_MERGED_DIR" ] && \
-     [ "$(count_certs "$APEX_MERGED_DIR")" -ge "$MIN_SAFE_CERTS" ]; then
-    bind_merged "$APEX_MERGED_DIR" "$SYSTEM_CACERTS" || return 1
-    log_msg "inject: system bind done (shared APEX tmpfs)"
-    return 0
-  fi
-
-  seed=$(pick_system_seed)
-  prepare_merged_dir "$SYSTEM_CACERTS" "$TEMP_SYSTEM" "$seed" || return 1
-  bind_merged "$PREPARED_DIR" "$SYSTEM_CACERTS" || return 1
-  log_msg "inject: system bind done (seed=$seed)"
+  prepare_merged_tmpfs "$SYSTEM_CACERTS" "$TEMP_SYSTEM" || return 1
+  bind_merged "$TEMP_SYSTEM" "$SYSTEM_CACERTS"
+  log_msg "inject: system bind done"
   return 0
 }
 
 case "${1:-inject}" in
   inject)
-    rc=0
-    inject_apex || rc=1
-    inject_system_merge || rc=1
-    exit "$rc"
+    inject_apex
+    inject_system_merge
     ;;
   *)
-    rc=0
-    inject_apex || rc=1
-    inject_system_merge || rc=1
-    exit "$rc"
+    inject_apex
+    inject_system_merge
     ;;
 esac

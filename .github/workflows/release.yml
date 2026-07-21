@@ -4,26 +4,26 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: '版本号（如 1.0.0 或 v1.0.0）'
+        description: "版本号（如 1.0.0 或 v1.0.0）"
         required: true
         type: string
       release_name:
-        description: 'Release 标题（可空，默认用 Tag）'
+        description: "Release 标题（可空，默认用 Tag）"
         required: false
         type: string
-        default: ''
+        default: ""
       prerelease:
-        description: '标记为预发布'
+        description: "标记为预发布"
         required: false
         type: boolean
         default: false
       draft:
-        description: '保存为草稿（不正式发布）'
+        description: "保存为草稿（不正式发布）"
         required: false
         type: boolean
         default: false
   push:
-    tags: ['v*']
+    tags: ["v*"]
 
 permissions:
   actions: write
@@ -105,7 +105,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "22"
           cache: npm
 
       - name: Sync npm package version

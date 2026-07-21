@@ -28,21 +28,21 @@ npm run build:docs
 
 采用语义化版本 **`vMAJOR.MINOR.PATCH`**（如 `v1.0.0`）。
 
-| 字段 | 规则 | 示例 |
-|------|------|------|
-| `version` | `v` + semver | `v1.0.0` / `v1.2.3` |
-| `versionCode` | `MAJOR * 10000 + MINOR * 100 + PATCH` | `10000` / `10203` |
+| 字段          | 规则                                  | 示例                |
+| ------------- | ------------------------------------- | ------------------- |
+| `version`     | `v` + semver                          | `v1.0.0` / `v1.2.3` |
+| `versionCode` | `MAJOR * 10000 + MINOR * 100 + PATCH` | `10000` / `10203`   |
 
 产物 zip：`CertBridge_v1.0.0.zip`。
 
 ## 工作流
 
-| 工作流 | 触发 | 职责 |
-|--------|------|------|
-| `Build Web` | `module/webroot/**` | 压缩 Web，上传 Artifact，推送 `dist-web` |
-| `Build Docs` | `docs/**` | 构建并部署 GitHub Pages |
-| `Package Module` | `module/**` | 仅构建 zip Artifact（不发 Release） |
-| `Release Module` | 手动 / `v*` 标签 | 构建 zip + GitHub Release + 更新 update.json |
+| 工作流           | 触发                | 职责                                         |
+| ---------------- | ------------------- | -------------------------------------------- |
+| `Build Web`      | `module/webroot/**` | 压缩 Web，上传 Artifact，推送 `dist-web`     |
+| `Build Docs`     | `docs/**`           | 构建并部署 GitHub Pages                      |
+| `Package Module` | `module/**`         | 仅构建 zip Artifact（不发 Release）          |
+| `Release Module` | 手动 / `v*` 标签    | 构建 zip + GitHub Release + 更新 update.json |
 
 ### 手动发版
 

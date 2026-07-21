@@ -1,6 +1,6 @@
 #!/system/bin/sh
 # 现场增量挂载：
-# 临时合并目录 = 当前目标路径全部 CA + 模块追加 → bind mount
+# tmpfs 合并目录 = 当前目标路径全部 CA + 模块追加 → bind mount
 # 模块包不再声明 system/cacerts，注入失败也不会遮蔽系统原有证书
 
 MODDIR=${MODDIR:-${0%/*}/..}
@@ -8,18 +8,25 @@ MODDIR=${MODDIR:-${0%/*}/..}
 
 prepare_merged_dir() {
   target_path="$1"
-  merge_base="$2"
+  merge_path="$2"
   seed_path="$3"
-  merge_path="${merge_base}.$(date +%s).$$"
   PREPARED_DIR="$merge_path"
 
+  # 只卸载源路径上的旧 tmpfs。已经 bind 到目标的旧 tmpfs 会继续保持内容，
+  # 因而可作为本次重建的 seed，不会因清理源目录而被一并清空。
+  umount "$merge_path" 2>/dev/null
   rm -rf "$merge_path" 2>/dev/null
   mkdir -p "$merge_path" || return 1
+  if ! mount -t tmpfs tmpfs "$merge_path"; then
+    log_msg "inject: tmpfs mount failed ($merge_path)"
+    rm -rf "$merge_path" 2>/dev/null
+    return 1
+  fi
 
   seed_n=$(count_certs "$seed_path")
   if [ "$seed_n" -lt "$MIN_SAFE_CERTS" ]; then
     log_msg "inject: seed too small ($seed_n) from $seed_path, refuse bind"
-    rm -rf "$merge_path" 2>/dev/null
+    umount "$merge_path" 2>/dev/null
     return 1
   fi
 
@@ -34,7 +41,7 @@ prepare_merged_dir() {
   merged=$(count_certs "$merge_path")
   if [ "$merged" -lt "$MIN_SAFE_CERTS" ]; then
     log_msg "inject: merged $merged < $MIN_SAFE_CERTS, refuse bind"
-    rm -rf "$merge_path" 2>/dev/null
+    umount "$merge_path" 2>/dev/null
     return 1
   fi
 
@@ -160,6 +167,7 @@ inject_apex() {
   # 开机后 APEX 仍是原厂完整库，直接现场合并
   prepare_merged_dir "$APEX_CACERTS" "$TEMP_APEX" "$APEX_CACERTS" || return 1
   bind_merged "$PREPARED_DIR" "$APEX_CACERTS" || return 1
+  APEX_MERGED_DIR="$PREPARED_DIR"
   log_msg "inject: APEX bind done"
   return 0
 }
@@ -176,6 +184,14 @@ inject_system_merge() {
   if [ ! -d "$SYSTEM_CACERTS" ]; then
     log_msg "inject: system cacerts missing"
     return 1
+  fi
+
+  api=$(get_api)
+  if [ "$api" -ge 34 ] && [ -n "$APEX_MERGED_DIR" ] && \
+     [ "$(count_certs "$APEX_MERGED_DIR")" -ge "$MIN_SAFE_CERTS" ]; then
+    bind_merged "$APEX_MERGED_DIR" "$SYSTEM_CACERTS" || return 1
+    log_msg "inject: system bind done (shared APEX tmpfs)"
+    return 0
   fi
 
   seed=$(pick_system_seed)

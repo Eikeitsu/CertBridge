@@ -5,6 +5,8 @@
 - 紧急修复 KernelSU Magic Mount 将系统 CA 目录遮蔽为仅剩 Reqable、ProxyPin 两张证书的问题
 - 移除模块包内的 `system/etc/security/cacerts` 覆盖目录，注入失败时保持系统 CA 原样可见
 - 将当前启用证书迁移到模块私有 `certs/active` 目录，不修改系统分区
+- 修复二次注入清空普通临时目录、导致系统 TLS 信任库失效和抓包断网的问题
+- 合并目录恢复使用 tmpfs；Android 14+ 的 APEX 与 system 共用同一份已验证证书集
 - 增加 PID 1、Zygote 与系统设置进程的挂载结果验证，失败时记录真实错误并回滚
 
 ## v1.0.1

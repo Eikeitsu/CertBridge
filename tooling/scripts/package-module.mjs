@@ -78,7 +78,7 @@ function createZip(zipPath) {
 }
 
 const version = readVersion();
-const zipName = `CACertStore_${version}.zip`;
+const zipName = `CertBridge_${version}.zip`;
 const zipPath = join(releaseDir, zipName);
 
 rmSync(staging, { recursive: true, force: true });

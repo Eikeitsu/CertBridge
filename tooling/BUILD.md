@@ -33,7 +33,7 @@ npm run build:docs
 | `version` | `v` + semver | `v1.0.0` / `v1.2.3` |
 | `versionCode` | `MAJOR * 10000 + MINOR * 100 + PATCH` | `10000` / `10203` |
 
-产物 zip：`CACertStore_v1.0.0.zip`。
+产物 zip：`CertBridge_v1.0.0.zip`。
 
 ## 工作流
 

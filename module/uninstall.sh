@@ -1,7 +1,7 @@
 #!/system/bin/sh
 MODDIR=${0%/*}
-TEMP_APEX="/data/local/tmp/cacertstore-apex-ca"
-TEMP_SYSTEM="/data/local/tmp/cacertstore-system-ca"
+TEMP_APEX="/data/local/tmp/certbridge-apex-ca"
+TEMP_SYSTEM="/data/local/tmp/certbridge-system-ca"
 APEX_CACERTS="/apex/com.android.conscrypt/cacerts"
 SYSTEM_CACERTS="/system/etc/security/cacerts"
 

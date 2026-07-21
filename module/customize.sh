@@ -1,8 +1,8 @@
 #!/system/bin/sh
 
 ui_print "********************************"
-ui_print " CA 证书管理 "
-ui_print " CACertStore "
+ui_print " 系统 CA 证书 "
+ui_print " CertBridge "
 ui_print "********************************"
 
 mkdir -p "$MODPATH/bin" "$MODPATH/config" "$MODPATH/data" "$MODPATH/webroot"

@@ -1,5 +1,5 @@
 #!/system/bin/sh
-# CACertStore - common helpers
+# CertBridge - common helpers
 
 MODDIR=${MODDIR:-${0%/*}/..}
 BINDIR="$MODDIR/bin"
@@ -11,8 +11,8 @@ CUSTOM_DIR="$CERT_POOL/custom"
 ACTIVE_DIR="$MODDIR/system/etc/security/cacerts"
 CONF="$CONFDIR/certs.conf"
 LOG_FILE="$DATADIR/install.log"
-TEMP_APEX="/data/local/tmp/cacertstore-apex-ca"
-TEMP_SYSTEM="/data/local/tmp/cacertstore-system-ca"
+TEMP_APEX="/data/local/tmp/certbridge-apex-ca"
+TEMP_SYSTEM="/data/local/tmp/certbridge-system-ca"
 APEX_CACERTS="/apex/com.android.conscrypt/cacerts"
 SYSTEM_CACERTS="/system/etc/security/cacerts"
 # 与 reqable 一致：合并结果过少则拒绝 bind，避免误覆盖

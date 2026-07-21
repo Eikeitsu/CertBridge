@@ -75,7 +75,7 @@ cmd_install_custom() {
     [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f].0) ;;
     *) echo "error=invalid_filename"; return 1 ;;
   esac
-  tmp="/data/local/tmp/cacertstore-upload.cert"
+  tmp="/data/local/tmp/certbridge-upload.cert"
   mkdir -p "$CUSTOM_DIR"
   echo "$b64" | base64 -d >"$tmp" 2>/dev/null || { echo "error=decode_failed"; return 1; }
   install -m 0644 -o 0 -g 0 "$tmp" "$CUSTOM_DIR/$filename"

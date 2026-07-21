@@ -1,7 +1,7 @@
 id=CertBridge
 name=系统 CA 证书
-version=v1.0.1
-versionCode=10001
+version=v1.0.2
+versionCode=10002
 author=许小墨
 description=[ 检测中 ] 将 Reqable / ProxyPin / 自定义 CA 增量挂载到系统 CA 信任库。支持 Magisk / KernelSU WebUI，Android 14+ 自动 APEX 注入。
 updateJson=https://eikeitsu.github.io/CertBridge/update.json

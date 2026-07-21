@@ -15,7 +15,7 @@ features:
   - title: 内置证书
     details: 预置 Reqable 与 ProxyPin CA，可在 WebUI 中独立开关。
   - title: 自定义 CA
-    details: 上传 OpenSSL hash 命名的 xxxxxxxx.0 证书，灵活扩展抓包工具。
+    details: 上传 PEM / DER 证书，自动校验 CA 属性、计算 hash 并处理文件名冲突。
   - title: Android 14+
     details: 针对 APEX Conscrypt 信任库自动注入，覆盖 zygote / 系统命名空间。
   - title: WebUI

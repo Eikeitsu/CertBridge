@@ -2,10 +2,10 @@ import { defineConfig } from 'vitepress';
 
 const repoName =
   process.env.VITEPRESS_BASE?.replace(/^\//, '').replace(/\/$/, '') ||
-  'CACertStore';
+  'CertBridge';
 
 export default defineConfig({
-  title: 'CA 证书管理',
+  title: '证书桥',
   description: '将 Reqable / ProxyPin / 自定义 CA 安装到 Android 系统信任库',
   base: `/${repoName}/`,
   lang: 'zh-CN',
@@ -14,7 +14,8 @@ export default defineConfig({
       { text: '首页', link: '/' },
       { text: '功能介绍', link: '/guide/features' },
       { text: '安装', link: '/guide/install' },
-      { text: '配置说明', link: '/guide/config' }
+      { text: '配置说明', link: '/guide/config' },
+      { text: '更新日志', link: '/guide/changelog' }
     ],
     sidebar: [
       {
@@ -23,6 +24,7 @@ export default defineConfig({
           { text: '功能介绍', link: '/guide/features' },
           { text: '安装与升级', link: '/guide/install' },
           { text: '配置说明', link: '/guide/config' },
+          { text: '更新日志', link: '/guide/changelog' },
           { text: '常见问题', link: '/guide/faq' },
           { text: '相关软件', link: '/guide/related' }
         ]
@@ -31,11 +33,11 @@ export default defineConfig({
     socialLinks: [
       {
         icon: 'github',
-        link: 'https://github.com/Eikeitsu/CACertStore'
+        link: 'https://github.com/Eikeitsu/CertBridge'
       }
     ],
     footer: {
-      message: 'CACertStore · CA 证书管理',
+      message: 'CertBridge · 证书桥',
       copyright: '许小墨'
     }
   }

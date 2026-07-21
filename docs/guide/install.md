@@ -8,7 +8,7 @@
 
 ## 安装步骤
 
-1. 从 [GitHub Releases](https://github.com/Eikeitsu/CACertStore/releases) 下载最新 zip
+1. 从 [GitHub Releases](https://github.com/Eikeitsu/CertBridge/releases) 下载最新 zip
 2. 在模块管理器中刷入
 3. **重启**手机
 4. 打开模块 WebUI，确认 Reqable / ProxyPin 已启用，APEX 状态正常
@@ -20,7 +20,7 @@
 ## 模块目录（设备上）
 
 ```text
-/data/adb/modules/CACertStore/
+/data/adb/modules/CertBridge/
 ├── module.prop
 ├── post-fs-data.sh
 ├── service.sh

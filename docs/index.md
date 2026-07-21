@@ -1,8 +1,8 @@
 ---
 layout: home
 hero:
-  name: CA 证书管理
-  text: CACertStore
+  name: 证书桥
+  text: CertBridge
   tagline: 将 Reqable、ProxyPin 与自定义 CA 安装到系统信任库。支持 Magisk / KernelSU WebUI，Android 14+ 自动 APEX 注入。
   actions:
     - theme: brand

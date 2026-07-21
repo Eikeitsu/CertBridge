@@ -1,11 +1,12 @@
-# CA 证书管理（CACertStore）
+# 证书桥（CertBridge）
 
 将 **Reqable** / **ProxyPin** / 自定义 CA 安装到 Android 系统信任库的 Magisk 模块，支持 KernelSU WebUI。Android 14+ 自动 APEX Conscrypt 注入。
 
-- **仓库**：[Eikeitsu/CACertStore](https://github.com/Eikeitsu/CACertStore)
-- **文档**：[eikeitsu.github.io/CACertStore](https://eikeitsu.github.io/CACertStore/)
+- **仓库**：[Eikeitsu/CertBridge](https://github.com/Eikeitsu/CertBridge)
+- **文档**：[eikeitsu.github.io/CertBridge](https://eikeitsu.github.io/CertBridge/)
 - **酷安**：[许小墨](https://www.coolapk.com/u/7602666)
-- **模块 ID**：`CACertStore`
+- **模块显示名**：系统 CA 证书
+- **模块 ID**：`CertBridge`
 
 ## WebUI 预览
 
@@ -27,11 +28,11 @@
 
 ## 快速开始
 
-1. 从 [Releases](https://github.com/Eikeitsu/CACertStore/releases) 下载 zip
+1. 从 [Releases](https://github.com/Eikeitsu/CertBridge/releases) 下载 zip
 2. 刷入模块并重启
 3. 打开 WebUI 确认证书状态
 
-详细说明见 [在线文档](https://eikeitsu.github.io/CACertStore/) 或 `docs/`。
+详细说明见 [在线文档](https://eikeitsu.github.io/CertBridge/) 或 `docs/`。
 
 ## 仓库结构
 

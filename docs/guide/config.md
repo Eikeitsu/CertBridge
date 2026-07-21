@@ -2,7 +2,7 @@
 
 ## certs.conf
 
-路径：`/data/adb/modules/CACertStore/config/certs.conf`
+路径：`/data/adb/modules/CertBridge/config/certs.conf`
 
 ```text
 reqable=1

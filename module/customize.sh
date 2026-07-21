@@ -5,75 +5,139 @@ ui_print " 系统 CA 证书 "
 ui_print " CertBridge "
 ui_print "********************************"
 
-mkdir -p "$MODPATH/bin" "$MODPATH/config" "$MODPATH/data" "$MODPATH/webroot"
-mkdir -p "$MODPATH/certs/builtin/reqable" "$MODPATH/certs/builtin/proxypin"
-mkdir -p "$MODPATH/certs/custom" "$MODPATH/certs/system_base"
+certbridge_volume_choice() {
+  event_file="${TMPDIR:-/data/local/tmp}/certbridge-key-events.$$"
+  rm -f "$event_file"
+  command -v getevent >/dev/null 2>&1 || return 2
 
-rm -rf "$MODPATH/system" 2>/dev/null
-mkdir -p "$MODPATH/system/etc/security/cacerts"
+  getevent -ql >"$event_file" 2>/dev/null &
+  event_pid=$!
+  for second in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+    sleep 1
+    if grep -q 'KEY_VOLUMEUP.*DOWN' "$event_file" 2>/dev/null; then
+      kill "$event_pid" 2>/dev/null
+      wait "$event_pid" 2>/dev/null
+      rm -f "$event_file"
+      return 0
+    fi
+    if grep -q 'KEY_VOLUMEDOWN.*DOWN' "$event_file" 2>/dev/null; then
+      kill "$event_pid" 2>/dev/null
+      wait "$event_pid" 2>/dev/null
+      rm -f "$event_file"
+      return 1
+    fi
+  done
 
-MIN_SAFE_CERTS=10
-APEX_CACERTS="/apex/com.android.conscrypt/cacerts"
-SYSTEM_CACERTS="/system/etc/security/cacerts"
-OLD_BASE="/data/adb/modules/CertBridge/certs/system_base"
-BASE_DIR="$MODPATH/certs/system_base"
-ACTIVE_DIR="$MODPATH/system/etc/security/cacerts"
-
-count_certs() {
-  n=$(ls -1 "$1"/*.0 2>/dev/null | wc -l)
-  echo "$n" | tr -d ' '
+  kill "$event_pid" 2>/dev/null
+  wait "$event_pid" 2>/dev/null
+  rm -f "$event_file"
+  return 2
 }
 
-ui_print "- 抓取系统 CA 基线..."
-rm -f "$BASE_DIR"/*.0 2>/dev/null
-captured=0
+certbridge_choose_component() {
+  component_name="$1"
+  ui_print "--------------------------------"
+  ui_print " 是否安装${component_name}？"
+  ui_print " 音量上：安装"
+  ui_print " 音量下：不安装"
+  ui_print " 20 秒未选择将跳过此项"
+  certbridge_volume_choice
+  case "$?" in
+    0) COMPONENT_CHOICE=1; ui_print "- ${component_name}：安装" ;;
+    1) COMPONENT_CHOICE=0; ui_print "- ${component_name}：不安装" ;;
+    *) COMPONENT_CHOICE=0; ui_print "- ${component_name}：选择超时，按安全默认不安装" ;;
+  esac
+}
 
-if [ -d "$OLD_BASE" ] && [ "$(count_certs "$OLD_BASE")" -ge "$MIN_SAFE_CERTS" ]; then
-  cp -f "$OLD_BASE"/*.0 "$BASE_DIR/" 2>/dev/null
-  captured=$(count_certs "$BASE_DIR")
-  ui_print "  来源: 已有基线 ($captured)"
-elif [ -d "$APEX_CACERTS" ] && [ "$(count_certs "$APEX_CACERTS")" -ge "$MIN_SAFE_CERTS" ]; then
-  cp -f "$APEX_CACERTS"/*.0 "$BASE_DIR/" 2>/dev/null
-  captured=$(count_certs "$BASE_DIR")
-  ui_print "  来源: APEX ($captured)"
-elif [ -d "$SYSTEM_CACERTS" ] && [ "$(count_certs "$SYSTEM_CACERTS")" -ge "$MIN_SAFE_CERTS" ]; then
-  cp -f "$SYSTEM_CACERTS"/*.0 "$BASE_DIR/" 2>/dev/null
-  captured=$(count_certs "$BASE_DIR")
-  ui_print "  来源: system ($captured)"
-fi
-
-if [ "$captured" -lt "$MIN_SAFE_CERTS" ]; then
-  abort "! 无法获取完整系统 CA 基线。请禁用或卸载旧版，重启后重新安装。"
-fi
-
-rm -f "$ACTIVE_DIR"/*.0 2>/dev/null
-cp -f "$BASE_DIR"/*.0 "$ACTIVE_DIR/" 2>/dev/null
-[ -f "$MODPATH/certs/builtin/reqable/833e2479.0" ] && cp -f "$MODPATH/certs/builtin/reqable/833e2479.0" "$ACTIVE_DIR/"
-[ -f "$MODPATH/certs/builtin/proxypin/243f0bfb.0" ] && cp -f "$MODPATH/certs/builtin/proxypin/243f0bfb.0" "$ACTIVE_DIR/"
-
-cert_n=$(count_certs "$ACTIVE_DIR")
-addon_n=0
-[ -f "$ACTIVE_DIR/833e2479.0" ] && addon_n=$((addon_n + 1))
-[ -f "$ACTIVE_DIR/243f0bfb.0" ] && addon_n=$((addon_n + 1))
+INSTALL_MODE="default"
+INSTALL_REQABLE=1
+INSTALL_PROXYPIN=1
+INSTALL_WEBUI=1
+INSTALL_HOT=1
 
 ui_print "--------------------------------"
-ui_print " 系统 CA 基线: $captured"
-ui_print " 挂载目录合计: $cert_n (含追加 $addon_n)"
-ui_print " 内置: Reqable / ProxyPin "
-ui_print " 模式: 系统基线增量合并 "
-ui_print " 支持: Magisk / KernelSU / APatch "
-ui_print " Android 14+ 自动 APEX 注入 "
+ui_print " 请选择安装方式"
+ui_print " 音量上：默认安装（推荐）"
+ui_print "   启用两张内置 CA，并安装全部功能"
+ui_print " 音量下：自定义安装"
+ui_print "   逐项选择证书与附加功能"
+ui_print " 20 秒未选择将使用默认安装"
+certbridge_volume_choice
+case "$?" in
+  1)
+    INSTALL_MODE="custom"
+    ui_print "- 已选择自定义安装"
+    certbridge_choose_component "Reqable CA"
+    INSTALL_REQABLE="$COMPONENT_CHOICE"
+    certbridge_choose_component "ProxyPin CA"
+    INSTALL_PROXYPIN="$COMPONENT_CHOICE"
+    certbridge_choose_component "WebUI 管理界面"
+    INSTALL_WEBUI="$COMPONENT_CHOICE"
+    ui_print "--------------------------------"
+    ui_print " 免重启热挂载可临时提升用户区或"
+    ui_print " 存储卡中的 CA，请仅使用可信证书"
+    certbridge_choose_component "免重启热挂载"
+    INSTALL_HOT="$COMPONENT_CHOICE"
+    ;;
+  0) ui_print "- 已选择默认安装" ;;
+  *) ui_print "- 未检测到按键，使用默认安装" ;;
+esac
+
+mkdir -p "$MODPATH/bin" "$MODPATH/config" "$MODPATH/data/state"
+mkdir -p "$MODPATH/certs/builtin/reqable" "$MODPATH/certs/builtin/proxypin"
+mkdir -p "$MODPATH/certs/custom" "$MODPATH/certs/generation"
+
+sed -i "s/^reqable=.*/reqable=$INSTALL_REQABLE/" "$MODPATH/config/certs.conf"
+sed -i "s/^proxypin=.*/proxypin=$INSTALL_PROXYPIN/" "$MODPATH/config/certs.conf"
+cat >"$MODPATH/config/install-profile.conf" <<EOF
+install_mode=$INSTALL_MODE
+webui=$INSTALL_WEBUI
+hot_reload=$INSTALL_HOT
+EOF
+
+if [ "$INSTALL_WEBUI" != "1" ]; then
+  rm -rf "$MODPATH/webroot"
+fi
+if [ "$INSTALL_HOT" != "1" ]; then
+  rm -f "$MODPATH/bin/hot_mount.sh"
+fi
+
+MODDIR="$MODPATH"
+. "$MODPATH/bin/common.sh"
+tr -d '\r\n' </proc/sys/kernel/random/boot_id >"$INSTALL_BOOT_FILE" 2>/dev/null
+
+[ "$INSTALL_MODE" = "default" ] && MODE_LABEL="默认安装" || MODE_LABEL="自定义安装"
+[ "$INSTALL_REQABLE" = "1" ] && REQABLE_LABEL="启用" || REQABLE_LABEL="不启用"
+[ "$INSTALL_PROXYPIN" = "1" ] && PROXYPIN_LABEL="启用" || PROXYPIN_LABEL="不启用"
+[ "$INSTALL_WEBUI" = "1" ] && WEBUI_LABEL="已安装" || WEBUI_LABEL="未安装"
+[ "$INSTALL_HOT" = "1" ] && HOT_LABEL="已安装" || HOT_LABEL="未安装"
+
 ui_print "--------------------------------"
-ui_print " 安装后请重启设备 "
-ui_print " 可在 WebUI 管理证书开关 "
+ui_print " 安装方案：$MODE_LABEL"
+ui_print " Reqable CA：$REQABLE_LABEL"
+ui_print " ProxyPin CA：$PROXYPIN_LABEL"
+ui_print " WebUI：$WEBUI_LABEL"
+ui_print " 免重启热挂载：$HOT_LABEL"
+log_msg "安装选项：方案=$MODE_LABEL，Reqable=$REQABLE_LABEL，ProxyPin=$PROXYPIN_LABEL，WebUI=$WEBUI_LABEL，免重启热挂载=$HOT_LABEL"
+ui_print "--------------------------------"
+ui_print " 开机实时读取并合并系统 CA"
+ui_print " 不保存系统 CA 基线，不创建 system 覆盖目录"
+if [ "$INSTALL_HOT" = "1" ]; then
+  ui_print " 永久配置重启生效；临时证书支持免重启"
+else
+  ui_print " 永久配置重启生效；未安装临时热挂载"
+fi
+ui_print " Android 14+ 自动注入 APEX"
+ui_print "--------------------------------"
+ui_print " 安装后必须重启设备 "
 ui_print "********************************"
 
 set_perm_recursive "$MODPATH/bin" root root 0755 0755
-set_perm_recursive "$MODPATH/config" root root 0755 0644
-set_perm_recursive "$MODPATH/data" root root 0755 0777
+set_perm_recursive "$MODPATH/config" root root 0700 0600
+set_perm_recursive "$MODPATH/data" root root 0700 0600
 set_perm_recursive "$MODPATH/certs" root root 0755 0644
-set_perm_recursive "$MODPATH/system/etc/security/cacerts" 0 0 0755 0644
-set_perm_recursive "$MODPATH/webroot" root root 0755 0644
+set_perm_recursive "$MODPATH/certs/custom" root root 0700 0600
+[ -d "$MODPATH/webroot" ] && set_perm_recursive "$MODPATH/webroot" root root 0755 0644
 for s in post-fs-data.sh service.sh action.sh uninstall.sh customize.sh; do
   [ -f "$MODPATH/$s" ] && set_perm "$MODPATH/$s" root root 0755
 done

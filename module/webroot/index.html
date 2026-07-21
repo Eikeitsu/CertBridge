@@ -12,21 +12,33 @@
     <script>
       (function () {
         try {
-          var mode = localStorage.getItem('cas_theme_mode') || 'system';
-          var dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          var resolved = mode === 'light' || mode === 'dark' ? mode : dark ? 'dark' : 'light';
-          document.documentElement.setAttribute('data-theme', resolved);
+          var mode = localStorage.getItem("cas_theme_mode") || "system";
+          var dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          var resolved =
+            mode === "light" || mode === "dark"
+              ? mode
+              : dark
+                ? "dark"
+                : "light";
+          document.documentElement.setAttribute("data-theme", resolved);
           document.documentElement.style.colorScheme = resolved;
           var themeMeta = document.querySelector('meta[name="theme-color"]');
-          if (themeMeta) themeMeta.setAttribute('content', resolved === 'dark' ? '#141218' : '#f2f4f7');
+          if (themeMeta)
+            themeMeta.setAttribute(
+              "content",
+              resolved === "dark" ? "#141218" : "#f2f4f7",
+            );
           var schemeMeta = document.querySelector('meta[name="color-scheme"]');
-          if (schemeMeta) schemeMeta.setAttribute('content', resolved);
-          var monet = localStorage.getItem('cas_monet');
-          var monetOn = monet === null ? true : monet === '1';
-          document.documentElement.classList.toggle('monet-on', monetOn);
-          document.documentElement.classList.toggle('monet-off', !monetOn);
-          var layout = localStorage.getItem('cas_layout') || 'classic';
-          document.documentElement.setAttribute('data-layout', layout === 'dock' ? 'dock' : 'classic');
+          if (schemeMeta) schemeMeta.setAttribute("content", resolved);
+          var monet = localStorage.getItem("cas_monet");
+          var monetOn = monet === null ? true : monet === "1";
+          document.documentElement.classList.toggle("monet-on", monetOn);
+          document.documentElement.classList.toggle("monet-off", !monetOn);
+          var layout = localStorage.getItem("cas_layout") || "classic";
+          document.documentElement.setAttribute(
+            "data-layout",
+            layout === "dock" ? "dock" : "classic",
+          );
         } catch (e) {}
       })();
     </script>
@@ -55,10 +67,13 @@
       </div>
       <div class="status-badge" id="statusBadge">状态加载中...</div>
       <div class="status-desc" id="statusDesc">
-        将 Reqable / ProxyPin / 自定义 CA 安装到系统信任库，Android 14+ 自动 APEX 注入。
+        安全合并 Reqable / ProxyPin / 自定义
+        CA，并支持用户区、存储卡证书免重启挂载与无痕卸载。
       </div>
       <div class="status-actions">
-        <button type="button" class="text-btn" id="refreshStatusBtn">刷新状态</button>
+        <button type="button" class="text-btn" id="refreshStatusBtn">
+          刷新状态
+        </button>
       </div>
     </section>
 
@@ -83,37 +98,24 @@
         </div>
       </div>
       <div class="kv-list">
-        <div class="kv-row"><span class="k">最近刷新</span><span class="v" id="homeUpdatedAt">--</span></div>
+        <div class="kv-row">
+          <span class="k">最近刷新</span
+          ><span class="v" id="homeUpdatedAt">--</span>
+        </div>
       </div>
     </section>
 
     <div class="small-title" data-page="home">快捷操作</div>
     <section class="card" data-page="home">
-      <div class="pref" id="reinjectRow">
-        <div class="pref-body">
-          <div class="pref-title">重新注入 APEX</div>
-          <div class="pref-desc">Android 14+ 强制重新挂载证书</div>
-        </div>
-        <div class="pref-right">
-          <button type="button" class="chip chip-btn" id="reinjectBtn">执行</button>
-        </div>
-      </div>
-      <div class="pref" id="syncRow">
-        <div class="pref-body">
-          <div class="pref-title">同步证书池</div>
-          <div class="pref-desc">按开关重建 system 挂载目录</div>
-        </div>
-        <div class="pref-right">
-          <button type="button" class="chip chip-btn" id="syncBtn">同步</button>
-        </div>
-      </div>
       <div class="pref" id="rebootRow">
         <div class="pref-body">
           <div class="pref-title">重启设备</div>
           <div class="pref-desc">应用挂载变更建议重启</div>
         </div>
         <div class="pref-right">
-          <button type="button" class="chip chip-btn" id="rebootBtn">重启</button>
+          <button type="button" class="chip chip-btn" id="rebootBtn">
+            重启
+          </button>
         </div>
       </div>
     </section>
@@ -146,17 +148,61 @@
           </label>
         </div>
       </div>
-      <div class="pref">
-        <div class="pref-body">
-          <div class="pref-title">开机自动注入</div>
-          <div class="pref-desc">Android 14+ service 阶段重新挂载</div>
+    </section>
+
+    <div class="small-title" data-page="certs" id="hotSectionTitle">
+      临时免重启挂载
+    </div>
+    <section class="card" data-page="certs" id="hotSection">
+      <div class="expand-inner" style="padding: var(--space-expand-pad)">
+        <div class="info-box">
+          将用户凭据区或存储卡目录中的有效 CA
+          临时合并到系统信任库，立即注入当前应用命名空间。卸载后恢复此前证书层，不修改系统文件。
         </div>
-        <div class="pref-right">
-          <label class="hyper-switch">
-            <input type="checkbox" id="autoReinject" />
-            <span class="track"></span>
-            <span class="thumb"></span>
-          </label>
+        <div class="field-hint warn">
+          用户证书模式会把所有用户及工作资料中的 CA
+          临时提升为全局系统信任，请确认来源可信。
+        </div>
+        <div class="field-label">存储卡证书目录</div>
+        <input
+          type="text"
+          id="hotSdPath"
+          value="/sdcard/CertBridge"
+          spellcheck="false"
+        />
+        <div class="field-hint">
+          支持 PEM / DER / CRT / CER / hash.0，递归扫描，最多 128 张。
+        </div>
+        <div class="chips" style="margin-top: 12px">
+          <button type="button" class="chip chip-btn" id="hotUserBtn">
+            挂载用户证书
+          </button>
+          <button type="button" class="chip chip-btn" id="hotSdBtn">
+            挂载存储卡证书
+          </button>
+          <button type="button" class="chip chip-btn" id="hotAllBtn">
+            合并挂载
+          </button>
+          <button type="button" class="chip chip-btn danger" id="hotUnmountBtn">
+            无痕卸载
+          </button>
+        </div>
+        <div class="kv-list" style="margin-top: 8px">
+          <div class="kv-row">
+            <span class="k">临时会话</span
+            ><span class="v" id="hotStatus">未挂载</span>
+          </div>
+          <div class="kv-row">
+            <span class="k">已加入证书</span
+            ><span class="v" id="hotAdded">0</span>
+          </div>
+          <div class="kv-row">
+            <span class="k">活动命名空间</span
+            ><span class="v" id="hotNamespaces">0</span>
+          </div>
+        </div>
+        <div class="field-hint warn" id="hotHint">
+          临时挂载在重启后自动失效；操作期间请勿同时运行其它证书挂载脚本。
         </div>
       </div>
     </section>
@@ -165,11 +211,23 @@
     <section class="card" data-page="certs">
       <div class="expand-inner" style="padding: var(--space-expand-pad)">
         <div class="info-box">
-          文件名须为 OpenSSL hash 格式：<b>8 位十六进制.0</b><br />
-          例如 <code>243f0bfb.0</code>。可用 <code>openssl x509 -subject_hash_old -in cert.pem</code> 计算。
+          支持 PEM / DER 格式。模块会使用 OpenSSL 校验 X.509、有效期与
+          <b>CA:TRUE</b>，自动计算 hash 并处理同名冲突。
         </div>
-        <input type="file" id="certFile" accept=".0,.pem,.crt,.cer" style="display: none" />
-        <button type="button" class="chip chip-btn" id="pickCertBtn" style="margin-bottom: 10px">选择证书文件</button>
+        <input
+          type="file"
+          id="certFile"
+          accept=".0,.pem,.crt,.cer"
+          style="display: none"
+        />
+        <button
+          type="button"
+          class="chip chip-btn"
+          id="pickCertBtn"
+          style="margin-bottom: 10px"
+        >
+          选择证书文件
+        </button>
         <div class="field-hint" id="pickedFileHint">未选择文件</div>
         <div id="customList" class="kv-list" style="margin-top: 8px"></div>
       </div>
@@ -178,8 +236,15 @@
     <div class="small-title dock-only" data-page="certs">使用提示</div>
     <section class="card dock-only" data-page="certs">
       <div class="expand-inner" style="padding: var(--space-expand-pad)">
-        <div class="field-hint">· 开关变更后会立即同步并尝试注入</div>
-        <div class="field-hint">· Android 14+ 若抓包仍失败，点「重新注入」或重启</div>
+        <div class="field-hint">
+          · 内置开关和自定义证书永久配置仍在重启后生效
+        </div>
+        <div class="field-hint">
+          · 用户区 / 存储卡证书可建立临时会话并免重启卸载
+        </div>
+        <div class="field-hint">
+          · 不保存系统 CA 基线；Android 14+ 自动注入 APEX
+        </div>
         <div class="field-hint">· 设置 → 安全 → 可信凭据 可查看系统 CA</div>
       </div>
     </section>
@@ -193,12 +258,16 @@
         </div>
         <div class="pref-right">
           <span class="expand-arrow open" id="arrow-log">▾</span>
-          <button type="button" class="chip chip-btn" id="refreshLogBtn">刷新</button>
+          <button type="button" class="chip chip-btn" id="refreshLogBtn">
+            刷新
+          </button>
         </div>
       </div>
       <div class="expand-body open" id="expand-log">
         <div class="log-toolbar">
-          <button type="button" class="chip chip-btn" id="clearLogBtn">清空</button>
+          <button type="button" class="chip chip-btn" id="clearLogBtn">
+            清空
+          </button>
         </div>
         <div class="expand-inner">
           <div class="log-box" id="logBox">暂无日志</div>
@@ -278,9 +347,25 @@
       <div class="expand-body" id="expand-fontSize">
         <div class="expand-inner">
           <div class="font-slider-row">
-            <span class="font-label" style="font-size: calc(0.7rem * var(--font-scale))">A</span>
-            <input type="range" class="font-slider" id="fontSlider" min="0.8" max="1.5" step="0.02" value="1" />
-            <span class="font-label" style="font-size: calc(1.1rem * var(--font-scale))">A</span>
+            <span
+              class="font-label"
+              style="font-size: calc(0.7rem * var(--font-scale))"
+              >A</span
+            >
+            <input
+              type="range"
+              class="font-slider"
+              id="fontSlider"
+              min="0.8"
+              max="1.5"
+              step="0.02"
+              value="1"
+            />
+            <span
+              class="font-label"
+              style="font-size: calc(1.1rem * var(--font-scale))"
+              >A</span
+            >
           </div>
         </div>
       </div>
@@ -306,7 +391,8 @@
 
     <div class="small-title" data-page="more">关于</div>
     <div class="about-note" data-page="more">
-      CertBridge 由许小墨开发。模块内置 Reqable、ProxyPin 的 CA 证书，便于配合对应抓包软件使用。
+      CertBridge 由许小墨开发。模块内置 Reqable、ProxyPin 的 CA
+      证书，便于配合对应抓包软件使用。
     </div>
     <section class="card" data-page="more">
       <div class="pref" data-url="https://www.coolapk.com/u/7602666">

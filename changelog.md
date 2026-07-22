@@ -1,6 +1,6 @@
 # 更新日志
 
-## v1.1.2
+## v1.2.0
 
 - 模块脚本按功能拆分到 `bin/lib/`（log / keys / conf / lock / store / certs / openssl / verify / generation / status），`common.sh` 仅作加载入口
 - Action 增加实用功能：音量上刷新状态，音量下进入菜单，可免重启挂载/卸载用户区与存储卡临时 CA

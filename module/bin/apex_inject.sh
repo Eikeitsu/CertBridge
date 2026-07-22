@@ -148,8 +148,6 @@ bind_pid_once() {
 }
 
 inject_boot_namespaces() {
-  target=$(get_target_store)
-  [ -d "$target" ] || { log_msg "inject: target missing ($target)"; return 1; }
   generation_valid || { log_msg "inject: generation invalid"; return 1; }
   [ -s "$APPLIED_MAP" ] || {
     log_msg "inject: no enabled addon, keep original store"
@@ -157,31 +155,106 @@ inject_boot_namespaces() {
   }
 
   rc=0
-  bind_current_once "$target" || rc=1
-  if command -v nsenter >/dev/null 2>&1; then
-    bind_pid_once 1 init "$target" || rc=1
-  else
-    log_msg "inject: nsenter unavailable"
-    rc=1
-  fi
+  has_target=0
+  for target in $(list_target_stores); do
+    has_target=1
+    bind_current_once "$target" || rc=1
+    if command -v nsenter >/dev/null 2>&1; then
+      bind_pid_once 1 init "$target" || rc=1
+    else
+      log_msg "inject: nsenter unavailable"
+      rc=1
+    fi
+  done
+  [ "$has_target" = "1" ] || {
+    log_msg "inject: no CA target directory found"
+    return 1
+  }
   return "$rc"
 }
 
+# Soft-bind one package if running; failures are logged but do not fail boot.
+bind_package_soft() {
+  pkg="$1"
+  target="$2"
+  for pid in $(pidof "$pkg" 2>/dev/null); do
+    bind_pid_once "$pid" "$pkg" "$target" || \
+      log_msg "inject: optional package $pkg pid=$pid bind skipped/failed"
+  done
+}
+
+collect_inject_namespaces() {
+  ns_file="$1"
+  target="$2"
+  : >"$ns_file"
+  seen="|"
+  for pid in 1 $(pidof zygote 2>/dev/null) $(pidof zygote64 2>/dev/null); do
+    [ -d "/proc/$pid/ns" ] || continue
+    ns=$(readlink "/proc/$pid/ns/mnt" 2>/dev/null)
+    [ -n "$ns" ] || continue
+    case "$seen" in *"|$ns|"*) continue ;; esac
+    nsenter --mount=/proc/"$pid"/ns/mnt -- test -d "$target" 2>/dev/null || continue
+    echo "$ns|$pid" >>"$ns_file"
+    seen="$seen$ns|"
+  done
+  for proc in /proc/[0-9]*; do
+    [ -d "$proc/ns" ] || continue
+    pid=${proc##*/}
+    ns=$(readlink "/proc/$pid/ns/mnt" 2>/dev/null)
+    [ -n "$ns" ] || continue
+    case "$seen" in *"|$ns|"*) continue ;; esac
+    nsenter --mount=/proc/"$pid"/ns/mnt -- test -d "$target" 2>/dev/null || continue
+    echo "$ns|$pid" >>"$ns_file"
+    seen="$seen$ns|"
+  done
+}
+
 inject_app_namespaces() {
-  target=$(get_target_store)
   generation_valid || return 1
   [ -s "$APPLIED_MAP" ] || return 0
   command -v nsenter >/dev/null 2>&1 || return 1
 
   rc=0
-  bind_pid_once 1 init "$target" || rc=1
-  for process in zygote zygote64; do
-    for pid in $(pidof "$process" 2>/dev/null); do
-      bind_pid_once "$pid" "$process" "$target" || rc=1
+  for target in $(list_target_stores); do
+    bind_pid_once 1 init "$target" || rc=1
+    for process in zygote zygote64; do
+      for pid in $(pidof "$process" 2>/dev/null); do
+        bind_pid_once "$pid" "$process" "$target" || rc=1
+      done
     done
-  done
-  for pid in $(pidof com.android.settings 2>/dev/null); do
-    bind_pid_once "$pid" settings "$target" || rc=1
+
+    # Settings + 抓包 App：检测逻辑和 TLS 都依赖自身命名空间
+    for pkg in \
+      com.android.settings \
+      com.reqable.android \
+      com.reqable.android.pro \
+      com.reqable \
+      com.proxy.pin \
+      com.network.proxy \
+      com.wangyu.proxypin; do
+      bind_package_soft "$pkg" "$target"
+    done
+
+    # 覆盖已启动应用命名空间，避免「Settings 有证书、App 仍 TLS 失败」
+    ns_file="$STATEDIR/.inject-ns.$$"
+    collect_inject_namespaces "$ns_file" "$target"
+    injected=0
+    failed=0
+    while IFS='|' read -r ns pid; do
+      [ -n "$pid" ] || continue
+      ns_now=$(readlink "/proc/$pid/ns/mnt" 2>/dev/null)
+      [ "$ns_now" = "$ns" ] || {
+        failed=$((failed + 1))
+        continue
+      }
+      if bind_pid_once "$pid" "ns:$pid" "$target"; then
+        injected=$((injected + 1))
+      else
+        failed=$((failed + 1))
+      fi
+    done <"$ns_file"
+    rm -f "$ns_file"
+    log_msg "inject: target=$target namespaces ok=$injected fail=$failed"
   done
   return "$rc"
 }

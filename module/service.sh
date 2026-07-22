@@ -20,10 +20,12 @@ if ! acquire_write_lock; then
   refresh_module_description >/dev/null
   exit 1
 fi
+# 热会话若仍活跃，仍补一次永久层命名空间：热层会叠在上面，但 zygote/抓包 App
+# 若热层未覆盖到，至少保证永久 addon 可用。
 if hot_session_active; then
-  rc=0
-  log_msg "service: hot session active, skip persistent namespace overlay"
-elif sh "$MODDIR/bin/apex_inject.sh" namespaces; then
+  log_msg "service: hot session active, still reinforce persistent namespaces"
+fi
+if sh "$MODDIR/bin/apex_inject.sh" namespaces; then
   rc=0
 else
   rc=1

@@ -49,10 +49,34 @@ get_api() {
 }
 
 get_target_store() {
-  if [ "$(get_api)" -ge 34 ]; then
+  if [ "$(get_api)" -ge 34 ] && [ -d "$APEX_CACERTS" ]; then
     echo "$APEX_CACERTS"
   else
     echo "$SYSTEM_CACERTS"
+  fi
+}
+
+# API 34+：Conscrypt 走 APEX，同时注入 system 供 Reqable/Flutter 等检测与旧客户端。
+# 仅运行时 bind，不写模块 system/cacerts，避免 Magic Mount 遮蔽整库。
+list_target_stores() {
+  seen="|"
+  if [ "$(get_api)" -ge 34 ]; then
+    if [ -d "$APEX_CACERTS" ]; then
+      echo "$APEX_CACERTS"
+      seen="$seen$APEX_CACERTS|"
+    fi
+    for apex_dir in /apex/com.android.conscrypt@*/cacerts; do
+      [ -d "$apex_dir" ] || continue
+      case "$seen" in *"|$apex_dir|"*) continue ;; esac
+      echo "$apex_dir"
+      seen="$seen$apex_dir|"
+    done
+  fi
+  if [ -d "$SYSTEM_CACERTS" ]; then
+    case "$seen" in *"|$SYSTEM_CACERTS|"*) ;; *)
+      echo "$SYSTEM_CACERTS"
+      ;;
+    esac
   fi
 }
 
@@ -285,7 +309,6 @@ namespace_path_identity() {
 generation_is_mounted() {
   generation_id=$(path_identity "$GEN_CERTS")
   [ -n "$generation_id" ] || return 1
-  generation_target=$(get_target_store)
   generation_seen="|"
   for generation_proc in /proc/[0-9]*; do
     [ -d "$generation_proc/ns" ] || continue
@@ -294,21 +317,23 @@ generation_is_mounted() {
     [ -n "$generation_ns" ] || continue
     case "$generation_seen" in *"|$generation_ns|"*) continue ;; esac
     generation_seen="$generation_seen$generation_ns|"
-    [ "$(namespace_path_identity "$generation_pid" "$generation_target")" = "$generation_id" ] && return 0
-    generation_mount_state=$(nsenter --mount=/proc/"$generation_pid"/ns/mnt -- \
-      awk -v target="$generation_target" \
-        -v source="$GEN_CERTS" \
-        -v adb_source="/adb/modules/CertBridge/certs/generation/current/cacerts" \
-        -v module_source="/CertBridge/certs/generation/current/cacerts" '
-        $5 == target && (
-          index($0, source) > 0 ||
-          index($0, adb_source) > 0 ||
-          index($0, module_source) > 0
-        ) { found=1 }
-        END { print found ? "mounted" : "clear" }
-      ' /proc/self/mountinfo 2>/dev/null)
-    [ "$generation_mount_state" = "mounted" ] && return 0
-    [ "$generation_mount_state" = "clear" ] || return 0
+    for generation_target in $(list_target_stores); do
+      [ "$(namespace_path_identity "$generation_pid" "$generation_target")" = "$generation_id" ] && return 0
+      generation_mount_state=$(nsenter --mount=/proc/"$generation_pid"/ns/mnt -- \
+        awk -v target="$generation_target" \
+          -v source="$GEN_CERTS" \
+          -v adb_source="/adb/modules/CertBridge/certs/generation/current/cacerts" \
+          -v module_source="/CertBridge/certs/generation/current/cacerts" '
+          $5 == target && (
+            index($0, source) > 0 ||
+            index($0, adb_source) > 0 ||
+            index($0, module_source) > 0
+          ) { found=1 }
+          END { print found ? "mounted" : "clear" }
+        ' /proc/self/mountinfo 2>/dev/null)
+      [ "$generation_mount_state" = "mounted" ] && return 0
+      [ "$generation_mount_state" = "clear" ] || return 0
+    done
   done
   return 1
 }
@@ -486,11 +511,12 @@ verify_direct_store() {
 
 check_store_injected() {
   [ -s "$APPLIED_MAP" ] || { echo 2; return 0; }
-  target=$(get_target_store)
-  verify_namespace_store 1 "$target" || { echo 0; return 0; }
-  for zygote in zygote zygote64; do
-    for pid in $(pidof "$zygote" 2>/dev/null); do
-      verify_namespace_store "$pid" "$target" || { echo 0; return 0; }
+  for target in $(list_target_stores); do
+    verify_namespace_store 1 "$target" || { echo 0; return 0; }
+    for zygote in zygote zygote64; do
+      for pid in $(pidof "$zygote" 2>/dev/null); do
+        verify_namespace_store "$pid" "$target" || { echo 0; return 0; }
+      done
     done
   done
   [ "$(get_api)" -ge 34 ] && echo 1 || echo 2

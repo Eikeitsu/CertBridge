@@ -564,6 +564,13 @@ hot_build_generation() {
     rm -rf "$HOT_STAGE"
     return 1
   }
+  # 热挂载必须保留已启用的永久 addon，避免用「原版+用户证」盖掉 Reqable/ProxyPin
+  HOT_ADDON_MAP="$HOT_STAGE/addon-certs.list"
+  if ! install_addon_certs_into "$HOT_STAGE_CERTS" "$HOT_ADDON_MAP"; then
+    log_msg "hot: failed to merge enabled permanent certificates"
+    rm -rf "$HOT_STAGE"
+    return 1
+  fi
   : >"$HOT_STAGE_MAP"
   : >"$HOT_STAGE_LEDGER"
   HOT_ADDED=0
@@ -634,34 +641,36 @@ EOF
 }
 
 hot_mount_namespaces() {
-  HOT_TARGET=$(hot_read_state target)
+  HOT_PRIMARY=$(hot_read_state target)
   HOT_SESSION=$(hot_read_state session_id)
   HOT_EXPECTED=$(hot_read_state store_count)
-  HOT_NS_FILE="$HOT_ROOT/.namespaces.$$"
   HOT_OK=0
   HOT_FAIL=0
-  hot_collect_namespaces "$HOT_NS_FILE" "$HOT_TARGET"
-  while IFS='|' read -r HOT_NS HOT_PID; do
-    [ -n "$HOT_PID" ] || continue
-    HOT_NS_BEFORE=$(hot_namespace_id "$HOT_PID")
-    [ "$HOT_NS_BEFORE" = "$HOT_NS" ] || {
-      HOT_FAIL=$((HOT_FAIL + 1))
-      continue
-    }
-    echo "intent|$HOT_NS|$HOT_PID" >>"$HOT_LEDGER"
-    if hot_bind_pid "$HOT_PID" "$HOT_NS" "$HOT_TARGET" "$HOT_SESSION" "$HOT_EXPECTED" && \
-        [ "$(hot_namespace_id "$HOT_PID")" = "$HOT_NS" ]; then
-      HOT_OK=$((HOT_OK + 1))
-    else
-      echo "failed|$HOT_NS|$HOT_PID" >>"$HOT_LEDGER"
-      HOT_FAIL=$((HOT_FAIL + 1))
-    fi
-  done <"$HOT_NS_FILE"
-  rm -f "$HOT_NS_FILE"
+  for HOT_TARGET in $(list_target_stores); do
+    HOT_NS_FILE="$HOT_ROOT/.namespaces.$$"
+    hot_collect_namespaces "$HOT_NS_FILE" "$HOT_TARGET"
+    while IFS='|' read -r HOT_NS HOT_PID; do
+      [ -n "$HOT_PID" ] || continue
+      HOT_NS_BEFORE=$(hot_namespace_id "$HOT_PID")
+      [ "$HOT_NS_BEFORE" = "$HOT_NS" ] || {
+        HOT_FAIL=$((HOT_FAIL + 1))
+        continue
+      }
+      echo "intent|$HOT_NS|$HOT_PID|$HOT_TARGET" >>"$HOT_LEDGER"
+      if hot_bind_pid "$HOT_PID" "$HOT_NS" "$HOT_TARGET" "$HOT_SESSION" "$HOT_EXPECTED" && \
+          [ "$(hot_namespace_id "$HOT_PID")" = "$HOT_NS" ]; then
+        HOT_OK=$((HOT_OK + 1))
+      else
+        echo "failed|$HOT_NS|$HOT_PID|$HOT_TARGET" >>"$HOT_LEDGER"
+        HOT_FAIL=$((HOT_FAIL + 1))
+      fi
+    done <"$HOT_NS_FILE"
+    rm -f "$HOT_NS_FILE"
+  done
   HOT_CRITICAL_FAIL=0
   for HOT_PID in 1 $(pidof zygote 2>/dev/null) $(pidof zygote64 2>/dev/null); do
     [ -d "/proc/$HOT_PID/ns" ] || continue
-    hot_top_owned_by_session "$HOT_PID" "$HOT_TARGET" "$HOT_SESSION" || HOT_CRITICAL_FAIL=1
+    hot_top_owned_by_session "$HOT_PID" "$HOT_PRIMARY" "$HOT_SESSION" || HOT_CRITICAL_FAIL=1
   done
   if [ "$HOT_CRITICAL_FAIL" -ne 0 ]; then
     hot_unmount_internal >/dev/null 2>&1

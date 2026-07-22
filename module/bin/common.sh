@@ -35,6 +35,8 @@ certbridge_init_paths() {
   LOCK_DIR="$STATEDIR/write.lock"
   LOCK_OWNER="$LOCK_DIR/owner"
   INSTALL_BOOT_FILE="$STATEDIR/install-boot-id"
+  RUNTIME_STATUS_FILE="$STATEDIR/runtime-status.conf"
+  ROOT_CACHE_FILE="$STATEDIR/root-impl.cache"
   APEX_CACERTS="/apex/com.android.conscrypt/cacerts"
   SYSTEM_CACERTS="/system/etc/security/cacerts"
   MIN_SAFE_CERTS=10

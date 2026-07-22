@@ -15,12 +15,13 @@ certbridge_action_ask() {
   echo "----------------------------------------"
   echo " $title"
   echo " 音量上：执行　　音量下：跳过"
-  echo " 20 秒未选择则跳过"
+  echo " 本轮 20 秒未选择则跳过"
   echo "----------------------------------------"
   certbridge_volume_choice 20
   case "$?" in
     0) return 0 ;;
-    *) return 1 ;;
+    1) echo " 已跳过"; return 1 ;;
+    *) echo " 本轮选择超时，已跳过"; return 1 ;;
   esac
 }
 
@@ -56,7 +57,7 @@ certbridge_action_refresh() {
 
   echo "[4/4] 临时热挂载..."
   if [ -x "$BINDIR/hot_mount.sh" ]; then
-    hot_status=$(sh "$BINDIR/hot_mount.sh" status 2>/dev/null)
+    hot_status=$(sh "$BINDIR/hot_mount.sh" status light 2>/dev/null)
     hot_active=$(echo "$hot_status" | awk -F= '$1 == "hot_active" { print $2; exit }')
     hot_added=$(echo "$hot_status" | awk -F= '$1 == "hot_added" { print $2; exit }')
     hot_partial=$(echo "$hot_status" | awk -F= '$1 == "hot_partial" { print $2; exit }')
@@ -152,13 +153,17 @@ echo "========================================"
 echo " 请选择"
 echo " 音量上：刷新权限与状态（默认）"
 echo " 音量下：实用功能（免重启挂载/卸载）"
-echo " 20 秒未选择将执行刷新"
+echo " 本轮 20 秒未选择将执行刷新"
 echo "========================================"
 certbridge_volume_choice 20
 case "$?" in
   1)
     echo "已选择：实用功能"
     certbridge_action_tools_menu
+    ;;
+  2)
+    echo "本轮选择超时，执行刷新"
+    certbridge_action_refresh
     ;;
   *)
     echo "已选择：刷新状态"

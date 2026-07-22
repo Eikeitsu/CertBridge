@@ -9,3 +9,4 @@ if [ -x "$MODDIR/bin/hot_mount.sh" ]; then
 fi
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] uninstall: module removed; reboot required to clear mounts" >>"$LOG_FILE" 2>/dev/null
 rm -rf /data/local/tmp/certbridge-* 2>/dev/null
+rm -rf "$MODDIR/data/runtime-mounts" 2>/dev/null

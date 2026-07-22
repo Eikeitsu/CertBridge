@@ -11,12 +11,12 @@
 
 ## 设置里能看到证书，但 Reqable 显示「未安装」、ProxyPin 抓包断网？
 
-常见原因有两类：
+常见原因：
 
-1. **检测路径**：部分 App 检查 `/system/etc/security/cacerts`，而 TLS 实际走 APEX。当前版本在 Android 14+ 会同时运行时绑定这两处（不是 Magic Mount 覆盖）。
-2. **命名空间**：设置页单独注入成功 ≠ 抓包 App 已注入。重启后 `service` 会覆盖 Zygote、抓包 App 与已运行应用命名空间；仍异常时请强停 App 再开。
-
-另请确认 App 当前使用的 CA 指纹与模块内置/自定义证书一致；在 App 内重新生成过 CA 时，需改用自定义导入或热挂载导入导出的证书。
+1. **注入层**：Android 14+ 需同时覆盖 Conscrypt APEX 与 `/system/etc/security/cacerts`（部分抓包 App 会检测 system 路径）。当前版本会为两条路径分别建立临时挂载层并设置对应 SELinux 后再绑定。
+2. **命名空间**：设置页成功 ≠ 抓包 App 已注入。重启后会覆盖 Zygote、抓包 App 与已运行应用；仍异常请强停 App 再开。
+3. **证书不一致（很常见）**：Reqable / ProxyPin **每次安装会生成自己的 CA**。模块内置证书若与 App「证书管理」里当前 CA 的指纹不同，系统里虽能看到名为 Reqable 的项，App 仍会显示未安装，抓包也会 TLS 失败。  
+   处理：在 App 中导出当前 CA → WebUI 自定义导入（或热挂载），确保指纹一致；不要假设内置文件永远匹配你的 App。
 
 ## 设置里看不到系统证书？
 

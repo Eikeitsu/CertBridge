@@ -24,8 +24,8 @@
 | ProxyPin CA            | 内置 `243f0bfb.0`，可开关                                    |
 | 自定义证书             | 上传 PEM / DER；自动校验 CA、有效期、hash 与文件名冲突       |
 | 开机实时合并           | 每次重启重新读取当前完整 `hash.N` 信任库，不依赖持久化基线   |
-| 分版本注入             | Android 7–13 挂载 system；Android 14+ 同时运行时绑定 Conscrypt APEX 与 system |
-| 命名空间验证           | `service.sh` 补齐 Zygote、Settings、抓包 App 与已运行应用命名空间               |
+| 分版本注入             | Android 7–13 挂载 system；Android 14+ 为 APEX 与 system 分别建立临时挂载层后再绑定 |
+| 命名空间验证           | `service.sh` 补齐 Zygote、Settings、抓包 App 与已运行应用命名空间                                       |
 | 用户证书热挂载（可选） | 读取 `/data/misc/user/*/cacerts-added/`，校验后免重启注入    |
 | 存储卡热挂载（可选）   | 递归读取指定目录中的 PEM / DER / CRT / CER / `hash.0`        |
 | 无痕卸载（可选）       | 通过会话标记只撤销 CertBridge 临时层，恢复挂载前证书库       |

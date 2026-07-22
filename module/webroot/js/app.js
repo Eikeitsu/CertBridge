@@ -278,7 +278,7 @@ const CasApp = {
       return;
     }
 
-    const result = await CasApi.cli("status", 60000);
+    const result = await CasApi.cli("status", 12000);
     if (result.errno === -2) {
       if (badge) {
         badge.className = "status-badge disabled";
@@ -483,11 +483,11 @@ const CasApp = {
     requestAnimationFrame(() => CasUi.syncTopbarSpacer());
     setTimeout(() => CasUi.syncTopbarSpacer(), 180);
 
-    if (this.statusTimer) clearInterval(this.statusTimer);
-    this.statusTimer = setInterval(
-      () => this.refreshStatus(),
-      CAS.STATUS_INTERVAL,
-    );
+    // 开机结果已缓存；仅手动刷新，不后台轮询
+    if (this.statusTimer) {
+      clearInterval(this.statusTimer);
+      this.statusTimer = null;
+    }
   },
 };
 

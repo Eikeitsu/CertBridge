@@ -8,22 +8,19 @@ while [ "$(getprop sys.boot_completed)" != "1" ] && [ $count -lt 90 ]; do
   count=$((count + 1))
 done
 
-if [ -f "$MODDIR/t_module" ] && ! grep -q '^# ##$' "$MODDIR/module.prop" 2>/dev/null; then
-  cp "$MODDIR/t_module" "$MODDIR/module.prop"
-  chmod 0644 "$MODDIR/module.prop"
-fi
+# 不再用 t_module 覆盖 module.prop（会把简介打回「检测中」）。
+# 开机最终状态由下方 finalize_runtime_status 写入。
 
 log_msg "service: verify app namespaces after boot (${count}s)"
+update_module_description "注入中"
 if ! acquire_write_lock; then
   echo "应用命名空间证书检查繁忙，请稍后在 WebUI 刷新" >"$STATEDIR/inject-error"
   log_msg "service: lifecycle lock timeout"
-  refresh_module_description >/dev/null
+  finalize_runtime_status service >/dev/null
   exit 1
 fi
-# 热会话若仍活跃，仍补一次永久层命名空间：热层会叠在上面，但 zygote/抓包 App
-# 若热层未覆盖到，至少保证永久 addon 可用。
-if hot_session_active; then
-  log_msg "service: hot session active, still reinforce persistent namespaces"
+if hot_session_recorded; then
+  log_msg "service: hot session recorded, still reinforce persistent namespaces"
 fi
 if sh "$MODDIR/bin/apex_inject.sh" namespaces; then
   rc=0
@@ -37,5 +34,5 @@ else
   echo "应用命名空间证书注入失败，请查看日志" >"$STATEDIR/inject-error"
   log_msg "service: namespace injection failed"
 fi
-refresh_module_description >/dev/null
+finalize_runtime_status service >/dev/null
 log_msg "service done"

@@ -1,9 +1,25 @@
 #!/system/bin/sh
-# Bind one validated, immutable boot generation over the active CA store.
-# The generation is rebuilt from the live store only before the first bind.
+# 将已校验的开机证书集注入到系统信任库。
+# 为每个目标路径准备独立临时层并设置 SELinux，再绑定到相关命名空间。
+# 只读重挂载失败时不撤销已经成功的绑定。
 
 MODDIR=${MODDIR:-${0%/*}/..}
 . "$MODDIR/bin/common.sh"
+
+RUNTIME_MOUNT_ROOT="$DATADIR/runtime-mounts"
+
+target_stage_dir() {
+  target="$1"
+  case "$target" in
+    "$APEX_CACERTS") echo "$RUNTIME_MOUNT_ROOT/apex" ;;
+    "$SYSTEM_CACERTS") echo "$RUNTIME_MOUNT_ROOT/system" ;;
+    *)
+      # versioned apex or unexpected path
+      name=$(echo "$target" | tr '/@' '__' | sed 's/__*/_/g')
+      echo "$RUNTIME_MOUNT_ROOT/$name"
+      ;;
+  esac
+}
 
 current_mount_id() {
   target="$1"
@@ -22,164 +38,156 @@ pid_mount_id() {
   ' /proc/self/mountinfo 2>/dev/null
 }
 
-rollback_current_owned() {
+# Best-effort read-only remount. Never undo a successful bind for this.
+try_remount_ro_current() {
   target="$1"
-  mount_id="$2"
-  source_id="$3"
-  [ "$(current_mount_id "$target")" = "$mount_id" ] || return 1
-  [ "$(path_identity "$target")" = "$source_id" ] || return 1
-  umount "$target" 2>/dev/null
+  mount -o remount,bind,ro "$target" 2>/dev/null || \
+    log_msg "inject: remount,ro skipped for current ns ($target)"
 }
 
-rollback_pid_owned() {
+try_remount_ro_pid() {
   pid="$1"
   target="$2"
-  mount_id="$3"
-  source_id="$4"
-  [ "$(pid_mount_id "$pid" "$target")" = "$mount_id" ] || return 1
-  [ "$(namespace_path_identity "$pid" "$target")" = "$source_id" ] || return 1
-  nsenter --mount=/proc/"$pid"/ns/mnt -- umount "$target" 2>/dev/null
+  label="$3"
+  nsenter --mount=/proc/"$pid"/ns/mnt -- mount -o remount,bind,ro "$target" 2>/dev/null || \
+    log_msg "inject: remount,ro skipped for $label pid=$pid ($target)"
 }
 
-source_for_pid() {
-  pid="$1"
-  if nsenter --mount=/proc/"$pid"/ns/mnt -- test -d "$GEN_CERTS" 2>/dev/null; then
-    echo "$GEN_CERTS"
-  elif nsenter --mount=/proc/"$pid"/ns/mnt -- test -d "/proc/1/root$GEN_CERTS" 2>/dev/null; then
-    echo "/proc/1/root$GEN_CERTS"
-  else
-    return 1
+prepare_target_stage() {
+  target="$1"
+  stage=$(target_stage_dir "$target")
+  mkdir -p "$RUNTIME_MOUNT_ROOT" || return 1
+
+  if ! mountpoint -q "$stage" 2>/dev/null; then
+    rm -rf "$stage" 2>/dev/null
+    mkdir -p "$stage" || return 1
+    mount -t tmpfs -o mode=755 tmpfs "$stage" 2>/dev/null || {
+      log_msg "inject: tmpfs mount failed ($stage)"
+      return 1
+    }
   fi
+
+  # Refresh contents from immutable generation
+  rm -f "$stage"/* 2>/dev/null
+  for cert in "$GEN_CERTS"/*.*; do
+    [ -f "$cert" ] || continue
+    name=$(basename "$cert")
+    is_cert_filename "$name" || continue
+    cp -f "$cert" "$stage/$name" 2>/dev/null || {
+      log_msg "inject: copy to tmpfs failed ($name)"
+      return 1
+    }
+  done
+  [ "$(count_certs "$stage")" -eq "$(count_certs "$GEN_CERTS")" ] || {
+    log_msg "inject: tmpfs cert count mismatch for $target"
+    return 1
+  }
+
+  chown -R 0:0 "$stage" 2>/dev/null
+  chmod 0755 "$stage" 2>/dev/null
+  chmod 0644 "$stage"/*.* 2>/dev/null
+  # Critical for Flutter/Reqable reading /system/etc/security/cacerts
+  set_selinux_context "$target" "$stage" || {
+    log_msg "inject: SELinux context for $target failed"
+    return 1
+  }
+  echo "$stage"
 }
 
-source_visible_for_pid() {
+stage_visible_for_pid() {
   pid="$1"
-  src=$(source_for_pid "$pid") || return 1
-  expected=$(count_certs "$GEN_CERTS")
-  n=$(nsenter --mount=/proc/"$pid"/ns/mnt -- sh -c \
-    "ls -1 '$src'/*.* 2>/dev/null | wc -l" 2>/dev/null | tr -d ' ')
-  [ "${n:-0}" -ge "$expected" ]
+  stage="$2"
+  if nsenter --mount=/proc/"$pid"/ns/mnt -- test -d "$stage" 2>/dev/null; then
+    echo "$stage"
+    return 0
+  fi
+  if nsenter --mount=/proc/"$pid"/ns/mnt -- test -d "/proc/1/root$stage" 2>/dev/null; then
+    echo "/proc/1/root$stage"
+    return 0
+  fi
+  return 1
 }
 
 bind_current_once() {
   target="$1"
-  verify_direct_store "$target" && {
-    source_id=$(path_identity "$GEN_CERTS")
-    if [ -n "$source_id" ] && [ "$(path_identity "$target")" = "$source_id" ]; then
-      mount -o remount,bind,ro "$target" 2>/dev/null || {
-        log_msg "inject: current namespace read-only remount failed"
-        return 1
-      }
-      log_msg "inject: current namespace already owned and valid"
-    else
-      log_msg "inject: compatible external CA layer already valid; leave ownership unchanged"
-    fi
-    return 0
-  }
-  source_id=$(path_identity "$GEN_CERTS")
+  stage="$2"
+  source_id=$(path_identity "$stage")
   [ -n "$source_id" ] || return 1
-  mount --bind "$GEN_CERTS" "$target" 2>/dev/null || {
-    log_msg "inject: current namespace bind failed ($target)"
+
+  if verify_direct_store "$target"; then
+    if [ "$(path_identity "$target")" = "$source_id" ]; then
+      try_remount_ro_current "$target"
+      log_msg "inject: current ns already valid ($target)"
+      return 0
+    fi
+    log_msg "inject: current ns has compatible content; rebinding to owned tmpfs ($target)"
+  fi
+
+  mount --bind "$stage" "$target" 2>/dev/null || {
+    log_msg "inject: current ns bind failed ($target)"
     return 1
   }
-  mount_id=$(current_mount_id "$target")
-  if [ -z "$mount_id" ] || [ "$(path_identity "$target")" != "$source_id" ]; then
-    log_msg "inject: current namespace ownership verification failed"
+  if [ "$(path_identity "$target")" != "$source_id" ]; then
+    log_msg "inject: current ns ownership mismatch ($target)"
+    umount "$target" 2>/dev/null
     return 1
   fi
-  if ! mount -o remount,bind,ro "$target" 2>/dev/null; then
-    log_msg "inject: current namespace read-only remount failed"
-    rollback_current_owned "$target" "$mount_id" "$source_id" >/dev/null 2>&1
-    return 1
-  fi
+  try_remount_ro_current "$target"
   verify_direct_store "$target" || {
-    log_msg "inject: current namespace verification failed"
-    rollback_current_owned "$target" "$mount_id" "$source_id" >/dev/null 2>&1
+    log_msg "inject: current ns content verify failed ($target)"
+    umount "$target" 2>/dev/null
     return 1
   }
-  log_msg "inject: current namespace injected ($target)"
+  log_msg "inject: current ns injected ($target)"
 }
 
 bind_pid_once() {
   pid="$1"
   label="$2"
   target="$3"
+  stage="$4"
   [ -d "/proc/$pid/ns" ] || return 0
-  verify_namespace_store "$pid" "$target" && {
-    source_id=$(path_identity "$GEN_CERTS")
-    if [ -n "$source_id" ] && [ "$(namespace_path_identity "$pid" "$target")" = "$source_id" ]; then
-      nsenter --mount=/proc/"$pid"/ns/mnt -- mount -o remount,bind,ro "$target" 2>/dev/null || {
-        log_msg "inject: $label pid=$pid read-only remount failed"
-        return 1
-      }
-      log_msg "inject: $label pid=$pid already owned and valid"
-    else
-      log_msg "inject: $label pid=$pid compatible external CA layer valid"
+  source_id=$(path_identity "$stage")
+  [ -n "$source_id" ] || return 1
+
+  if verify_namespace_store "$pid" "$target"; then
+    if [ "$(namespace_path_identity "$pid" "$target")" = "$source_id" ]; then
+      try_remount_ro_pid "$pid" "$target" "$label"
+      log_msg "inject: $label pid=$pid already valid"
+      return 0
     fi
-    return 0
-  }
-  source_visible_for_pid "$pid" || {
-    log_msg "inject: $label pid=$pid cannot see complete generation"
+    log_msg "inject: $label pid=$pid rebinding to owned tmpfs"
+  fi
+
+  src=$(stage_visible_for_pid "$pid" "$stage") || {
+    log_msg "inject: $label pid=$pid cannot see stage $stage"
     return 1
   }
-  src=$(source_for_pid "$pid") || return 1
-  source_id=$(path_identity "$GEN_CERTS")
-  [ -n "$source_id" ] || return 1
   nsenter --mount=/proc/"$pid"/ns/mnt -- mount --bind "$src" "$target" 2>/dev/null || {
     log_msg "inject: $label pid=$pid bind failed"
     return 1
   }
-  mount_id=$(pid_mount_id "$pid" "$target")
-  if [ -z "$mount_id" ] || [ "$(namespace_path_identity "$pid" "$target")" != "$source_id" ]; then
-    log_msg "inject: $label pid=$pid ownership verification failed"
+  if [ "$(namespace_path_identity "$pid" "$target")" != "$source_id" ]; then
+    log_msg "inject: $label pid=$pid ownership mismatch"
+    nsenter --mount=/proc/"$pid"/ns/mnt -- umount "$target" 2>/dev/null
     return 1
   fi
-  if ! nsenter --mount=/proc/"$pid"/ns/mnt -- mount -o remount,bind,ro "$target" 2>/dev/null; then
-    log_msg "inject: $label pid=$pid read-only remount failed"
-    rollback_pid_owned "$pid" "$target" "$mount_id" "$source_id" >/dev/null 2>&1
-    return 1
-  fi
+  try_remount_ro_pid "$pid" "$target" "$label"
   verify_namespace_store "$pid" "$target" || {
-    log_msg "inject: $label pid=$pid verification failed"
-    rollback_pid_owned "$pid" "$target" "$mount_id" "$source_id" >/dev/null 2>&1
+    log_msg "inject: $label pid=$pid content verify failed"
+    nsenter --mount=/proc/"$pid"/ns/mnt -- umount "$target" 2>/dev/null
     return 1
   }
   log_msg "inject: $label pid=$pid injected"
 }
 
-inject_boot_namespaces() {
-  generation_valid || { log_msg "inject: generation invalid"; return 1; }
-  [ -s "$APPLIED_MAP" ] || {
-    log_msg "inject: no enabled addon, keep original store"
-    return 0
-  }
-
-  rc=0
-  has_target=0
-  for target in $(list_target_stores); do
-    has_target=1
-    bind_current_once "$target" || rc=1
-    if command -v nsenter >/dev/null 2>&1; then
-      bind_pid_once 1 init "$target" || rc=1
-    else
-      log_msg "inject: nsenter unavailable"
-      rc=1
-    fi
-  done
-  [ "$has_target" = "1" ] || {
-    log_msg "inject: no CA target directory found"
-    return 1
-  }
-  return "$rc"
-}
-
-# Soft-bind one package if running; failures are logged but do not fail boot.
 bind_package_soft() {
   pkg="$1"
   target="$2"
+  stage="$3"
   for pid in $(pidof "$pkg" 2>/dev/null); do
-    bind_pid_once "$pid" "$pkg" "$target" || \
-      log_msg "inject: optional package $pkg pid=$pid bind skipped/failed"
+    bind_pid_once "$pid" "$pkg" "$target" "$stage" || \
+      log_msg "inject: optional package $pkg pid=$pid skipped/failed"
   done
 }
 
@@ -188,7 +196,8 @@ collect_inject_namespaces() {
   target="$2"
   : >"$ns_file"
   seen="|"
-  for pid in 1 $(pidof zygote 2>/dev/null) $(pidof zygote64 2>/dev/null); do
+  for pid in 1 $(pidof zygote 2>/dev/null) $(pidof zygote64 2>/dev/null) \
+      $(pgrep -x zygote 2>/dev/null) $(pgrep -x zygote64 2>/dev/null); do
     [ -d "/proc/$pid/ns" ] || continue
     ns=$(readlink "/proc/$pid/ns/mnt" 2>/dev/null)
     [ -n "$ns" ] || continue
@@ -209,6 +218,88 @@ collect_inject_namespaces() {
   done
 }
 
+inject_one_target() {
+  target="$1"
+  mode="$2"
+  [ -d "$target" ] || {
+    log_msg "inject: skip missing target $target"
+    return 0
+  }
+
+  stage=$(prepare_target_stage "$target") || return 1
+  rc=0
+  bind_current_once "$target" "$stage" || rc=1
+
+  if command -v nsenter >/dev/null 2>&1; then
+    bind_pid_once 1 init "$target" "$stage" || rc=1
+
+    if [ "$mode" = "namespaces" ] || [ "$mode" = "boot" ]; then
+      for process in zygote zygote64; do
+        for pid in $(pidof "$process" 2>/dev/null) $(pgrep -x "$process" 2>/dev/null); do
+          bind_pid_once "$pid" "$process" "$target" "$stage" || rc=1
+        done
+      done
+    fi
+
+    if [ "$mode" = "namespaces" ]; then
+      for pkg in \
+        com.android.settings \
+        com.reqable.android \
+        com.reqable.android.pro \
+        com.reqable \
+        com.proxy.pin \
+        com.network.proxy \
+        com.wangyu.proxypin; do
+        bind_package_soft "$pkg" "$target" "$stage"
+      done
+
+      ns_file="$STATEDIR/.inject-ns.$$"
+      collect_inject_namespaces "$ns_file" "$target"
+      injected=0
+      failed=0
+      while IFS='|' read -r ns pid; do
+        [ -n "$pid" ] || continue
+        ns_now=$(readlink "/proc/$pid/ns/mnt" 2>/dev/null)
+        [ "$ns_now" = "$ns" ] || {
+          failed=$((failed + 1))
+          continue
+        }
+        if bind_pid_once "$pid" "ns:$pid" "$target" "$stage"; then
+          injected=$((injected + 1))
+        else
+          failed=$((failed + 1))
+        fi
+      done <"$ns_file"
+      rm -f "$ns_file"
+      log_msg "inject: target=$target namespaces ok=$injected fail=$failed"
+    fi
+  else
+    log_msg "inject: nsenter unavailable"
+    rc=1
+  fi
+  return "$rc"
+}
+
+inject_boot_namespaces() {
+  generation_valid || { log_msg "inject: generation invalid"; return 1; }
+  [ -s "$APPLIED_MAP" ] || {
+    log_msg "inject: no enabled addon, keep original store"
+    return 0
+  }
+
+  rc=0
+  has_target=0
+  for target in $(list_target_stores); do
+    has_target=1
+    inject_one_target "$target" boot || rc=1
+  done
+  [ "$has_target" = "1" ] || {
+    log_msg "inject: no CA target directory found"
+    return 1
+  }
+  return "$rc"
+}
+
 inject_app_namespaces() {
   generation_valid || return 1
   [ -s "$APPLIED_MAP" ] || return 0
@@ -216,45 +307,7 @@ inject_app_namespaces() {
 
   rc=0
   for target in $(list_target_stores); do
-    bind_pid_once 1 init "$target" || rc=1
-    for process in zygote zygote64; do
-      for pid in $(pidof "$process" 2>/dev/null); do
-        bind_pid_once "$pid" "$process" "$target" || rc=1
-      done
-    done
-
-    # Settings + 抓包 App：检测逻辑和 TLS 都依赖自身命名空间
-    for pkg in \
-      com.android.settings \
-      com.reqable.android \
-      com.reqable.android.pro \
-      com.reqable \
-      com.proxy.pin \
-      com.network.proxy \
-      com.wangyu.proxypin; do
-      bind_package_soft "$pkg" "$target"
-    done
-
-    # 覆盖已启动应用命名空间，避免「Settings 有证书、App 仍 TLS 失败」
-    ns_file="$STATEDIR/.inject-ns.$$"
-    collect_inject_namespaces "$ns_file" "$target"
-    injected=0
-    failed=0
-    while IFS='|' read -r ns pid; do
-      [ -n "$pid" ] || continue
-      ns_now=$(readlink "/proc/$pid/ns/mnt" 2>/dev/null)
-      [ "$ns_now" = "$ns" ] || {
-        failed=$((failed + 1))
-        continue
-      }
-      if bind_pid_once "$pid" "ns:$pid" "$target"; then
-        injected=$((injected + 1))
-      else
-        failed=$((failed + 1))
-      fi
-    done <"$ns_file"
-    rm -f "$ns_file"
-    log_msg "inject: target=$target namespaces ok=$injected fail=$failed"
+    inject_one_target "$target" namespaces || rc=1
   done
   return "$rc"
 }

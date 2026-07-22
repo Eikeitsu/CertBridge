@@ -16,7 +16,8 @@ cmd_status() {
   hot_supported=0
   if [ -x "$BINDIR/hot_mount.sh" ]; then
     hot_supported=1
-    hot_status=$(sh "$BINDIR/hot_mount.sh" status 2>/dev/null)
+    # 轻量 status：读会话文件，不做全命名空间扫描
+    hot_status=$(sh "$BINDIR/hot_mount.sh" status light 2>/dev/null)
   else
     hot_status="hot_active=0
 hot_partial=0
@@ -39,7 +40,11 @@ hot_failed=0"
   echo "custom_count=$custom"
   echo "base_count=$(grep '^source_count=' "$SOURCE_META" 2>/dev/null | cut -d= -f2)"
   echo "store_count=$(count_certs "$GEN_CERTS")"
-  echo "apex_ok=$(check_store_injected)"
+  if runtime_status_fresh; then
+    echo "apex_ok=$(read_runtime_status apex_ok)"
+  else
+    echo "apex_ok=2"
+  fi
   echo "pending_reboot=$([ -f "$PENDING_FILE" ] && echo 1 || echo 0)"
   echo "inject_error=$([ -f "$STATEDIR/inject-error" ] && echo 1 || echo 0)"
   if [ "$hot_partial" = "1" ]; then
@@ -47,6 +52,7 @@ hot_failed=0"
   else
     echo "desc_short=$(compute_status_tag)"
   fi
+  echo "status_cached=$(runtime_status_fresh && echo 1 || echo 0)"
   echo "desc_body=$(get_desc_body)"
   echo "reqable_enabled=$(read_conf reqable 1)"
   echo "reqable_active=$(is_addon_applied reqable && echo 1 || echo 0)"

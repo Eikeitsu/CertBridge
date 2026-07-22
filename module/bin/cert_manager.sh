@@ -81,21 +81,6 @@ cmd_toggle() {
   echo "reboot_required=1"
 }
 
-find_openssl() {
-  for binary in openssl /system/bin/openssl /data/adb/magisk/busybox; do
-    if [ "$binary" = "/data/adb/magisk/busybox" ]; then
-      [ -x "$binary" ] && "$binary" openssl version >/dev/null 2>&1 && {
-        echo "$binary openssl"
-        return 0
-      }
-    elif command -v "$binary" >/dev/null 2>&1 || [ -x "$binary" ]; then
-      echo "$binary"
-      return 0
-    fi
-  done
-  return 1
-}
-
 cmd_install_custom() {
   b64="$1"
   raw="$DATADIR/upload.$$.raw"

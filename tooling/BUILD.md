@@ -6,11 +6,32 @@
 
 ```text
 module/                 # Magisk 模块本体
+  bin/
+    common.sh           # 路径初始化 + 加载 lib/*
+    lib/                # 按功能拆分的公共库
+    apex_inject.sh      # 开机 / 命名空间注入
+    hot_mount.sh        # 免重启热挂载（可选）
+    cert_manager.sh     # WebUI / CLI
   webroot/              # WebUI 可读源码
 tooling/scripts/        # 构建脚本
 docs/                   # VitePress 用户文档
 .release / .build/      # 本地产物（不入库）
 ```
+
+### bin/lib 职责
+
+| 文件 | 职责 |
+| --- | --- |
+| `log.sh` | 安装/运行日志 |
+| `keys.sh` | 音量键选择 |
+| `conf.sh` | `certs.conf` 读写 |
+| `lock.sh` | 写锁 |
+| `store.sh` | 信任库路径、SELinux、路径身份 |
+| `certs.sh` | 证书文件名、复制、addon 合并 |
+| `openssl.sh` | OpenSSL 定位 |
+| `verify.sh` | 注入结果校验 |
+| `generation.sh` | 开机证书集合生成 |
+| `status.sh` | 模块状态标签与描述 |
 
 ## 本地命令
 

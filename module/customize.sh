@@ -5,34 +5,15 @@ ui_print " 系统 CA 证书 "
 ui_print " CertBridge "
 ui_print "********************************"
 
-certbridge_volume_choice() {
-  event_file="${TMPDIR:-/data/local/tmp}/certbridge-key-events.$$"
-  rm -f "$event_file"
-  command -v getevent >/dev/null 2>&1 || return 2
-
-  getevent -ql >"$event_file" 2>/dev/null &
-  event_pid=$!
-  for second in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
-    sleep 1
-    if grep -q 'KEY_VOLUMEUP.*DOWN' "$event_file" 2>/dev/null; then
-      kill "$event_pid" 2>/dev/null
-      wait "$event_pid" 2>/dev/null
-      rm -f "$event_file"
-      return 0
-    fi
-    if grep -q 'KEY_VOLUMEDOWN.*DOWN' "$event_file" 2>/dev/null; then
-      kill "$event_pid" 2>/dev/null
-      wait "$event_pid" 2>/dev/null
-      rm -f "$event_file"
-      return 1
-    fi
-  done
-
-  kill "$event_pid" 2>/dev/null
-  wait "$event_pid" 2>/dev/null
-  rm -f "$event_file"
-  return 2
-}
+# 音量键：复用 bin/lib/keys.sh（Magisk 已解压到 MODPATH）
+MODDIR="$MODPATH"
+if [ -f "$MODPATH/bin/common.sh" ]; then
+  # shellcheck disable=SC1090
+  . "$MODPATH/bin/common.sh"
+else
+  ui_print "! 缺少 bin/common.sh，安装包不完整"
+  abort "! incomplete package" 2>/dev/null || exit 1
+fi
 
 certbridge_choose_component() {
   component_name="$1"
@@ -103,7 +84,6 @@ if [ "$INSTALL_HOT" != "1" ]; then
 fi
 
 MODDIR="$MODPATH"
-. "$MODPATH/bin/common.sh"
 tr -d '\r\n' </proc/sys/kernel/random/boot_id >"$INSTALL_BOOT_FILE" 2>/dev/null
 
 [ "$INSTALL_MODE" = "default" ] && MODE_LABEL="默认安装" || MODE_LABEL="自定义安装"

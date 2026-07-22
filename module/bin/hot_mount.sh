@@ -67,21 +67,6 @@ hot_boot_id() {
   tr -d '\r\n' </proc/sys/kernel/random/boot_id 2>/dev/null
 }
 
-hot_find_openssl() {
-  for binary in openssl /system/bin/openssl /data/adb/magisk/busybox; do
-    if [ "$binary" = "/data/adb/magisk/busybox" ]; then
-      [ -x "$binary" ] && "$binary" openssl version >/dev/null 2>&1 && {
-        echo "$binary openssl"
-        return 0
-      }
-    elif command -v "$binary" >/dev/null 2>&1 || [ -x "$binary" ]; then
-      echo "$binary"
-      return 0
-    fi
-  done
-  return 1
-}
-
 hot_normalize_cert() {
   HOT_INPUT="$1"
   HOT_OUTPUT="$2"
@@ -552,7 +537,7 @@ hot_build_generation() {
     HOT_BASE_COUNT=$(count_certs "$HOT_LIVE_SOURCE")
   fi
   [ "$HOT_BASE_COUNT" -ge "$MIN_SAFE_CERTS" ] || return 1
-  HOT_OPENSSL=$(hot_find_openssl) || return 2
+  HOT_OPENSSL=$(find_openssl) || return 2
 
   HOT_STAGE="$HOT_ROOT/.new.$$"
   HOT_STAGE_CERTS="$HOT_STAGE/cacerts"

@@ -1,5 +1,10 @@
 # 更新日志
 
+## v1.1.2
+
+- 模块脚本按功能拆分到 `bin/lib/`（log / keys / conf / lock / store / certs / openssl / verify / generation / status），`common.sh` 仅作加载入口
+- Action 增加实用功能：音量上刷新状态，音量下进入菜单，可免重启挂载/卸载用户区与存储卡临时 CA
+
 ## v1.1.1
 
 - 修复 Android 14+ 仅注入 APEX、未覆盖 system 路径导致 Reqable 等检测「证书未安装」的问题；现同时运行时绑定 APEX 与 system

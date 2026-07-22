@@ -1,7 +1,7 @@
 id=CertBridge
 name=系统 CA 证书
-version=v1.1.1
-versionCode=10101
+version=v1.1.2
+versionCode=10102
 author=许小墨
 description=[ 检测中 ] 安全合并 Reqable / ProxyPin / 自定义 CA；支持用户区与存储卡证书免重启挂载、无痕卸载，失败时保持系统原始证书库。
 updateJson=https://eikeitsu.github.io/CertBridge/update.json

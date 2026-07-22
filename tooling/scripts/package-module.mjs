@@ -44,10 +44,24 @@ function directoryHasFiles(path) {
   );
 }
 
+const BIN_LIBS = [
+  "bin/lib/log.sh",
+  "bin/lib/keys.sh",
+  "bin/lib/conf.sh",
+  "bin/lib/lock.sh",
+  "bin/lib/store.sh",
+  "bin/lib/certs.sh",
+  "bin/lib/openssl.sh",
+  "bin/lib/verify.sh",
+  "bin/lib/generation.sh",
+  "bin/lib/status.sh",
+];
+
 function validateSources() {
   const required = [
     ...ROOT_FILES,
     "bin/common.sh",
+    ...BIN_LIBS,
     "bin/apex_inject.sh",
     "bin/hot_mount.sh",
     "bin/cert_manager.sh",
@@ -75,6 +89,7 @@ function validateSources() {
   for (const relPath of [
     ...ROOT_FILES.filter((file) => file.endsWith(".sh")),
     "bin/common.sh",
+    ...BIN_LIBS,
     "bin/apex_inject.sh",
     "bin/hot_mount.sh",
     "bin/cert_manager.sh",

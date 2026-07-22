@@ -49,6 +49,7 @@ npm run build:docs
 1. Actions → **Release Module** → Run workflow
 2. 填写版本：`1.0.0` 或 `v1.0.0`
 3. 可选：预发布 / 草稿
+4. Release 正文会自动摘取 `changelog.md` 中与当前版本匹配的章节（若有），并保留 GitHub 生成的 Full Changelog
 
 也可本地打标签推送：
 

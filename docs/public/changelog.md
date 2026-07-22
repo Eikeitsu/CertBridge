@@ -1,5 +1,13 @@
 # 更新日志
 
+## v1.1.1
+
+- 修复 Android 14+ 仅注入 APEX、未覆盖 system 路径导致 Reqable 等检测「证书未安装」的问题；现同时运行时绑定 APEX 与 system
+- 开机后命名空间注入扩展到抓包 App 与已运行应用，避免 Settings 能看到证书但抓包 TLS 仍失败 / 断网
+- 临时热挂载会合并已启用的永久 addon，且同样覆盖 APEX / system 双路径
+- 重做普通深色配色与卡片层次；莫奈深色改为跟随系统色相 / MD3 token，不再与固定深色共用一套写死色值
+- 移除深色顶栏浅色状态栏条，改为依赖 `color-scheme` 与 theme-color 同步状态栏
+
 ## v1.1.0
 
 - 移除持久化系统 CA 基线与 `system/cacerts` 覆盖目录，改为每次开机从当前 system / Conscrypt APEX 信任库生成完整证书集
@@ -10,11 +18,6 @@
 - 安装脚本支持音量键选择默认或自定义方案，可分别启用 Reqable、ProxyPin、WebUI 和免重启热挂载
 - WebUI、CLI 与 Action 增加待重启、注入失败及临时会话状态；未安装可选组件时自动隐藏或降级对应功能
 - 加强写锁、目录权限、日志轮转、Root 环境识别与发布包完整性检查
-- 重做普通深色配色与卡片层次；莫奈深色改为跟随系统色相 / MD3 token，不再与固定深色共用一套写死色值
-- 移除深色顶栏浅色状态栏条，改为依赖 `color-scheme` 与 theme-color 同步状态栏
-- 修复 Android 14+ 仅注入 APEX、未覆盖 system 路径导致 Reqable 等检测「证书未安装」的问题；现同时运行时绑定 APEX 与 system
-- 开机后命名空间注入扩展到抓包 App 与已运行应用，避免 Settings 能看到证书但抓包 TLS 仍失败 / 断网
-- 临时热挂载会合并已启用的永久 addon，且同样覆盖 APEX / system 双路径
 
 ## v1.0.2
 

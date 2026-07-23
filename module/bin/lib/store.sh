@@ -51,7 +51,13 @@ set_selinux_context() {
     chcon -R "$ctx" "$dest" 2>/dev/null || return 1
   fi
   actual_ctx=$(ls -Zd "$dest" 2>/dev/null | awk '{print $1}')
-  [ "$actual_ctx" = "$ctx" ]
+  # 部分机型带 MCS 类别（s0:cXX），只比较 type 段，避免误杀整次注入
+  if [ "$actual_ctx" = "$ctx" ]; then
+    return 0
+  fi
+  actual_type=$(echo "$actual_ctx" | cut -d: -f1-3)
+  expect_type=$(echo "$ctx" | cut -d: -f1-3)
+  [ -n "$actual_type" ] && [ "$actual_type" = "$expect_type" ]
 }
 
 path_identity() {

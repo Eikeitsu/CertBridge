@@ -43,8 +43,9 @@ else
   echo "开机证书注入失败；请查看日志" >"$STATEDIR/inject-error"
   log_msg "post-fs-data: boot injection failed"
 fi
-# 仅记录 post-fs 阶段结果；最终「运行正常」由 service 在 zygote 注入后写入
-write_runtime_status post-fs-data "$(check_store_injected)" "注入中"
+# 仅标记中间态；不要在此处跑 check_store_injected（zygote 常未就绪，会把 apex_ok 误写成 0）
+# 最终「运行正常 / 证书注入失败」必须由 service 的 finalize_runtime_status 写入
+write_runtime_status post-fs-data 2 "注入中"
 update_module_description "注入中"
 post_cleanup
 log_msg "post-fs-data done"

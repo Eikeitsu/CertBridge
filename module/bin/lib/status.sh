@@ -120,10 +120,24 @@ compute_status_tag() {
 
   if [ "$force_verify" != "1" ] && runtime_status_fresh; then
     cached_tag=$(read_runtime_status tag)
-    [ -n "$cached_tag" ] && {
-      echo "$cached_tag"
-      return 0
-    }
+    cached_phase=$(read_runtime_status phase)
+    # 「注入中/启动中」只是中间态；若 service 已落盘或存在错误文件，不能一直吃缓存
+    case "$cached_tag" in
+      注入中|启动中|检测中)
+        if [ "$cached_phase" = "service" ] || [ -f "$STATEDIR/inject-error" ]; then
+          :
+        else
+          echo "$cached_tag"
+          return 0
+        fi
+        ;;
+      "")
+        ;;
+      *)
+        echo "$cached_tag"
+        return 0
+        ;;
+    esac
   fi
 
   if [ "$force_verify" = "1" ]; then

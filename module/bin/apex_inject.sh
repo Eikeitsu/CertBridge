@@ -191,24 +191,24 @@ bind_package_soft() {
   done
 }
 
+# 只收集关键命名空间，不再遍历全部 /proc（会在部分机型上卡住，导致状态永久「注入中」）
 collect_inject_namespaces() {
   ns_file="$1"
   target="$2"
   : >"$ns_file"
   seen="|"
-  for pid in 1 $(pidof zygote 2>/dev/null) $(pidof zygote64 2>/dev/null) \
-      $(pgrep -x zygote 2>/dev/null) $(pgrep -x zygote64 2>/dev/null); do
+  for pid in 1 \
+      $(pidof zygote 2>/dev/null) $(pidof zygote64 2>/dev/null) \
+      $(pgrep -x zygote 2>/dev/null) $(pgrep -x zygote64 2>/dev/null) \
+      $(pidof com.android.settings 2>/dev/null) \
+      $(pidof com.reqable.android 2>/dev/null) \
+      $(pidof com.reqable.android.pro 2>/dev/null) \
+      $(pidof com.reqable 2>/dev/null) \
+      $(pidof com.proxy.pin 2>/dev/null) \
+      $(pidof com.network.proxy 2>/dev/null) \
+      $(pidof com.wangyu.proxypin 2>/dev/null); do
+    [ -n "$pid" ] || continue
     [ -d "/proc/$pid/ns" ] || continue
-    ns=$(readlink "/proc/$pid/ns/mnt" 2>/dev/null)
-    [ -n "$ns" ] || continue
-    case "$seen" in *"|$ns|"*) continue ;; esac
-    nsenter --mount=/proc/"$pid"/ns/mnt -- test -d "$target" 2>/dev/null || continue
-    echo "$ns|$pid" >>"$ns_file"
-    seen="$seen$ns|"
-  done
-  for proc in /proc/[0-9]*; do
-    [ -d "$proc/ns" ] || continue
-    pid=${proc##*/}
     ns=$(readlink "/proc/$pid/ns/mnt" 2>/dev/null)
     [ -n "$ns" ] || continue
     case "$seen" in *"|$ns|"*) continue ;; esac

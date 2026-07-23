@@ -45,7 +45,7 @@ generation_is_mounted() {
           END { print found ? "mounted" : "clear" }
         ' /proc/self/mountinfo 2>/dev/null)
       [ "$generation_mount_state" = "mounted" ] && return 0
-      [ "$generation_mount_state" = "clear" ] || return 0
+      # 仅在明确仍挂着 generation 源时拒绝替换；探测失败视为未挂载，避免误拒重建
     done
   done
   return 1

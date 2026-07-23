@@ -1,7 +1,7 @@
 id=CertBridge
 name=证书桥
-version=v1.2.0
-versionCode=10200
+version=v2.0.0
+versionCode=20000
 author=许小墨
 description=[🔎 检测中|等待开机注入完成] 让系统信任抓包 CA，支持 Reqable / ProxyPin / 自定义；兼容 Magisk、KernelSU、APatch，Android 7–16
 updateJson=https://eikeitsu.github.io/CertBridge/update.json

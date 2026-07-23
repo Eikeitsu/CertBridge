@@ -109,7 +109,7 @@ build_boot_generation() {
     rm -rf "$stage"
     return 1
   }
-  while IFS='|' read -r label name checksum; do
+  while IFS='|' read -r label name checksum display; do
     [ -n "$name" ] || continue
     [ -f "$certs/$name" ] || {
       log_msg "generation: missing applied cert $label/$name"
@@ -156,7 +156,7 @@ generation_valid() {
   [ "${source_n:-0}" -ge "$MIN_SAFE_CERTS" ] || return 1
   [ "$(count_certs "$GEN_CERTS")" -ge "$source_n" ] || return 1
   [ -f "$APPLIED_MAP" ] || return 1
-  while IFS='|' read -r label name checksum; do
+  while IFS='|' read -r label name checksum display; do
     [ -n "$name" ] || continue
     [ -f "$GEN_CERTS/$name" ] || return 1
     actual=$(cksum "$GEN_CERTS/$name" 2>/dev/null | awk '{print $1 ":" $2}')
@@ -172,6 +172,18 @@ mark_reboot_required() {
 
 get_applied_name() {
   grep -m1 "^$1|" "$APPLIED_MAP" 2>/dev/null | cut -d'|' -f2
+}
+
+get_applied_display() {
+  label="$1"
+  fallback="$2"
+  name=$(grep -m1 "^${label}|" "$APPLIED_MAP" 2>/dev/null | cut -d'|' -f4)
+  name=$(echo "$name" | tr -d '\r\n')
+  if [ -n "$name" ]; then
+    echo "$name"
+    return 0
+  fi
+  echo "${fallback:-$label}"
 }
 
 is_addon_applied() {

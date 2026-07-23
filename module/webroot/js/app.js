@@ -11,6 +11,14 @@ const CasApp = {
       .getElementById("proxypinEnabled")
       ?.addEventListener("change", () => this.toggleBuiltin("proxypin"));
 
+    document.querySelectorAll(".cert-row[data-cert]").forEach((node) => {
+      node.addEventListener("click", (event) => {
+        if (event.target.closest(".hyper-switch")) return;
+        if (event.target.closest("button")) return;
+        this.toggleCertDetail(node.dataset.cert);
+      });
+    });
+
     document.querySelectorAll(".pref[data-expand]").forEach((node) => {
       node.addEventListener("click", (event) => {
         if (event.target.closest(".hyper-switch")) return;
@@ -78,13 +86,56 @@ const CasApp = {
     const value = el?.checked ? "1" : "0";
     CasUi.toast("正在保存…");
     const result = await CasApi.cli(`toggle ${name} ${value}`);
-    if (result.errno !== 0 || !result.stdout.includes("ok=1")) {
+    const data = CasApi.parseKv(result.stdout);
+    if (result.errno !== 0 || data.ok !== "1") {
       if (el) el.checked = value !== "1";
-      CasUi.toast("保存失败，请查看日志");
+      CasUi.toast(
+        data.error === "certificate_unavailable"
+          ? "未找到对应 App 证书，请先在 App 中生成或改用自定义导入"
+          : "保存失败，请查看日志",
+      );
       return;
     }
     await this.refreshStatus(false);
     CasUi.toast("已保存，重启后生效");
+  },
+
+  async toggleCertDetail(kind) {
+    const panel = document.getElementById(`${kind}Detail`);
+    if (!panel) return;
+    if (!panel.hidden && panel.dataset.loaded === "1") {
+      panel.hidden = true;
+      return;
+    }
+    panel.hidden = false;
+    panel.innerHTML =
+      '<div class="field-hint" style="padding:10px 0">正在读取证书信息…</div>';
+    const result = await CasApi.cli(`cert_info ${kind}`);
+    const info = CasApi.parseKv(result.stdout);
+    if (result.errno !== 0 || info.ok !== "1") {
+      panel.innerHTML =
+        '<div class="field-hint warn" style="padding:10px 0">暂无证书详情（未导入或无法解析）</div>';
+      panel.dataset.loaded = "0";
+      return;
+    }
+    const rows = [
+      ["名称", info.display_name],
+      ["文件", info.filename],
+      ["Hash", info.hash],
+      ["主题", info.subject],
+      ["颁发者", info.issuer],
+      ["生效", info.not_before],
+      ["过期", info.not_after],
+      ["指纹", info.fingerprint_sha256],
+    ]
+      .filter(([, v]) => v)
+      .map(
+        ([k, v]) =>
+          `<div class="kv-row"><span class="k">${k}</span><span class="v">${v}</span></div>`,
+      )
+      .join("");
+    panel.innerHTML = `<div class="kv-list">${rows}</div>`;
+    panel.dataset.loaded = "1";
   },
 
   async reboot() {
@@ -246,8 +297,16 @@ const CasApp = {
     }
     box.innerHTML = lines
       .map((line) => {
-        const name = line.split("|")[1];
-        return `<div class="kv-row"><span class="k">${name}</span><span class="v"><button type="button" class="chip chip-btn" data-rm="${name}">删除</button></span></div>`;
+        const parts = line.split("|");
+        const name = parts[1];
+        const display = parts[2] || name;
+        return `<div class="cert-custom" data-cert="custom:${name}">
+          <div class="kv-row cert-row">
+            <span class="k">${display}</span>
+            <span class="v"><button type="button" class="chip chip-btn" data-rm="${name}">删除</button></span>
+          </div>
+          <div class="cert-detail" hidden></div>
+        </div>`;
       })
       .join("");
     box.querySelectorAll("[data-rm]").forEach((btn) => {
@@ -263,6 +322,47 @@ const CasApp = {
         CasUi.toast("已删除，重启后生效");
         await this.refreshStatus(false);
         await this.refreshCustomList();
+      });
+    });
+    box.querySelectorAll(".cert-custom").forEach((row) => {
+      row.querySelector(".cert-row")?.addEventListener("click", async (e) => {
+        if (e.target.closest("[data-rm]")) return;
+        const target = row.dataset.cert;
+        const panel = row.querySelector(".cert-detail");
+        if (!panel) return;
+        if (!panel.hidden && panel.dataset.loaded === "1") {
+          panel.hidden = true;
+          return;
+        }
+        panel.hidden = false;
+        panel.innerHTML =
+          '<div class="field-hint" style="padding:10px 0">正在读取证书信息…</div>';
+        const infoResult = await CasApi.cli(`cert_info '${target}'`);
+        const info = CasApi.parseKv(infoResult.stdout);
+        if (infoResult.errno !== 0 || info.ok !== "1") {
+          panel.innerHTML =
+            '<div class="field-hint warn" style="padding:10px 0">无法解析证书详情</div>';
+          panel.dataset.loaded = "0";
+          return;
+        }
+        const rows = [
+          ["名称", info.display_name],
+          ["文件", info.filename],
+          ["Hash", info.hash],
+          ["主题", info.subject],
+          ["颁发者", info.issuer],
+          ["生效", info.not_before],
+          ["过期", info.not_after],
+          ["指纹", info.fingerprint_sha256],
+        ]
+          .filter(([, v]) => v)
+          .map(
+            ([k, v]) =>
+              `<div class="kv-row"><span class="k">${k}</span><span class="v">${v}</span></div>`,
+          )
+          .join("");
+        panel.innerHTML = `<div class="kv-list">${rows}</div>`;
+        panel.dataset.loaded = "1";
       });
     });
   },
@@ -312,18 +412,37 @@ const CasApp = {
     if (hotSectionTitle) hotSectionTitle.hidden = !hotSupported;
     if (hotSection) hotSection.hidden = !hotSupported;
 
+    const reqTitle = document.getElementById("reqableTitle");
+    if (reqTitle)
+      reqTitle.textContent =
+        (s.reqable_active === "1" ? s.reqable_title : s.reqable_display) ||
+        "Reqable";
+    const ppTitle = document.getElementById("proxypinTitle");
+    if (ppTitle)
+      ppTitle.textContent =
+        (s.proxypin_active === "1" ? s.proxypin_title : s.proxypin_display) ||
+        "ProxyPin";
+
     const reqSub = document.getElementById("reqableSub");
-    if (reqSub)
-      reqSub.textContent =
-        s.reqable_active === "1"
-          ? `已应用（${s.reqable_name || "内置证书"}）`
-          : "未应用";
+    if (reqSub) {
+      if (s.reqable_available !== "1")
+        reqSub.textContent = "未检测到证书（请先在 App 中生成）";
+      else if (s.reqable_active === "1")
+        reqSub.textContent = "已应用 · 点击查看详情";
+      else if (s.reqable_enabled === "1")
+        reqSub.textContent = "已开启，重启后生效 · 点击查看详情";
+      else reqSub.textContent = "已关闭 · 点击查看详情";
+    }
     const ppSub = document.getElementById("proxypinSub");
-    if (ppSub)
-      ppSub.textContent =
-        s.proxypin_active === "1"
-          ? `已应用（${s.proxypin_name || "内置证书"}）`
-          : "未应用";
+    if (ppSub) {
+      if (s.proxypin_available !== "1")
+        ppSub.textContent = "未检测到证书";
+      else if (s.proxypin_active === "1")
+        ppSub.textContent = "已应用 · 点击查看详情";
+      else if (s.proxypin_enabled === "1")
+        ppSub.textContent = "已开启，重启后生效 · 点击查看详情";
+      else ppSub.textContent = "已关闭 · 点击查看详情";
+    }
 
     const hotActive = s.hot_active === "1";
     const hotFailedCount = Number(s.hot_failed || 0);

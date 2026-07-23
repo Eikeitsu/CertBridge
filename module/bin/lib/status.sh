@@ -87,20 +87,28 @@ hot_session_active() {
   [ "$actual" = "$hot_session" ]
 }
 
-# 从 applied-certs.list 生成「Reqable、ProxyPin、自定义×N」
+# 从 applied-certs.list 生成「显示名」摘要（第 4 列为证书 CN/名称）
 compose_applied_cert_summary() {
   [ -s "$APPLIED_MAP" ] || return 1
   names=""
   custom_n=0
   total=0
-  while IFS='|' read -r label name checksum; do
+  while IFS='|' read -r label name checksum display; do
     [ -n "$label" ] || continue
     total=$((total + 1))
     case "$label" in
-      reqable) names="${names}${names:+、}Reqable" ;;
-      proxypin) names="${names}${names:+、}ProxyPin" ;;
       custom:*) custom_n=$((custom_n + 1)) ;;
-      *) names="${names}${names:+、}${label}" ;;
+      *)
+        if [ -n "$display" ]; then
+          names="${names}${names:+、}${display}"
+        else
+          case "$label" in
+            reqable) names="${names}${names:+、}Reqable" ;;
+            proxypin) names="${names}${names:+、}ProxyPin" ;;
+            *) names="${names}${names:+、}${label}" ;;
+          esac
+        fi
+        ;;
     esac
   done <"$APPLIED_MAP"
   [ "$custom_n" -gt 0 ] && names="${names}${names:+、}自定义×${custom_n}"
@@ -113,12 +121,16 @@ compose_pending_cert_summary() {
   names=""
   total=0
   custom_n=0
-  if [ "$(read_conf reqable 1)" = "1" ] && find_builtin_cert reqable >/dev/null 2>&1; then
-    names="${names}${names:+、}Reqable"
+  if [ "$(read_conf reqable 1)" = "1" ] && find_addon_cert reqable 0 >/dev/null 2>&1; then
+    cert=$(find_addon_cert reqable 0)
+    dn=$(read_cert_meta_display "$cert" "Reqable")
+    names="${names}${names:+、}${dn}"
     total=$((total + 1))
   fi
-  if [ "$(read_conf proxypin 1)" = "1" ] && find_builtin_cert proxypin >/dev/null 2>&1; then
-    names="${names}${names:+、}ProxyPin"
+  if [ "$(read_conf proxypin 1)" = "1" ] && find_addon_cert proxypin 0 >/dev/null 2>&1; then
+    cert=$(find_addon_cert proxypin 0)
+    dn=$(read_cert_meta_display "$cert" "ProxyPin")
+    names="${names}${names:+、}${dn}"
     total=$((total + 1))
   fi
   for cert in "$CUSTOM_DIR"/*.*; do

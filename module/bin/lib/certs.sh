@@ -64,14 +64,19 @@ install_one_addon() {
   src="$1"
   dest="$2"
   label="$3"
+  display="${4:-}"
   name=$(next_collision_name "$src" "$dest" "$(basename "$src")") || return 1
   [ -f "$dest/$name" ] || cp -f "$src" "$dest/$name" 2>/dev/null || return 1
   checksum=$(cksum "$dest/$name" 2>/dev/null | awk '{print $1 ":" $2}')
   [ -n "$checksum" ] || return 1
-  echo "$label|$name|$checksum" >>"$MAP_TMP"
+  if [ -z "$display" ]; then
+    display=$(read_cert_meta_display "$src" "$(basename "$src")")
+  fi
+  display=$(echo "$display" | tr '|' '/' | tr -d '\r\n')
+  echo "$label|$name|$checksum|$display" >>"$MAP_TMP"
 }
 
-# 内置目录中取第一张合法 hash.N（subject hash 随 CA 变化，不可写死文件名）
+# 内置目录中取第一张合法 hash.N（仅 ProxyPin 兜底仍使用）
 find_builtin_cert() {
   kind="$1"
   dir="$BUILTIN_DIR/$kind"
@@ -88,36 +93,40 @@ find_builtin_cert() {
 install_addon_certs_into() {
   dest="$1"
   MAP_TMP="$2"
-  builtin_cert=""
+  addon_cert=""
   : >"$MAP_TMP" || return 1
   if is_enabled reqable; then
-    builtin_cert=$(find_builtin_cert reqable) || {
-      log_msg "certs: reqable enabled but no builtin hash.N found"
-      return 1
-    }
-    install_one_addon "$builtin_cert" "$dest" reqable || return 1
+    # 开机优先从已安装 Reqable 刷新；找不到则用安装时导入的 sources
+    if addon_cert=$(find_addon_cert reqable 1) || addon_cert=$(find_addon_cert reqable 0); then
+      display=$(read_cert_meta_display "$addon_cert" "Reqable")
+      install_one_addon "$addon_cert" "$dest" reqable "$display" || return 1
+    else
+      log_msg "certs: reqable enabled but no app/source certificate found (skipped)"
+    fi
   fi
   if is_enabled proxypin; then
-    builtin_cert=$(find_builtin_cert proxypin) || {
-      log_msg "certs: proxypin enabled but no builtin hash.N found"
-      return 1
-    }
-    install_one_addon "$builtin_cert" "$dest" proxypin || return 1
+    if addon_cert=$(find_addon_cert proxypin 1) || addon_cert=$(find_addon_cert proxypin 0); then
+      display=$(read_cert_meta_display "$addon_cert" "ProxyPin")
+      install_one_addon "$addon_cert" "$dest" proxypin "$display" || return 1
+    else
+      log_msg "certs: proxypin enabled but no certificate found (skipped)"
+    fi
   fi
   for cert in "$CUSTOM_DIR"/*.*; do
     [ -f "$cert" ] || continue
     name=$(basename "$cert")
     is_cert_filename "$name" || continue
-    install_one_addon "$cert" "$dest" "custom:$name" || return 1
+    display=$(read_cert_meta_display "$cert" "$name")
+    install_one_addon "$cert" "$dest" "custom:$name" "$display" || return 1
   done
 }
 
 count_addon_certs() {
   n=0
-  if is_enabled reqable && find_builtin_cert reqable >/dev/null; then
+  if is_enabled reqable && find_addon_cert reqable 0 >/dev/null 2>&1; then
     n=$((n + 1))
   fi
-  if is_enabled proxypin && find_builtin_cert proxypin >/dev/null; then
+  if is_enabled proxypin && find_addon_cert proxypin 0 >/dev/null 2>&1; then
     n=$((n + 1))
   fi
   for cert in "$CUSTOM_DIR"/*.*; do

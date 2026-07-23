@@ -12,12 +12,12 @@ hero:
       text: 安装模块
       link: /guide/install
 features:
-  - title: 内置证书
-    details: 预置 Reqable 与 ProxyPin CA，可在 WebUI 中独立开关。
+  - title: App 证书导入
+    details: 自动检测 Reqable / ProxyPin 等；ProxyPin 可内置兜底；HttpCanary、ADG 可询问导入为自定义。
   - title: 自定义 CA
-    details: 上传 PEM / DER 证书，自动校验 CA 属性、计算 hash 并处理文件名冲突。
+    details: 上传 PEM / DER 证书，自动校验、计算 hash，并从证书解析显示名与详情。
   - title: Android 14+
     details: 针对 APEX Conscrypt 信任库自动注入，覆盖 zygote / 系统命名空间。
   - title: WebUI
-    details: 状态概览、证书管理、日志；支持主题、莫奈取色、悬浮分页等显示选项。
+    details: 状态概览、证书开关与详情、日志；支持主题、莫奈取色、悬浮分页等显示选项。
 ---

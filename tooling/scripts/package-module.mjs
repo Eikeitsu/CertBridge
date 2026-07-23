@@ -52,6 +52,10 @@ const BIN_LIBS = [
   "bin/lib/store.sh",
   "bin/lib/certs.sh",
   "bin/lib/openssl.sh",
+  "bin/lib/app_detect.sh",
+  "bin/lib/cert_parse.sh",
+  "bin/lib/cert_sources.sh",
+  "bin/lib/install_flow.sh",
   "bin/lib/verify.sh",
   "bin/lib/generation.sh",
   "bin/lib/status.sh",
@@ -91,10 +95,13 @@ function validateSources() {
     }
   }
 
-  const builtinCerts = [
-    ...listBuiltinCertFiles("reqable"),
-    ...listBuiltinCertFiles("proxypin"),
-  ];
+  // Reqable 从已安装 App 导入；仅 ProxyPin 保留模块内置证书
+  const builtinCerts = [...listBuiltinCertFiles("proxypin")];
+  if (existsSync(join(moduleRoot, "certs", "builtin", "reqable"))) {
+    throw new Error(
+      "certs/builtin/reqable must not be packaged (Reqable CA is imported from the app)",
+    );
+  }
 
   for (const relPath of ["system", "certs/system_base", "certs/active"]) {
     const legacyPath = join(moduleRoot, relPath);

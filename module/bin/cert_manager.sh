@@ -57,9 +57,25 @@ hot_failed=0"
   echo "reqable_enabled=$(read_conf reqable 1)"
   echo "reqable_active=$(is_addon_applied reqable && echo 1 || echo 0)"
   echo "reqable_name=$(get_applied_name reqable)"
+  echo "reqable_title=$(get_applied_display reqable Reqable)"
+  if req_file=$(find_addon_cert reqable 0 2>/dev/null); then
+    echo "reqable_available=1"
+    echo "reqable_display=$(read_cert_meta_display "$req_file" "Reqable")"
+  else
+    echo "reqable_available=0"
+    echo "reqable_display=Reqable"
+  fi
   echo "proxypin_enabled=$(read_conf proxypin 1)"
   echo "proxypin_active=$(is_addon_applied proxypin && echo 1 || echo 0)"
   echo "proxypin_name=$(get_applied_name proxypin)"
+  echo "proxypin_title=$(get_applied_display proxypin ProxyPin)"
+  if pp_file=$(find_addon_cert proxypin 0 2>/dev/null); then
+    echo "proxypin_available=1"
+    echo "proxypin_display=$(read_cert_meta_display "$pp_file" "ProxyPin")"
+  else
+    echo "proxypin_available=0"
+    echo "proxypin_display=ProxyPin"
+  fi
   echo "version=$(grep '^version=' "$MODDIR/module.prop" 2>/dev/null | cut -d= -f2-)"
   echo "$hot_status"
 }
@@ -69,7 +85,9 @@ cmd_list_custom() {
     [ -f "$cert" ] || continue
     name=$(basename "$cert")
     is_cert_filename "$name" || continue
-    echo "custom|$name"
+    display=$(read_cert_meta_display "$cert" "$name")
+    display=$(echo "$display" | tr '|' '/')
+    echo "custom|$name|$display"
   done
 }
 
@@ -78,6 +96,15 @@ cmd_toggle() {
   value="$2"
   case "$name" in reqable|proxypin) ;; *) echo "error=invalid_toggle"; return 1 ;; esac
   [ "$value" = "1" ] || [ "$value" = "0" ] || { echo "error=invalid_value"; return 1; }
+  if [ "$value" = "1" ]; then
+    # 开启时尽量从 App 刷新；Reqable 无来源则拒绝开启
+    sync_source_from_app "$name" >/dev/null 2>&1 || true
+    if ! find_addon_cert "$name" 0 >/dev/null 2>&1; then
+      echo "error=certificate_unavailable"
+      echo "hint=请先在对应 App 中生成根证书，或使用自定义导入"
+      return 1
+    fi
+  fi
   acquire_write_lock || { echo "error=busy"; return 1; }
   write_conf "$name" "$value" || { release_write_lock; echo "error=write_failed"; return 1; }
   mark_reboot_required
@@ -161,13 +188,17 @@ cmd_install_custom() {
       return 1
     }
   fi
+  display=$(cert_display_name_from_file "$CUSTOM_DIR/$name" "$name")
+  printf 'display_name=%s\n' "$display" >"$CUSTOM_DIR/$name.meta"
+  chmod 0600 "$CUSTOM_DIR/$name.meta" 2>/dev/null
   mark_reboot_required
   release_write_lock
   rm -f "$raw" "$normalized"
-  log_msg "custom: installed $name (reboot required)"
+  log_msg "custom: installed $name ($display, reboot required)"
   refresh_module_description >/dev/null 2>&1
   echo "ok=1"
   echo "filename=$name"
+  echo "display_name=$display"
   echo "reboot_required=1"
 }
 
@@ -180,7 +211,7 @@ cmd_remove_custom() {
     echo "error=not_found"
     return 1
   }
-  rm -f "$CUSTOM_DIR/$filename" || {
+  rm -f "$CUSTOM_DIR/$filename" "$CUSTOM_DIR/$filename.meta" || {
     release_write_lock
     echo "error=remove_failed"
     return 1
@@ -191,6 +222,31 @@ cmd_remove_custom() {
   refresh_module_description >/dev/null 2>&1
   echo "ok=1"
   echo "reboot_required=1"
+}
+
+cmd_cert_info() {
+  target="$1"
+  case "$target" in
+    reqable|proxypin)
+      file=$(find_addon_cert "$target" 0) || {
+        echo "error=not_found"
+        return 1
+      }
+      ;;
+    custom:*)
+      name=${target#custom:}
+      is_cert_filename "$name" || {
+        echo "error=invalid_filename"
+        return 1
+      }
+      file="$CUSTOM_DIR/$name"
+      ;;
+    *)
+      echo "error=invalid_target"
+      return 1
+      ;;
+  esac
+  cert_info_from_file "$file"
 }
 
 cmd_hot_mount() {
@@ -212,6 +268,7 @@ case "$1" in
   toggle) cmd_toggle "$2" "$3" ;;
   install_custom) cmd_install_custom "$2" ;;
   remove_custom) cmd_remove_custom "$2" ;;
+  cert_info) cmd_cert_info "$2" ;;
   hot_mount) cmd_hot_mount "$2" "$3" ;;
   hot_unmount) cmd_hot_unmount ;;
   reinject|sync)
@@ -220,7 +277,7 @@ case "$1" in
     exit 1
     ;;
   *)
-    echo "usage: cert_manager.sh {status|list_custom|toggle|install_custom|remove_custom|hot_mount|hot_unmount}"
+    echo "usage: cert_manager.sh {status|list_custom|toggle|install_custom|remove_custom|cert_info|hot_mount|hot_unmount}"
     exit 1
     ;;
 esac

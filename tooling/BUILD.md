@@ -7,8 +7,10 @@
 ```text
 module/                 # Magisk 模块本体
   bin/
-    common.sh           # 路径初始化 + 加载 lib/*
+    common.sh           # 路径初始化 + 按 install/runtime 加载 lib/*
     lib/                # 按功能拆分的公共库
+      # 证书域: app_detect / cert_parse / cert_sources
+      # 安装: install_flow（仅刷入时加载）
     apex_inject.sh      # 开机 / 命名空间注入
     hot_mount.sh        # 免重启热挂载（可选）
     cert_manager.sh     # WebUI / CLI
@@ -29,9 +31,15 @@ docs/                   # VitePress 用户文档
 | `store.sh` | 信任库路径、SELinux、路径身份 |
 | `certs.sh` | 证书文件名、复制、addon 合并 |
 | `openssl.sh` | OpenSSL 定位 |
+| `app_detect.sh` | 已安装抓包 App 的 CA 路径探测 |
+| `cert_parse.sh` | 显示名 / 详情解析、规范化导入 |
+| `cert_sources.sh` | sources 同步与 addon 查找（含 ProxyPin 内置） |
+| `install_flow.sh` | 刷入安装编排（仅 `CERTBRIDGE_PROFILE=install`） |
 | `verify.sh` | 注入结果校验 |
 | `generation.sh` | 开机证书集合生成 |
 | `status.sh` | 模块状态标签与描述 |
+
+`common.sh` 按 `CERTBRIDGE_PROFILE` 加载：`install` 仅装入安装所需库；默认 `runtime` 装入开机 / WebUI / Action 所需库。
 
 ## 本地命令
 

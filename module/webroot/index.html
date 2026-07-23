@@ -125,11 +125,11 @@
       </div>
     </section>
 
-    <div class="small-title" data-page="certs">内置证书</div>
+    <div class="small-title" data-page="certs">抓包应用证书</div>
     <section class="card" data-page="certs">
-      <div class="pref">
+      <div class="pref cert-row" data-cert="reqable">
         <div class="pref-body">
-          <div class="pref-title">Reqable CA</div>
+          <div class="pref-title" id="reqableTitle">Reqable</div>
           <div class="pref-desc" id="reqableSub">加载中…</div>
         </div>
         <div class="pref-right">
@@ -140,9 +140,10 @@
           </label>
         </div>
       </div>
-      <div class="pref">
+      <div class="cert-detail" id="reqableDetail" hidden></div>
+      <div class="pref cert-row" data-cert="proxypin">
         <div class="pref-body">
-          <div class="pref-title">ProxyPin CA</div>
+          <div class="pref-title" id="proxypinTitle">ProxyPin</div>
           <div class="pref-desc" id="proxypinSub">加载中…</div>
         </div>
         <div class="pref-right">
@@ -152,6 +153,12 @@
             <span class="thumb"></span>
           </label>
         </div>
+      </div>
+      <div class="cert-detail" id="proxypinDetail" hidden></div>
+      <div class="field-hint" style="padding: 8px 16px 12px">
+        点击证书行可展开详情。Reqable /
+        ProxyPin 优先从已安装 App 读取 CA；ProxyPin
+        若未检测到 App 证书则使用内置兜底。
       </div>
     </section>
 

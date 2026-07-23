@@ -1,5 +1,11 @@
 # 更新日志
 
+## v2.0.0
+
+- 证书来源重构：不再内置 Reqable，优先从已安装 App 自动导入；ProxyPin 优先 App，未检测到且安装时选了 ProxyPin 则使用模块内置证书；检测到 HttpCanary、ADG 等依次询问是否导入为自定义证书
+- WebUI 证书名称从证书 subject（CN/O）自动解析，支持点击展开详情（主题、颁发者、有效期、指纹等）；自定义证书同样显示可读名称
+- 模块结构再梳理：证书域拆为探测 / 解析 / 来源；安装编排独立为 `install_flow`；`common.sh` 按 install / runtime 场景按需加载
+
 ## v1.2.0
 
 - 模块脚本按功能拆分到 `bin/lib/`，`common.sh` 仅作加载入口

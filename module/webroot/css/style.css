@@ -1021,6 +1021,40 @@ html[data-layout="dock"] .dock-nav:not([hidden]) {
   word-break: break-all;
 }
 
+.cert-row {
+  cursor: pointer;
+}
+
+.cert-row .pref-body {
+  min-width: 0;
+}
+
+.cert-detail {
+  padding: 0 16px 12px;
+  border-top: 1px solid var(--line);
+  background: var(--muted);
+}
+
+.cert-detail .kv-list {
+  padding: 4px 0 0;
+}
+
+.cert-detail .kv-row {
+  padding: 8px 4px;
+  font-size: calc(0.78rem * var(--font-scale));
+}
+
+.cert-detail .k {
+  color: var(--text-3);
+  flex: 0 0 4.5em;
+}
+
+.cert-detail .v {
+  font-weight: 500;
+  text-align: left;
+  word-break: break-all;
+}
+
 .mini-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

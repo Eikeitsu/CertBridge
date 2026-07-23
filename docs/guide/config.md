@@ -26,17 +26,22 @@ proxypin=1
 
 ## 自定义证书
 
-1. WebUI 支持 PEM / DER 证书，文件不必预先改名
+适用于本机抓包软件当前使用的根证书与模块内置默认不一致时（例如 Reqable / ProxyPin 重新生成过 CA）。两张 CA 即使文件大小接近，内容与指纹也可能完全不同，请以 App 内指纹为准。
+
+1. WebUI 支持 PEM（Base64 文本）与 DER（二进制）内容；从用户侧导出时后缀常见 `.pem`、`.crt`（亦可见 `.cer` / `.der`），按内容识别，不必预先改名
 2. 设备必须提供 OpenSSL，模块会检查 X.509、有效期和 `CA:TRUE`
-3. 模块自动计算 `subject_hash_old`，并在冲突时分配 `.1`、`.2` 等序号
-4. 单个文件最大 64 KiB，保存后重启生效
+3. 模块自动计算 8 位十六进制的 `subject_hash_old` 作为系统信任库文件名，冲突时分配 `.1`、`.2` 等序号
+4. 单个文件最大 64 KiB，保存后写入**系统**信任库，重启生效（与「仅装到用户证书」不是同一层）
+5. 长期只用自定义证书时，建议在 WebUI 关闭对应内置开关，避免与默认证书并存
+
+也可将证书放入模块目录 `certs/custom/`，下次开机一并合并；日常更推荐走 WebUI，便于校验与管理。
 
 ## 临时免重启挂载
 
 此功能仅在安装时选择“默认安装”或在自定义安装中明确启用后可用。
 
-- **用户证书**：读取所有用户的 `/data/misc/user/*/cacerts-added/`
-- **存储卡证书**：默认递归扫描 `/sdcard/CertBridge`，也可在 WebUI 指定 `/sdcard/`、`/storage/emulated/` 或 `/mnt/media_rw/` 下的目录
+- **用户证书**：读取所有用户的 `/data/misc/user/*/cacerts-added/`（其中常见 `.pem`、`.crt` 等后缀）
+- **存储卡证书**：默认递归扫描 `/sdcard/CertBridge`（支持 `.pem` / `.crt` / `.cer` / `.der` / `hash.0`），也可在 WebUI 指定 `/sdcard/`、`/storage/emulated/` 或 `/mnt/media_rw/` 下的目录
 - **合并挂载**：同时加入用户区与存储卡证书
 - **无痕卸载**：只卸载带当前 CertBridge 会话标记的挂载层，永久配置不变
 

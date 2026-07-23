@@ -1,7 +1,7 @@
 #!/system/bin/sh
 
 ui_print "********************************"
-ui_print " 系统 CA 证书 "
+ui_print " 证书桥 "
 ui_print " CertBridge "
 ui_print "********************************"
 

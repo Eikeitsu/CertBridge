@@ -6,7 +6,7 @@ MODDIR=${0%/*}
 . "$MODDIR/bin/common.sh"
 
 echo "========================================"
-echo " 系统 CA 证书 · Action"
+echo " 证书桥 · Action"
 echo "========================================"
 
 certbridge_action_ask() {

@@ -5,7 +5,7 @@
 - **仓库**：[Eikeitsu/CertBridge](https://github.com/Eikeitsu/CertBridge)
 - **文档**：[eikeitsu.github.io/CertBridge](https://eikeitsu.github.io/CertBridge/)
 - **酷安**：[许小墨](https://www.coolapk.com/u/7602666)
-- **模块显示名**：系统 CA 证书
+- **模块显示名**：证书桥
 - **模块 ID**：`CertBridge`
 
 ## WebUI 预览

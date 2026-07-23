@@ -316,13 +316,13 @@ const CasApp = {
     if (reqSub)
       reqSub.textContent =
         s.reqable_active === "1"
-          ? `已应用 · ${s.reqable_name || "内置证书"}`
+          ? `已应用（${s.reqable_name || "内置证书"}）`
           : "未应用";
     const ppSub = document.getElementById("proxypinSub");
     if (ppSub)
       ppSub.textContent =
         s.proxypin_active === "1"
-          ? `已应用 · ${s.proxypin_name || "内置证书"}`
+          ? `已应用（${s.proxypin_name || "内置证书"}）`
           : "未应用";
 
     const hotActive = s.hot_active === "1";
@@ -336,9 +336,9 @@ const CasApp = {
         all: "用户 + 存储卡",
       };
       hotStatus.textContent = hotActive
-        ? `${hotPartial ? "部分挂载" : "已挂载"} · ${modes[s.hot_mode] || "临时会话"}`
+        ? `${hotPartial ? "部分挂载" : "已挂载"}（${modes[s.hot_mode] || "临时会话"}）`
         : s.hot_stale === "1"
-          ? "状态异常 · 建议卸载或重启"
+          ? "状态异常（建议卸载或重启）"
           : "未挂载";
     }
     const hotAdded = document.getElementById("hotAdded");
@@ -391,25 +391,31 @@ const CasApp = {
         badge.textContent = short || "模块已禁用";
         badge.classList.add("disabled");
       } else if (s.pending_reboot === "1") {
-        badge.textContent = hotActive
-          ? short || "临时证书已挂载，永久配置待重启"
-          : "配置已保存，等待重启生效";
+        badge.textContent =
+          short ||
+          (hotActive
+            ? "🔥 热挂载（永久配置待重启）"
+            : "⏳ 待重启");
         badge.classList.add("stopped");
       } else if (short) {
         badge.textContent = short;
         if (
           short.includes("失败") ||
+          short.includes("异常") ||
           short.includes("需重装") ||
-          short.includes("未启用")
+          short.includes("未启用") ||
+          short.includes("💤")
         ) {
           badge.classList.add(
-            short.includes("未启用") ? "disabled" : "stopped",
+            short.includes("未启用") || short.includes("💤")
+              ? "disabled"
+              : "stopped",
           );
         }
       } else if (s.apex_ok === "1" || s.apex_ok === "2") {
-        badge.textContent = `正常 · ${s.active_count || 0} 张证书已启用`;
+        badge.textContent = `✅ 运行正常 · ${s.active_count || 0} 张`;
       } else {
-        badge.textContent = "APEX 注入失败，请查看日志并重启";
+        badge.textContent = "⚠️ 异常（请查看日志）";
         badge.classList.add("stopped");
       }
     }

@@ -48,12 +48,12 @@ hot_failed=0"
   echo "pending_reboot=$([ -f "$PENDING_FILE" ] && echo 1 || echo 0)"
   echo "inject_error=$([ -f "$STATEDIR/inject-error" ] && echo 1 || echo 0)"
   if [ "$hot_partial" = "1" ]; then
-    echo "desc_short=临时证书部分挂载，请检查命名空间状态"
+    echo "desc_short=🔥 热挂载（部分未覆盖）"
   else
     echo "desc_short=$(compute_status_tag)"
   fi
   echo "status_cached=$(runtime_status_fresh && echo 1 || echo 0)"
-  echo "desc_body=$(get_desc_body)"
+  echo "desc_body=$(compose_module_description)"
   echo "reqable_enabled=$(read_conf reqable 1)"
   echo "reqable_active=$(is_addon_applied reqable && echo 1 || echo 0)"
   echo "reqable_name=$(get_applied_name reqable)"
@@ -83,6 +83,7 @@ cmd_toggle() {
   mark_reboot_required
   release_write_lock
   log_msg "config: $name=$value (reboot required)"
+  refresh_module_description >/dev/null 2>&1
   echo "ok=1"
   echo "reboot_required=1"
 }
@@ -164,6 +165,7 @@ cmd_install_custom() {
   release_write_lock
   rm -f "$raw" "$normalized"
   log_msg "custom: installed $name (reboot required)"
+  refresh_module_description >/dev/null 2>&1
   echo "ok=1"
   echo "filename=$name"
   echo "reboot_required=1"
@@ -186,6 +188,7 @@ cmd_remove_custom() {
   mark_reboot_required
   release_write_lock
   log_msg "custom: removed $filename (reboot required)"
+  refresh_module_description >/dev/null 2>&1
   echo "ok=1"
   echo "reboot_required=1"
 }

@@ -316,13 +316,13 @@ const CasApp = {
     if (reqSub)
       reqSub.textContent =
         s.reqable_active === "1"
-          ? `已应用 · ${s.reqable_name || "833e2479.0"}`
+          ? `已应用 · ${s.reqable_name || "内置证书"}`
           : "未应用";
     const ppSub = document.getElementById("proxypinSub");
     if (ppSub)
       ppSub.textContent =
         s.proxypin_active === "1"
-          ? `已应用 · ${s.proxypin_name || "243f0bfb.0"}`
+          ? `已应用 · ${s.proxypin_name || "内置证书"}`
           : "未应用";
 
     const hotActive = s.hot_active === "1";

@@ -57,6 +57,22 @@ const BIN_LIBS = [
   "bin/lib/status.sh",
 ];
 
+function listBuiltinCertFiles(kind) {
+  const dir = join(moduleRoot, "certs", "builtin", kind);
+  if (!existsSync(dir)) {
+    throw new Error(`missing builtin cert directory: certs/builtin/${kind}`);
+  }
+  const files = readdirSync(dir).filter((name) =>
+    /^[0-9a-fA-F]{8}\.\d+$/.test(name),
+  );
+  if (files.length < 1) {
+    throw new Error(
+      `missing builtin hash.N certificate under certs/builtin/${kind}/`,
+    );
+  }
+  return files.map((name) => join("certs", "builtin", kind, name));
+}
+
 function validateSources() {
   const required = [
     ...ROOT_FILES,
@@ -68,14 +84,17 @@ function validateSources() {
     "config/certs.conf",
     "webroot/index.html",
     "webroot/assets/tip.png",
-    "certs/builtin/reqable/833e2479.0",
-    "certs/builtin/proxypin/243f0bfb.0",
   ];
   for (const relPath of required) {
     if (!existsSync(join(moduleRoot, relPath))) {
       throw new Error(`missing required module file: ${relPath}`);
     }
   }
+
+  const builtinCerts = [
+    ...listBuiltinCertFiles("reqable"),
+    ...listBuiltinCertFiles("proxypin"),
+  ];
 
   for (const relPath of ["system", "certs/system_base", "certs/active"]) {
     const legacyPath = join(moduleRoot, relPath);
@@ -101,10 +120,7 @@ function validateSources() {
       throw new Error(`invalid shell shebang: ${relPath}`);
   }
 
-  for (const relPath of [
-    "certs/builtin/reqable/833e2479.0",
-    "certs/builtin/proxypin/243f0bfb.0",
-  ]) {
+  for (const relPath of builtinCerts) {
     const content = readFileSync(join(moduleRoot, relPath));
     const isPem = content
       .subarray(0, 27)

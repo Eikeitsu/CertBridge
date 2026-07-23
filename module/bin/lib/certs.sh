@@ -71,15 +71,38 @@ install_one_addon() {
   echo "$label|$name|$checksum" >>"$MAP_TMP"
 }
 
+# 内置目录中取第一张合法 hash.N（subject hash 随 CA 变化，不可写死文件名）
+find_builtin_cert() {
+  kind="$1"
+  dir="$BUILTIN_DIR/$kind"
+  [ -d "$dir" ] || return 1
+  for cert in "$dir"/*.*; do
+    [ -f "$cert" ] || continue
+    is_cert_filename "$(basename "$cert")" || continue
+    echo "$cert"
+    return 0
+  done
+  return 1
+}
+
 install_addon_certs_into() {
   dest="$1"
   MAP_TMP="$2"
+  builtin_cert=""
   : >"$MAP_TMP" || return 1
-  if is_enabled reqable && [ -f "$BUILTIN_DIR/reqable/833e2479.0" ]; then
-    install_one_addon "$BUILTIN_DIR/reqable/833e2479.0" "$dest" reqable || return 1
+  if is_enabled reqable; then
+    builtin_cert=$(find_builtin_cert reqable) || {
+      log_msg "certs: reqable enabled but no builtin hash.N found"
+      return 1
+    }
+    install_one_addon "$builtin_cert" "$dest" reqable || return 1
   fi
-  if is_enabled proxypin && [ -f "$BUILTIN_DIR/proxypin/243f0bfb.0" ]; then
-    install_one_addon "$BUILTIN_DIR/proxypin/243f0bfb.0" "$dest" proxypin || return 1
+  if is_enabled proxypin; then
+    builtin_cert=$(find_builtin_cert proxypin) || {
+      log_msg "certs: proxypin enabled but no builtin hash.N found"
+      return 1
+    }
+    install_one_addon "$builtin_cert" "$dest" proxypin || return 1
   fi
   for cert in "$CUSTOM_DIR"/*.*; do
     [ -f "$cert" ] || continue
@@ -91,8 +114,12 @@ install_addon_certs_into() {
 
 count_addon_certs() {
   n=0
-  is_enabled reqable && [ -f "$BUILTIN_DIR/reqable/833e2479.0" ] && n=$((n + 1))
-  is_enabled proxypin && [ -f "$BUILTIN_DIR/proxypin/243f0bfb.0" ] && n=$((n + 1))
+  if is_enabled reqable && find_builtin_cert reqable >/dev/null; then
+    n=$((n + 1))
+  fi
+  if is_enabled proxypin && find_builtin_cert proxypin >/dev/null; then
+    n=$((n + 1))
+  fi
   for cert in "$CUSTOM_DIR"/*.*; do
     [ -f "$cert" ] || continue
     is_cert_filename "$(basename "$cert")" && n=$((n + 1))

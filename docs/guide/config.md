@@ -26,7 +26,7 @@ proxypin=1
 
 ## 自定义证书
 
-适用于 HttpCanary、ADG、Charles、mitmproxy 等，或 Reqable / ProxyPin 未自动检测到时。显示名优先取证书 CN（其次 O），自定义证书也会有可读名称。
+适用于 HttpCanary、ADGuard、Charles、mitmproxy 等，或 Reqable / ProxyPin 未自动检测到时。显示名优先取证书 CN（其次 O），自定义证书也会有可读名称。
 
 1. WebUI 支持 PEM（Base64 文本）与 DER（二进制）内容；从用户侧导出时后缀常见 `.pem`、`.crt`（亦可见 `.cer` / `.der`），按内容识别，不必预先改名
 2. 设备必须提供 OpenSSL，模块会检查 X.509、有效期和 `CA:TRUE`
@@ -34,7 +34,7 @@ proxypin=1
 4. 单个文件最大 64 KiB，保存后写入**系统**信任库，重启生效（与「仅装到用户证书」不是同一层）
 5. 长期只用自定义证书时，可在 WebUI 关闭 Reqable / ProxyPin 开关，避免多张并存造成困惑
 
-也可将证书放入模块目录 `certs/custom/`，下次开机一并合并；日常更推荐走 WebUI，便于校验与管理。安装时若检测到 HttpCanary、ADG，也会询问是否直接导入到该目录。
+也可将证书放入模块目录 `certs/custom/`，下次开机一并合并；日常更推荐走 WebUI，便于校验与管理。安装时若检测到 HttpCanary、ADGuard，也会询问是否直接导入到该目录。
 
 ## 临时免重启挂载（热挂载）
 

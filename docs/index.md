@@ -13,7 +13,7 @@ hero:
       link: /guide/install
 features:
   - title: App 证书导入
-    details: 自动检测 Reqable / ProxyPin 等；ProxyPin 可内置兜底；HttpCanary、ADG 可询问导入为自定义。
+    details: 自动检测 Reqable / ProxyPin 等；ProxyPin 可内置兜底；HttpCanary、ADGuard 可询问导入为自定义。
   - title: 自定义 CA
     details: 上传 PEM / DER 证书，自动校验、计算 hash，并从证书解析显示名与详情。
   - title: Android 14+

@@ -9,3 +9,8 @@ docs/.vitepress/cache/
 .vscode/
 .release-body.md
 .release-notes.md
+# large static openssl binaries (fetched by npm run package:module)
+module/bin/openssl/openssl-arm
+module/bin/openssl/openssl-arm64
+module/bin/openssl/openssl-x64
+module/bin/openssl/openssl-x86

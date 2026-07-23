@@ -164,7 +164,7 @@ certbridge_install_import_proxypin() {
 }
 
 certbridge_install_ask_optional_apps() {
-  for opt_kind in httpcanary adg; do
+  for opt_kind in httpcanary adguard; do
     opt_label=$(app_cert_label "$opt_kind")
     live=$(find_live_app_cert "$opt_kind") || {
       certbridge_install_log "$opt_kind: not installed / no cert path"

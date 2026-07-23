@@ -38,8 +38,13 @@ find_live_app_cert() {
         "/data/data/com.guoshi.httpcanary/cache/HttpCanary.pem" \
         "/data/data/com.guoshi.httpcanary.premium/cache/HttpCanary.pem"
       ;;
-    adg)
+    adguard)
+      # 包名路径里的 adg 是第三方目录名，kind 统一用 adguard
       if path=$(_app_cert_first_existing \
+        "/data/user/0/com.adguard.android/files/ca.crt" \
+        "/data/user/0/com.adguard.android/files/certificate.crt" \
+        "/data/user/0/com.adguard.android.contentblocker/files/ca.crt" \
+        "/data/data/com.adguard.android/files/ca.crt" \
         "/data/user/0/com.network.adg/files/ca.crt" \
         "/data/user/0/com.network.adg/files/certificate.crt" \
         "/data/user/0/com.adg.catcher/files/ca.crt" \
@@ -47,7 +52,8 @@ find_live_app_cert() {
         echo "$path"
         return 0
       fi
-      for dir in /data/user/0/*adg* /data/data/*adg*; do
+      for dir in /data/user/0/com.adguard* /data/data/com.adguard* \
+        /data/user/0/*adg* /data/data/*adg*; do
         [ -d "$dir" ] || continue
         path=$(_app_cert_first_existing \
           "$dir/files/ca.crt" \
@@ -68,7 +74,7 @@ app_cert_label() {
     reqable) echo "Reqable" ;;
     proxypin) echo "ProxyPin" ;;
     httpcanary) echo "HttpCanary" ;;
-    adg) echo "ADG" ;;
+    adguard) echo "ADGuard" ;;
     *) echo "$1" ;;
   esac
 }

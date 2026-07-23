@@ -30,7 +30,7 @@ docs/                   # VitePress 用户文档
 | `lock.sh` | 写锁 |
 | `store.sh` | 信任库路径、SELinux、路径身份 |
 | `certs.sh` | 证书文件名、复制、addon 合并 |
-| `openssl.sh` | OpenSSL 定位 |
+| `openssl.sh` | OpenSSL 定位（优先模块内置静态二进制） |
 | `app_detect.sh` | 已安装抓包 App 的 CA 路径探测 |
 | `cert_parse.sh` | 显示名 / 详情解析、规范化导入 |
 | `cert_sources.sh` | sources 同步与 addon 查找（含 ProxyPin 内置） |

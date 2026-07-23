@@ -22,7 +22,7 @@
 
 - 默认安装自动检测已安装抓包 App 的 CA；也可用音量键逐项自定义
 - Reqable / ProxyPin 优先从已安装 App 导入；ProxyPin 无 App 证书时用内置兜底；可独立开关
-- 检测到 HttpCanary、ADG 等时可询问导入为自定义证书；也可上传 PEM / DER
+- 检测到 HttpCanary、ADGuard 等时可询问导入为自定义证书；也可上传 PEM / DER
 - Android 7–16；Android 14+ APEX bypass
 - 每次开机从实时系统信任库完整合并，不保存系统 CA 基线
 - 可选用户凭据区 / 存储卡证书免重启热挂载，可按会话标记无痕卸载

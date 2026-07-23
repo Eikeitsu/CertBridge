@@ -16,13 +16,13 @@
 
 ## 主要能力
 
-默认安装会检测已安装抓包 App 并导入 CA，同时安装 WebUI 与热挂载；自定义安装可逐项选择 Reqable、ProxyPin、WebUI 或免重启热挂载。若检测到 HttpCanary、ADG 等，会依次询问是否导入为自定义证书。
+默认安装会检测已安装抓包 App 并导入 CA，同时安装 WebUI 与热挂载；自定义安装可逐项选择 Reqable、ProxyPin、WebUI 或免重启热挂载。若检测到 HttpCanary、ADGuard 等，会依次询问是否导入为自定义证书。
 
 | 能力                   | 说明                                                         |
 | ---------------------- | ------------------------------------------------------------ |
 | Reqable CA             | 从已安装 Reqable App 读取根证（不再内置）；开机可再刷新；可开关 |
 | ProxyPin CA            | 优先从已安装 ProxyPin App 导入；未检测到时使用模块内置兜底；可开关 |
-| 其它抓包 App           | 安装时若检测到 HttpCanary、ADG 等，可询问导入为自定义证书     |
+| 其它抓包 App           | 安装时若检测到 HttpCanary、ADGuard 等，可询问导入为自定义证书     |
 | 自定义证书             | 上传 PEM / DER；自动校验 CA、有效期、hash；显示名从证书 subject 读取 |
 | 开机实时合并           | 每次重启重新读取当前完整 `hash.N` 信任库，不依赖持久化基线   |
 | 分版本注入             | Android 7–13 挂载 system；Android 14+ 为 APEX 与 system 分别建立临时挂载层后再绑定 |

@@ -61,6 +61,67 @@ const BIN_LIBS = [
   "bin/lib/status.sh",
 ];
 
+const OPENSSL_BINARIES = [
+  "openssl-arm",
+  "openssl-arm64",
+  "openssl-x64",
+  "openssl-x86",
+];
+
+const OPENSSL_ZIP_URL =
+  "https://github.com/JelmerDeHen/MagiskBypassCertificateTransparencyError/releases/download/v0.0.1/MagiskBypassCertificateTransparencyError.zip";
+
+function ensureOpensslBinaries() {
+  const dest = join(moduleRoot, "bin", "openssl");
+  mkdirSync(dest, { recursive: true });
+  const missing = OPENSSL_BINARIES.filter(
+    (name) => !existsSync(join(dest, name)),
+  );
+  if (!missing.length) {
+    log("bundled openssl binaries present");
+    return;
+  }
+
+  log(`fetching bundled openssl for: ${missing.join(", ")}`);
+  const cacheDir = join(repoRoot, ".build", "openssl-cache");
+  const zipPath = join(cacheDir, "openssl-src.zip");
+  const extractDir = join(cacheDir, "extract");
+  mkdirSync(cacheDir, { recursive: true });
+  if (!existsSync(zipPath)) {
+    execSync(`curl.exe -L --fail -o "${zipPath}" "${OPENSSL_ZIP_URL}"`, {
+      stdio: "inherit",
+      shell: true,
+    });
+  }
+  rmSync(extractDir, { recursive: true, force: true });
+  if (process.platform === "win32") {
+    execSync(
+      `powershell -NoProfile -Command "Expand-Archive -Path '${zipPath.replace(/'/g, "''")}' -DestinationPath '${extractDir.replace(/'/g, "''")}' -Force"`,
+      { stdio: "inherit" },
+    );
+  } else {
+    execSync(`unzip -qo "${zipPath}" -d "${extractDir}"`, { stdio: "inherit" });
+  }
+  for (const name of OPENSSL_BINARIES) {
+    const src = join(extractDir, "bin", name);
+    if (!existsSync(src)) {
+      throw new Error(`openssl binary missing in upstream zip: ${name}`);
+    }
+    cpSync(src, join(dest, name));
+  }
+  writeFileSync(
+    join(dest, "README.txt"),
+    [
+      "# Static OpenSSL for Android (arm / arm64 / x86 / x64)",
+      "# Used when the install / runtime environment has no system openssl.",
+      "# Source: MagiskBypassCertificateTransparencyError static builds",
+      "# https://github.com/JelmerDeHen/MagiskBypassCertificateTransparencyError",
+      "",
+    ].join("\n"),
+  );
+  log("bundled openssl binaries ready");
+}
+
 function listBuiltinCertFiles(kind) {
   const dir = join(moduleRoot, "certs", "builtin", kind);
   if (!existsSync(dir)) {
@@ -142,6 +203,16 @@ function validateSources() {
     if (Date.parse(certificate.validTo) <= Date.now())
       throw new Error(`built-in certificate expired: ${relPath}`);
   }
+
+  for (const name of OPENSSL_BINARIES) {
+    const relPath = join("bin", "openssl", name);
+    if (!existsSync(join(moduleRoot, relPath))) {
+      throw new Error(`missing bundled openssl binary: ${relPath}`);
+    }
+    if (statSync(join(moduleRoot, relPath)).size < 100000) {
+      throw new Error(`openssl binary looks too small: ${relPath}`);
+    }
+  }
 }
 
 function copyFromModule(relPath) {
@@ -188,6 +259,7 @@ const version = readVersion();
 const zipName = `CertBridge_${version}.zip`;
 const zipPath = join(releaseDir, zipName);
 
+ensureOpensslBinaries();
 validateSources();
 rmSync(staging, { recursive: true, force: true });
 mkdirSync(staging, { recursive: true });

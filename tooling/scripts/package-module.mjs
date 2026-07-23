@@ -71,7 +71,43 @@ const OPENSSL_BINARIES = [
 const OPENSSL_ZIP_URL =
   "https://github.com/JelmerDeHen/MagiskBypassCertificateTransparencyError/releases/download/v0.0.1/MagiskBypassCertificateTransparencyError.zip";
 
-function ensureOpensslBinaries() {
+async function downloadFile(url, dest) {
+  log(`downloading ${url}`);
+  const res = await fetch(url, { redirect: "follow" });
+  if (!res.ok) {
+    throw new Error(`download failed HTTP ${res.status}: ${url}`);
+  }
+  const buf = Buffer.from(await res.arrayBuffer());
+  writeFileSync(dest, buf);
+  log(`saved ${(buf.length / 1024 / 1024).toFixed(1)} MB -> ${dest}`);
+}
+
+function extractZip(zipPath, extractDir) {
+  mkdirSync(extractDir, { recursive: true });
+  if (process.platform === "win32") {
+    const z = zipPath.replace(/'/g, "''");
+    const d = extractDir.replace(/'/g, "''");
+    execSync(
+      `powershell -NoProfile -Command "Expand-Archive -Path '${z}' -DestinationPath '${d}' -Force"`,
+      { stdio: "inherit" },
+    );
+    return;
+  }
+  try {
+    execSync(`unzip -qo "${zipPath}" -d "${extractDir}"`, {
+      stdio: "inherit",
+    });
+    return;
+  } catch {
+    // GitHub runners may lack unzip; Python is usually available
+  }
+  execSync(
+    `python3 -c "import zipfile; zipfile.ZipFile(r'''${zipPath}''').extractall(r'''${extractDir}''')"`,
+    { stdio: "inherit" },
+  );
+}
+
+async function ensureOpensslBinaries() {
   const dest = join(moduleRoot, "bin", "openssl");
   mkdirSync(dest, { recursive: true });
   const missing = OPENSSL_BINARIES.filter(
@@ -87,21 +123,11 @@ function ensureOpensslBinaries() {
   const zipPath = join(cacheDir, "openssl-src.zip");
   const extractDir = join(cacheDir, "extract");
   mkdirSync(cacheDir, { recursive: true });
-  if (!existsSync(zipPath)) {
-    execSync(`curl.exe -L --fail -o "${zipPath}" "${OPENSSL_ZIP_URL}"`, {
-      stdio: "inherit",
-      shell: true,
-    });
+  if (!existsSync(zipPath) || statSync(zipPath).size < 1000) {
+    await downloadFile(OPENSSL_ZIP_URL, zipPath);
   }
   rmSync(extractDir, { recursive: true, force: true });
-  if (process.platform === "win32") {
-    execSync(
-      `powershell -NoProfile -Command "Expand-Archive -Path '${zipPath.replace(/'/g, "''")}' -DestinationPath '${extractDir.replace(/'/g, "''")}' -Force"`,
-      { stdio: "inherit" },
-    );
-  } else {
-    execSync(`unzip -qo "${zipPath}" -d "${extractDir}"`, { stdio: "inherit" });
-  }
+  extractZip(zipPath, extractDir);
   for (const name of OPENSSL_BINARIES) {
     const src = join(extractDir, "bin", name);
     if (!existsSync(src)) {
@@ -259,7 +285,7 @@ const version = readVersion();
 const zipName = `CertBridge_${version}.zip`;
 const zipPath = join(releaseDir, zipName);
 
-ensureOpensslBinaries();
+await ensureOpensslBinaries();
 validateSources();
 rmSync(staging, { recursive: true, force: true });
 mkdirSync(staging, { recursive: true });

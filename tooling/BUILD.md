@@ -53,6 +53,16 @@ npm run dev:docs
 npm run build:docs
 ```
 
+OpenSSL 打包默认只含 **arm + arm64**（真机）。需要模拟器 x86/x64 时：
+
+```bash
+# Linux / macOS
+OPENSSL_ABIS=all npm run package:module
+
+# Windows PowerShell
+$env:OPENSSL_ABIS="all"; npm run package:module
+```
+
 ## 版本约定
 
 采用语义化版本 **`vMAJOR.MINOR.PATCH`**（如 `v1.0.0`）。

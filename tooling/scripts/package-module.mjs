@@ -61,12 +61,44 @@ const BIN_LIBS = [
   "bin/lib/status.sh",
 ];
 
-const OPENSSL_BINARIES = [
+const OPENSSL_ALL_BINARIES = [
   "openssl-arm",
   "openssl-arm64",
   "openssl-x64",
   "openssl-x86",
 ];
+
+/** abi 短名 → 文件名；默认只打手机架构，模拟器用 OPENSSL_ABIS=all */
+const OPENSSL_ABI_FILE = {
+  arm: "openssl-arm",
+  arm64: "openssl-arm64",
+  x64: "openssl-x64",
+  x86_64: "openssl-x64",
+  x86: "openssl-x86",
+};
+
+function resolveOpensslPackageBinaries() {
+  const raw = (process.env.OPENSSL_ABIS ?? "arm,arm64").trim().toLowerCase();
+  if (raw === "all") {
+    return [...OPENSSL_ALL_BINARIES];
+  }
+  const selected = [];
+  for (const token of raw.split(/[,+\s]+/).filter(Boolean)) {
+    const name = OPENSSL_ABI_FILE[token];
+    if (!name) {
+      throw new Error(
+        `unknown OPENSSL_ABIS token "${token}" (use arm,arm64,x86,x64 or all)`,
+      );
+    }
+    if (!selected.includes(name)) selected.push(name);
+  }
+  if (!selected.length) {
+    throw new Error("OPENSSL_ABIS resolved to empty set");
+  }
+  return selected;
+}
+
+const OPENSSL_BINARIES = resolveOpensslPackageBinaries();
 
 const OPENSSL_ZIP_URL =
   "https://github.com/JelmerDeHen/MagiskBypassCertificateTransparencyError/releases/download/v0.0.1/MagiskBypassCertificateTransparencyError.zip";
@@ -138,14 +170,36 @@ async function ensureOpensslBinaries() {
   writeFileSync(
     join(dest, "README.txt"),
     [
-      "# Static OpenSSL for Android (arm / arm64 / x86 / x64)",
+      "# Static OpenSSL for Android",
       "# Used when the install / runtime environment has no system openssl.",
+      "# Package ships phone ABIs by default (arm + arm64); set OPENSSL_ABIS=all for x86/x64.",
+      "# Install keeps only the device ABI on disk.",
       "# Source: MagiskBypassCertificateTransparencyError static builds",
       "# https://github.com/JelmerDeHen/MagiskBypassCertificateTransparencyError",
       "",
     ].join("\n"),
   );
   log("bundled openssl binaries ready");
+}
+
+/** 发布 zip 只保留本次打包选中的架构，去掉仓库里可能残留的其它 ABI */
+function pruneStagingOpenssl() {
+  const dir = join(staging, "bin", "openssl");
+  if (!existsSync(dir)) return;
+  const keep = new Set(OPENSSL_BINARIES);
+  for (const name of OPENSSL_ALL_BINARIES) {
+    const path = join(dir, name);
+    if (!existsSync(path)) continue;
+    if (keep.has(name)) continue;
+    rmSync(path);
+    log(`omitted from zip: bin/openssl/${name}`);
+  }
+  for (const name of OPENSSL_BINARIES) {
+    if (!existsSync(join(dir, name))) {
+      throw new Error(`staging missing openssl binary: ${name}`);
+    }
+  }
+  log(`openssl in zip: ${OPENSSL_BINARIES.join(", ")}`);
 }
 
 function listBuiltinCertFiles(kind) {
@@ -286,6 +340,9 @@ const zipName = `CertBridge_${version}.zip`;
 const zipPath = join(releaseDir, zipName);
 
 await ensureOpensslBinaries();
+log(
+  `openssl package ABIs: ${OPENSSL_BINARIES.join(", ")} (OPENSSL_ABIS=${process.env.OPENSSL_ABIS || "arm,arm64"})`,
+);
 validateSources();
 rmSync(staging, { recursive: true, force: true });
 mkdirSync(staging, { recursive: true });
@@ -297,6 +354,7 @@ for (const file of ROOT_FILES) copyFromModule(file);
 copyDirFromModule("META-INF");
 copyDirFromModule("config");
 copyDirFromModule("bin");
+pruneStagingOpenssl();
 copyDirFromModule("certs");
 
 if (!existsSync(builtWebDir)) {

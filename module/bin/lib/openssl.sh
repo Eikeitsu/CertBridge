@@ -1,6 +1,7 @@
 #!/system/bin/sh
 # OpenSSL 定位：优先使用模块自带静态二进制（安装环境通常没有系统 openssl）
-# zip 内含多架构；安装时 trim_bundled_openssl_to_abi 只保留当前 ABI，约省 20MB
+# zip 默认只打 arm/arm64；安装时再 trim 到当前 ABI
+# 全架构：OPENSSL_ABIS=all npm run package:module
 
 OPENSSL_BUNDLE_NAMES="openssl-arm64 openssl-arm openssl-x64 openssl-x86"
 

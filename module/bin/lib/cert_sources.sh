@@ -3,6 +3,30 @@
 
 SOURCES_DIR="${SOURCES_DIR:-$CERT_POOL/sources}"
 
+# 诊断从 App 导入失败原因（打印到 stdout，供安装日志）
+# 返回码：0=可导入 1=无 OpenSSL 2=未找到文件 3=校验/转换失败
+diagnose_app_cert_import() {
+  kind="$1"
+  if ! find_openssl >/dev/null 2>&1; then
+    echo "reason=openssl_unavailable"
+    return 1
+  fi
+  echo "openssl=$(find_openssl)"
+  live=$(find_live_app_cert "$kind") || {
+    echo "reason=live_not_found"
+    return 2
+  }
+  echo "live=$live"
+  if ! import_ca_into_dir "$live" "$DATADIR/diag_import.$$" "$(app_cert_label "$kind")" >/dev/null 2>&1; then
+    rm -rf "$DATADIR/diag_import.$$"
+    echo "reason=import_failed"
+    return 3
+  fi
+  rm -rf "$DATADIR/diag_import.$$"
+  echo "reason=ok"
+  return 0
+}
+
 # 从 App 同步到 sources/<kind>/，成功打印文件路径
 sync_source_from_app() {
   kind="$1"
@@ -11,7 +35,11 @@ sync_source_from_app() {
   dest="$SOURCES_DIR/$kind"
   rm -rf "$dest"
   mkdir -p "$dest" || return 1
-  name=$(import_ca_into_dir "$live" "$dest" "$label") || return 1
+  name=$(import_ca_into_dir "$live" "$dest" "$label") || {
+    rm -rf "$dest"
+    mkdir -p "$dest"
+    return 1
+  }
   echo "$dest/$name"
 }
 

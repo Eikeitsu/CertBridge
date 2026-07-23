@@ -78,21 +78,65 @@ certbridge_install_choose_mode() {
   esac
 }
 
+certbridge_install_log() {
+  log_msg "install: $*"
+}
+
+certbridge_install_try_app() {
+  # 尝试从 App 导入到 sources；写日志与 ui_print。成功返回 0。
+  kind="$1"
+  label=$(app_cert_label "$kind")
+  diag=$(diagnose_app_cert_import "$kind")
+  diag_rc=$?
+  certbridge_install_log "$kind: diag_rc=$diag_rc"
+  [ -n "$diag" ] && certbridge_install_log "$kind: $diag"
+  case "$diag_rc" in
+    0)
+      if path=$(sync_source_from_app "$kind"); then
+        dn=$(read_cert_meta_display "$path" "$label")
+        ui_print "- 已从 ${label} 导入：$dn"
+        ui_print "  源文件：$(echo "$diag" | awk -F= '$1=="live"{print substr($0,6); exit}')"
+        ui_print "  写入：${path#$MODPATH/}"
+        certbridge_install_log "$kind: ok path=$path display=$dn"
+        return 0
+      fi
+      ui_print "! ${label} 二次写入失败"
+      certbridge_install_log "$kind: sync failed after diagnose ok"
+      return 1
+      ;;
+    1)
+      ui_print "! ${label}：设备上找不到可用的 OpenSSL，无法转换证书"
+      ui_print "  （安装环境需 openssl；可稍后在系统启动后用 WebUI 导入）"
+      return 1
+      ;;
+    2)
+      ui_print "! ${label}：未找到 App 证书文件"
+      ui_print "  请先在 ${label} 内生成/导出根证书后再刷入"
+      certbridge_install_log "$kind: searched common app paths, none found"
+      return 1
+      ;;
+    *)
+      live=$(echo "$diag" | awk -F= '$1=="live"{print substr($0,6); exit}')
+      ui_print "! ${label}：找到文件但校验/转换失败"
+      [ -n "$live" ] && ui_print "  文件：$live"
+      ui_print "  需为有效 CA、未过期；详见 data/install.log"
+      return 1
+      ;;
+  esac
+}
+
 certbridge_install_import_reqable() {
   REQABLE_SRC_OK=0
   if [ "$INSTALL_REQABLE" != "1" ]; then
+    certbridge_install_log "reqable: skipped (disabled by choice)"
     return 0
   fi
   ui_print "--------------------------------"
   ui_print " 正在检测 Reqable 证书…"
-  if sync_source_from_app reqable >/dev/null 2>&1; then
+  if certbridge_install_try_app reqable; then
     REQABLE_SRC_OK=1
-    dn=$(read_cert_meta_display "$(find_source_cert reqable)" "Reqable")
-    ui_print "- 已从 Reqable 导入：$dn"
   else
     INSTALL_REQABLE=0
-    ui_print "! 未找到 Reqable 证书文件"
-    ui_print "  请先在 Reqable 中生成/导出根证书后再刷入"
     ui_print "  或稍后用 WebUI 自定义导入"
   fi
 }
@@ -100,38 +144,88 @@ certbridge_install_import_reqable() {
 certbridge_install_import_proxypin() {
   PROXYPIN_SRC="none"
   if [ "$INSTALL_PROXYPIN" != "1" ]; then
+    certbridge_install_log "proxypin: skipped (disabled by choice)"
     return 0
   fi
   ui_print "--------------------------------"
   ui_print " 正在检测 ProxyPin 证书…"
-  if sync_source_from_app proxypin >/dev/null 2>&1; then
+  if certbridge_install_try_app proxypin; then
     PROXYPIN_SRC="app"
-    dn=$(read_cert_meta_display "$(find_source_cert proxypin)" "ProxyPin")
-    ui_print "- 已从 ProxyPin 导入：$dn"
-  elif find_builtin_cert proxypin >/dev/null 2>&1; then
+  elif builtin_path=$(find_builtin_cert proxypin); then
     PROXYPIN_SRC="builtin"
-    ui_print "- 未检测到 ProxyPin App 证书，使用模块内置兜底"
+    ui_print "- 未从 App 导入成功，使用模块内置证书"
+    ui_print "  内置：${builtin_path#$MODPATH/}"
+    certbridge_install_log "proxypin: fallback builtin=$builtin_path"
   else
     INSTALL_PROXYPIN=0
-    ui_print "! ProxyPin 无 App 证书且缺少内置兜底，已跳过"
+    ui_print "! ProxyPin 无 App 证书且缺少内置文件，已跳过"
+    certbridge_install_log "proxypin: no app and no builtin"
   fi
 }
 
 certbridge_install_ask_optional_apps() {
   for opt_kind in httpcanary adg; do
     opt_label=$(app_cert_label "$opt_kind")
-    live=$(find_live_app_cert "$opt_kind") || continue
+    live=$(find_live_app_cert "$opt_kind") || {
+      certbridge_install_log "$opt_kind: not installed / no cert path"
+      continue
+    }
+    certbridge_install_log "$opt_kind: detected live=$live"
     if certbridge_ask_import_detected "$opt_label"; then
+      if ! find_openssl >/dev/null 2>&1; then
+        ui_print "! ${opt_label}：OpenSSL 不可用，跳过导入"
+        certbridge_install_log "$opt_kind: skip import, openssl unavailable"
+        continue
+      fi
       if name=$(import_ca_into_dir "$live" "$MODPATH/certs/custom" "$opt_label"); then
         ui_print "- 已导入 ${opt_label} → 自定义 $name"
-        log_msg "install: imported $opt_kind as custom $name"
+        certbridge_install_log "$opt_kind: imported as custom/$name"
       else
         ui_print "! ${opt_label} 证书校验失败，已跳过"
+        certbridge_install_log "$opt_kind: import_ca_into_dir failed live=$live"
       fi
     else
       ui_print "- 已跳过 ${opt_label}"
+      certbridge_install_log "$opt_kind: user skipped"
     fi
   done
+}
+
+certbridge_install_dump_tree() {
+  ui_print "--------------------------------"
+  ui_print " 证书目录结果（modules_update 下）"
+  certbridge_install_log "--- cert tree begin ---"
+  for sub in sources/reqable sources/proxypin custom builtin/proxypin; do
+    dir="$MODPATH/certs/$sub"
+    if [ ! -d "$dir" ]; then
+      ui_print " · $sub：（目录不存在）"
+      certbridge_install_log "tree: $sub MISSING"
+      continue
+    fi
+    count=0
+    list=""
+    for f in "$dir"/*; do
+      [ -f "$f" ] || continue
+      case "$f" in *.meta) continue ;; esac
+      count=$((count + 1))
+      list="${list}${list:+, }$(basename "$f")"
+    done
+    if [ "$count" -eq 0 ]; then
+      ui_print " · $sub：空"
+      certbridge_install_log "tree: $sub empty"
+    else
+      ui_print " · $sub：$list"
+      certbridge_install_log "tree: $sub = $list"
+    fi
+  done
+  if [ -f "$MODPATH/config/install-profile.conf" ]; then
+    certbridge_install_log "profile:"
+    while IFS= read -r line; do
+      [ -n "$line" ] && certbridge_install_log "  $line"
+    done <"$MODPATH/config/install-profile.conf"
+  fi
+  certbridge_install_log "--- cert tree end ---"
+  ui_print " 详细日志：data/install.log"
 }
 
 certbridge_install_write_config() {
@@ -193,6 +287,16 @@ certbridge_install_print_summary() {
 
 # Magisk customize 主流程（权限设置仍由 customize.sh 完成）
 certbridge_run_install() {
+  certbridge_install_log "==== CertBridge install start ===="
+  certbridge_install_log "MODPATH=$MODPATH"
+  if openssl_cmd=$(find_openssl); then
+    certbridge_install_log "openssl=$openssl_cmd"
+    ui_print "- OpenSSL：$openssl_cmd"
+  else
+    certbridge_install_log "openssl=UNAVAILABLE"
+    ui_print "! 警告：当前环境无 OpenSSL，App 证书无法转换导入"
+    ui_print "  ProxyPin 仍可使用内置证书；Reqable/自定义请重启后用 WebUI"
+  fi
   certbridge_install_choose_mode
   certbridge_install_prepare_dirs
   certbridge_install_import_reqable
@@ -202,5 +306,7 @@ certbridge_run_install() {
   certbridge_install_trim_components
   MODDIR="$MODPATH"
   tr -d '\r\n' </proc/sys/kernel/random/boot_id >"$INSTALL_BOOT_FILE" 2>/dev/null
+  certbridge_install_dump_tree
   certbridge_install_print_summary
+  certbridge_install_log "==== CertBridge install end ===="
 }

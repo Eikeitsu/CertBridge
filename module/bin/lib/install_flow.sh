@@ -289,12 +289,16 @@ certbridge_install_print_summary() {
 certbridge_run_install() {
   certbridge_install_log "==== CertBridge install start ===="
   certbridge_install_log "MODPATH=$MODPATH"
+  # 尽早给 bin 可执行权限，避免解压后无 +x 导致内置 openssl 探测失败
+  chmod -R 0755 "$MODPATH/bin" 2>/dev/null || true
   if openssl_cmd=$(find_openssl); then
     certbridge_install_log "openssl=$openssl_cmd"
     ui_print "- OpenSSL：$openssl_cmd"
   else
     certbridge_install_log "openssl=UNAVAILABLE"
-    ui_print "! 警告：当前环境无 OpenSSL，App 证书无法转换导入"
+    diag=$(diagnose_bundled_openssl 2>&1)
+    [ -n "$diag" ] && certbridge_install_log "openssl_diag: $diag"
+    ui_print "! 警告：当前环境无可用 OpenSSL，App 证书无法转换导入"
     ui_print "  ProxyPin 仍可使用内置证书；Reqable/自定义请重启后用 WebUI"
   fi
   certbridge_install_choose_mode

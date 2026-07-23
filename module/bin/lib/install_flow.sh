@@ -291,9 +291,12 @@ certbridge_run_install() {
   certbridge_install_log "MODPATH=$MODPATH"
   # 尽早给 bin 可执行权限，避免解压后无 +x 导致内置 openssl 探测失败
   chmod -R 0755 "$MODPATH/bin" 2>/dev/null || true
+  # zip 含多架构；安装后只保留当前 ABI，约省 20MB 占用
+  trim_info=$(trim_bundled_openssl_to_abi 2>/dev/null)
+  [ -n "$trim_info" ] && certbridge_install_log "openssl_trim: $trim_info"
   if openssl_cmd=$(find_openssl); then
     certbridge_install_log "openssl=$openssl_cmd"
-    ui_print "- OpenSSL：$openssl_cmd"
+    ui_print "- OpenSSL：已按 ABI 精简（$openssl_cmd）"
   else
     certbridge_install_log "openssl=UNAVAILABLE"
     diag=$(diagnose_bundled_openssl 2>&1)

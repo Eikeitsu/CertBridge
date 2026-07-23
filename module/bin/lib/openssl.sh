@@ -1,39 +1,70 @@
 #!/system/bin/sh
 # OpenSSL 定位：优先使用模块自带静态二进制（安装环境通常没有系统 openssl）
+# zip 内含多架构；安装时 trim_bundled_openssl_to_abi 只保留当前 ABI，约省 20MB
 
-# 按 ABI 选择模块内 openssl 路径（只看文件是否存在，不看执行位）
-resolve_bundled_openssl_path() {
-  base=""
+OPENSSL_BUNDLE_NAMES="openssl-arm64 openssl-arm openssl-x64 openssl-x86"
+
+# 解析模块内 openssl 目录
+resolve_bundled_openssl_dir() {
   for d in \
     "${BINDIR}/openssl" \
     "${MODDIR}/bin/openssl" \
     "${MODPATH}/bin/openssl"
   do
     [ -n "$d" ] && [ -d "$d" ] && {
-      base="$d"
-      break
+      echo "$d"
+      return 0
     }
   done
-  [ -n "$base" ] || return 1
+  return 1
+}
 
+# 当前设备对应的二进制文件名（不含路径）
+preferred_bundled_openssl_name() {
   abi=$(getprop ro.product.cpu.abi 2>/dev/null)
-  cand=""
   case "$abi" in
-    arm64-v8a) cand="$base/openssl-arm64" ;;
-    armeabi-v7a|armeabi) cand="$base/openssl-arm" ;;
-    x86_64) cand="$base/openssl-x64" ;;
-    x86) cand="$base/openssl-x86" ;;
+    arm64-v8a) echo "openssl-arm64" ;;
+    armeabi-v7a|armeabi) echo "openssl-arm" ;;
+    x86_64) echo "openssl-x64" ;;
+    x86) echo "openssl-x86" ;;
+    *) return 1 ;;
   esac
-  if [ -n "$cand" ] && [ -f "$cand" ]; then
-    echo "$cand"
+}
+
+# 按 ABI 选择模块内 openssl 路径（只看文件是否存在，不看执行位）
+resolve_bundled_openssl_path() {
+  base=$(resolve_bundled_openssl_dir) || return 1
+
+  pref=$(preferred_bundled_openssl_name 2>/dev/null)
+  if [ -n "$pref" ] && [ -f "$base/$pref" ]; then
+    echo "$base/$pref"
     return 0
   fi
-  for c in "$base/openssl-arm64" "$base/openssl-arm" "$base/openssl-x64" "$base/openssl-x86"; do
-    [ -f "$c" ] || continue
-    echo "$c"
+  for name in $OPENSSL_BUNDLE_NAMES; do
+    [ -f "$base/$name" ] || continue
+    echo "$base/$name"
     return 0
   done
   return 1
+}
+
+# 安装时删除其它架构，只保留将实际使用的那一份
+trim_bundled_openssl_to_abi() {
+  base=$(resolve_bundled_openssl_dir) || return 0
+  keep=$(resolve_bundled_openssl_path) || return 0
+  keep_name=${keep##*/}
+  removed=0
+  for name in $OPENSSL_BUNDLE_NAMES; do
+    [ "$name" = "$keep_name" ] && continue
+    [ -f "$base/$name" ] || continue
+    rm -f "$base/$name"
+    removed=$((removed + 1))
+  done
+  if [ "$removed" -gt 0 ]; then
+    echo "keep=$keep_name removed=$removed"
+  else
+    echo "keep=$keep_name removed=0"
+  fi
 }
 
 find_bundled_openssl() {
@@ -49,7 +80,8 @@ find_bundled_openssl() {
 # 安装诊断：把失败原因写到 stdout（供 install.log）
 diagnose_bundled_openssl() {
   echo "abi=$(getprop ro.product.cpu.abi 2>/dev/null)"
-  echo "BINDER=${BINDIR:-}"
+  echo "preferred=$(preferred_bundled_openssl_name 2>/dev/null)"
+  echo "BINDIR=${BINDIR:-}"
   echo "MODDIR=${MODDIR:-}"
   echo "MODPATH=${MODPATH:-}"
   for d in "${BINDIR}/openssl" "${MODDIR}/bin/openssl" "${MODPATH}/bin/openssl"; do

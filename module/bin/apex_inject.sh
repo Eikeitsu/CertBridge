@@ -38,19 +38,14 @@ pid_mount_id() {
   ' /proc/self/mountinfo 2>/dev/null
 }
 
-# Best-effort read-only remount. Never undo a successful bind for this.
+# Best-effort placeholder（保留函数名以兼容调用点）。
+# bind 后不再 remount,ro：部分机型会干扰 Conscrypt 读取信任库。
 try_remount_ro_current() {
-  target="$1"
-  mount -o remount,bind,ro "$target" 2>/dev/null || \
-    log_msg "inject: remount,ro skipped for current ns ($target)"
+  :
 }
 
 try_remount_ro_pid() {
-  pid="$1"
-  target="$2"
-  label="$3"
-  nsenter --mount=/proc/"$pid"/ns/mnt -- mount -o remount,bind,ro "$target" 2>/dev/null || \
-    log_msg "inject: remount,ro skipped for $label pid=$pid ($target)"
+  :
 }
 
 prepare_target_stage() {
@@ -108,6 +103,8 @@ stage_visible_for_pid() {
   return 1
 }
 
+# 绑定成功即保留。后续内容/归属检查仅用于日志；失败绝不 umount 回滚。
+# （过严回滚曾导致「检测已安装、实际 TLS 仍失败」。）
 bind_current_once() {
   target="$1"
   stage="$2"
@@ -116,7 +113,6 @@ bind_current_once() {
 
   if verify_direct_store "$target"; then
     if [ "$(path_identity "$target")" = "$source_id" ]; then
-      try_remount_ro_current "$target"
       log_msg "inject: current ns already valid ($target)"
       return 0
     fi
@@ -128,17 +124,13 @@ bind_current_once() {
     return 1
   }
   if [ "$(path_identity "$target")" != "$source_id" ]; then
-    log_msg "inject: current ns ownership mismatch ($target)"
-    umount "$target" 2>/dev/null
-    return 1
+    log_msg "inject: current ns ownership mismatch after bind ($target) (keep mount)"
   fi
-  try_remount_ro_current "$target"
-  verify_direct_store "$target" || {
-    log_msg "inject: current ns content verify failed ($target)"
-    umount "$target" 2>/dev/null
-    return 1
-  }
+  if ! verify_direct_store "$target"; then
+    log_msg "inject: current ns content verify soft-fail ($target) (keep mount)"
+  fi
   log_msg "inject: current ns injected ($target)"
+  return 0
 }
 
 bind_pid_once() {
@@ -152,7 +144,6 @@ bind_pid_once() {
 
   if verify_namespace_store "$pid" "$target"; then
     if [ "$(namespace_path_identity "$pid" "$target")" = "$source_id" ]; then
-      try_remount_ro_pid "$pid" "$target" "$label"
       log_msg "inject: $label pid=$pid already valid"
       return 0
     fi
@@ -168,17 +159,13 @@ bind_pid_once() {
     return 1
   }
   if [ "$(namespace_path_identity "$pid" "$target")" != "$source_id" ]; then
-    log_msg "inject: $label pid=$pid ownership mismatch"
-    nsenter --mount=/proc/"$pid"/ns/mnt -- umount "$target" 2>/dev/null
-    return 1
+    log_msg "inject: $label pid=$pid ownership mismatch after bind (keep mount)"
   fi
-  try_remount_ro_pid "$pid" "$target" "$label"
-  verify_namespace_store "$pid" "$target" || {
-    log_msg "inject: $label pid=$pid content verify failed"
-    nsenter --mount=/proc/"$pid"/ns/mnt -- umount "$target" 2>/dev/null
-    return 1
-  }
+  if ! verify_namespace_store "$pid" "$target"; then
+    log_msg "inject: $label pid=$pid content verify soft-fail (keep mount)"
+  fi
   log_msg "inject: $label pid=$pid injected"
+  return 0
 }
 
 bind_package_soft() {

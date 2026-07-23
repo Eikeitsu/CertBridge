@@ -226,7 +226,6 @@ function validateSources() {
     "bin/apex_inject.sh",
     "bin/hot_mount.sh",
     "bin/cert_manager.sh",
-    "bin/cbx509.sh",
     "config/certs.conf",
     "webroot/index.html",
     "webroot/assets/tip.png",
@@ -381,11 +380,14 @@ function applyEdition(edition) {
     if (!existsSync(join(staging, "bin", "cbx509", "classes.dex"))) {
       throw new Error("lite edition missing cbx509 classes.dex");
     }
-    log("edition=lite (openssl removed, cbx509 only)");
+    log("edition=lite (cbx509 only, no openssl)");
     return;
   }
+  // 完整版只用 OpenSSL，不打入 Lite dex
+  rmSync(join(staging, "bin", "cbx509"), { recursive: true, force: true });
+  rmSync(join(staging, "bin", "cbx509.sh"), { force: true });
   pruneStagingOpenssl();
-  log("edition=full (openssl + cbx509 fallback)");
+  log("edition=full (openssl only)");
 }
 
 function packageOne(edition, version) {
@@ -423,8 +425,15 @@ const version = readVersion();
 const editions = resolvePackageEditions();
 mkdirSync(releaseDir, { recursive: true });
 
-await ensureCbx509();
-validateCbx509();
+if (editions.includes("lite")) {
+  await ensureCbx509();
+  validateCbx509();
+  const content = readFileSync(join(moduleRoot, "bin", "cbx509.sh"), "utf8");
+  if (content.includes("\r\n"))
+    throw new Error("CRLF is not allowed in shell script: bin/cbx509.sh");
+  if (!content.startsWith("#!/system/bin/sh"))
+    throw new Error("invalid shell shebang: bin/cbx509.sh");
+}
 
 if (editions.includes("full")) {
   await ensureOpensslBinaries();
@@ -435,15 +444,6 @@ if (editions.includes("full")) {
 }
 
 validateSources();
-
-// shell CRLF check also covers cbx509.sh
-{
-  const content = readFileSync(join(moduleRoot, "bin", "cbx509.sh"), "utf8");
-  if (content.includes("\r\n"))
-    throw new Error("CRLF is not allowed in shell script: bin/cbx509.sh");
-  if (!content.startsWith("#!/system/bin/sh"))
-    throw new Error("invalid shell shebang: bin/cbx509.sh");
-}
 
 for (const edition of editions) {
   packageOne(edition, version);

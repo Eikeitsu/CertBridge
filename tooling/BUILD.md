@@ -72,7 +72,7 @@ PACKAGE_EDITIONS=full   # 仅完整版（内置 OpenSSL）
 PACKAGE_EDITIONS=lite   # 仅 Lite（cbx509 dex，无 OpenSSL）
 ```
 
-Lite 依赖设备上的 `app_process`/`dalvikvm`（Magisk 应用内刷入通常可用；纯 Recovery 环境可能无法在安装阶段解析证书，可重启后用 WebUI）。
+Lite 依赖设备上的 `app_process`/`dalvikvm`（Magisk 应用内刷入通常可用；纯 Recovery 环境可能无法在安装阶段解析证书，可重启后用 WebUI）。完整版 zip **不含** cbx509，仅 Lite 包含 dex。
 
 ## 版本约定
 

@@ -8,7 +8,7 @@
 - 内置多架构静态 OpenSSL，解决刷入环境无 openssl 导致 App 证书无法导入的问题；安装日志输出导入诊断与证书目录结果
 - 安装时按设备 ABI 只保留一份 OpenSSL，删除其余架构，设备占用约从 28MB 降到约 7MB
 - 发布 zip 默认只打入 arm + arm64（覆盖真机）；模拟器可设 `OPENSSL_ABIS=all` 打入 x86/x64
-- 新增 **Lite** 版：用约数十 KB 的 `cbx509` dex 替代内置 OpenSSL（`app_process` 调用）；打包同时产出 `CertBridge_v*.zip`（完整版）与 `CertBridge_v*_lite.zip`
+- 新增 **Lite** 版：用约 8KB 的 `cbx509` dex 替代内置 OpenSSL；打包同时产出完整版与 `*_lite.zip`（完整版仅含 OpenSSL，不含 dex）
 - 修复 Magisk 解压后二进制无执行位时，内置 OpenSSL 在 chmod 前被 `-x` 误判为不可用
 - 修复证书显示名写入 applied 列表后，校验仍按三列解析导致 checksum 永远不匹配、状态误报「注入失败」
 

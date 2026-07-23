@@ -9,7 +9,7 @@ verify_namespace_store() {
   n=$(nsenter --mount=/proc/"$pid"/ns/mnt -- sh -c "ls -1 '$target'/*.* 2>/dev/null | wc -l" 2>/dev/null)
   n=$(echo "$n" | tr -d ' ')
   [ "${n:-0}" -eq "$expected" ] || return 1
-  while IFS='|' read -r label name checksum; do
+  while IFS='|' read -r label name checksum display; do
     [ -n "$name" ] || continue
     actual=$(nsenter --mount=/proc/"$pid"/ns/mnt -- cksum "$target/$name" 2>/dev/null | \
       awk '{print $1 ":" $2}')
@@ -22,7 +22,7 @@ verify_direct_store() {
   expected=$(count_certs "$GEN_CERTS")
   [ "$expected" -ge "$MIN_SAFE_CERTS" ] || return 1
   [ "$(count_certs "$target")" -eq "$expected" ] || return 1
-  while IFS='|' read -r label name checksum; do
+  while IFS='|' read -r label name checksum display; do
     [ -n "$name" ] || continue
     actual=$(cksum "$target/$name" 2>/dev/null | awk '{print $1 ":" $2}')
     [ "$actual" = "$checksum" ] || return 1

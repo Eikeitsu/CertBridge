@@ -7,6 +7,7 @@
 - 模块结构再梳理：证书域拆为探测 / 解析 / 来源；安装编排独立为 `install_flow`；`common.sh` 按 install / runtime 场景按需加载
 - 内置多架构静态 OpenSSL，解决刷入环境无 openssl 导致 App 证书无法导入的问题；安装日志输出导入诊断与证书目录结果
 - 修复 Magisk 解压后二进制无执行位时，内置 OpenSSL 在 chmod 前被 `-x` 误判为不可用
+- 修复证书显示名写入 applied 列表后，校验仍按三列解析导致 checksum 永远不匹配、状态误报「注入失败」
 
 ## v1.2.0
 

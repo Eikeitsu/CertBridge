@@ -6,13 +6,17 @@ on:
     paths:
       - "module/**"
       - "tooling/scripts/build-web.mjs"
+      - "tooling/scripts/build-cbx509.mjs"
       - "tooling/scripts/package-module.mjs"
+      - "tooling/cbx509/**"
   pull_request:
     branches: [main, master]
     paths:
       - "module/**"
       - "tooling/scripts/build-web.mjs"
+      - "tooling/scripts/build-cbx509.mjs"
       - "tooling/scripts/package-module.mjs"
+      - "tooling/cbx509/**"
   workflow_dispatch:
 
 permissions:

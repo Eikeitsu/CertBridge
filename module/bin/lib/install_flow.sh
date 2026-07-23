@@ -296,12 +296,19 @@ certbridge_run_install() {
   [ -n "$trim_info" ] && certbridge_install_log "openssl_trim: $trim_info"
   if openssl_cmd=$(find_openssl); then
     certbridge_install_log "openssl=$openssl_cmd"
-    ui_print "- OpenSSL：已按 ABI 精简（$openssl_cmd）"
+    case "$openssl_cmd" in
+      *cbx509.sh)
+        ui_print "- X509：CertBridge Lite（dex）"
+        ;;
+      *)
+        ui_print "- OpenSSL：已按 ABI 精简（$openssl_cmd）"
+        ;;
+    esac
   else
     certbridge_install_log "openssl=UNAVAILABLE"
     diag=$(diagnose_bundled_openssl 2>&1)
     [ -n "$diag" ] && certbridge_install_log "openssl_diag: $diag"
-    ui_print "! 警告：当前环境无可用 OpenSSL，App 证书无法转换导入"
+    ui_print "! 警告：当前环境无可用 X509 工具，App 证书无法转换导入"
     ui_print "  ProxyPin 仍可使用内置证书；Reqable/自定义请重启后用 WebUI"
   fi
   certbridge_install_choose_mode

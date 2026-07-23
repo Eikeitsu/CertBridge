@@ -47,8 +47,9 @@ docs/                   # VitePress 用户文档
 npm install
 npm run dev:web          # 预览 module/webroot
 npm run build:web        # 压缩 → .build/webroot
-npm run package:module   # 打 Magisk zip
+npm run package:module   # 打 Magisk zip（默认同时产出完整版 + Lite）
 npm run build:module     # build:web + package:module
+npm run build:cbx509     # 构建 Lite 用的 cbx509.dex（便携 JDK + D8）
 npm run dev:docs
 npm run build:docs
 ```
@@ -62,6 +63,16 @@ OPENSSL_ABIS=all npm run package:module
 # Windows PowerShell
 $env:OPENSSL_ABIS="all"; npm run package:module
 ```
+
+发包版本（默认 `both`）：
+
+```bash
+PACKAGE_EDITIONS=both   # CertBridge_v*.zip + CertBridge_v*_lite.zip
+PACKAGE_EDITIONS=full   # 仅完整版（内置 OpenSSL）
+PACKAGE_EDITIONS=lite   # 仅 Lite（cbx509 dex，无 OpenSSL）
+```
+
+Lite 依赖设备上的 `app_process`/`dalvikvm`（Magisk 应用内刷入通常可用；纯 Recovery 环境可能无法在安装阶段解析证书，可重启后用 WebUI）。
 
 ## 版本约定
 

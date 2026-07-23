@@ -118,7 +118,7 @@
 
 ## 自定义证书无法上传？
 
-模块要求设备提供 OpenSSL，并拒绝无效、过期、非 `CA:TRUE` 或超过 64 KiB 的证书。文件名无需手动改为 hash。
+模块内置 OpenSSL（完整版）或 Lite 的 `cbx509` dex，并拒绝无效、过期、非 `CA:TRUE` 或超过 64 KiB 的证书。文件名无需手动改为 hash。
 
 ## 为什么修改开关后没有立即生效？
 
@@ -134,7 +134,7 @@
 
 ## 为什么提示缺少 nsenter 或 OpenSSL？
 
-临时免重启功能需要 `nsenter`、`stat`、`readlink` 以及支持 `subject_hash_old` 的 OpenSSL。部分 Android 7–8 ROM 或精简 Root 环境不提供这些命令，模块会拒绝热挂载而不是降低校验强度；开机永久注入和 WebUI 其它功能不受影响。
+临时免重启功能需要 `nsenter`、`stat`、`readlink`，以及能算 `subject_hash_old` 的 X509 工具（完整版内置 OpenSSL；Lite 版用 `cbx509` + `app_process`）。部分 Android 7–8 ROM 或精简 Root / 纯 Recovery 环境可能缺少这些能力，模块会拒绝热挂载而不是降低校验强度；开机永久注入和 WebUI 其它功能通常不受影响。
 
 ## 为什么不再保存系统 CA 基线？
 

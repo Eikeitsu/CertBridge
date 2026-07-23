@@ -78,6 +78,30 @@ find_bundled_openssl() {
   echo "$cand"
 }
 
+# Lite：dex + app_process，伪装成 openssl（支持 x509 / version）
+resolve_cbx509_wrapper() {
+  for s in \
+    "${BINDIR}/cbx509.sh" \
+    "${MODDIR}/bin/cbx509.sh" \
+    "${MODPATH}/bin/cbx509.sh"
+  do
+    [ -n "$s" ] && [ -f "$s" ] || continue
+    dex_dir="${s%/*}/cbx509"
+    [ -f "$dex_dir/classes.dex" ] || continue
+    if [ ! -x /system/bin/app_process64 ] && \
+       [ ! -x /system/bin/app_process ] && \
+       [ ! -x /system/bin/app_process32 ] && \
+       [ ! -x /system/bin/dalvikvm ] && \
+       [ ! -x /system/bin/dalvikvm64 ]; then
+      continue
+    fi
+    chmod 0755 "$s" 2>/dev/null || true
+    echo "$s"
+    return 0
+  done
+  return 1
+}
+
 # 安装诊断：把失败原因写到 stdout（供 install.log）
 diagnose_bundled_openssl() {
   echo "abi=$(getprop ro.product.cpu.abi 2>/dev/null)"
@@ -96,8 +120,20 @@ diagnose_bundled_openssl() {
       echo "dir_missing=$d"
     fi
   done
+  for d in "${BINDIR}/cbx509" "${MODDIR}/bin/cbx509" "${MODPATH}/bin/cbx509"; do
+    [ -n "$d" ] || continue
+    if [ -f "$d/classes.dex" ]; then
+      echo "cbx509_dex=$d/classes.dex"
+      echo "cbx509_dex_size=$(wc -c <"$d/classes.dex" 2>/dev/null)"
+    fi
+  done
   cand=$(resolve_bundled_openssl_path) || {
-    echo "resolve=fail"
+    echo "resolve_openssl=fail"
+    if w=$(resolve_cbx509_wrapper 2>/dev/null); then
+      echo "cbx509_wrapper=$w"
+      return 0
+    fi
+    echo "resolve_cbx509=fail"
     return 1
   }
   echo "candidate=$cand"
@@ -113,6 +149,10 @@ diagnose_bundled_openssl() {
 find_openssl() {
   if bundled=$(find_bundled_openssl); then
     echo "$bundled"
+    return 0
+  fi
+  if lite=$(resolve_cbx509_wrapper); then
+    echo "$lite"
     return 0
   fi
 

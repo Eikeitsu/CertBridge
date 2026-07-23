@@ -226,6 +226,7 @@ function validateSources() {
     "bin/apex_inject.sh",
     "bin/hot_mount.sh",
     "bin/cert_manager.sh",
+    "bin/cbx509.sh",
     "config/certs.conf",
     "webroot/index.html",
     "webroot/assets/tip.png",
@@ -283,7 +284,9 @@ function validateSources() {
     if (Date.parse(certificate.validTo) <= Date.now())
       throw new Error(`built-in certificate expired: ${relPath}`);
   }
+}
 
+function validateOpensslBinaries() {
   for (const name of OPENSSL_BINARIES) {
     const relPath = join("bin", "openssl", name);
     if (!existsSync(join(moduleRoot, relPath))) {
@@ -293,6 +296,35 @@ function validateSources() {
       throw new Error(`openssl binary looks too small: ${relPath}`);
     }
   }
+}
+
+function validateCbx509() {
+  const dex = join(moduleRoot, "bin", "cbx509", "classes.dex");
+  const wrapper = join(moduleRoot, "bin", "cbx509.sh");
+  if (!existsSync(wrapper)) throw new Error("missing bin/cbx509.sh");
+  if (!existsSync(dex) || statSync(dex).size < 200) {
+    throw new Error("missing bin/cbx509/classes.dex — run npm run build:cbx509");
+  }
+}
+
+function resolvePackageEditions() {
+  const raw = (process.env.PACKAGE_EDITIONS || "both").trim().toLowerCase();
+  if (raw === "both" || raw === "") return ["full", "lite"];
+  if (raw === "full" || raw === "lite") return [raw];
+  throw new Error(`PACKAGE_EDITIONS must be both|full|lite, got: ${raw}`);
+}
+
+async function ensureCbx509() {
+  const dex = join(moduleRoot, "bin", "cbx509", "classes.dex");
+  if (existsSync(dex) && statSync(dex).size > 200) {
+    log(`cbx509 present (${statSync(dex).size} bytes)`);
+    return;
+  }
+  log("building cbx509 dex...");
+  execSync("node tooling/scripts/build-cbx509.mjs", {
+    cwd: repoRoot,
+    stdio: "inherit",
+  });
 }
 
 function copyFromModule(relPath) {
@@ -335,36 +367,85 @@ function createZip(zipPath) {
   execSync(`cd "${staging}" && zip -qr9 "${zipPath}" .`, { stdio: "inherit" });
 }
 
-const version = readVersion();
-const zipName = `CertBridge_${version}.zip`;
-const zipPath = join(releaseDir, zipName);
-
-await ensureOpensslBinaries();
-log(
-  `openssl package ABIs: ${OPENSSL_BINARIES.join(", ")} (OPENSSL_ABIS=${process.env.OPENSSL_ABIS || "arm,arm64"})`,
-);
-validateSources();
-rmSync(staging, { recursive: true, force: true });
-mkdirSync(staging, { recursive: true });
-mkdirSync(releaseDir, { recursive: true });
-mkdirSync(join(staging, "data"), { recursive: true });
-writeFileSync(join(staging, "data", ".keep"), "");
-
-for (const file of ROOT_FILES) copyFromModule(file);
-copyDirFromModule("META-INF");
-copyDirFromModule("config");
-copyDirFromModule("bin");
-pruneStagingOpenssl();
-copyDirFromModule("certs");
-
-if (!existsSync(builtWebDir)) {
-  throw new Error("missing .build/webroot — run npm run build:web first");
+function applyEdition(edition) {
+  writeFileSync(join(staging, "bin", "edition"), `${edition}\n`, "utf8");
+  if (edition === "lite") {
+    rmSync(join(staging, "bin", "openssl"), { recursive: true, force: true });
+    let prop = readFileSync(join(staging, "module.prop"), "utf8");
+    prop = prop.replace(/^name=.*/m, "name=证书桥 Lite");
+    prop = prop.replace(
+      /^description=.*/m,
+      "description=[Lite|无内置 OpenSSL] 系统信任抓包 CA；X509 由极小 dex 处理。兼容 Magisk / KernelSU / APatch",
+    );
+    writeFileSync(join(staging, "module.prop"), prop, "utf8");
+    if (!existsSync(join(staging, "bin", "cbx509", "classes.dex"))) {
+      throw new Error("lite edition missing cbx509 classes.dex");
+    }
+    log("edition=lite (openssl removed, cbx509 only)");
+    return;
+  }
+  pruneStagingOpenssl();
+  log("edition=full (openssl + cbx509 fallback)");
 }
-cpSync(builtWebDir, join(staging, "webroot"), { recursive: true });
 
-if (existsSync(zipPath)) rmSync(zipPath);
-log(`packaging ${zipName}...`);
-createZip(zipPath);
-log(`created ${zipPath} (${(statSync(zipPath).size / 1024).toFixed(1)} KB)`);
-rmSync(staging, { recursive: true, force: true });
-log("done");
+function packageOne(edition, version) {
+  const zipName =
+    edition === "lite"
+      ? `CertBridge_${version}_lite.zip`
+      : `CertBridge_${version}.zip`;
+  const zipPath = join(releaseDir, zipName);
+
+  rmSync(staging, { recursive: true, force: true });
+  mkdirSync(staging, { recursive: true });
+  mkdirSync(join(staging, "data"), { recursive: true });
+  writeFileSync(join(staging, "data", ".keep"), "");
+
+  for (const file of ROOT_FILES) copyFromModule(file);
+  copyDirFromModule("META-INF");
+  copyDirFromModule("config");
+  copyDirFromModule("bin");
+  copyDirFromModule("certs");
+  applyEdition(edition);
+
+  if (!existsSync(builtWebDir)) {
+    throw new Error("missing .build/webroot — run npm run build:web first");
+  }
+  cpSync(builtWebDir, join(staging, "webroot"), { recursive: true });
+
+  if (existsSync(zipPath)) rmSync(zipPath);
+  log(`packaging ${zipName}...`);
+  createZip(zipPath);
+  log(`created ${zipPath} (${(statSync(zipPath).size / 1024).toFixed(1)} KB)`);
+  rmSync(staging, { recursive: true, force: true });
+}
+
+const version = readVersion();
+const editions = resolvePackageEditions();
+mkdirSync(releaseDir, { recursive: true });
+
+await ensureCbx509();
+validateCbx509();
+
+if (editions.includes("full")) {
+  await ensureOpensslBinaries();
+  log(
+    `openssl package ABIs: ${OPENSSL_BINARIES.join(", ")} (OPENSSL_ABIS=${process.env.OPENSSL_ABIS || "arm,arm64"})`,
+  );
+  validateOpensslBinaries();
+}
+
+validateSources();
+
+// shell CRLF check also covers cbx509.sh
+{
+  const content = readFileSync(join(moduleRoot, "bin", "cbx509.sh"), "utf8");
+  if (content.includes("\r\n"))
+    throw new Error("CRLF is not allowed in shell script: bin/cbx509.sh");
+  if (!content.startsWith("#!/system/bin/sh"))
+    throw new Error("invalid shell shebang: bin/cbx509.sh");
+}
+
+for (const edition of editions) {
+  packageOne(edition, version);
+}
+log(`done (${editions.join(", ")})`);

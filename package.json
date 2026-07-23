@@ -6,7 +6,8 @@
   "scripts": {
     "dev:web": "serve module/webroot -l 5174",
     "build:web": "node tooling/scripts/build-web.mjs",
-    "package:module": "npm run build:web && node tooling/scripts/package-module.mjs",
+    "build:cbx509": "node tooling/scripts/build-cbx509.mjs",
+    "package:module": "npm run build:web && npm run build:cbx509 && node tooling/scripts/package-module.mjs",
     "build:module": "npm run package:module",
     "dev:docs": "vitepress dev docs",
     "build:docs": "vitepress build docs",

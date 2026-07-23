@@ -163,15 +163,22 @@
           用户证书模式会把所有用户及工作资料中的 CA
           临时提升为全局系统信任，请确认来源可信。
         </div>
-        <div class="field-label">存储卡证书目录</div>
-        <input
-          type="text"
-          id="hotSdPath"
-          value="/sdcard/CertBridge"
-          spellcheck="false"
-        />
-        <div class="field-hint">
-          支持 PEM / DER / CRT / CER / hash.0，递归扫描，最多 128 张。
+        <div class="path-field">
+          <div class="path-field-label">存储卡证书目录</div>
+          <input
+            type="text"
+            class="path-field-input"
+            id="hotSdPath"
+            value="/sdcard/CertBridge"
+            spellcheck="false"
+            autocomplete="off"
+            autocapitalize="off"
+            enterkeyhint="done"
+            aria-label="存储卡证书目录"
+          />
+          <div class="path-field-hint">
+            支持 PEM / DER / CRT / CER / hash.0，递归扫描，最多 128 张
+          </div>
         </div>
         <div class="chips" style="margin-top: 12px">
           <button type="button" class="chip chip-btn" id="hotUserBtn">

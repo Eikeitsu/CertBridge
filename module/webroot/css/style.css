@@ -562,8 +562,7 @@ html[data-theme="dark"] .card {
   font-weight: 600;
   color: var(--text-2);
   margin: 12px 0 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.2px;
 }
 
 .field-hint {
@@ -575,6 +574,69 @@ html[data-theme="dark"] .card {
 
 .field-hint.warn {
   color: var(--accent-strong);
+}
+
+.path-field {
+  margin: 10px 0 4px;
+  padding: 10px 12px;
+  border-radius: var(--radius-inner);
+  background: var(--muted);
+  border: 1px solid var(--line);
+  transition:
+    border-color 0.2s var(--transition-smooth),
+    box-shadow 0.2s var(--transition-smooth),
+    background 0.2s var(--transition-smooth);
+}
+
+.path-field:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 48%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent);
+  background: color-mix(in srgb, var(--muted) 72%, var(--accent-soft));
+}
+
+.path-field-label {
+  font-size: calc(0.72rem * var(--font-scale));
+  font-weight: 600;
+  color: var(--text-2);
+  margin: 0 0 8px;
+  line-height: 1.3;
+}
+
+.path-field-input {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--input-bg);
+  color: var(--text);
+  font-family:
+    "SF Mono", "Roboto Mono", "MiSans", ui-monospace, monospace;
+  font-size: calc(0.8125rem * var(--font-scale));
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  outline: none;
+  caret-color: var(--accent);
+  transition:
+    border-color 0.2s var(--transition-smooth),
+    background 0.2s var(--transition-smooth);
+}
+
+.path-field-input::placeholder {
+  color: var(--text-3);
+}
+
+.path-field-input:focus {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  background: var(--card-solid);
+}
+
+.path-field-hint {
+  margin: 8px 0 0;
+  font-size: calc(0.6875rem * var(--font-scale));
+  color: var(--text-3);
+  line-height: 1.45;
 }
 
 .chips {
@@ -614,7 +676,7 @@ html[data-theme="dark"] .card {
 }
 
 input[type="number"],
-input[type="text"] {
+input[type="text"]:not(.path-field-input) {
   width: 100%;
   padding: 10px 12px;
   border-radius: var(--radius-inner);
@@ -628,7 +690,7 @@ input[type="text"] {
   font-family: var(--font);
 }
 
-input:focus {
+input:focus:not(.path-field-input) {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
 }

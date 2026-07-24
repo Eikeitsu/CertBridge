@@ -254,7 +254,7 @@
     <section class="card" data-page="certs">
       <div class="expand-inner" style="padding: var(--space-expand-pad)">
         <div class="info-box">
-          支持 PEM / DER 格式。模块会使用 OpenSSL 校验 X.509、有效期与
+          支持 PEM / DER 格式。模块会校验 X.509、有效期与
           <b>CA:TRUE</b>，自动计算 hash 并处理同名冲突。
         </div>
         <input
@@ -434,8 +434,8 @@
 
     <div class="small-title" data-page="more">关于</div>
     <div class="about-note" data-page="more">
-      CertBridge 由许小墨开发。模块内置 Reqable、ProxyPin 的 CA
-      证书，便于配合对应抓包软件使用。
+      CertBridge 由许小墨开发。Reqable 从本机 App 导入；ProxyPin
+      优先 App，必要时使用模块内置兜底。也可导入自定义 CA。
     </div>
     <section class="card" data-page="more">
       <div class="pref" data-url="https://www.coolapk.com/u/7602666">

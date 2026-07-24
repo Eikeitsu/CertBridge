@@ -48,7 +48,7 @@ hot_failed=0"
   echo "pending_reboot=$([ -f "$PENDING_FILE" ] && echo 1 || echo 0)"
   echo "inject_error=$([ -f "$STATEDIR/inject-error" ] && echo 1 || echo 0)"
   if [ "$hot_partial" = "1" ]; then
-    echo "desc_short=🔥 热挂载（部分未覆盖）"
+    echo "desc_short=🔥热挂载（部分未覆盖）"
   else
     echo "desc_short=$(compute_status_tag)"
   fi

@@ -157,7 +157,8 @@ hot_mode_label() {
 
 # 列表简介：
 #   [大状态|子状态] 括号外说明（必填，可稍长）
-# 例：[✅ 运行正常|已挂载:2] 当前生效：Reqable、ProxyPin
+#   emoji 后无空格；方括号内 | 两侧不加空格；括号外若用 | 则两侧加空格
+# 例：[✅运行正常|已挂载:2] 当前生效：Reqable、ProxyPin
 # 模块定位仅写入「首次尚未真正跑起来」时的括号外文案
 DESC_INTRO="让系统信任抓包 CA，支持 Reqable / ProxyPin / 自定义；兼容 Magisk、KernelSU、APatch，Android 7–16"
 
@@ -183,18 +184,18 @@ compose_module_description() {
   hint="$1"
 
   if [ -f "$MODDIR/disable" ]; then
-    format_module_description "⛔ 已禁用" "模块未运行" \
+    format_module_description "⛔已禁用" "模块未运行" \
       "可在模块管理器中重新启用以恢复挂载"
     return 0
   fi
 
   case "$hint" in
     启动中)
-      format_module_description "🔎 启动中" "准备信任库" "$DESC_INTRO"
+      format_module_description "🔎启动中" "准备信任库" "$DESC_INTRO"
       return 0
       ;;
     注入中)
-      format_module_description "✨ 注入中" "写入命名空间" "$DESC_INTRO"
+      format_module_description "✨注入中" "写入命名空间" "$DESC_INTRO"
       return 0
       ;;
   esac
@@ -209,7 +210,7 @@ compose_module_description() {
     outer="来自${hot_label}的临时会话，重启后自动失效"
     [ "${hot_failed:-0}" -gt 0 ] && outer="${outer}；部分应用命名空间未覆盖"
     [ -f "$PENDING_FILE" ] && outer="${outer}；另有永久配置待重启生效"
-    format_module_description "🔥 热挂载" "临时:${hot_added}" "$outer"
+    format_module_description "🔥热挂载" "临时:${hot_added}" "$outer"
     return 0
   fi
 
@@ -217,10 +218,10 @@ compose_module_description() {
     if summary=$(compose_pending_cert_summary); then
       n=${summary%%|*}
       names=${summary#*|}
-      format_module_description "⏳ 待重启" "待生效:${n}" \
+      format_module_description "⏳待重启" "待生效:${n}" \
         "重启后挂入：${names}"
     else
-      format_module_description "⏳ 待重启" "配置已改" \
+      format_module_description "⏳待重启" "配置已改" \
         "请重启设备使新配置生效"
     fi
     return 0
@@ -228,22 +229,22 @@ compose_module_description() {
 
   if ! generation_valid; then
     if [ -f "$STATEDIR/inject-error" ]; then
-      format_module_description "⚠️ 异常" "证书集未就绪" \
+      format_module_description "⚠️异常" "证书集未就绪" \
         "请打开 WebUI 查看日志，必要时重启后再检查"
     else
-      format_module_description "🔎 检测中" "等待开机注入完成" "$DESC_INTRO"
+      format_module_description "🔎检测中" "等待开机注入完成" "$DESC_INTRO"
     fi
     return 0
   fi
 
   if [ "$(count_addon_certs)" -eq 0 ]; then
-    format_module_description "💤 未启用" "无证书" \
+    format_module_description "💤未启用" "无证书" \
       "请在 WebUI 启用内置证书或导入自定义 CA"
     return 0
   fi
 
   if [ -f "$STATEDIR/inject-error" ] && ! runtime_status_fresh; then
-    format_module_description "⚠️ 异常" "注入失败" \
+    format_module_description "⚠️异常" "注入失败" \
       "请打开 WebUI 查看日志，必要时重启后再检查"
     return 0
   fi
@@ -252,14 +253,14 @@ compose_module_description() {
     cached_tag=$(read_runtime_status tag)
     case "$cached_tag" in
       *失败*|注入异常|⚠️*|异常)
-        format_module_description "⚠️ 异常" "注入失败" \
+        format_module_description "⚠️异常" "注入失败" \
           "请打开 WebUI 查看日志，必要时重启后再检查"
         return 0
         ;;
       注入中|启动中|检测中|✨*|🔎*)
         cached_phase=$(read_runtime_status phase)
         if [ "$cached_phase" != "service" ]; then
-          format_module_description "✨ 注入中" "写入命名空间" "$DESC_INTRO"
+          format_module_description "✨注入中" "写入命名空间" "$DESC_INTRO"
           return 0
         fi
         ;;
@@ -269,18 +270,18 @@ compose_module_description() {
   if summary=$(compose_applied_cert_summary); then
     n=${summary%%|*}
     names=${summary#*|}
-    format_module_description "✅ 运行正常" "已挂载:${n}" \
+    format_module_description "✅运行正常" "已挂载:${n}" \
       "当前生效：${names}"
     return 0
   fi
 
-  format_module_description "🔎 检测中" "等待开机注入完成" "$DESC_INTRO"
+  format_module_description "🔎检测中" "等待开机注入完成" "$DESC_INTRO"
 }
 
 # WebUI / 状态短标签（可带 emoji）
 compute_status_tag() {
   force_verify="${1:-0}"
-  [ -f "$MODDIR/disable" ] && { echo "⛔ 已禁用"; return 0; }
+  [ -f "$MODDIR/disable" ] && { echo "⛔已禁用"; return 0; }
 
   if hot_session_recorded; then
     hot_failed=$(awk -F= '$1 == "namespace_failed" { print $2; exit }' \
@@ -288,22 +289,22 @@ compute_status_tag() {
     hot_added=$(awk -F= '$1 == "added_count" { print $2; exit }' \
       "$STATEDIR/hot-session.conf" 2>/dev/null)
     if [ "${hot_failed:-0}" -gt 0 ]; then
-      echo "🔥 热挂载 +${hot_added:-0}（部分未覆盖）"
+      echo "🔥热挂载 +${hot_added:-0}（部分未覆盖）"
     elif [ -f "$PENDING_FILE" ]; then
-      echo "🔥 热挂载 +${hot_added:-0}（待重启）"
+      echo "🔥热挂载 +${hot_added:-0}（待重启）"
     else
-      echo "🔥 热挂载 +${hot_added:-0}"
+      echo "🔥热挂载 +${hot_added:-0}"
     fi
     return 0
   fi
 
-  [ -f "$PENDING_FILE" ] && { echo "⏳ 待重启"; return 0; }
+  [ -f "$PENDING_FILE" ] && { echo "⏳待重启"; return 0; }
   generation_valid || {
-    [ -f "$STATEDIR/inject-error" ] && { echo "⚠️ 异常"; return 0; }
-    echo "🔎 检测中"
+    [ -f "$STATEDIR/inject-error" ] && { echo "⚠️异常"; return 0; }
+    echo "🔎检测中"
     return 0
   }
-  [ "$(count_addon_certs)" -eq 0 ] && { echo "💤 未启用"; return 0; }
+  [ "$(count_addon_certs)" -eq 0 ] && { echo "💤未启用"; return 0; }
 
   if [ "$force_verify" != "1" ] && runtime_status_fresh; then
     cached_tag=$(read_runtime_status tag)
@@ -313,7 +314,7 @@ compute_status_tag() {
         if [ "$cached_phase" = "service" ] || [ -f "$STATEDIR/inject-error" ]; then
           :
         else
-          echo "✨ 注入中"
+          echo "✨注入中"
           return 0
         fi
         ;;
@@ -328,23 +329,23 @@ compute_status_tag() {
 
   if [ "$force_verify" = "1" ]; then
     [ "$(check_store_injected)" = "0" ] && {
-      echo "⚠️ 异常"
+      echo "⚠️异常"
       return 0
     }
     if summary=$(compose_applied_cert_summary); then
       n=${summary%%|*}
-      echo "✅ 运行正常 · ${n} 张"
+      echo "✅运行正常 · ${n} 张"
     else
-      echo "✅ 运行正常"
+      echo "✅运行正常"
     fi
     return 0
   fi
 
   if [ -f "$STATEDIR/inject-error" ]; then
-    echo "⚠️ 异常"
+    echo "⚠️异常"
     return 0
   fi
-  echo "🔎 检测中"
+  echo "🔎检测中"
 }
 
 update_module_description() {
@@ -374,33 +375,33 @@ refresh_module_description() {
 finalize_runtime_status() {
   phase="$1"
   if [ -f "$MODDIR/disable" ]; then
-    write_runtime_status "$phase" 2 "⛔ 已禁用"
+    write_runtime_status "$phase" 2 "⛔已禁用"
     update_module_description
     return 0
   fi
   if [ -f "$PENDING_FILE" ]; then
-    write_runtime_status "$phase" 2 "⏳ 待重启"
+    write_runtime_status "$phase" 2 "⏳待重启"
     update_module_description
     return 0
   fi
   if ! generation_valid; then
-    write_runtime_status "$phase" 0 "⚠️ 异常"
+    write_runtime_status "$phase" 0 "⚠️异常"
     update_module_description
     return 0
   fi
   if [ "$(count_addon_certs)" -eq 0 ]; then
-    write_runtime_status "$phase" 2 "💤 未启用"
+    write_runtime_status "$phase" 2 "💤未启用"
     update_module_description
     return 0
   fi
   apex_ok=$(check_store_injected)
   if [ "$apex_ok" = "0" ]; then
-    tag="⚠️ 异常"
+    tag="⚠️异常"
   elif summary=$(compose_applied_cert_summary); then
     n=${summary%%|*}
-    tag="✅ 运行正常 · ${n} 张"
+    tag="✅运行正常 · ${n} 张"
   else
-    tag="✅ 运行正常"
+    tag="✅运行正常"
   fi
   write_runtime_status "$phase" "$apex_ok" "$tag"
   update_module_description

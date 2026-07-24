@@ -184,7 +184,7 @@ const CasApp = {
       const errors = {
         invalid_sd_path: "存储卡路径不受支持",
         sd_path_missing: "证书目录不存在",
-        openssl_unavailable: "设备缺少 OpenSSL，无法安全校验证书",
+        openssl_unavailable: "缺少可用的 X509 工具，无法安全校验证书",
         no_valid_certificates: "没有找到有效且未过期的 CA 证书",
         previous_session_busy: "旧临时会话未能完整卸载",
         hot_build_failed: "临时证书集合生成失败",
@@ -264,7 +264,7 @@ const CasApp = {
       } else {
         const error = CasApi.parseKv(result.stdout).error || "unknown";
         const labels = {
-          openssl_unavailable: "设备缺少 OpenSSL，无法安全校验证书",
+          openssl_unavailable: "缺少可用的 X509 工具，无法安全校验证书",
           invalid_x509: "不是有效的 X.509 证书",
           expired_certificate: "证书已过期或尚未生效",
           not_ca_certificate: "证书不具备 CA:TRUE 属性",
@@ -513,8 +513,8 @@ const CasApp = {
         badge.textContent =
           short ||
           (hotActive
-            ? "🔥 热挂载（永久配置待重启）"
-            : "⏳ 待重启");
+            ? "🔥热挂载（永久配置待重启）"
+            : "⏳待重启");
         badge.classList.add("stopped");
       } else if (short) {
         badge.textContent = short;
@@ -532,9 +532,9 @@ const CasApp = {
           );
         }
       } else if (s.apex_ok === "1" || s.apex_ok === "2") {
-        badge.textContent = `✅ 运行正常 · ${s.active_count || 0} 张`;
+        badge.textContent = `✅运行正常 · ${s.active_count || 0} 张`;
       } else {
-        badge.textContent = "⚠️ 异常（请查看日志）";
+        badge.textContent = "⚠️异常（请查看日志）";
         badge.classList.add("stopped");
       }
     }

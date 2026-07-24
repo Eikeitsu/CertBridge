@@ -4,6 +4,9 @@ hero:
   name: 证书桥
   text: CertBridge
   tagline: 将 Reqable、ProxyPin 与自定义 CA 合并进系统信任库。支持 Magisk / KernelSU / APatch，Android 14+ 自动 APEX 注入；提供完整版与 Lite 双包。
+  image:
+    src: /icon-mark-light.png
+    alt: 证书桥 CertBridge
   actions:
     - theme: brand
       text: 了解功能

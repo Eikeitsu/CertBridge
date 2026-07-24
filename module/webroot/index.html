@@ -76,8 +76,18 @@
   <body>
     <header class="topbar" id="topbar">
       <div class="topbar-left">
-        <h1>证书桥</h1>
-        <div class="subtitle" id="deviceName">加载中...</div>
+        <img
+          class="topbar-logo"
+          src="img/icon.png"
+          width="40"
+          height="40"
+          alt=""
+          decoding="async"
+        />
+        <div class="topbar-titles">
+          <h1>证书桥</h1>
+          <div class="subtitle" id="deviceName">加载中...</div>
+        </div>
       </div>
     </header>
     <div class="topbar-spacer" id="topbarSpacer" aria-hidden="true"></div>
@@ -433,6 +443,22 @@
     </section>
 
     <div class="small-title" data-page="more">关于</div>
+    <div class="about-brand" data-page="more">
+      <img
+        class="about-brand-mark"
+        src="img/icon-mark-light.png"
+        data-mark-light="img/icon-mark-light.png"
+        data-mark-dark="img/icon-mark.png"
+        width="72"
+        height="72"
+        alt=""
+        decoding="async"
+      />
+      <div class="about-brand-text">
+        <div class="about-brand-title">证书桥</div>
+        <div class="about-brand-sub">CertBridge</div>
+      </div>
+    </div>
     <div class="about-note" data-page="more">
       CertBridge 由许小墨开发。Reqable 从本机 App 导入；ProxyPin
       优先 App，必要时使用模块内置兜底。也可导入自定义 CA。

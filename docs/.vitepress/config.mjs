@@ -9,7 +9,19 @@ export default defineConfig({
   description: "将 Reqable / ProxyPin / 自定义 CA 合并进 Android 系统信任库；完整版与 Lite 双包",
   base: `/${repoName}/`,
   lang: "zh-CN",
+  head: [
+    ["link", { rel: "icon", type: "image/png", href: `/${repoName}/icon.png` }],
+    [
+      "link",
+      {
+        rel: "apple-touch-icon",
+        href: `/${repoName}/icon.png`,
+      },
+    ],
+  ],
   themeConfig: {
+    logo: "/icon.png",
+    siteTitle: "证书桥",
     nav: [
       { text: "首页", link: "/" },
       { text: "功能介绍", link: "/guide/features" },

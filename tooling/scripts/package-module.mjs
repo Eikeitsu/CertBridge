@@ -27,6 +27,7 @@ const ROOT_FILES = [
   "customize.sh",
   "action.sh",
   "uninstall.sh",
+  "icon.png",
 ];
 
 function log(message) {

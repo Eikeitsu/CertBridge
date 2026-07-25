@@ -30,14 +30,16 @@
 | ProxyPin CA            | 优先从已安装 ProxyPin App 导入；未检测到且安装时启用了 ProxyPin 时用模块内置兜底；可开关 |
 | HttpCanary / ADGuard   | 仅二者在安装时可能询问导入为**自定义**证书；其它工具请手动上传 |
 | 自定义证书             | 上传 PEM / DER；校验 CA、有效期、hash；显示名取自 CN / O；可点开详情 |
-| 开机完整合并           | 每次重启重新生成「完整系统库 + addon」，不依赖持久化基线 |
-| 分版本注入             | Android 7–13 挂载 system；Android 14+ 同时绑定 APEX 与 system 临时层 |
+| 开机完整合并           | 每次重启重新生成「完整系统库 + addon」，不依赖持久化基线（完整兼容模式） |
+| 挂载模式               | **完整兼容**（默认，运行时 bind，无需挂载元模块）或 **轻量 Magic**（仅叠 addon；Magisk 一般自带，KernelSU 需确认叠层）；见 [配置说明](/guide/config#挂载模式) |
+| 分版本注入             | Android 7–13 挂载 system；Android 14+ 同时绑定 APEX 与 system 临时层（完整兼容）；轻量模式下 APEX 仍由脚本注入 |
 | 关键命名空间             | `service.sh` 补齐 PID 1、Zygote、Settings、Reqable、ProxyPin（**不扫全机应用**） |
 | 用户证书热挂载（可选） | 读取用户凭据区 CA，免重启注入系统信任库；见 [配置说明](/guide/config) |
 | 存储卡热挂载（可选）   | 扫描指定目录证书并免重启挂载；默认 `/sdcard/CertBridge` |
 | 无痕卸载（可选）       | 只撤销本次临时会话，不改永久配置与系统文件 |
 | Action 实用菜单        | 音量上刷新；音量下可挂载/卸载临时 CA（需已安装热挂载） |
-| WebUI（可选）          | 概览状态、证书开关与详情、热挂载、日志；更多页可调主题 / 莫奈 / 布局 / 紧凑与字号 |
+| WebUI（可选）          | 概览状态、证书开关与详情、热挂载、日志；更多页可调挂载模式 / 主题 / 莫奈 / 布局 / 紧凑与字号 |
+
 | 双层生效               | 永久配置重启生效；热挂载立即生效，重启后临时层消失 |
 | 完整版 / Lite          | 完整版内置 OpenSSL；Lite 用约 8KB `cbx509` dex。详见 [安装与升级](/guide/install) |
 

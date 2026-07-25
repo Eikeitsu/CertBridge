@@ -12,7 +12,7 @@ read_conf() {
 write_conf() {
   key="$1"
   value="$2"
-  case "$key" in reqable|proxypin|schema_version) ;; *) return 1 ;; esac
+  case "$key" in reqable|proxypin|schema_version|mount_mode) ;; *) return 1 ;; esac
   mkdir -p "$CONFDIR" 2>/dev/null
   tmp="$CONF.tmp.$$"
   if [ -f "$CONF" ]; then
@@ -31,4 +31,18 @@ write_conf() {
 
 is_enabled() {
   [ "$(read_conf "$1" "1")" = "1" ]
+}
+
+# compatible = 完整兼容（运行时整库 bind，默认）
+# magic     = 轻量 Magic Mount（模块 system/ 仅叠 addon 证书）
+get_mount_mode() {
+  mode=$(read_conf mount_mode compatible | tr 'A-Z' 'a-z')
+  case "$mode" in
+    magic|builtin|lightweight) echo magic ;;
+    *) echo compatible ;;
+  esac
+}
+
+is_magic_mount_mode() {
+  [ "$(get_mount_mode)" = "magic" ]
 }

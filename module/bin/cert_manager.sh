@@ -76,6 +76,7 @@ hot_failed=0"
     echo "proxypin_available=0"
     echo "proxypin_display=ProxyPin"
   fi
+  echo "mount_mode=$(get_mount_mode)"
   echo "version=$(grep '^version=' "$MODDIR/module.prop" 2>/dev/null | cut -d= -f2-)"
   echo "$hot_status"
 }
@@ -107,6 +108,9 @@ cmd_toggle() {
   fi
   acquire_write_lock || { echo "error=busy"; return 1; }
   write_conf "$name" "$value" || { release_write_lock; echo "error=write_failed"; return 1; }
+  if is_magic_mount_mode; then
+    sync_magic_overlay "$MODDIR" >/dev/null 2>&1 || true
+  fi
   mark_reboot_required
   release_write_lock
   log_msg "config: $name=$value (reboot required)"
@@ -192,6 +196,9 @@ cmd_install_custom() {
   printf 'display_name=%s\n' "$display" >"$CUSTOM_DIR/$name.meta"
   chmod 0600 "$CUSTOM_DIR/$name.meta" 2>/dev/null
   mark_reboot_required
+  if is_magic_mount_mode; then
+    sync_magic_overlay "$MODDIR" >/dev/null 2>&1 || true
+  fi
   release_write_lock
   rm -f "$raw" "$normalized"
   log_msg "custom: installed $name ($display, reboot required)"
@@ -217,6 +224,9 @@ cmd_remove_custom() {
     return 1
   }
   mark_reboot_required
+  if is_magic_mount_mode; then
+    sync_magic_overlay "$MODDIR" >/dev/null 2>&1 || true
+  fi
   release_write_lock
   log_msg "custom: removed $filename (reboot required)"
   refresh_module_description >/dev/null 2>&1
@@ -249,6 +259,28 @@ cmd_cert_info() {
   cert_info_from_file "$file"
 }
 
+cmd_set_mount_mode() {
+  mode="$1"
+  case "$mode" in
+    compatible|magic) ;;
+    *) echo "error=invalid_mount_mode"; return 1 ;;
+  esac
+  acquire_write_lock || { echo "error=busy"; return 1; }
+  write_conf mount_mode "$mode" || { release_write_lock; echo "error=write_failed"; return 1; }
+  if [ "$mode" = "magic" ]; then
+    sync_magic_overlay "$MODDIR" >/dev/null 2>&1 || true
+  else
+    clear_magic_overlay "$MODDIR" >/dev/null 2>&1 || true
+  fi
+  mark_reboot_required
+  release_write_lock
+  log_msg "config: mount_mode=$mode (reboot required)"
+  refresh_module_description >/dev/null 2>&1
+  echo "ok=1"
+  echo "mount_mode=$mode"
+  echo "reboot_required=1"
+}
+
 cmd_hot_mount() {
   mode="$1"
   sd_path="$2"
@@ -266,6 +298,7 @@ case "$1" in
   status) cmd_status ;;
   list_custom) cmd_list_custom ;;
   toggle) cmd_toggle "$2" "$3" ;;
+  set_mount_mode) cmd_set_mount_mode "$2" ;;
   install_custom) cmd_install_custom "$2" ;;
   remove_custom) cmd_remove_custom "$2" ;;
   cert_info) cmd_cert_info "$2" ;;
@@ -277,7 +310,7 @@ case "$1" in
     exit 1
     ;;
   *)
-    echo "usage: cert_manager.sh {status|list_custom|toggle|install_custom|remove_custom|cert_info|hot_mount|hot_unmount}"
+    echo "usage: cert_manager.sh {status|list_custom|toggle|set_mount_mode|install_custom|remove_custom|cert_info|hot_mount|hot_unmount}"
     exit 1
     ;;
 esac

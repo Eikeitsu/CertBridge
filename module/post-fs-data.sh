@@ -31,11 +31,23 @@ if [ -x "$BINDIR/hot_mount.sh" ]; then
 else
   log_msg "post-fs-data: hot reload component not installed"
 fi
+# 按挂载模式准备 / 清理模块 system 叠层（magic 仅 addon；compatible 必须清空）
+if ! prepare_mount_mode_overlay "$MODDIR"; then
+  echo "挂载模式叠层准备失败；未执行开机注入" >"$STATEDIR/inject-error"
+  log_msg "post-fs-data: prepare_mount_mode_overlay failed"
+  finalize_runtime_status post-fs-data >/dev/null
+  exit 1
+fi
 if ! build_boot_generation; then
   echo "实时证书集合生成失败；未执行任何挂载" >"$STATEDIR/inject-error"
   log_msg "post-fs-data: live generation failed, original store preserved"
   finalize_runtime_status post-fs-data >/dev/null
   exit 1
+fi
+# generation 后再次同步 magic 叠层，确保与本轮 applied 一致
+if is_magic_mount_mode; then
+  sync_magic_overlay "$MODDIR" >/dev/null || \
+    log_msg "post-fs-data: magic overlay resync soft-fail"
 fi
 if sh "$MODDIR/bin/apex_inject.sh" boot; then
   rm -f "$STATEDIR/inject-error"

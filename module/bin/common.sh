@@ -41,6 +41,9 @@ certbridge_init_paths() {
   ROOT_CACHE_FILE="$STATEDIR/root-impl.cache"
   APEX_CACERTS="/apex/com.android.conscrypt/cacerts"
   SYSTEM_CACERTS="/system/etc/security/cacerts"
+  # 挂载源放 /data/local/tmp，避免 mountinfo 暴露 modules/CertBridge；逻辑不变
+  RUNTIME_MOUNT_ROOT="/data/local/tmp/sys-ca-merge"
+  HOT_RUNTIME_ROOT="/data/local/tmp/sys-ca-merge-hot"
   MIN_SAFE_CERTS=10
   MAX_CUSTOM_BYTES=65536
 }
@@ -63,7 +66,9 @@ certbridge_load_cert_domain() {
 certbridge_load_libs_install() {
   certbridge_load_lib log.sh
   certbridge_load_lib keys.sh
+  certbridge_load_lib conf.sh
   certbridge_load_cert_domain
+  certbridge_load_lib store.sh
   certbridge_load_lib install_flow.sh
 }
 

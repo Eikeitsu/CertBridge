@@ -100,6 +100,53 @@ const CasApp = {
     CasUi.toast("已保存，重启后生效");
   },
 
+  renderMountMode(mode) {
+    const current = mode === "magic" ? "magic" : "compatible";
+    const desc = document.getElementById("mountModeDesc");
+    if (desc) {
+      desc.textContent =
+        current === "magic" ? "轻量 Magic Mount" : "完整兼容（运行时 bind）";
+    }
+    if (typeof CasUi === "undefined") return;
+    CasUi.renderChips(
+      "mountModeChips",
+      [
+        { id: "compatible", l: "完整兼容" },
+        { id: "magic", l: "轻量 Magic" },
+      ],
+      current,
+      (id) => this.setMountMode(id),
+    );
+  },
+
+  async setMountMode(mode) {
+    if (!["compatible", "magic"].includes(mode)) return;
+    const current = this.status?.mount_mode === "magic" ? "magic" : "compatible";
+    if (mode === current) return;
+    const labels = {
+      compatible: "完整兼容（运行时 bind）",
+      magic: "轻量 Magic Mount",
+    };
+    if (
+      !window.confirm(
+        `切换为「${labels[mode]}」？需重启后生效。\n\nKernelSU 使用轻量模式时，请确认 Magic Mount / 挂载元模块工作正常，否则可能只剩模块那几张系统证书。`,
+      )
+    ) {
+      this.renderMountMode(current);
+      return;
+    }
+    CasUi.toast("正在保存…");
+    const result = await CasApi.cli(`set_mount_mode ${mode}`);
+    const data = CasApi.parseKv(result.stdout);
+    if (result.errno !== 0 || data.ok !== "1") {
+      this.renderMountMode(current);
+      CasUi.toast("切换失败，请查看日志");
+      return;
+    }
+    await this.refreshStatus(false);
+    CasUi.toast("已保存，重启后生效");
+  },
+
   async toggleCertDetail(kind) {
     const panel = document.getElementById(`${kind}Detail`);
     if (!panel) return;
@@ -481,9 +528,14 @@ const CasApp = {
     if (document.getElementById("homeRoot")) {
       document.getElementById("homeRoot").textContent = s.root || "--";
     }
+    if (document.getElementById("homeMountMode")) {
+      document.getElementById("homeMountMode").textContent =
+        s.mount_mode === "magic" ? "轻量" : "兼容";
+    }
     if (document.getElementById("homeVersion")) {
       document.getElementById("homeVersion").textContent = s.version || "--";
     }
+    this.renderMountMode(s.mount_mode || "compatible");
     const apexEl = document.getElementById("homeApex");
     if (apexEl) {
       if (s.apex_ok === "2") apexEl.textContent = "N/A";

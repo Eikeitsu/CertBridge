@@ -96,10 +96,11 @@ Lite 依赖设备上的 `app_process`/`dalvikvm`（Magisk 应用内刷入通常�
 
 ### 手动发版
 
-1. Actions → **Release Module** → Run workflow
-2. 填写版本：`1.0.0` 或 `v1.0.0`
-3. 可选：预发布 / 草稿
-4. Release 正文会自动摘取 `changelog.md` 中与当前版本匹配的章节（若有），并保留 GitHub 生成的 Full Changelog
+1. 开发中把用户可见改动写在根目录 `changelog.md` → `## Unreleased`（详见 [`RELEASE.md`](./RELEASE.md)）
+2. Actions → **Release Module** → Run workflow
+3. 填写版本：`1.0.0` 或 `v1.0.0`
+4. 可选：预发布 / 草稿
+5. 工作流会：提升 Unreleased → 版本号；文档站两份 changelog **不含 Unreleased**；Release 正文优先取版本节（否则回退 Unreleased）+ GitHub Full Changelog
 
 也可本地打标签推送：
 

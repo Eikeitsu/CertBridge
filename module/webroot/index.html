@@ -132,6 +132,10 @@
           <div class="ml">APEX</div>
         </div>
         <div class="mini-item">
+          <div class="mv" id="homeMountMode">--</div>
+          <div class="ml">挂载</div>
+        </div>
+        <div class="mini-item">
           <div class="mv" id="homeVersion">--</div>
           <div class="ml">版本</div>
         </div>
@@ -328,6 +332,40 @@
       </div>
     </section>
 
+    <div class="small-title" data-page="more">挂载模式</div>
+    <section class="card" data-page="more">
+      <div class="pref" data-expand="mountMode">
+        <div class="pref-body">
+          <div class="pref-title">挂载模式</div>
+          <div class="pref-desc" id="mountModeDesc">完整兼容</div>
+        </div>
+        <div class="pref-right">
+          <span class="expand-arrow" id="arrow-mountMode">▾</span>
+        </div>
+      </div>
+      <div class="expand-body" id="expand-mountMode">
+        <div class="expand-inner">
+          <div class="chips" id="mountModeChips"></div>
+          <div class="info-box" style="margin-top: 12px">
+            <b>完整兼容（默认）</b><br />
+            运行时整库合并后 bind，不写
+            <code>system/</code> 叠层。<b>不依赖</b> Magic Mount
+            元模块；Magisk / KernelSU / APatch 均可。<br /><br />
+            <b>轻量 Magic Mount</b><br />
+            只把当前启用的 addon 证书叠进
+            <code>system/etc/security/cacerts</code>；Android 14+
+            仍对 APEX 做脚本注入。<br />
+            · <b>Magisk</b>：自带 Magic Mount，一般<b>不需要</b>元模块<br />
+            · <b>KernelSU</b>：需管理器正确挂载
+            <code>system/</code>；若叠层变成「只剩几张证」，请改回完整兼容，或安装提供正确
+            overlay 的挂载元模块后再用轻量模式<br />
+            · <b>APatch</b>：视版本挂载实现而定，异常时用完整兼容<br /><br />
+            切换后需<b>重启</b>生效。
+          </div>
+        </div>
+      </div>
+    </section>
+
     <div class="small-title" data-page="more">显示</div>
     <section class="card" data-page="more">
       <div class="pref" data-expand="theme">
@@ -438,6 +476,13 @@
           配置：<code>config/certs.conf</code><br />
           日志：<code>data/install.log</code><br />
           自定义：<code>certs/custom/</code>
+        </div>
+        <div class="info-box">
+          <b>挂载与元模块</b><br />
+          默认「完整兼容」无需元模块。轻量 Magic 模式在 Magisk
+          上通常可直接用；KernelSU 若出现系统 CA
+          只剩模块那几张，请改回完整兼容或确认挂载元模块提供正确
+          overlay。
         </div>
       </div>
     </section>

@@ -12,6 +12,8 @@ HOT_CERTS="$HOT_CURRENT/cacerts"
 HOT_LEDGER="$HOT_CURRENT/mounts.list"
 HOT_STATE="$STATEDIR/hot-session.conf"
 HOT_MARKER="certbridge_session"
+# 仅换 bind 物理路径；标记 / remount,ro / 校验逻辑保持原版
+HOT_BIND_ROOT="${HOT_RUNTIME_ROOT:-/data/local/tmp/sys-ca-merge-hot}"
 HOT_MAX_FILES=128
 HOT_ADDED=0
 HOT_SKIPPED=0
@@ -261,12 +263,49 @@ hot_collect_namespaces() {
   done
 }
 
+hot_prepare_bind_stage() {
+  HOT_TARGET=$(hot_read_state target)
+  [ -d "$HOT_CERTS" ] || return 1
+  [ -n "$HOT_TARGET" ] || HOT_TARGET=$(get_target_store)
+  mkdir -p "$HOT_BIND_ROOT" || return 1
+  if ! mountpoint -q "$HOT_BIND_ROOT" 2>/dev/null; then
+    umount "$HOT_BIND_ROOT" 2>/dev/null
+    rm -rf "$HOT_BIND_ROOT" 2>/dev/null
+    mkdir -p "$HOT_BIND_ROOT" || return 1
+    mount -t tmpfs -o mode=755 tmpfs "$HOT_BIND_ROOT" 2>/dev/null || return 1
+  fi
+  for HOT_F in "$HOT_BIND_ROOT"/*; do
+    [ -e "$HOT_F" ] || continue
+    rm -f "$HOT_F" 2>/dev/null
+  done
+  for HOT_F in "$HOT_CERTS"/*; do
+    [ -f "$HOT_F" ] || continue
+    cp -f "$HOT_F" "$HOT_BIND_ROOT/$(basename "$HOT_F")" 2>/dev/null || return 1
+  done
+  [ -f "$HOT_CERTS/$HOT_MARKER" ] || return 1
+  [ -f "$HOT_BIND_ROOT/$HOT_MARKER" ] || \
+    cp -f "$HOT_CERTS/$HOT_MARKER" "$HOT_BIND_ROOT/$HOT_MARKER" 2>/dev/null || return 1
+  chown -R 0:0 "$HOT_BIND_ROOT" 2>/dev/null
+  chmod 0755 "$HOT_BIND_ROOT" 2>/dev/null
+  chmod 0644 "$HOT_BIND_ROOT"/* 2>/dev/null
+  set_selinux_context "$HOT_TARGET" "$HOT_BIND_ROOT" || return 1
+  HOT_SOURCE_ID=$(stat -c '%d:%i' "$HOT_BIND_ROOT" 2>/dev/null | tr -d '\r\n')
+  [ -n "$HOT_SOURCE_ID" ] || return 1
+  hot_state_set source_identity "$HOT_SOURCE_ID" || return 1
+  log_msg "hot: bind stage ready at $HOT_BIND_ROOT"
+}
+
+hot_teardown_bind_stage() {
+  umount "$HOT_BIND_ROOT" 2>/dev/null
+  rm -rf "$HOT_BIND_ROOT" 2>/dev/null
+}
+
 hot_source_for_pid() {
   HOT_PID="$1"
-  if nsenter --mount=/proc/"$HOT_PID"/ns/mnt -- test -d "$HOT_CERTS" 2>/dev/null; then
-    echo "$HOT_CERTS"
-  elif nsenter --mount=/proc/"$HOT_PID"/ns/mnt -- test -d "/proc/1/root$HOT_CERTS" 2>/dev/null; then
-    echo "/proc/1/root$HOT_CERTS"
+  if nsenter --mount=/proc/"$HOT_PID"/ns/mnt -- test -d "$HOT_BIND_ROOT" 2>/dev/null; then
+    echo "$HOT_BIND_ROOT"
+  elif nsenter --mount=/proc/"$HOT_PID"/ns/mnt -- test -d "/proc/1/root$HOT_BIND_ROOT" 2>/dev/null; then
+    echo "/proc/1/root$HOT_BIND_ROOT"
   else
     return 1
   fi
@@ -316,7 +355,8 @@ hot_mount_points_to_source() {
     awk -v target="$HOT_TARGET" -v id="$HOT_MOUNT_ID" \
       '$1 == id && $5 == target { print; exit }' /proc/self/mountinfo 2>/dev/null)
   case "$HOT_MOUNT_LINE" in
-    *"$HOT_CERTS"*|*"/adb/modules/CertBridge/certs/hot/current/cacerts"*|*"/CertBridge/certs/hot/current/cacerts"*)
+    *"$HOT_BIND_ROOT"*|*"$HOT_CERTS"*|*"/data/local/tmp/sys-ca-merge-hot"*|\
+    *"/adb/modules/CertBridge/certs/hot/current/cacerts"*|*"/CertBridge/certs/hot/current/cacerts"*)
       return 0
       ;;
   esac
@@ -503,12 +543,14 @@ hot_unmount_internal() {
   [ -n "$HOT_TARGET" ] || HOT_TARGET=$(get_target_store)
   [ -n "$HOT_SESSION" ] && [ -n "$HOT_TARGET" ] || {
     [ -d "$HOT_CURRENT" ] && return 1
+    hot_teardown_bind_stage
     rm -f "$HOT_STATE"
     return 0
   }
   if [ -n "$HOT_STATE_BOOT" ] && [ -n "$HOT_NOW_BOOT" ] && [ "$HOT_STATE_BOOT" != "$HOT_NOW_BOOT" ]; then
     HOT_REMAINING=$(hot_count_mounted_namespaces "$HOT_SESSION" "$HOT_TARGET")
     [ "$HOT_REMAINING" -eq 0 ] || return 1
+    hot_teardown_bind_stage
     rm -rf "$HOT_CURRENT" 2>/dev/null
     rm -f "$HOT_STATE"
     return 0
@@ -521,6 +563,7 @@ hot_unmount_internal() {
   done
   HOT_REMAINING=$(hot_count_mounted_namespaces "$HOT_SESSION" "$HOT_TARGET")
   [ "$HOT_REMAINING" -eq 0 ] || return 1
+  hot_teardown_bind_stage
   rm -rf "$HOT_CURRENT" 2>/dev/null
   rm -f "$HOT_STATE"
   log_msg "hot: session $HOT_SESSION removed without reboot"
@@ -629,6 +672,10 @@ hot_mount_namespaces() {
   HOT_PRIMARY=$(hot_read_state target)
   HOT_SESSION=$(hot_read_state session_id)
   HOT_EXPECTED=$(hot_read_state store_count)
+  hot_prepare_bind_stage || {
+    log_msg "hot: failed to prepare bind stage at $HOT_BIND_ROOT"
+    return 1
+  }
   HOT_OK=0
   HOT_FAIL=0
   for HOT_TARGET in $(list_target_stores); do

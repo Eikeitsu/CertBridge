@@ -46,6 +46,7 @@ certbridge_install_choose_mode() {
   INSTALL_PROXYPIN=1
   INSTALL_WEBUI=1
   INSTALL_HOT=1
+  INSTALL_MOUNT_MODE="compatible"
 
   ui_print "--------------------------------"
   ui_print " 请选择安装方式"
@@ -53,8 +54,9 @@ certbridge_install_choose_mode() {
   ui_print "   自动检测已安装抓包 App 的 CA"
   ui_print "   ProxyPin 未检测到时使用内置兜底"
   ui_print "   并安装 WebUI 与免重启热挂载"
+  ui_print "   挂载：完整兼容模式（运行时 bind）"
   ui_print " 音量下：自定义安装"
-  ui_print "   逐项选择证书与附加功能"
+  ui_print "   逐项选择证书、附加功能与挂载模式"
   ui_print " 20 秒未选择将使用默认安装"
   certbridge_volume_choice
   case "$?" in
@@ -72,9 +74,30 @@ certbridge_install_choose_mode() {
       ui_print " 存储卡中的 CA，请仅使用可信证书"
       certbridge_choose_component "免重启热挂载"
       INSTALL_HOT="$COMPONENT_CHOICE"
+      ui_print "--------------------------------"
+      ui_print " 请选择挂载模式"
+      ui_print " 音量上：完整兼容（推荐，默认方案）"
+      ui_print "   运行时整库合并 + bind，不依赖 Magic Mount"
+      ui_print "   Magisk / KernelSU / APatch 均可，无需元模块"
+      ui_print " 音量下：轻量 Magic Mount"
+      ui_print "   仅把启用的 addon 叠进 system/"
+      ui_print "   Magisk 一般自带；KernelSU 常需挂载元模块"
+      ui_print "   Android 14+ 仍会对 APEX 做脚本注入"
+      ui_print " 20 秒未选择将使用完整兼容"
+      certbridge_volume_choice
+      case "$?" in
+        1)
+          INSTALL_MOUNT_MODE="magic"
+          ui_print "- 挂载模式：轻量 Magic Mount"
+          ;;
+        *)
+          INSTALL_MOUNT_MODE="compatible"
+          ui_print "- 挂载模式：完整兼容"
+          ;;
+      esac
       ;;
-    0) ui_print "- 已选择默认安装" ;;
-    *) ui_print "- 未检测到按键，使用默认安装" ;;
+    0) ui_print "- 已选择默认安装（完整兼容挂载）" ;;
+    *) ui_print "- 未检测到按键，使用默认安装（完整兼容挂载）" ;;
   esac
 }
 
@@ -231,13 +254,40 @@ certbridge_install_dump_tree() {
 certbridge_install_write_config() {
   sed -i "s/^reqable=.*/reqable=$INSTALL_REQABLE/" "$MODPATH/config/certs.conf"
   sed -i "s/^proxypin=.*/proxypin=$INSTALL_PROXYPIN/" "$MODPATH/config/certs.conf"
+  if grep -q '^mount_mode=' "$MODPATH/config/certs.conf" 2>/dev/null; then
+    sed -i "s/^mount_mode=.*/mount_mode=$INSTALL_MOUNT_MODE/" "$MODPATH/config/certs.conf"
+  else
+    echo "mount_mode=$INSTALL_MOUNT_MODE" >>"$MODPATH/config/certs.conf"
+  fi
+  if grep -q '^schema_version=' "$MODPATH/config/certs.conf" 2>/dev/null; then
+    sed -i "s/^schema_version=.*/schema_version=3/" "$MODPATH/config/certs.conf"
+  else
+    echo "schema_version=3" >>"$MODPATH/config/certs.conf"
+  fi
   cat >"$MODPATH/config/install-profile.conf" <<EOF
 install_mode=$INSTALL_MODE
 webui=$INSTALL_WEBUI
 hot_reload=$INSTALL_HOT
+mount_mode=$INSTALL_MOUNT_MODE
 reqable_source=$([ "$REQABLE_SRC_OK" = "1" ] && echo app || echo none)
 proxypin_source=$PROXYPIN_SRC
 EOF
+  MODDIR="$MODPATH"
+  CONFDIR="$MODPATH/config"
+  CONF="$CONFDIR/certs.conf"
+  STATEDIR="$MODPATH/data/state"
+  CERT_POOL="$MODPATH/certs"
+  CUSTOM_DIR="$CERT_POOL/custom"
+  BUILTIN_DIR="$CERT_POOL/builtin"
+  SOURCES_DIR="$CERT_POOL/sources"
+  GEN_CERTS="$CERT_POOL/generation/current/cacerts"
+  APPLIED_MAP="$STATEDIR/applied-certs.list"
+  mkdir -p "$STATEDIR"
+  if [ "$INSTALL_MOUNT_MODE" = "magic" ]; then
+    sync_magic_overlay "$MODPATH" >/dev/null 2>&1 || true
+  else
+    clear_magic_overlay "$MODPATH" >/dev/null 2>&1 || true
+  fi
 }
 
 certbridge_install_trim_components() {
@@ -263,17 +313,30 @@ certbridge_install_print_summary() {
   esac
   [ "$INSTALL_WEBUI" = "1" ] && WEBUI_LABEL="已安装" || WEBUI_LABEL="未安装"
   [ "$INSTALL_HOT" = "1" ] && HOT_LABEL="已安装" || HOT_LABEL="未安装"
+  if [ "$INSTALL_MOUNT_MODE" = "magic" ]; then
+    MOUNT_LABEL="轻量 Magic Mount"
+  else
+    MOUNT_LABEL="完整兼容（运行时 bind）"
+  fi
 
   ui_print "--------------------------------"
   ui_print " 安装方案：$MODE_LABEL"
+  ui_print " 挂载模式：$MOUNT_LABEL"
   ui_print " Reqable：$REQABLE_LABEL"
   ui_print " ProxyPin：$PROXYPIN_LABEL"
   ui_print " WebUI：$WEBUI_LABEL"
   ui_print " 免重启热挂载：$HOT_LABEL"
-  log_msg "安装选项：方案=$MODE_LABEL，Reqable=$REQABLE_LABEL，ProxyPin=$PROXYPIN_LABEL，WebUI=$WEBUI_LABEL，免重启热挂载=$HOT_LABEL"
+  log_msg "安装选项：方案=$MODE_LABEL，挂载=$MOUNT_LABEL，Reqable=$REQABLE_LABEL，ProxyPin=$PROXYPIN_LABEL，WebUI=$WEBUI_LABEL，免重启热挂载=$HOT_LABEL"
   ui_print "--------------------------------"
   ui_print " 开机将再次尝试从 App 刷新 CA"
-  ui_print " 不保存系统 CA 基线，不创建 system 覆盖目录"
+  if [ "$INSTALL_MOUNT_MODE" = "magic" ]; then
+    ui_print " 轻量模式：system/ 仅叠启用的 addon 证书"
+    ui_print " Magisk 通常无需元模块；KernelSU 建议确认"
+    ui_print " 已启用正确的 Magic Mount / 挂载元模块"
+  else
+    ui_print " 完整兼容：不写 system 覆盖目录，运行时 bind"
+    ui_print " 不依赖 Magic Mount 元模块"
+  fi
   if [ "$INSTALL_HOT" = "1" ]; then
     ui_print " 永久配置重启生效；临时证书支持免重启"
   else

@@ -35,12 +35,16 @@ generation_is_mounted() {
       generation_mount_state=$(nsenter --mount=/proc/"$generation_pid"/ns/mnt -- \
         awk -v target="$generation_target" \
           -v source="$GEN_CERTS" \
+          -v runtime_source="$RUNTIME_MOUNT_ROOT" \
           -v adb_source="/adb/modules/CertBridge/certs/generation/current/cacerts" \
-          -v module_source="/CertBridge/certs/generation/current/cacerts" '
+          -v module_source="/CertBridge/certs/generation/current/cacerts" \
+          -v legacy_runtime="/modules/CertBridge/data/runtime-mounts" '
           $5 == target && (
             index($0, source) > 0 ||
+            index($0, runtime_source) > 0 ||
             index($0, adb_source) > 0 ||
-            index($0, module_source) > 0
+            index($0, module_source) > 0 ||
+            index($0, legacy_runtime) > 0
           ) { found=1 }
           END { print found ? "mounted" : "clear" }
         ' /proc/self/mountinfo 2>/dev/null)

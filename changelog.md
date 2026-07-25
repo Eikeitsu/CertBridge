@@ -1,5 +1,14 @@
 # 更新日志
 
+## Unreleased
+
+- 新增挂载模式：`compatible`（默认，完整兼容 / 运行时 bind）与 `magic`（轻量 Magic Mount，仅叠 addon）
+- 自定义安装增加音量键选择挂载模式；默认安装固定完整兼容
+- WebUI「更多」可切换挂载模式，并说明 Magisk / KernelSU 与挂载元模块关系
+- 开机注入与热挂载的临时层改到 `/data/local/tmp/sys-ca-merge{,-hot}`，降低 mountinfo 中的模块路径暴露
+- 发版时自动将 `changelog.md` 的 `Unreleased` 提升为版本号；文档站两份 changelog **不含 Unreleased**
+- 发版约定见 `tooling/RELEASE.md`
+
 ## v2.0.0
 
 - 证书来源重构：不再内置 Reqable，优先从已安装 App 自动导入；ProxyPin 优先 App，未检测到且安装时选了 ProxyPin 则使用模块内置证书；检测到 HttpCanary、ADGuard 等依次询问是否导入为自定义证书

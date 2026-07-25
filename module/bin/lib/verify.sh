@@ -31,7 +31,19 @@ verify_direct_store() {
 
 check_store_injected() {
   [ -s "$APPLIED_MAP" ] || { echo 2; return 0; }
+
+  # 轻量 Magic：系统路径应能看到叠上去的 addon（Magic Mount / 管理器叠层）
+  if is_magic_mount_mode; then
+    if ! verify_magic_overlay_live; then
+      log_msg "verify: magic overlay missing under $SYSTEM_CACERTS"
+      echo 0
+      return 0
+    fi
+  fi
+
+  has_bind_target=0
   for target in $(list_target_stores); do
+    has_bind_target=1
     verify_namespace_store 1 "$target" || { echo 0; return 0; }
     for zygote in zygote zygote64; do
       for pid in $(pidof "$zygote" 2>/dev/null); do
@@ -39,5 +51,14 @@ check_store_injected() {
       done
     done
   done
+
+  # magic + Android <14：无 bind 目标，叠层校验已通过
+  if [ "$has_bind_target" = "0" ]; then
+    if is_magic_mount_mode; then
+      echo 2
+      return 0
+    fi
+  fi
+
   [ "$(get_api)" -ge 34 ] && echo 1 || echo 2
 }

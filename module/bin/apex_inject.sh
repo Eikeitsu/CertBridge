@@ -6,8 +6,6 @@
 MODDIR=${MODDIR:-${0%/*}/..}
 . "$MODDIR/bin/common.sh"
 
-RUNTIME_MOUNT_ROOT="$DATADIR/runtime-mounts"
-
 target_stage_dir() {
   target="$1"
   case "$target" in
@@ -274,6 +272,11 @@ inject_boot_namespaces() {
     return 0
   }
 
+  if is_magic_mount_mode && [ "$(get_api)" -lt 34 ]; then
+    log_msg "inject: magic mode on API $(get_api), skip bind (Magic Mount)"
+    return 0
+  fi
+
   rc=0
   has_target=0
   for target in $(list_target_stores); do
@@ -281,6 +284,10 @@ inject_boot_namespaces() {
     inject_one_target "$target" boot || rc=1
   done
   [ "$has_target" = "1" ] || {
+    if is_magic_mount_mode; then
+      log_msg "inject: magic mode with no bind targets"
+      return 0
+    fi
     log_msg "inject: no CA target directory found"
     return 1
   }
@@ -290,12 +297,24 @@ inject_boot_namespaces() {
 inject_app_namespaces() {
   generation_valid || return 1
   [ -s "$APPLIED_MAP" ] || return 0
+
+  if is_magic_mount_mode && [ "$(get_api)" -lt 34 ]; then
+    log_msg "inject: magic mode on API $(get_api), skip namespace bind"
+    return 0
+  fi
+
   command -v nsenter >/dev/null 2>&1 || return 1
 
   rc=0
+  has_target=0
   for target in $(list_target_stores); do
+    has_target=1
     inject_one_target "$target" namespaces || rc=1
   done
+  [ "$has_target" = "1" ] || {
+    is_magic_mount_mode && return 0
+    return 1
+  }
   return "$rc"
 }
 

@@ -5,18 +5,66 @@
 路径：`/data/adb/modules/CertBridge/config/certs.conf`
 
 ```text
-schema_version=2
+schema_version=3
 reqable=1
 proxypin=1
+mount_mode=compatible
 ```
 
 | 键               | 含义                       | 默认 |
 | ---------------- | -------------------------- | ---- |
-| `schema_version` | 配置结构版本，请勿手动修改 | `2`  |
+| `schema_version` | 配置结构版本，请勿手动修改 | `3`  |
 | `reqable`        | 启用 Reqable（App 导入）CA | `1`  |
 | `proxypin`       | 启用 ProxyPin CA（App 或内置兜底） | `1`  |
+| `mount_mode`     | 挂载模式：`compatible` 或 `magic` | `compatible` |
 
-也可在 WebUI「证书」页用开关修改。开关与自定义永久证书仍在**重启后**生效，避免重写正在使用的开机证书层。点击证书行可展开详情（主题、颁发者、有效期、指纹等由模块 X509 工具解析；标题自动取 CN / O）。
+### 挂载模式
+
+证书桥提供两种把 CA 送进系统信任库的方式，可在 **自定义安装** 用音量键选择，或在 WebUI「更多 → 挂载模式」切换（均需**重启**生效）。默认安装固定为完整兼容。
+
+#### 完整兼容（`compatible`，默认）
+
+| 项目 | 行为 |
+| --- | --- |
+| 原理 | 开机从当前系统 / Conscrypt 信任库做**完整合并**，加上启用的 addon，经 tmpfs 后 `bind` 到目标路径 |
+| 模块 `system/` | **不写**叠层目录（避免错误叠层导致系统 CA 被遮蔽） |
+| Android 7–13 | bind `/system/etc/security/cacerts` |
+| Android 14+ | bind APEX Conscrypt 与 system 双路径（供 Flutter 等检测） |
+| 临时目录 | `/data/local/tmp/sys-ca-merge`（热挂载为 `sys-ca-merge-hot`） |
+| 元模块 | **不需要**。Magisk / KernelSU / APatch 只要能跑 `post-fs-data` / `service` 即可 |
+| 特点 | 兼容面宽、行为可控；mountinfo 中可见临时目录挂载 |
+
+适合：大多数用户、KernelSU 未确认挂载叠层是否正确、需要多 CA / 热挂载 / 与完整校验一致的场景。
+
+#### 轻量 Magic Mount（`magic`）
+
+| 项目 | 行为 |
+| --- | --- |
+| 原理 | 只把**当前启用的 addon**（Reqable / ProxyPin / 自定义等）写成 `hash.N`，放入模块的 `system/etc/security/cacerts/`，交给管理器的 **Magic Mount** 叠进系统目录 |
+| 模块 `system/` | **仅 addon 文件**；无证书时会删掉空目录，避免空目录整库遮蔽 |
+| Android 7–13 | 主要依赖 Magic Mount，开机脚本不再对 system 做整库 bind |
+| Android 14+ | system 仍靠 Magic Mount；**APEX 仍由脚本 bind**（管理器通常无法 Magic Mount `/apex`） |
+| 元模块 | 见下表 |
+| 特点 | 痕迹更接近「多几张系统 CA」；依赖管理器叠层实现正确 |
+
+| Root 方案 | 轻量模式是否需要元模块 |
+| --- | --- |
+| **Magisk** | 一般**不需要**（自带 Magic Mount，按文件叠层） |
+| **KernelSU** | **常常需要**确认：管理器或挂载元模块必须对 `system/` 做**文件级叠层**。若实现成「用模块目录整目录替换」，系统 CA 会只剩模块里那几张，表现为大面积 TLS 失败——请立刻改回完整兼容并重启 |
+| **APatch** | 视版本挂载实现而定；异常时改用完整兼容 |
+
+适合：已确认 Magic Mount 叠层正常、希望减少整库 bind 痕迹的环境。不确定时请用完整兼容。
+
+#### 如何选择
+
+1. 默认 / 不确定 → **完整兼容**  
+2. Magisk 且想更「轻」→ 可试 **轻量 Magic**，重启后看系统信任库证书总数是否仍接近原来的几百张  
+3. KernelSU → 优先完整兼容；仅在确认叠层正确后再用轻量  
+4. 切换模式、改开关、导入自定义后都要**重启**  
+
+也可在 WebUI「更多 → 挂载模式」切换，**重启后生效**。
+
+也可在 WebUI「证书」页用开关修改 Reqable / ProxyPin。开关与自定义永久证书仍在**重启后**生效，避免重写正在使用的开机证书层。点击证书行可展开详情（主题、颁发者、有效期、指纹等由模块 X509 工具解析；标题自动取 CN / O）。
 
 ![证书页](/screenshots/webui-certs.png)
 
@@ -28,6 +76,7 @@ proxypin=1
 install_mode=default
 webui=1
 hot_reload=1
+mount_mode=compatible
 reqable_source=app
 proxypin_source=builtin
 ```
@@ -37,10 +86,13 @@ proxypin_source=builtin
 | `install_mode` | `default` 或 `custom` |
 | `webui` | 是否安装了 WebUI（`1` / `0`） |
 | `hot_reload` | 是否安装了免重启热挂载（`1` / `0`） |
+| `mount_mode` | `compatible` 或 `magic` |
 | `reqable_source` | `app` 或 `none`（未导入成功则为 none，对应开关会被关掉） |
 | `proxypin_source` | `app` / `builtin` / `none` |
 
 选择不安装 WebUI 不影响开机证书注入；选择不安装热挂载后，设备上不会保留 `bin/hot_mount.sh`，WebUI 也会隐藏对应区域。
+
+默认安装固定 `mount_mode=compatible`；仅**自定义安装**会询问挂载模式。
 
 ## 自定义证书
 

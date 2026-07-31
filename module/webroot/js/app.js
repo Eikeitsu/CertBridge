@@ -542,6 +542,14 @@ const CasApp = {
       else if (s.apex_ok === "1") apexEl.textContent = "已注入";
       else apexEl.textContent = "失败";
     }
+    const hotEl = document.getElementById("homeHot");
+    if (hotEl) {
+      if (s.hot_supported !== "1") hotEl.textContent = "N/A";
+      else if (s.hot_stale === "1") hotEl.textContent = "异常";
+      else if (s.hot_active === "1")
+        hotEl.textContent = s.hot_partial === "1" ? "部分" : "已挂载";
+      else hotEl.textContent = "未挂载";
+    }
 
     const now = new Date();
     const updated = document.getElementById("homeUpdatedAt");

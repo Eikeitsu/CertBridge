@@ -26,16 +26,18 @@
 
 ## 发版时工作流做什么
 
-Actions → **Release Module**（或推送版本 tag）：
+Actions → **Release Module**（或推送 `v*` tag）：
 
-1. 打包模块 zip，创建 GitHub Release（Release 正文优先取对应当前版本的节；没有则回退读 Unreleased）  
-2. `promote-changelog.py <version>`：把非空 `Unreleased` **提升**为当前版本号，并留下空的 `## Unreleased`  
-3. `promote-changelog.py --export-docs`：写出 **去掉 Unreleased** 的两份文档站 changelog  
-4. 更新 `update.json` / `module.prop`（及本仓库其它版本字段），提交并触发文档构建  
+1. 打包模块 zip，创建 GitHub Release（正文优先取当前版本节；没有则回退 Unreleased）
+2. `promote-changelog.py <version>`：非空 `Unreleased` → 当前版本号，并留下空 stub
+3. `promote-changelog.py --export-docs`：文档站两份 changelog **去掉 Unreleased**
+4. 更新 `update.json` / `module.prop` / `package.json` 等并推送主分支；因 `GITHUB_TOKEN` 推送不会连锁触发其它 Actions，脚本会再 `gh workflow run build-docs.yml`
+
+工作流拆为 `build` → `publish` → `post` 三阶段；版本解析见 `resolve-release-version.py`，回写见 `post-release-update.sh`。版本号仍为 semver：`vMAJOR.MINOR.PATCH`。
 
 因此：
 
-- 根目录 `changelog.md`：发版后仍有空的 `## Unreleased`（给下一轮开发用）  
+- 根目录 `changelog.md`：发版后仍有空的 `## Unreleased`（给下一轮开发用）
 - 文档站两份：只有已发布版本，**没有 Unreleased**
 
 ## 本地命令（可选）
@@ -51,10 +53,10 @@ python3 tooling/scripts/promote-changelog.py --export-docs changelog.md \
 
 ## AI / 协作者检查清单
 
-1. 有用户可见改动 → 在 `changelog.md` → `## Unreleased` 追加 bullet  
-2. 不要把 Unreleased 写进 `docs/**/changelog.md`  
-3. 不要删空的 `## Unreleased` stub  
-4. 发版用工作流，不要手改版本号后漏同步文档站两份日志  
+1. 有用户可见改动 → 在 `changelog.md` → `## Unreleased` 追加 bullet
+2. 不要把 Unreleased 写进 `docs/**/changelog.md`
+3. 不要删空的 `## Unreleased` stub
+4. 发版用工作流，不要手改版本号后漏同步文档站两份日志
 
-相关脚本：`tooling/scripts/promote-changelog.py`、`tooling/scripts/prepare-release-notes.py`。  
+相关脚本：`promote-changelog.py`、`prepare-release-notes.py`、`resolve-release-version.py`、`post-release-update.sh`。  
 构建细节见 [`BUILD.md`](./BUILD.md)。

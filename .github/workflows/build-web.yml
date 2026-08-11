@@ -7,28 +7,31 @@ on:
       - "module/webroot/**"
       - "tooling/scripts/build-web.mjs"
       - "tooling/scripts/publish-web-branch.mjs"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/actions/setup-node-npm/**"
+      - ".github/workflows/build-web.yml"
   pull_request:
     branches: [main, master]
     paths:
       - "module/webroot/**"
       - "tooling/scripts/build-web.mjs"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/actions/setup-node-npm/**"
+      - ".github/workflows/build-web.yml"
   workflow_dispatch:
-
-permissions:
-  contents: write
 
 jobs:
   build-web:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: npm
+      - uses: ./.github/actions/setup-node-npm
 
-      - run: npm ci
       - run: npm run build:web
 
       - uses: actions/upload-artifact@v4
@@ -37,8 +40,25 @@ jobs:
           path: .build/webroot/
           if-no-files-found: error
 
+  publish-web:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    needs: build-web
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: .build/webroot/
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
       - name: Publish dist-web branch
-        if: github.event_name == 'push'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}

@@ -87,12 +87,16 @@ Lite 依赖设备上的 `app_process`/`dalvikvm`（Magisk 应用内刷入通常�
 
 ## 工作流
 
-| 工作流           | 触发                | 职责                                         |
-| ---------------- | ------------------- | -------------------------------------------- |
-| `Build Web`      | `module/webroot/**` | 压缩 Web，上传 Artifact，推送 `dist-web`     |
-| `Build Docs`     | `docs/**`           | 构建并部署 GitHub Pages                      |
-| `Package Module` | `module/**`         | 仅构建 zip Artifact（不发 Release）          |
-| `Release Module` | 手动 / `v*` 标签    | 构建 zip + GitHub Release + 更新 update.json |
+共用 composite：`.github/actions/setup-node-npm`（Node 22 + `npm ci`）。
+
+| 工作流           | 触发                | 职责                                                                 |
+| ---------------- | ------------------- | -------------------------------------------------------------------- |
+| `Build Web`      | `module/webroot/**` | 压缩 Web → Artifact；push/手动再发布 `dist-web`（独立 job）          |
+| `Build Docs`     | `docs/**`           | 构建并部署 GitHub Pages                                              |
+| `Package Module` | `module/**`         | 仅构建 zip Artifact（不发 Release）                                  |
+| `Release Module` | 手动 / `v*` 标签    | `build` 打包 → `publish` 发 Release → `post` 回写主分支 / 触发文档站 |
+
+发版脚本：`resolve-release-version.py`、`post-release-update.sh`（见 [`RELEASE.md`](./RELEASE.md)）。
 
 ### 手动发版
 

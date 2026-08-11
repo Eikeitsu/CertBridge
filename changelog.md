@@ -2,7 +2,8 @@
 
 ## Unreleased
 
-- Action：重新设计Action功能，由于Sukisu限制脚本超时10s，去除一些音量键操作功能，保证脚本不会被提前终止
+- Action：重新设计 Action 功能，由于 SukiSU 限制脚本超时 10s，去除部分音量键操作，保证脚本不会被提前终止
+- CI：Release 拆为 build / publish / post；Web 构建与 `dist-web` 发布分离；共用 Node 安装 action
 
 ## v2.2.0
 

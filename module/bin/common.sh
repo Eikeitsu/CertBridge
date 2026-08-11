@@ -74,8 +74,8 @@ certbridge_load_libs_install() {
 }
 
 certbridge_load_libs_runtime() {
+  # keys.sh 仅安装用；Action / service / WebUI 后端不加载
   certbridge_load_lib log.sh
-  certbridge_load_lib keys.sh
   certbridge_load_lib conf.sh
   certbridge_load_lib lock.sh
   certbridge_load_lib store.sh

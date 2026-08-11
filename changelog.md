@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- - Action：重新设计Action功能，由于Sukisu限制脚本超时10s，去除一些音量键操作功能，保证脚本不会被提前终止
+- Action：重新设计Action功能，由于Sukisu限制脚本超时10s，去除一些音量键操作功能，保证脚本不会被提前终止
 
 ## v2.2.0
 

@@ -3,10 +3,11 @@
 # 返回：0=音量上，1=音量下，2=超时或无法读取
 # 可选参数：超时秒数（默认 20）
 #
-# 注意：
-# - 只认 KEY_* DOWN（认 UP 会把「松开」当成新一次选择）
-# - 安装界面不会因短暂无输出杀脚本；Action（SukiSU/KSU 等）约 1–2s 无 stdout 会杀
-# - 因此仅 Action 需要保活输出；安装保持安静，等待日志不是功能必需
+# Action（SukiSU/KSU）约 1–2s 无 stdout 会杀脚本；安装无此限制。
+# 第一次等待正常、第二次被杀：常见于 getevent/timeout 残留占住输入设备，
+# 第二次阻塞时又没有并行心跳。故 Action 下：
+#   1) 不用 timeout 包 getevent（改后台启动 + 到期强杀）
+#   2) 整段等待期间后台并行输出保活
 
 certbridge_volume_getevent_bin() {
   if [ -x /system/bin/getevent ]; then
@@ -35,18 +36,47 @@ certbridge_volume_match_down() {
   grep -qE 'KEY_VOLUMEDOWN[[:space:]]+DOWN|[[:space:]]0072[[:space:]]+00000001' "$1" 2>/dev/null
 }
 
-# Action 保活：尽量短，避免刷屏；安装路径不调用
-certbridge_volume_keepalive() {
+certbridge_volume_hb_pid=""
+
+certbridge_volume_hb_stop() {
+  if [ -n "$certbridge_volume_hb_pid" ]; then
+    kill "$certbridge_volume_hb_pid" 2>/dev/null || true
+    wait "$certbridge_volume_hb_pid" 2>/dev/null || true
+    certbridge_volume_hb_pid=""
+  fi
+}
+
+certbridge_volume_hb_start() {
   certbridge_volume_in_action || return 0
-  printf '%s\n' "$1"
-  printf '%s\n' "$1" >&2
+  certbridge_volume_hb_stop
+  (
+    n=0
+    while [ "$n" -lt 120 ]; do
+      printf '.\n'
+      printf '.\n' >&2
+      sleep 1
+      n=$((n + 1))
+    done
+  ) &
+  certbridge_volume_hb_pid=$!
+}
+
+certbridge_volume_ge_pid=""
+
+certbridge_volume_kill_getevent() {
+  if [ -n "$certbridge_volume_ge_pid" ]; then
+    kill "$certbridge_volume_ge_pid" 2>/dev/null || true
+    kill -9 "$certbridge_volume_ge_pid" 2>/dev/null || true
+    wait "$certbridge_volume_ge_pid" 2>/dev/null || true
+    certbridge_volume_ge_pid=""
+  fi
 }
 
 certbridge_volume_read_one() {
-  local out="$1"
-  local ge="$2"
-  local slice_sec="$3"
-  local pid w
+  out="$1"
+  ge="$2"
+  slice_sec="$3"
+  w=0
 
   case "$slice_sec" in
     ""|*[!0-9]*) slice_sec=1 ;;
@@ -61,36 +91,30 @@ certbridge_volume_read_one() {
   rm -f "$out"
   : >"$out"
 
-  if command -v timeout >/dev/null 2>&1; then
-    timeout "$slice_sec" "$ge" -lqc 1 >"$out" 2>/dev/null || true
-    return 0
-  fi
-
+  certbridge_volume_kill_getevent
+  # 一律后台 + 到期强杀；不用 timeout（部分机型对 getevent 杀不干净，第二次必挂）
   "$ge" -lqc 1 >"$out" 2>/dev/null &
-  pid=$!
+  certbridge_volume_ge_pid=$!
   w=0
   while [ "$w" -lt "$slice_sec" ]; do
-    kill -0 "$pid" 2>/dev/null || break
+    kill -0 "$certbridge_volume_ge_pid" 2>/dev/null || break
     [ -s "$out" ] && break
     sleep 1
     w=$((w + 1))
   done
-  kill "$pid" 2>/dev/null || true
-  wait "$pid" 2>/dev/null || true
+  certbridge_volume_kill_getevent
   return 0
 }
 
 certbridge_volume_drain() {
-  local ge="$1"
-  local event_file="$2"
-  local n=0
-  local max=6
-  local slice=1
+  ge="$1"
+  event_file="$2"
+  n=0
+  max=4
 
-  certbridge_volume_in_action || max=8
+  certbridge_volume_in_action && max=3
   while [ "$n" -lt "$max" ]; do
-    certbridge_volume_keepalive "."
-    certbridge_volume_read_one "$event_file" "$ge" "$slice"
+    certbridge_volume_read_one "$event_file" "$ge" 1
     [ -s "$event_file" ] || break
     n=$((n + 1))
   done
@@ -98,9 +122,15 @@ certbridge_volume_drain() {
 }
 
 certbridge_volume_choice() {
-  local timeout_sec="${1:-20}"
-  local event_file ge
-  local start_ts now_ts elapsed remaining slice
+  timeout_sec="${1:-20}"
+  event_file=""
+  ge=""
+  start_ts=0
+  now_ts=0
+  elapsed=0
+  remaining=0
+  slice=1
+  rc=2
 
   case "$timeout_sec" in
     ""|*[!0-9]*) timeout_sec=20 ;;
@@ -111,7 +141,8 @@ certbridge_volume_choice() {
   ge="$(certbridge_volume_getevent_bin)" || return 2
   [ -n "$ge" ] || return 2
 
-  trap 'rm -f "'"$event_file"'" 2>/dev/null' HUP INT TERM
+  certbridge_volume_hb_start
+  trap 'certbridge_volume_hb_stop; certbridge_volume_kill_getevent; rm -f "'"$event_file"'" 2>/dev/null' HUP INT TERM
   trap '' PIPE
 
   certbridge_volume_drain "$ge" "$event_file"
@@ -125,7 +156,6 @@ certbridge_volume_choice() {
     [ "$remaining" -lt 1 ] && remaining=1
     if certbridge_volume_in_action; then
       slice=1
-      certbridge_volume_keepalive "."
     else
       slice=2
       [ "$remaining" -lt "$slice" ] && slice="$remaining"
@@ -134,16 +164,14 @@ certbridge_volume_choice() {
     certbridge_volume_read_one "$event_file" "$ge" "$slice"
     if [ -s "$event_file" ]; then
       if certbridge_volume_match_up "$event_file"; then
-        rm -f "$event_file"
-        trap - HUP INT TERM PIPE
+        rc=0
         echo "  → 音量上"
-        return 0
+        break
       fi
       if certbridge_volume_match_down "$event_file"; then
-        rm -f "$event_file"
-        trap - HUP INT TERM PIPE
+        rc=1
         echo "  → 音量下"
-        return 1
+        break
       fi
     fi
 
@@ -159,8 +187,14 @@ certbridge_volume_choice() {
     fi
   done
 
+  if [ "$elapsed" -ge "$timeout_sec" ] && [ "$rc" -eq 2 ]; then
+    echo "  → 等待超时"
+    rc=2
+  fi
+
   rm -f "$event_file"
+  certbridge_volume_kill_getevent
+  certbridge_volume_hb_stop
   trap - HUP INT TERM PIPE
-  echo "  → 等待超时"
-  return 2
+  return "$rc"
 }

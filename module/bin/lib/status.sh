@@ -330,15 +330,28 @@ compose_module_description() {
 }
 
 # WebUI statusDesc：复用模块状态判定，仅改写「运行正常」文案
-# （| 两侧空格；当前生效含数量；自定义列证书名；不写 module.prop）
+# 目标：[✅运行正常 | 已挂载:N] 当前生效：N | 名称1、名称2…
+# 注意：不要对 summary 再按 | 拆分后拼接（易把整串误塞进 names）
+compose_webui_running_description() {
+  [ -s "$APPLIED_MAP" ] || return 1
+  webui_names=""
+  webui_total=0
+  while IFS='|' read -r label name checksum display; do
+    [ -n "$label" ] || continue
+    webui_total=$((webui_total + 1))
+    [ -n "$display" ] || display=$(applied_cert_fallback_display "$label" "$name")
+    webui_names="${webui_names}${webui_names:+、}${display}"
+  done <"$APPLIED_MAP"
+  [ "$webui_total" -gt 0 ] || return 1
+  echo "[✅运行正常 | 已挂载:${webui_total}] 当前生效：${webui_total} | ${webui_names}"
+}
+
 compose_webui_description() {
   desc=$(compose_module_description)
   case "$desc" in
     "[✅运行正常|"*)
-      if summary=$(compose_applied_cert_summary named); then
-        n=${summary%%|*}
-        names=${summary#*|}
-        echo "[✅运行正常 | 已挂载:${n}] 当前生效：${n} | ${names}"
+      if webui_desc=$(compose_webui_running_description); then
+        echo "$webui_desc"
         return 0
       fi
       ;;

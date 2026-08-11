@@ -46,35 +46,58 @@ try_remount_ro_pid() {
   :
 }
 
-prepare_target_stage() {
-  target="$1"
-  stage=$(target_stage_dir "$target")
-  mkdir -p "$RUNTIME_MOUNT_ROOT" || return 1
-
-  if ! mountpoint -q "$stage" 2>/dev/null; then
-    rm -rf "$stage" 2>/dev/null
-    mkdir -p "$stage" || return 1
-    mount -t tmpfs -o mode=755 tmpfs "$stage" 2>/dev/null || {
-      log_msg "inject: tmpfs mount failed ($stage)"
-      return 1
-    }
+ensure_stage_tmpfs() {
+  stage="$1"
+  if mountpoint -q "$stage" 2>/dev/null; then
+    # 旧层可能被 remount 成只读，刷新前尽量改回可写
+    mount -o remount,rw "$stage" 2>/dev/null || true
+    return 0
   fi
+  rm -rf "$stage" 2>/dev/null
+  mkdir -p "$stage" || return 1
+  mount -t tmpfs -o mode=755 tmpfs "$stage" 2>/dev/null || {
+    log_msg "inject: tmpfs mount failed ($stage)"
+    return 1
+  }
+}
 
-  # Refresh contents from immutable generation
+# 将 GEN_CERTS 刷入 stage；失败时打印首个问题文件名
+fill_stage_from_generation() {
+  stage="$1"
+  fail_name=""
   rm -f "$stage"/* 2>/dev/null
   for cert in "$GEN_CERTS"/*.*; do
     [ -f "$cert" ] || continue
     name=$(basename "$cert")
     is_cert_filename "$name" || continue
-    cp -f "$cert" "$stage/$name" 2>/dev/null || {
+    if ! cp -f "$cert" "$stage/$name" 2>/dev/null; then
+      fail_name="$name"
       log_msg "inject: copy to tmpfs failed ($name)"
       return 1
-    }
+    fi
   done
   [ "$(count_certs "$stage")" -eq "$(count_certs "$GEN_CERTS")" ] || {
-    log_msg "inject: tmpfs cert count mismatch for $target"
+    log_msg "inject: tmpfs cert count mismatch for stage=$stage${fail_name:+ (last=$fail_name)}"
     return 1
   }
+  return 0
+}
+
+prepare_target_stage() {
+  target="$1"
+  stage=$(target_stage_dir "$target")
+  mkdir -p "$RUNTIME_MOUNT_ROOT" || return 1
+
+  ensure_stage_tmpfs "$stage" || return 1
+
+  # Refresh contents from immutable generation；失败则拆掉旧 tmpfs 重建一次
+  if ! fill_stage_from_generation "$stage"; then
+    log_msg "inject: refreshing stage failed, recreating tmpfs ($stage)"
+    umount "$stage" 2>/dev/null || umount -l "$stage" 2>/dev/null || true
+    rm -rf "$stage" 2>/dev/null
+    ensure_stage_tmpfs "$stage" || return 1
+    fill_stage_from_generation "$stage" || return 1
+  fi
 
   chown -R 0:0 "$stage" 2>/dev/null
   chmod 0755 "$stage" 2>/dev/null

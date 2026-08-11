@@ -40,6 +40,10 @@ if ! prepare_mount_mode_overlay "$MODDIR"; then
   finalize_runtime_status post-fs-data >/dev/null
   exit 1
 fi
+# 软重启后上一轮 apex/system bind 可能仍在；先卸掉再读真实系统 CA，
+# 否则已关闭的 ProxyPin 等 addon 会污染新 generation（日志里仍出现 243f0bfb.0）
+detach_runtime_cacert_binds || \
+  log_msg "post-fs-data: detach runtime binds soft-fail"
 if ! build_boot_generation; then
   echo "实时证书集合生成失败；未执行任何挂载" >"$STATEDIR/inject-error"
   log_msg "post-fs-data: live generation failed, original store preserved"

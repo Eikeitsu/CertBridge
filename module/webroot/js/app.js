@@ -474,6 +474,8 @@ const CasApp = {
     if (reqSub) {
       if (s.reqable_available !== "1")
         reqSub.textContent = "未检测到证书（请先在 App 中生成）";
+      else if (s.reqable_enabled !== "1" && s.reqable_active === "1")
+        reqSub.textContent = "已关闭，仍在生效（重启后移除）· 点击查看详情";
       else if (s.reqable_active === "1")
         reqSub.textContent = "已应用 · 点击查看详情";
       else if (s.reqable_enabled === "1")
@@ -484,6 +486,8 @@ const CasApp = {
     if (ppSub) {
       if (s.proxypin_available !== "1")
         ppSub.textContent = "未检测到证书";
+      else if (s.proxypin_enabled !== "1" && s.proxypin_active === "1")
+        ppSub.textContent = "已关闭，仍在生效（重启后移除）· 点击查看详情";
       else if (s.proxypin_active === "1")
         ppSub.textContent = "已应用 · 点击查看详情";
       else if (s.proxypin_enabled === "1")

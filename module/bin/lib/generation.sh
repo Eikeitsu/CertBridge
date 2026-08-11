@@ -67,8 +67,19 @@ build_boot_generation() {
   [ -n "$previous_boot_id" ] || previous_boot_id=$(cat "$GEN_ACTIVE_BOOT" 2>/dev/null | tr -d '\r\n')
   [ -n "$previous_boot_id" ] || \
     previous_boot_id=$(grep '^boot_id=' "$SOURCE_META" 2>/dev/null | cut -d= -f2-)
+  # 当前 conf 与已生效 conf 不一致时必须重建（防止 pending 标记丢失后仍用旧 addon）
+  conf_changed=0
+  if [ -f "$CONF" ] && [ -f "$APPLIED_CONF" ]; then
+    cmp -s "$CONF" "$APPLIED_CONF" 2>/dev/null || conf_changed=1
+  elif [ -f "$CONF" ] && [ ! -f "$APPLIED_CONF" ] && [ -s "$APPLIED_MAP" ]; then
+    conf_changed=1
+  fi
+  [ "$conf_changed" = "1" ] && \
+    log_msg "generation: conf differs from applied, force rebuild"
+
   # KernelSU 软重启不换 boot_id，但会重跑 post-fs-data；有待生效配置时必须重建
-  if [ "$pending" != "1" ] && [ -n "$boot_id" ] && [ "$boot_id" = "$previous_boot_id" ] && \
+  if [ "$pending" != "1" ] && [ "$conf_changed" != "1" ] && \
+      [ -n "$boot_id" ] && [ "$boot_id" = "$previous_boot_id" ] && \
       generation_valid && verify_direct_store "$target"; then
     log_msg "generation: already active for this boot, skip rebuild"
     return 0
@@ -94,6 +105,11 @@ build_boot_generation() {
     log_msg "generation: live source too small ($source_n), refuse build"
     return 1
   }
+  # 双保险：若目标仍是本模块 runtime bind，禁止当作系统基线
+  if is_certbridge_runtime_bind "$target"; then
+    log_msg "generation: live target still runtime-bound, refuse contaminated source"
+    return 1
+  fi
 
   stage="$GEN_ROOT/.new.$$"
   certs="$stage/cacerts"

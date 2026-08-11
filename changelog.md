@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- 修复软重启后仍可能注入已关闭证书的问题（例如关掉 ProxyPin 后日志仍报注入失败）
+- 开机注入更稳健：刷新失败会自动重试；改过开关后会按新配置重新生成证书
+- WebUI：证书开关已关但旧证尚未卸掉时，会提示「仍在生效（重启后移除）」
 - Action：重新设计 Action 功能，由于 SukiSU 限制脚本超时 10s，去除部分音量键操作，保证脚本不会被提前终止
 - CI：Release 拆为 build / publish / post；Web 构建与 `dist-web` 发布分离；共用 Node 安装 action
 

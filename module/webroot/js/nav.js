@@ -23,20 +23,17 @@ const CasNav = {
     },
   ],
 
+  currentPage: "home",
+
   getPage() {
-    try {
-      const id = localStorage.getItem(this.PAGE_KEY) || "home";
-      return this.PAGES.some((p) => p.id === id) ? id : "home";
-    } catch (_) {
-      return "home";
-    }
+    return this.PAGES.some((p) => p.id === this.currentPage)
+      ? this.currentPage
+      : "home";
   },
 
   setPage(id) {
     const page = this.PAGES.some((p) => p.id === id) ? id : "home";
-    try {
-      localStorage.setItem(this.PAGE_KEY, page);
-    } catch (_) {}
+    this.currentPage = page;
     document.documentElement.setAttribute("data-page", page);
     document.querySelectorAll(".dock-item").forEach((el) => {
       el.classList.toggle("active", el.dataset.nav === page);
@@ -70,9 +67,13 @@ const CasNav = {
     const dock = layout === "dock";
     const nav = document.getElementById("dockNav");
     if (nav) nav.hidden = !dock;
+    try {
+      localStorage.removeItem(this.PAGE_KEY);
+    } catch (_) {}
     if (dock) {
+      this.currentPage = "home";
       this.renderDock();
-      this.setPage(this.getPage());
+      this.setPage("home");
     } else {
       document.documentElement.removeAttribute("data-page");
     }

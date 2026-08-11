@@ -13,6 +13,8 @@ trap post_cleanup 0
 trap 'post_cleanup; exit 1' 1 2 15
 
 log_msg "post-fs-data start (api=$(get_api))"
+# 软重启不换内核 boot_id：先递增 epoch，立刻让旧 runtime-status / 热会话缓存失效
+bump_boot_epoch
 update_module_description "启动中"
 if ! acquire_write_lock; then
   echo "开机证书锁获取失败；未执行新的挂载" >"$STATEDIR/inject-error"

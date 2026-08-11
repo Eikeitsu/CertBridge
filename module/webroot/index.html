@@ -38,7 +38,8 @@
           // 深底 → 浅色（白）状态栏图标；仅 color-scheme 对 MMRL/WebUI-X 不够
           var lightBars = resolved !== "dark";
           var applyBars = function (api) {
-            if (!api || typeof api.setLightStatusBars !== "function") return false;
+            if (!api || typeof api.setLightStatusBars !== "function")
+              return false;
             try {
               api.setLightStatusBars(lightBars);
               if (typeof api.setLightNavigationBars === "function")
@@ -198,9 +199,8 @@
       </div>
       <div class="cert-detail" id="proxypinDetail" hidden></div>
       <div class="field-hint" style="padding: 8px 16px 12px">
-        点击证书行可展开详情。Reqable /
-        ProxyPin 优先从已安装 App 读取 CA；ProxyPin
-        若未检测到 App 证书则使用内置兜底。
+        点击证书行可展开详情。Reqable / ProxyPin 优先从已安装 App 读取
+        CA；ProxyPin 若未检测到 App 证书则使用内置兜底。
       </div>
     </section>
 
@@ -353,16 +353,17 @@
           <div class="info-box" style="margin-top: 12px">
             <b>完整兼容（默认）</b><br />
             运行时整库合并后 bind，不写
-            <code>system/</code> 叠层。<b>不依赖</b> Magic Mount
-            元模块；Magisk / KernelSU / APatch 均可。<br /><br />
+            <code>system/</code> 叠层。<b>不依赖</b> Magic Mount 元模块；Magisk
+            / KernelSU / APatch 均可。<br /><br />
             <b>轻量 Magic Mount</b><br />
             只把当前启用的 addon 证书叠进
-            <code>system/etc/security/cacerts</code>；Android 14+
-            仍对 APEX 做脚本注入。<br />
+            <code>system/etc/security/cacerts</code>；Android 14+ 仍对 APEX
+            做脚本注入。<br />
             · <b>Magisk</b>：自带 Magic Mount，一般<b>不需要</b>元模块<br />
             · <b>KernelSU</b>：需管理器正确挂载
-            <code>system/</code>；若叠层变成「只剩几张证」，请改回完整兼容，或安装提供正确
-            overlay 的挂载元模块后再用轻量模式<br />
+            <code>system/</code
+            >；若叠层变成「只剩几张证」，请改回完整兼容，或安装提供正确 overlay
+            的挂载元模块后再用轻量模式<br />
             · <b>APatch</b>：视版本挂载实现而定，异常时用完整兼容<br /><br />
             切换后需<b>重启</b>生效。
           </div>
@@ -404,7 +405,7 @@
 
       <div class="pref">
         <div class="pref-body">
-          <div class="pref-title">悬浮分页</div>
+          <div class="pref-title">悬浮底栏</div>
           <div class="pref-desc" id="dockDesc">单页长列表</div>
         </div>
         <div class="pref-right">
@@ -485,8 +486,7 @@
           <b>挂载与元模块</b><br />
           默认「完整兼容」无需元模块。轻量 Magic 模式在 Magisk
           上通常可直接用；KernelSU 若出现系统 CA
-          只剩模块那几张，请改回完整兼容或确认挂载元模块提供正确
-          overlay。
+          只剩模块那几张，请改回完整兼容或确认挂载元模块提供正确 overlay。
         </div>
       </div>
     </section>
@@ -509,8 +509,8 @@
       </div>
     </div>
     <div class="about-note" data-page="more">
-      CertBridge 由许小墨开发。Reqable 从本机 App 导入；ProxyPin
-      优先 App，必要时使用模块内置兜底。也可导入自定义 CA。
+      CertBridge 由许小墨开发。Reqable 从本机 App 导入；ProxyPin 优先
+      App，必要时使用模块内置兜底。也可导入自定义 CA。
     </div>
     <section class="card" data-page="more">
       <div class="pref" data-url="https://www.coolapk.com/u/7602666">

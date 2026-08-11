@@ -53,7 +53,7 @@ hot_failed=0"
     echo "desc_short=$(compute_status_tag)"
   fi
   echo "status_cached=$(runtime_status_fresh && echo 1 || echo 0)"
-  echo "desc_body=$(compose_module_description)"
+  echo "desc_body=$(compose_webui_description)"
   echo "reqable_enabled=$(read_conf reqable 1)"
   echo "reqable_active=$(is_addon_applied reqable && echo 1 || echo 0)"
   echo "reqable_name=$(get_applied_name reqable)"

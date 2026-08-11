@@ -69,6 +69,24 @@ hot_boot_id() {
   tr -d '\r\n' </proc/sys/kernel/random/boot_id 2>/dev/null
 }
 
+hot_boot_epoch() {
+  tr -d '\r\n' <"$BOOT_EPOCH_FILE" 2>/dev/null
+}
+
+# 会话是否属于当前内核 boot + 用户态 epoch（软重启会递增 epoch）
+hot_session_boot_fresh() {
+  HOT_STATE_BOOT="$1"
+  HOT_STATE_EPOCH="$2"
+  HOT_NOW_BOOT=$(hot_boot_id)
+  HOT_NOW_EPOCH=$(hot_boot_epoch)
+  [ -n "$HOT_STATE_BOOT" ] && [ "$HOT_STATE_BOOT" = "$HOT_NOW_BOOT" ] || return 1
+  if [ -n "$HOT_STATE_EPOCH" ]; then
+    [ "$HOT_STATE_EPOCH" = "$HOT_NOW_EPOCH" ]
+  else
+    [ -z "$HOT_NOW_EPOCH" ] || [ "$HOT_NOW_EPOCH" = "0" ]
+  fi
+}
+
 hot_normalize_cert() {
   HOT_INPUT="$1"
   HOT_OUTPUT="$2"
@@ -538,7 +556,7 @@ hot_unmount_internal() {
   HOT_SESSION=$(hot_read_state session_id)
   HOT_TARGET=$(hot_read_state target)
   HOT_STATE_BOOT=$(hot_read_state boot_id)
-  HOT_NOW_BOOT=$(hot_boot_id)
+  HOT_STATE_EPOCH=$(hot_read_state boot_epoch)
   [ -n "$HOT_SESSION" ] || HOT_SESSION=$(cat "$HOT_CERTS/$HOT_MARKER" 2>/dev/null | tr -d '\r\n')
   [ -n "$HOT_TARGET" ] || HOT_TARGET=$(get_target_store)
   [ -n "$HOT_SESSION" ] && [ -n "$HOT_TARGET" ] || {
@@ -547,13 +565,16 @@ hot_unmount_internal() {
     rm -f "$HOT_STATE"
     return 0
   }
-  if [ -n "$HOT_STATE_BOOT" ] && [ -n "$HOT_NOW_BOOT" ] && [ "$HOT_STATE_BOOT" != "$HOT_NOW_BOOT" ]; then
+  if ! hot_session_boot_fresh "$HOT_STATE_BOOT" "$HOT_STATE_EPOCH"; then
     HOT_REMAINING=$(hot_count_mounted_namespaces "$HOT_SESSION" "$HOT_TARGET")
-    [ "$HOT_REMAINING" -eq 0 ] || return 1
-    hot_teardown_bind_stage
-    rm -rf "$HOT_CURRENT" 2>/dev/null
-    rm -f "$HOT_STATE"
-    return 0
+    if [ "$HOT_REMAINING" -eq 0 ]; then
+      hot_teardown_bind_stage
+      rm -rf "$HOT_CURRENT" 2>/dev/null
+      rm -f "$HOT_STATE"
+      return 0
+    fi
+    # 软重启已递增 epoch，会话标记过期但仍有残留挂载：继续卸载，勿直接失败
+    log_msg "hot: stale boot token with $HOT_REMAINING mounts, force unmount"
   fi
 
   HOT_PASS=0
@@ -644,6 +665,7 @@ hot_build_generation() {
   cat >"$HOT_STAGE/session.conf" <<EOF
 session_id=$HOT_SESSION
 boot_id=$(hot_boot_id)
+boot_epoch=$(tr -d '\r\n' <"$BOOT_EPOCH_FILE" 2>/dev/null)
 target=$HOT_TARGET
 mode=$HOT_MODE
 sd_path=$HOT_SD_PATH
@@ -786,8 +808,8 @@ hot_status() {
   HOT_SESSION=$(hot_read_state session_id)
   HOT_TARGET=$(hot_read_state target)
   HOT_STATE_BOOT=$(hot_read_state boot_id)
-  HOT_NOW_BOOT=$(hot_boot_id)
-  if [ -z "$HOT_SESSION" ] || [ "$HOT_STATE_BOOT" != "$HOT_NOW_BOOT" ]; then
+  HOT_STATE_EPOCH=$(hot_read_state boot_epoch)
+  if [ -z "$HOT_SESSION" ] || ! hot_session_boot_fresh "$HOT_STATE_BOOT" "$HOT_STATE_EPOCH"; then
     echo "hot_active=0"
     echo "hot_stale=$([ -n "$HOT_SESSION" ] && echo 1 || echo 0)"
     echo "hot_partial=0"

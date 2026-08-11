@@ -19,7 +19,10 @@ source_identity() {
   echo "source_checksum=${checksum:-unknown}"
 }
 
-generation_is_mounted() {
+# 是否仍有命名空间直接挂着 generation 目录本身（不可安全替换）
+# 注意：运行时 tmpfs 拷贝层（RUNTIME_MOUNT_ROOT）不算 —— 软重启后仍可能残留，
+# 但不应阻止重建 GEN_CURRENT；后续 inject 会刷新 tmpfs 内容。
+generation_source_busy() {
   generation_id=$(path_identity "$GEN_CERTS")
   [ -n "$generation_id" ] || return 1
   generation_seen="|"
@@ -35,52 +38,55 @@ generation_is_mounted() {
       generation_mount_state=$(nsenter --mount=/proc/"$generation_pid"/ns/mnt -- \
         awk -v target="$generation_target" \
           -v source="$GEN_CERTS" \
-          -v runtime_source="$RUNTIME_MOUNT_ROOT" \
           -v adb_source="/adb/modules/CertBridge/certs/generation/current/cacerts" \
-          -v module_source="/CertBridge/certs/generation/current/cacerts" \
-          -v legacy_runtime="/modules/CertBridge/data/runtime-mounts" '
+          -v module_source="/CertBridge/certs/generation/current/cacerts" '
           $5 == target && (
             index($0, source) > 0 ||
-            index($0, runtime_source) > 0 ||
             index($0, adb_source) > 0 ||
-            index($0, module_source) > 0 ||
-            index($0, legacy_runtime) > 0
+            index($0, module_source) > 0
           ) { found=1 }
           END { print found ? "mounted" : "clear" }
         ' /proc/self/mountinfo 2>/dev/null)
       [ "$generation_mount_state" = "mounted" ] && return 0
-      # 仅在明确仍挂着 generation 源时拒绝替换；探测失败视为未挂载，避免误拒重建
     done
   done
   return 1
 }
 
+# 兼容旧调用名
+generation_is_mounted() {
+  generation_source_busy
+}
+
 build_boot_generation() {
   target=$(get_target_store)
   boot_id=$(tr -d '\r\n' </proc/sys/kernel/random/boot_id 2>/dev/null)
+  pending=0
+  [ -f "$PENDING_FILE" ] && pending=1
   previous_boot_id=$(cat "$GEN_CURRENT/boot-id" 2>/dev/null | tr -d '\r\n')
   [ -n "$previous_boot_id" ] || previous_boot_id=$(cat "$GEN_ACTIVE_BOOT" 2>/dev/null | tr -d '\r\n')
   [ -n "$previous_boot_id" ] || \
     previous_boot_id=$(grep '^boot_id=' "$SOURCE_META" 2>/dev/null | cut -d= -f2-)
-  if [ -n "$boot_id" ] && [ "$boot_id" = "$previous_boot_id" ] && \
+  # KernelSU 软重启不换 boot_id，但会重跑 post-fs-data；有待生效配置时必须重建
+  if [ "$pending" != "1" ] && [ -n "$boot_id" ] && [ "$boot_id" = "$previous_boot_id" ] && \
       generation_valid && verify_direct_store "$target"; then
     log_msg "generation: already active for this boot, skip rebuild"
     return 0
   fi
   if [ -d "$GEN_CURRENT" ]; then
-    if generation_is_mounted; then
+    if generation_source_busy; then
       log_msg "generation: current source is still mounted, refuse replacement"
       return 1
     fi
     if [ -z "$previous_boot_id" ]; then
       install_boot_id=$(cat "$INSTALL_BOOT_FILE" 2>/dev/null | tr -d '\r\n')
       if [ -z "$install_boot_id" ] || [ "$install_boot_id" = "$boot_id" ]; then
-        log_msg "generation: source lifecycle unknown, preserve until reboot"
-        return 1
+        # 软重启后可安全重建；仅在源仍被占用时才保留到冷重启
+        log_msg "generation: source lifecycle unknown, rebuild (soft-reboot safe)"
       fi
     elif [ "$previous_boot_id" = "$boot_id" ]; then
-      log_msg "generation: invalid same-boot source preserved"
-      return 1
+      # 同 boot_id：冷启动不应走到这里；软重启 / 待生效配置允许重建
+      log_msg "generation: same-boot rebuild (pending=$pending, soft-reboot friendly)"
     fi
   fi
   source_n=$(count_certs "$target")

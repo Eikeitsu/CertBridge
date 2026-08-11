@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- 修复 KernelSU 越狱模式软重启后状态不更新：软重启不换内核 `boot_id`，原先会跳过证书集重建并卡住「待重启」/旧缓存；现用 `boot-epoch` 区分用户态周期，并允许同 boot 重建待生效配置
+
 ## v2.1.0
 
 - 新增挂载模式：`compatible`（默认，完整兼容 / 运行时 bind）与 `magic`（轻量 Magic Mount，仅叠 addon）

@@ -6,6 +6,27 @@ current_boot_id() {
   tr -d '\r\n' </proc/sys/kernel/random/boot_id 2>/dev/null
 }
 
+# KernelSU 软重启（越狱模式常用）不换内核 boot_id，但会重跑模块脚本。
+# boot-epoch 在每次 post-fs-data 递增，用来区分「同 boot_id 的不同用户态周期」。
+current_boot_epoch() {
+  tr -d '\r\n' <"$BOOT_EPOCH_FILE" 2>/dev/null
+}
+
+current_boot_token() {
+  echo "$(current_boot_id):$(current_boot_epoch)"
+}
+
+bump_boot_epoch() {
+  mkdir -p "$STATEDIR" 2>/dev/null
+  old=$(current_boot_epoch)
+  case "$old" in
+    ""|*[!0-9]*) old=0 ;;
+  esac
+  echo $((old + 1)) >"$BOOT_EPOCH_FILE.tmp.$$" 2>/dev/null && \
+    mv -f "$BOOT_EPOCH_FILE.tmp.$$" "$BOOT_EPOCH_FILE"
+  chmod 0600 "$BOOT_EPOCH_FILE" 2>/dev/null
+}
+
 read_runtime_status() {
   key="$1"
   [ -f "$RUNTIME_STATUS_FILE" ] || return 1
@@ -14,8 +35,16 @@ read_runtime_status() {
 }
 
 runtime_status_fresh() {
+  cached_token=$(read_runtime_status boot_token)
+  if [ -n "$cached_token" ]; then
+    [ "$cached_token" = "$(current_boot_token)" ]
+    return $?
+  fi
+  # 兼容旧缓存：仅有 boot_id 时，还要求 epoch 为空/0（未曾软重启递增）
   cached_boot=$(read_runtime_status boot_id)
-  [ -n "$cached_boot" ] && [ "$cached_boot" = "$(current_boot_id)" ]
+  epoch=$(current_boot_epoch)
+  [ -n "$cached_boot" ] && [ "$cached_boot" = "$(current_boot_id)" ] && \
+    { [ -z "$epoch" ] || [ "$epoch" = "0" ]; }
 }
 
 # phase: post-fs-data | service | manual
@@ -28,6 +57,8 @@ write_runtime_status() {
   tmp="$RUNTIME_STATUS_FILE.tmp.$$"
   cat >"$tmp" <<EOF
 boot_id=$(current_boot_id)
+boot_epoch=$(current_boot_epoch)
+boot_token=$(current_boot_token)
 phase=$phase
 apex_ok=$apex_ok
 tag=$tag
@@ -73,7 +104,16 @@ hot_session_recorded() {
   [ -f "$hot_state" ] || return 1
   hot_session=$(awk -F= '$1 == "session_id" { sub(/^[^=]*=/, ""); print; exit }' "$hot_state" 2>/dev/null)
   hot_boot=$(awk -F= '$1 == "boot_id" { sub(/^[^=]*=/, ""); print; exit }' "$hot_state" 2>/dev/null)
-  [ -n "$hot_session" ] && [ "$hot_boot" = "$(current_boot_id)" ]
+  hot_epoch=$(awk -F= '$1 == "boot_epoch" { sub(/^[^=]*=/, ""); print; exit }' "$hot_state" 2>/dev/null)
+  [ -n "$hot_session" ] || return 1
+  [ "$hot_boot" = "$(current_boot_id)" ] || return 1
+  # 无 epoch 字段的旧会话：仅在尚未发生软重启递增时视为有效
+  cur_epoch=$(current_boot_epoch)
+  if [ -n "$hot_epoch" ]; then
+    [ "$hot_epoch" = "$cur_epoch" ]
+  else
+    [ -z "$cur_epoch" ] || [ "$cur_epoch" = "0" ]
+  fi
 }
 
 hot_session_active() {
@@ -87,8 +127,22 @@ hot_session_active() {
   [ "$actual" = "$hot_session" ]
 }
 
-# 从 applied-certs.list 生成「显示名」摘要（第 4 列为证书 CN/名称）
+# 证书缺省显示名（applied 第 4 列为空时）
+applied_cert_fallback_display() {
+  label="$1"
+  name="$2"
+  case "$label" in
+    reqable) echo Reqable ;;
+    proxypin) echo ProxyPin ;;
+    custom:*) echo "${name:-${label#custom:}}" ;;
+    *) echo "$label" ;;
+  esac
+}
+
+# 从 applied-certs.list 生成摘要（第 4 列为证书 CN/名称）
+# $1=compact（模块简介：自定义收成「自定义×N」）| named（WebUI：每张都列名）
 compose_applied_cert_summary() {
+  mode="${1:-compact}"
   [ -s "$APPLIED_MAP" ] || return 1
   names=""
   custom_n=0
@@ -96,22 +150,19 @@ compose_applied_cert_summary() {
   while IFS='|' read -r label name checksum display; do
     [ -n "$label" ] || continue
     total=$((total + 1))
-    case "$label" in
-      custom:*) custom_n=$((custom_n + 1)) ;;
+    case "$mode:$label" in
+      compact:custom:*)
+        custom_n=$((custom_n + 1))
+        ;;
       *)
-        if [ -n "$display" ]; then
-          names="${names}${names:+、}${display}"
-        else
-          case "$label" in
-            reqable) names="${names}${names:+、}Reqable" ;;
-            proxypin) names="${names}${names:+、}ProxyPin" ;;
-            *) names="${names}${names:+、}${label}" ;;
-          esac
-        fi
+        [ -n "$display" ] || display=$(applied_cert_fallback_display "$label" "$name")
+        names="${names}${names:+、}${display}"
         ;;
     esac
   done <"$APPLIED_MAP"
-  [ "$custom_n" -gt 0 ] && names="${names}${names:+、}自定义×${custom_n}"
+  if [ "$mode" = "compact" ] && [ "$custom_n" -gt 0 ]; then
+    names="${names}${names:+、}自定义×${custom_n}"
+  fi
   [ "$total" -gt 0 ] || return 1
   echo "${total}|${names}"
 }
@@ -276,6 +327,23 @@ compose_module_description() {
   fi
 
   format_module_description "🔎检测中" "等待开机注入完成" "$DESC_INTRO"
+}
+
+# WebUI statusDesc：复用模块状态判定，仅改写「运行正常」文案
+# （| 两侧空格；当前生效含数量；自定义列证书名；不写 module.prop）
+compose_webui_description() {
+  desc=$(compose_module_description)
+  case "$desc" in
+    "[✅运行正常|"*)
+      if summary=$(compose_applied_cert_summary named); then
+        n=${summary%%|*}
+        names=${summary#*|}
+        echo "[✅运行正常 | 已挂载:${n}] 当前生效：${n} | ${names}"
+        return 0
+      fi
+      ;;
+  esac
+  echo "$desc"
 }
 
 # WebUI / 状态短标签（可带 emoji）

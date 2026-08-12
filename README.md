@@ -12,11 +12,11 @@
 
 |                        概览                         |                       证书                       |
 | :-------------------------------------------------: | :----------------------------------------------: |
-| ![概览](docs/public/screenshots/webui-overview.png) | ![证书](docs/public/screenshots/webui-certs.png) |
+| ![概览](docs/public/screenshots/webui-overview.svg) | ![证书](docs/public/screenshots/webui-certs.svg) |
 
 |                      日志                      |                      更多                       |
 | :--------------------------------------------: | :---------------------------------------------: |
-| ![日志](docs/public/screenshots/webui-log.png) | ![更多](docs/public/screenshots/webui-more.png) |
+| ![日志](docs/public/screenshots/webui-log.svg) | ![更多](docs/public/screenshots/webui-more.svg) |
 
 ## 功能概览
 
@@ -26,7 +26,7 @@
 - Android 7–16；Android 14+ APEX + system 双路径  
 - 每次开机从实时系统信任库**完整合并**，不保存系统 CA 基线  
 - 可选用户凭据区 / 存储卡证书免重启热挂载（合并永久 addon），可按会话无痕卸载  
-- 可选 WebUI：状态、证书管理与详情、日志；主题 / 莫奈 / 布局等  
+- 可选 WebUI（React 四页）：状态、证书管理与详情、注入诊断、日志；主题与挂载设置  
 - 生成或校验失败时不挂载，保留系统原始证书库  
 
 ## 快速开始
@@ -40,19 +40,20 @@
 ## 仓库结构
 
 ```text
-module/          # Magisk 模块本体
-  webroot/       # WebUI 源码
+webui/           # WebUI 源码（React + Redux Toolkit + antd；app / features / shared）
+module/          # 模块本体；webroot/ 为构建产物
+archives/        # 旧版原生 WebUI 归档
 docs/            # VitePress 用户文档
-  public/screenshots/
 tooling/         # 构建脚本
-.github/         # CI
+.github/         # CI（含 lint）
 ```
 
 ## 本地开发
 
 ```bash
 npm install
-npm run dev:web
+npm run dev:web               # Vite 开发
+npm run build:web             # 同步到 module/webroot
 npm run build:module          # 默认同时打完整版 + Lite
 npm run build:cbx509          # 仅构建 Lite 用 dex
 npm run dev:docs

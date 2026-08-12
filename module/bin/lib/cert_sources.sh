@@ -27,19 +27,57 @@ diagnose_app_cert_import() {
   return 0
 }
 
+# 比较两份证书 SHA256 指纹是否相同（任一失败视为不同）
+cert_same_fingerprint() {
+  a="$1"
+  b="$2"
+  [ -f "$a" ] && [ -f "$b" ] || return 1
+  fa=$(cert_fingerprint_sha256 "$a") || return 1
+  fb=$(cert_fingerprint_sha256 "$b") || return 1
+  [ -n "$fa" ] && [ "$fa" = "$fb" ]
+}
+
 # 从 App 同步到 sources/<kind>/，成功打印文件路径
+# - 先写入临时目录，校验成功后再替换，失败保留旧源
+# - 指纹未变则不覆盖（避免无意义改写）
 sync_source_from_app() {
   kind="$1"
   live=$(find_live_app_cert "$kind") || return 1
   label=$(app_cert_label "$kind")
   dest="$SOURCES_DIR/$kind"
-  rm -rf "$dest"
-  mkdir -p "$dest" || return 1
-  name=$(import_ca_into_dir "$live" "$dest" "$label") || {
-    rm -rf "$dest"
-    mkdir -p "$dest"
+  mkdir -p "$SOURCES_DIR" "$DATADIR" || return 1
+
+  stage="$DATADIR/sync_stage.$$.$kind"
+  rm -rf "$stage"
+  mkdir -p "$stage" || return 1
+  name=$(import_ca_into_dir "$live" "$stage" "$label") || {
+    rm -rf "$stage"
     return 1
   }
+  new_cert="$stage/$name"
+
+  if old=$(find_source_cert "$kind" 2>/dev/null); then
+    if cert_same_fingerprint "$old" "$new_cert"; then
+      # 刷新显示名（App 侧可能改了 subject 展示，但指纹相同极少见；仍以旧文件为准）
+      rm -rf "$stage"
+      echo "$old"
+      return 0
+    fi
+  fi
+
+  new_dest="$dest.new.$$"
+  rm -rf "$new_dest"
+  if ! mv "$stage" "$new_dest"; then
+    rm -rf "$stage" "$new_dest"
+    return 1
+  fi
+  rm -rf "$dest"
+  if ! mv "$new_dest" "$dest"; then
+    # 极端情况：尽量把新目录挪回，避免空源
+    mv "$new_dest" "$dest" 2>/dev/null || true
+    return 1
+  fi
+  log_msg "sources: $kind updated from app ($name)"
   echo "$dest/$name"
 }
 
@@ -90,4 +128,45 @@ resolve_addon_file_for_label() {
       return 1
       ;;
   esac
+}
+
+# 同步已启用的抓包 App 证书源；供 WebUI 刷新
+# 输出：ok / updated / kept / miss 计数与各 kind 结果
+sync_enabled_app_sources() {
+  updated=0
+  kept=0
+  miss=0
+  for kind in reqable proxypin; do
+    if ! is_enabled "$kind"; then
+      echo "${kind}=off"
+      continue
+    fi
+    old=""
+    old_fp=""
+    if old=$(find_source_cert "$kind" 2>/dev/null); then
+      old_fp=$(cert_fingerprint_sha256 "$old" 2>/dev/null || true)
+    fi
+    if ! path=$(sync_source_from_app "$kind" 2>/dev/null); then
+      if [ -n "$old" ]; then
+        echo "${kind}=keep"
+        kept=$((kept + 1))
+      else
+        echo "${kind}=miss"
+        miss=$((miss + 1))
+      fi
+      continue
+    fi
+    new_fp=$(cert_fingerprint_sha256 "$path" 2>/dev/null || true)
+    if [ -n "$old_fp" ] && [ -n "$new_fp" ] && [ "$old_fp" = "$new_fp" ]; then
+      echo "${kind}=unchanged"
+      kept=$((kept + 1))
+    else
+      echo "${kind}=updated"
+      updated=$((updated + 1))
+    fi
+  done
+  echo "ok=1"
+  echo "updated=$updated"
+  echo "kept=$kept"
+  echo "miss=$miss"
 }

@@ -25,6 +25,7 @@ export default defineConfig({
     nav: [
       { text: "首页", link: "/" },
       { text: "功能介绍", link: "/guide/features" },
+      { text: "WebUI", link: "/guide/webui" },
       { text: "安装", link: "/guide/install" },
       { text: "配置说明", link: "/guide/config" },
       { text: "更新日志", link: "/guide/changelog" },
@@ -34,6 +35,7 @@ export default defineConfig({
         text: "使用指南",
         items: [
           { text: "功能介绍", link: "/guide/features" },
+          { text: "WebUI 使用说明", link: "/guide/webui" },
           { text: "安装与升级", link: "/guide/install" },
           { text: "配置说明", link: "/guide/config" },
           { text: "更新日志", link: "/guide/changelog" },

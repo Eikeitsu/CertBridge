@@ -22,5 +22,5 @@ features:
   - title: Android 14+
     details: APEX Conscrypt 与 system 双路径注入；开机关键命名空间补齐。
   - title: WebUI 与热挂载
-    details: 状态 / 开关 / 详情 / 日志；可选用户区与存储卡免重启临时挂载。
+    details: React 四页界面（概览 / 证书 / 日志 / 更多）；主题与挂载设置；可选用户区与存储卡免重启临时挂载。
 ---

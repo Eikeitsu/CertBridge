@@ -9,6 +9,7 @@ schema_version=3
 reqable=1
 proxypin=1
 mount_mode=compatible
+tmpfs_style=short
 ```
 
 | 键               | 含义                       | 默认 |
@@ -17,6 +18,7 @@ mount_mode=compatible
 | `reqable`        | 启用 Reqable（App 导入）CA | `1`  |
 | `proxypin`       | 启用 ProxyPin CA（App 或内置兜底） | `1`  |
 | `mount_mode`     | 挂载模式：`compatible` 或 `magic` | `compatible` |
+| `tmpfs_style`    | 临时挂载路径：`short`（`.fs0`/`.fs1`）或 `legacy`（`sys-ca-merge*`） | `short` |
 
 ### 挂载模式
 
@@ -30,7 +32,7 @@ mount_mode=compatible
 | 模块 `system/` | **不写**叠层目录（避免错误叠层导致系统 CA 被遮蔽） |
 | Android 7–13 | bind `/system/etc/security/cacerts` |
 | Android 14+ | bind APEX Conscrypt 与 system 双路径（供 Flutter 等检测） |
-| 临时目录 | `/data/local/tmp/sys-ca-merge`（热挂载为 `sys-ca-merge-hot`） |
+| 临时目录 | 由 `tmpfs_style` 决定：默认 `/data/local/tmp/.fs0`（热挂载 `.fs1`）；`legacy` 时为 `sys-ca-merge{,-hot}` |
 | 元模块 | **不需要**。Magisk / KernelSU / APatch 只要能跑 `post-fs-data` / `service` 即可 |
 | 特点 | 兼容面宽、行为可控；mountinfo 中可见临时目录挂载 |
 
@@ -64,9 +66,20 @@ mount_mode=compatible
 
 也可在 WebUI「更多 → 挂载模式」切换，**重启后生效**。
 
-也可在 WebUI「证书」页用开关修改 Reqable / ProxyPin。开关与自定义永久证书仍在**重启后**生效，避免重写正在使用的开机证书层。点击证书行可展开详情（主题、颁发者、有效期、指纹等由模块 X509 工具解析；标题自动取 CN / O）。
+### 临时挂载路径（`tmpfs_style`）
 
-![证书页](/screenshots/webui-certs.png)
+完整兼容与热挂载会把合并后的证书集放到 `/data/local/tmp` 下再 bind。可用 WebUI「更多 → 临时挂载路径」或直接改 `certs.conf`：
+
+| 值 | 开机注入 | 热挂载 | 说明 |
+| --- | --- | --- | --- |
+| `short`（默认） | `/data/local/tmp/.fs0` | `/data/local/tmp/.fs1` | 降低 mountinfo 中的可读关键词特征 |
+| `legacy` | `/data/local/tmp/sys-ca-merge` | `/data/local/tmp/sys-ca-merge-hot` | 旧版可读路径，便于排障 |
+
+切换后需**重启**。卸载会同时清理两套目录。这只减弱字符串特征，挡不住「信任库被 bind」本身。
+
+也可在 WebUI「证书」页用开关修改 Reqable / ProxyPin。**下拉刷新**会尝试从已启用 App 同步最新 CA（有变化则提示重启）。开关与自定义永久证书仍在**重启后**生效。
+
+![证书页](/screenshots/webui-certs.svg)
 
 ## 安装组件记录
 
@@ -144,11 +157,11 @@ proxypin_source=builtin
 
 #### 挂载存储卡证书
 
-- **读哪里**：默认 **`/sdcard/CertBridge`**（WebUI 里可改成其它 `/sdcard/...` 路径）  
+- **读哪里**：默认 **`/sdcard/Documents/cacerts`**（WebUI 里可改成其它 `/sdcard/...` 路径）  
 - **你要做的**：把 `.pem` / `.crt` / `.cer` / `.der` 等 CA 文件拷进该文件夹  
 - **然后**：点「挂载存储卡证书」  
 - **结果**：只信任你放进该目录的证，一般比「挂用户区」更干净、更好控  
-- **典型用法**：从 Reqable 导出当前根证 → 丢进 `/sdcard/CertBridge` → 挂载 → 立刻试抓包，确认指纹对不对  
+- **典型用法**：从 Reqable 导出当前根证 → 丢进 `/sdcard/Documents/cacerts` → 挂载 → 立刻试抓包，确认指纹对不对  
 
 #### 合并挂载（挂载全部）
 
@@ -166,19 +179,19 @@ proxypin_source=builtin
 
 ### 和 Action 的关系
 
-**同一套功能，两个入口**，底层都调用 `bin/hot_mount.sh`：
+**WebUI 负责写操作**（挂载 / 卸载 / 改开关 / 导入证书）。**Action** 为只读仪表盘，显示状态、注入诊断与日志路径；不再提供音量键热挂载菜单。
 
 | | WebUI「证书」页底部 | 模块管理器 **Action** |
 | --- | --- | --- |
-| 挂用户 / 存储卡 / 全部 | 三个按钮 | 音量下进菜单后逐项询问；上=执行、下=跳过 |
-| 存储卡路径 | 可输入 / 修改 | 固定 `/sdcard/CertBridge` |
-| 无痕卸载 | 「无痕卸载」按钮 | 菜单最后一项 |
-| 音量上（Action 第一级） | — | **只刷新状态**，不挂载 |
+| 挂用户 / 存储卡 / 全部 | 三个按钮 | 仅显示热挂载摘要，不执行挂载 |
+| 存储卡路径 | 可输入 / 修改 | — |
+| 无痕卸载 | 「无痕卸载」按钮 | — |
+| 状态 / 诊断 | 概览页刷新 | 打印版本、简介、注入错误与建议 |
 
 ### 推荐用法（最简单）
 
 1. 从抓包 App **导出当前根证书**  
-2. 放进 `/sdcard/CertBridge`（没有就新建）  
+2. 放进 `/sdcard/Documents/cacerts`（没有就新建）  
 3. WebUI → 证书页 → **挂载存储卡证书**  
 4. **强停**要抓的 App 再打开，试抓包  
 5. 通了：再做成 WebUI「自定义证书」并**重启**（永久）；或点 **无痕卸载** / 重启清掉临时层  
@@ -192,16 +205,15 @@ proxypin_source=builtin
 - 若提示命名空间部分未覆盖：强停目标 App 再开，或卸载后重挂；仍异常可重启  
 - 与永久注入可同时存在：简介里会同时提示临时张数与永久证书概况  
 
-## WebUI「更多」页（显示选项）
+## WebUI「更多」页
 
-在已安装 WebUI 时可用：
+在已安装 WebUI 时可用，详见 [WebUI 使用说明](/guide/webui#更多)。
 
-- 主题：浅色 / 深色 / 跟随系统；可选莫奈（Material You）取色  
-- 布局：经典底栏 / 悬浮分页（Dock）  
-- 紧凑卡片、字号等阅读偏好  
-- 概览页可请求重启；关于里有酷安、GitHub、在线文档与打赏入口  
+- **外观**：主题包（经典 / Material / 流体）、深浅色、强调色、莫奈取色、悬浮底栏、紧凑与字号等  
+- **挂载模式** / **临时挂载路径**：见上文  
+- **关于**：版本、文档、开源与打赏入口  
 
-深色模式下模块会同步状态栏图标颜色（依赖管理器 WebUI 桥接，如 MMRL / WebUI-X）。
+深色模式下模块会同步状态栏图标颜色（依赖管理器 WebUI 桥接）。
 
 ## 状态与简介
 
@@ -215,12 +227,12 @@ proxypin_source=builtin
 | ✅运行正常 | 开机注入成功，附加证书已挂上 |
 | ⏳待重启 | 永久开关或自定义证书已改，需重启 |
 | 🔥热挂载 | 存在临时会话（可能附带「部分未覆盖」「待重启」） |
-| ⚠️异常 | 证书集未就绪或注入失败（见日志 / `inject-error`） |
+| ⚠️异常 | 证书集未就绪或注入失败（WebUI 概览会显示可读原因与建议） |
 | 💤未启用 | 当前没有启用的附加证书 |
 | ✨注入中 / 🔎检测中 | 开机流程尚未写完最终状态 |
 | ⛔已禁用 | 模块被管理器禁用 |
 
-WebUI 概览与简介只读开机写入的运行时状态缓存，不再后台轮询。
+WebUI 概览与简介只读开机写入的运行时状态缓存；点刷新会同步 App 证书并更新显示。
 
 ## 日志
 

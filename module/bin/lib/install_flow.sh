@@ -264,6 +264,9 @@ certbridge_install_write_config() {
   else
     echo "schema_version=3" >>"$MODPATH/config/certs.conf"
   fi
+  if ! grep -q '^tmpfs_style=' "$MODPATH/config/certs.conf" 2>/dev/null; then
+    echo "tmpfs_style=short" >>"$MODPATH/config/certs.conf"
+  fi
   cat >"$MODPATH/config/install-profile.conf" <<EOF
 install_mode=$INSTALL_MODE
 webui=$INSTALL_WEBUI

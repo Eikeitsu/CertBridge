@@ -75,6 +75,25 @@ cert_info_from_file() {
   echo "filename=$(basename "$file")"
 }
 
+# SHA256 指纹（无冒号大写/小写均可；失败返回非 0）
+cert_fingerprint_sha256() {
+  file="$1"
+  [ -f "$file" ] || return 1
+  openssl_cmd=$(find_openssl) || return 1
+  inform=""
+  if ! $openssl_cmd x509 -in "$file" -noout >/dev/null 2>&1; then
+    if $openssl_cmd x509 -inform DER -in "$file" -noout >/dev/null 2>&1; then
+      inform="-inform DER"
+    else
+      return 1
+    fi
+  fi
+  fp=$($openssl_cmd x509 $inform -in "$file" -noout -fingerprint -sha256 2>/dev/null | \
+    sed 's/^sha256 Fingerprint=//' | tr -d ':\r\n' | tr 'A-F' 'a-f')
+  [ -n "$fp" ] || return 1
+  echo "$fp"
+}
+
 # 将任意 CA 规范化为 hash.N 写入目标目录，并写 .meta 显示名
 # 返回文件名到 stdout
 import_ca_into_dir() {

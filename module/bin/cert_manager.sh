@@ -46,7 +46,7 @@ hot_failed=0"
     echo "apex_ok=2"
   fi
   echo "pending_reboot=$([ -f "$PENDING_FILE" ] && echo 1 || echo 0)"
-  echo "inject_error=$([ -f "$STATEDIR/inject-error" ] && echo 1 || echo 0)"
+  emit_inject_error_status
   if [ "$hot_partial" = "1" ]; then
     echo "desc_short=🔥热挂载（部分未覆盖）"
   else
@@ -77,6 +77,7 @@ hot_failed=0"
     echo "proxypin_display=ProxyPin"
   fi
   echo "mount_mode=$(get_mount_mode)"
+  echo "tmpfs_style=$(get_tmpfs_style)"
   echo "version=$(grep '^version=' "$MODDIR/module.prop" 2>/dev/null | cut -d= -f2-)"
   echo "$hot_status"
 }
@@ -98,7 +99,7 @@ cmd_toggle() {
   case "$name" in reqable|proxypin) ;; *) echo "error=invalid_toggle"; return 1 ;; esac
   [ "$value" = "1" ] || [ "$value" = "0" ] || { echo "error=invalid_value"; return 1; }
   if [ "$value" = "1" ]; then
-    # 开启时尽量从 App 刷新；Reqable 无来源则拒绝开启
+    # 开启时尽量从 App 刷新；无来源则拒绝开启（ProxyPin 可用 builtin）
     sync_source_from_app "$name" >/dev/null 2>&1 || true
     if ! find_addon_cert "$name" 0 >/dev/null 2>&1; then
       echo "error=certificate_unavailable"
@@ -117,6 +118,19 @@ cmd_toggle() {
   refresh_module_description >/dev/null 2>&1
   echo "ok=1"
   echo "reboot_required=1"
+}
+
+cmd_sync_apps() {
+  out=$(sync_enabled_app_sources)
+  echo "$out"
+  updated=$(echo "$out" | awk -F= '$1 == "updated" { print $2; exit }')
+  if [ "${updated:-0}" -gt 0 ] 2>/dev/null; then
+    mark_reboot_required
+    echo "reboot_required=1"
+    refresh_module_description >/dev/null 2>&1
+  else
+    refresh_module_description >/dev/null 2>&1
+  fi
 }
 
 cmd_install_custom() {
@@ -281,6 +295,24 @@ cmd_set_mount_mode() {
   echo "reboot_required=1"
 }
 
+cmd_set_tmpfs_style() {
+  style="$1"
+  case "$style" in
+    short|legacy) ;;
+    *) echo "error=invalid_tmpfs_style"; return 1 ;;
+  esac
+  acquire_write_lock || { echo "error=busy"; return 1; }
+  write_conf tmpfs_style "$style" || { release_write_lock; echo "error=write_failed"; return 1; }
+  apply_tmpfs_style
+  mark_reboot_required
+  release_write_lock
+  log_msg "config: tmpfs_style=$style (reboot required)"
+  refresh_module_description >/dev/null 2>&1
+  echo "ok=1"
+  echo "tmpfs_style=$style"
+  echo "reboot_required=1"
+}
+
 cmd_hot_mount() {
   mode="$1"
   sd_path="$2"
@@ -298,7 +330,9 @@ case "$1" in
   status) cmd_status ;;
   list_custom) cmd_list_custom ;;
   toggle) cmd_toggle "$2" "$3" ;;
+  sync_apps) cmd_sync_apps ;;
   set_mount_mode) cmd_set_mount_mode "$2" ;;
+  set_tmpfs_style) cmd_set_tmpfs_style "$2" ;;
   install_custom) cmd_install_custom "$2" ;;
   remove_custom) cmd_remove_custom "$2" ;;
   cert_info) cmd_cert_info "$2" ;;
@@ -310,7 +344,7 @@ case "$1" in
     exit 1
     ;;
   *)
-    echo "usage: cert_manager.sh {status|list_custom|toggle|set_mount_mode|install_custom|remove_custom|cert_info|hot_mount|hot_unmount}"
+    echo "usage: cert_manager.sh {status|list_custom|toggle|sync_apps|set_mount_mode|set_tmpfs_style|install_custom|remove_custom|cert_info|hot_mount|hot_unmount}"
     exit 1
     ;;
 esac

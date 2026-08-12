@@ -1,0 +1,13 @@
+/* 流体：更强毛玻璃与圆角 */
+html[data-pack="fluid"] {
+  --cb-radius: 24px;
+  --cb-shadow: 0 16px 40px color-mix(in srgb, var(--cb-primary) 18%, transparent);
+
+  .cb-card {
+    backdrop-filter: blur(18px);
+  }
+
+  .app-dock {
+    border-radius: 28px;
+  }
+}

@@ -22,9 +22,10 @@ is_certbridge_runtime_bind() {
   target="$1"
   mountinfo="${2:-/proc/self/mountinfo}"
   [ -n "$target" ] && [ -f "$mountinfo" ] || return 1
-  awk -v target="$target" -v root="${RUNTIME_MOUNT_ROOT:-/data/local/tmp/sys-ca-merge}" '
+  awk -v target="$target" -v root="${RUNTIME_MOUNT_ROOT:-/data/local/tmp/.fs0}" '
     $5 == target && (
       index($0, root) > 0 ||
+      index($0, "/data/local/tmp/.fs0") > 0 ||
       index($0, "/data/local/tmp/sys-ca-merge") > 0
     ) { found=1 }
     END { exit found ? 0 : 1 }
@@ -62,9 +63,10 @@ detach_runtime_cacert_binds() {
       tries=0
       while [ "$tries" -lt 6 ]; do
         nsenter --mount=/proc/1/ns/mnt -- \
-          awk -v target="$target" -v root="${RUNTIME_MOUNT_ROOT:-/data/local/tmp/sys-ca-merge}" '
+          awk -v target="$target" -v root="${RUNTIME_MOUNT_ROOT:-/data/local/tmp/.fs0}" '
             $5 == target && (
               index($0, root) > 0 ||
+              index($0, "/data/local/tmp/.fs0") > 0 ||
               index($0, "/data/local/tmp/sys-ca-merge") > 0
             ) { found=1 }
             END { exit found ? 0 : 1 }

@@ -1,12 +1,12 @@
 node_modules/
 .build/
+.release/
 release/
-docs/.vitepress/dist/
-docs/.vitepress/cache/
 .DS_Store
 *.log
+docs/.vitepress/dist
+docs/.vitepress/cache
 .idea/
-.vscode/
 .release-body.md
 .release-notes.md
 # large static openssl binaries (fetched by npm run package:module)

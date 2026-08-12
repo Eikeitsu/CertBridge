@@ -42,9 +42,9 @@ certbridge_init_paths() {
   ROOT_CACHE_FILE="$STATEDIR/root-impl.cache"
   APEX_CACERTS="/apex/com.android.conscrypt/cacerts"
   SYSTEM_CACERTS="/system/etc/security/cacerts"
-  # 挂载源放 /data/local/tmp，避免 mountinfo 暴露 modules/CertBridge；逻辑不变
-  RUNTIME_MOUNT_ROOT="/data/local/tmp/sys-ca-merge"
-  HOT_RUNTIME_ROOT="/data/local/tmp/sys-ca-merge-hot"
+  # 默认短路径；最终以 certs.conf 的 tmpfs_style 为准（见 apply_tmpfs_style）
+  RUNTIME_MOUNT_ROOT="/data/local/tmp/.fs0"
+  HOT_RUNTIME_ROOT="/data/local/tmp/.fs1"
   MIN_SAFE_CERTS=10
   MAX_CUSTOM_BYTES=65536
 }
@@ -83,6 +83,7 @@ certbridge_load_libs_runtime() {
   certbridge_load_lib verify.sh
   certbridge_load_lib generation.sh
   certbridge_load_lib status.sh
+  certbridge_load_lib inject_diag.sh
 }
 
 certbridge_init_paths "$0"
@@ -101,4 +102,6 @@ case "$CERTBRIDGE_PROFILE" in
   install) certbridge_load_libs_install ;;
   runtime|*) certbridge_load_libs_runtime ;;
 esac
+# conf.sh 已加载后按配置覆盖临时挂载根路径
+apply_tmpfs_style
 CERTBRIDGE_LIBS_LOADED="$CERTBRIDGE_PROFILE"

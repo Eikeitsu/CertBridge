@@ -27,7 +27,8 @@
    - 若检测到 **HttpCanary**、**ADGuard**，会再依次询问是否导入为自定义  
    - 未检测到按键或超时 → 默认完整安装  
 4. **重启**手机  
-5. 若安装了 WebUI，打开页面确认状态与证书详情；也可在「更多 → 挂载模式」切换（需再重启）  
+5. 若安装了 WebUI，打开页面确认状态；详见 [WebUI 使用说明](/guide/webui)  
+6. 可在「更多 → 挂载模式」切换（需再重启）  
 
 自定义安装中每个组件均需明确按音量上；音量下或超时会跳过该项。挂载模式询问：音量上=完整兼容，音量下=轻量 Magic；超时则完整兼容。
 
@@ -48,7 +49,7 @@
 
 支持管理器在线更新：`module.prop` 的 `updateJson` 指向文档站 `update.json`。
 
-![概览](/screenshots/webui-overview.png)
+![概览](/screenshots/webui-overview.svg)
 
 ## 模块目录（设备上）
 

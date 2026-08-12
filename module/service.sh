@@ -24,7 +24,7 @@ done
 log_msg "service: verify app namespaces after boot (${count}s)"
 update_module_description "注入中"
 if ! acquire_write_lock; then
-  echo "应用命名空间证书检查繁忙，请稍后在 WebUI 刷新" >"$STATEDIR/inject-error"
+  write_inject_error service_busy
   log_msg "service: lifecycle lock timeout"
   service_finalize
   exit 1
@@ -33,6 +33,7 @@ SERVICE_HAS_LOCK=1
 if hot_session_recorded; then
   log_msg "service: hot session recorded, still reinforce persistent namespaces"
 fi
+rm -f "$INJECT_FAIL_FILE"
 if sh "$MODDIR/bin/apex_inject.sh" namespaces; then
   rc=0
 else
@@ -41,9 +42,10 @@ fi
 release_write_lock
 SERVICE_HAS_LOCK=0
 if [ "$rc" -eq 0 ]; then
-  rm -f "$STATEDIR/inject-error"
+  # 保留 post-fs 已写入的更早失败；仅在本轮成功时清除
+  clear_inject_error
 else
-  echo "应用命名空间证书注入失败，请查看日志" >"$STATEDIR/inject-error"
+  commit_inject_fail namespace_failed
   log_msg "service: namespace injection failed"
 fi
 finalize_runtime_status service >/dev/null

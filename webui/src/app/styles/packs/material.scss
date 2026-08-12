@@ -1,0 +1,20 @@
+/* Material：大标题、更方、色块更强 */
+html[data-pack="material"] {
+  --cb-radius: 16px;
+  --cb-dock-h: 68px;
+
+  .app-topbar {
+    padding-top: 18px;
+    padding-bottom: 14px;
+
+    h1 {
+      font-size: 1.7rem;
+      font-weight: 700;
+    }
+  }
+
+  .cb-stat {
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--cb-primary) 14%, transparent);
+  }
+}

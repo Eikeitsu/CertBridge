@@ -8,10 +8,13 @@ if [ -x "$MODDIR/bin/hot_mount.sh" ]; then
     echo "uninstall: temporary session could not be fully removed; reboot required" >>"$LOG_FILE"
 fi
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] uninstall: module removed; reboot required to clear mounts" >>"$LOG_FILE" 2>/dev/null
-for _cb_mnt in /data/local/tmp/sys-ca-merge /data/local/tmp/sys-ca-merge-hot \
+for _cb_mnt in /data/local/tmp/.fs0 /data/local/tmp/.fs1 \
+    /data/local/tmp/.fs0/apex /data/local/tmp/.fs0/system \
+    /data/local/tmp/sys-ca-merge /data/local/tmp/sys-ca-merge-hot \
     /data/local/tmp/sys-ca-merge/apex /data/local/tmp/sys-ca-merge/system; do
   umount "$_cb_mnt" 2>/dev/null
 done
-rm -rf /data/local/tmp/sys-ca-merge /data/local/tmp/sys-ca-merge-hot \
+rm -rf /data/local/tmp/.fs0 /data/local/tmp/.fs1 \
+  /data/local/tmp/sys-ca-merge /data/local/tmp/sys-ca-merge-hot \
   /data/local/tmp/certbridge-* 2>/dev/null
 rm -rf "$MODDIR/data/runtime-mounts" 2>/dev/null

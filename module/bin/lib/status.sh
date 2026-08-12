@@ -279,9 +279,11 @@ compose_module_description() {
   fi
 
   if ! generation_valid; then
-    if [ -f "$STATEDIR/inject-error" ]; then
+    if inject_error_present; then
+      err=$(read_inject_error_field message)
+      hint=$(read_inject_error_field hint)
       format_module_description "⚠️异常" "证书集未就绪" \
-        "请打开 WebUI 查看日志，必要时重启后再检查"
+        "${err:-请打开 WebUI 查看说明}${hint:+ · $hint}"
     else
       format_module_description "🔎检测中" "等待开机注入完成" "$DESC_INTRO"
     fi
@@ -294,9 +296,11 @@ compose_module_description() {
     return 0
   fi
 
-  if [ -f "$STATEDIR/inject-error" ] && ! runtime_status_fresh; then
+  if inject_error_present && ! runtime_status_fresh; then
+    err=$(read_inject_error_field message)
+    hint=$(read_inject_error_field hint)
     format_module_description "⚠️异常" "注入失败" \
-      "请打开 WebUI 查看日志，必要时重启后再检查"
+      "${err}${hint:+ · $hint}"
     return 0
   fi
 
@@ -304,8 +308,15 @@ compose_module_description() {
     cached_tag=$(read_runtime_status tag)
     case "$cached_tag" in
       *失败*|注入异常|⚠️*|异常)
-        format_module_description "⚠️异常" "注入失败" \
-          "请打开 WebUI 查看日志，必要时重启后再检查"
+        if inject_error_present; then
+          err=$(read_inject_error_field message)
+          hint=$(read_inject_error_field hint)
+          format_module_description "⚠️异常" "注入失败" \
+            "${err}${hint:+ · $hint}"
+        else
+          format_module_description "⚠️异常" "注入失败" \
+            "请打开 WebUI 查看说明，必要时重启后再检查"
+        fi
         return 0
         ;;
       注入中|启动中|检测中|✨*|🔎*)
@@ -392,7 +403,7 @@ compute_status_tag() {
     cached_phase=$(read_runtime_status phase)
     case "$cached_tag" in
       注入中|启动中|检测中|✨*|🔎*)
-        if [ "$cached_phase" = "service" ] || [ -f "$STATEDIR/inject-error" ]; then
+        if [ "$cached_phase" = "service" ] || inject_error_present; then
           :
         else
           echo "✨注入中"
@@ -422,7 +433,7 @@ compute_status_tag() {
     return 0
   fi
 
-  if [ -f "$STATEDIR/inject-error" ]; then
+  if inject_error_present; then
     echo "⚠️异常"
     return 0
   fi
@@ -471,6 +482,7 @@ finalize_runtime_status() {
     return 0
   fi
   if [ "$(count_addon_certs)" -eq 0 ]; then
+    clear_inject_error 2>/dev/null || true
     write_runtime_status "$phase" 2 "💤未启用"
     update_module_description
     return 0
@@ -478,11 +490,19 @@ finalize_runtime_status() {
   apex_ok=$(check_store_injected)
   if [ "$apex_ok" = "0" ]; then
     tag="⚠️异常"
+    # service 阶段才做细化诊断（post-fs zygote 常未就绪）
+    if [ "$phase" = "service" ]; then
+      ensure_inject_error_diagnosed 2>/dev/null || true
+    elif ! inject_error_present; then
+      write_inject_error verify_failed 2>/dev/null || true
+    fi
   elif summary=$(compose_applied_cert_summary); then
     n=${summary%%|*}
     tag="✅运行正常 · ${n} 张"
+    [ "$phase" = "service" ] && clear_inject_error 2>/dev/null || true
   else
     tag="✅运行正常"
+    [ "$phase" = "service" ] && clear_inject_error 2>/dev/null || true
   fi
   write_runtime_status "$phase" "$apex_ok" "$tag"
   update_module_description

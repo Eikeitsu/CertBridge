@@ -54,9 +54,13 @@ ensure_stage_tmpfs() {
     return 0
   fi
   rm -rf "$stage" 2>/dev/null
-  mkdir -p "$stage" || return 1
+  mkdir -p "$stage" || {
+    record_inject_fail tmpfs_failed "无法创建临时目录"
+    return 1
+  }
   mount -t tmpfs -o mode=755 tmpfs "$stage" 2>/dev/null || {
     log_msg "inject: tmpfs mount failed ($stage)"
+    record_inject_fail tmpfs_failed "tmpfs 挂载失败"
     return 1
   }
 }
@@ -73,11 +77,13 @@ fill_stage_from_generation() {
     if ! cp -f "$cert" "$stage/$name" 2>/dev/null; then
       fail_name="$name"
       log_msg "inject: copy to tmpfs failed ($name)"
+      record_inject_fail stage_copy_failed "$name"
       return 1
     fi
   done
   [ "$(count_certs "$stage")" -eq "$(count_certs "$GEN_CERTS")" ] || {
     log_msg "inject: tmpfs cert count mismatch for stage=$stage${fail_name:+ (last=$fail_name)}"
+    record_inject_fail stage_copy_failed "数量不一致${fail_name:+:$fail_name}"
     return 1
   }
   return 0
@@ -105,6 +111,7 @@ prepare_target_stage() {
   # Critical for Flutter/Reqable reading /system/etc/security/cacerts
   set_selinux_context "$target" "$stage" || {
     log_msg "inject: SELinux context for $target failed"
+    record_inject_fail selinux_failed "$(basename "$target")"
     return 1
   }
   echo "$stage"
@@ -142,6 +149,7 @@ bind_current_once() {
 
   mount --bind "$stage" "$target" 2>/dev/null || {
     log_msg "inject: current ns bind failed ($target)"
+    record_inject_fail bind_failed "init"
     return 1
   }
   if [ "$(path_identity "$target")" != "$source_id" ]; then
@@ -173,10 +181,12 @@ bind_pid_once() {
 
   src=$(stage_visible_for_pid "$pid" "$stage") || {
     log_msg "inject: $label pid=$pid cannot see stage $stage"
+    record_inject_fail bind_failed "$label 看不到临时层"
     return 1
   }
   nsenter --mount=/proc/"$pid"/ns/mnt -- mount --bind "$src" "$target" 2>/dev/null || {
     log_msg "inject: $label pid=$pid bind failed"
+    record_inject_fail bind_failed "$label"
     return 1
   }
   if [ "$(namespace_path_identity "$pid" "$target")" != "$source_id" ]; then
@@ -283,13 +293,18 @@ inject_one_target() {
     fi
   else
     log_msg "inject: nsenter unavailable"
+    record_inject_fail nsenter_unavailable
     rc=1
   fi
   return "$rc"
 }
 
 inject_boot_namespaces() {
-  generation_valid || { log_msg "inject: generation invalid"; return 1; }
+  generation_valid || {
+    log_msg "inject: generation invalid"
+    record_inject_fail generation_invalid
+    return 1
+  }
   [ -s "$APPLIED_MAP" ] || {
     log_msg "inject: no enabled addon, keep original store"
     return 0
@@ -312,13 +327,17 @@ inject_boot_namespaces() {
       return 0
     fi
     log_msg "inject: no CA target directory found"
+    record_inject_fail no_target
     return 1
   }
   return "$rc"
 }
 
 inject_app_namespaces() {
-  generation_valid || return 1
+  generation_valid || {
+    record_inject_fail generation_invalid
+    return 1
+  }
   [ -s "$APPLIED_MAP" ] || return 0
 
   if is_magic_mount_mode && [ "$(get_api)" -lt 34 ]; then
@@ -326,7 +345,10 @@ inject_app_namespaces() {
     return 0
   fi
 
-  command -v nsenter >/dev/null 2>&1 || return 1
+  command -v nsenter >/dev/null 2>&1 || {
+    record_inject_fail nsenter_unavailable
+    return 1
+  }
 
   rc=0
   has_target=0
@@ -336,8 +358,13 @@ inject_app_namespaces() {
   done
   [ "$has_target" = "1" ] || {
     is_magic_mount_mode && return 0
+    record_inject_fail no_target
     return 1
   }
+  if [ "$rc" != "0" ]; then
+    # 若尚未记下更具体原因，记为命名空间部分失败
+    [ -f "$INJECT_FAIL_FILE" ] || record_inject_fail namespace_partial
+  fi
   return "$rc"
 }
 

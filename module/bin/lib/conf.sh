@@ -12,7 +12,7 @@ read_conf() {
 write_conf() {
   key="$1"
   value="$2"
-  case "$key" in reqable|proxypin|schema_version|mount_mode) ;; *) return 1 ;; esac
+  case "$key" in reqable|proxypin|schema_version|mount_mode|tmpfs_style) ;; *) return 1 ;; esac
   mkdir -p "$CONFDIR" 2>/dev/null
   tmp="$CONF.tmp.$$"
   if [ -f "$CONF" ]; then
@@ -45,4 +45,27 @@ get_mount_mode() {
 
 is_magic_mount_mode() {
   [ "$(get_mount_mode)" = "magic" ]
+}
+
+# short  = /data/local/tmp/.fs0 | .fs1（默认，降低 mountinfo 关键词特征）
+# legacy = /data/local/tmp/sys-ca-merge | sys-ca-merge-hot（可读旧路径）
+get_tmpfs_style() {
+  style=$(read_conf tmpfs_style short | tr 'A-Z' 'a-z')
+  case "$style" in
+    legacy|classic|verbose|long) echo legacy ;;
+    *) echo short ;;
+  esac
+}
+
+apply_tmpfs_style() {
+  case "$(get_tmpfs_style)" in
+    legacy)
+      RUNTIME_MOUNT_ROOT="/data/local/tmp/sys-ca-merge"
+      HOT_RUNTIME_ROOT="/data/local/tmp/sys-ca-merge-hot"
+      ;;
+    *)
+      RUNTIME_MOUNT_ROOT="/data/local/tmp/.fs0"
+      HOT_RUNTIME_ROOT="/data/local/tmp/.fs1"
+      ;;
+  esac
 }

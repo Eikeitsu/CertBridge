@@ -1,0 +1,92 @@
+:root {
+  --cb-safe-top: env(safe-area-inset-top, 0px);
+  --cb-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --cb-dock-h: 64px;
+  --cb-font-scale: 1;
+  --cb-font-display: "Segoe UI Semibold", "PingFang SC", "Noto Sans SC",
+    "Microsoft YaHei", sans-serif;
+  --cb-font-body: "Segoe UI", "PingFang SC", "Noto Sans SC", "Microsoft YaHei",
+    sans-serif;
+  --cb-radius: 20px;
+  --cb-primary: #0f766e;
+  --cb-accent: #14b8a6;
+  --cb-ok: #0d9488;
+  --cb-warn: #d97706;
+  --cb-bad: #e11d48;
+  --cb-ink: #0f172a;
+  --cb-ink-2: #334155;
+  --cb-ink-3: #64748b;
+  --cb-paper: #f0fdfa;
+  --cb-card: rgba(255, 255, 255, 0.78);
+  --cb-stroke: rgba(15, 118, 110, 0.12);
+  --cb-shadow: 0 10px 30px rgba(15, 118, 110, 0.08);
+}
+
+html[data-theme="dark"] {
+  --cb-ok: #2dd4bf;
+  --cb-warn: #fbbf24;
+  --cb-bad: #fb7185;
+  --cb-ink: #e2e8f0;
+  --cb-ink-2: #cbd5e1;
+  --cb-ink-3: #94a3b8;
+  --cb-paper: #0b1220;
+  --cb-card: rgba(15, 23, 42, 0.82);
+  --cb-stroke: rgba(45, 212, 191, 0.14);
+  --cb-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+}
+
+html[data-compact="1"] {
+  --cb-dock-h: 56px;
+  --cb-radius: 16px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+html {
+  font-size: calc(16px * var(--cb-font-scale));
+}
+
+body {
+  font-family: var(--cb-font-body);
+  color: var(--cb-ink);
+  background:
+    radial-gradient(
+      1200px 600px at 10% -10%,
+      color-mix(in srgb, var(--cb-accent) 22%, transparent),
+      transparent 55%
+    ),
+    radial-gradient(
+      900px 500px at 110% 0%,
+      color-mix(in srgb, var(--cb-primary) 16%, transparent),
+      transparent 50%
+    ),
+    linear-gradient(
+      165deg,
+      var(--cb-paper),
+      color-mix(in srgb, var(--cb-paper) 88%, #cffafe)
+    );
+  background-attachment: fixed;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+a {
+  color: var(--cb-primary);
+}

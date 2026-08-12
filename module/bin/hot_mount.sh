@@ -13,7 +13,7 @@ HOT_LEDGER="$HOT_CURRENT/mounts.list"
 HOT_STATE="$STATEDIR/hot-session.conf"
 HOT_MARKER="certbridge_session"
 # 仅换 bind 物理路径；标记 / remount,ro / 校验逻辑保持原版
-HOT_BIND_ROOT="${HOT_RUNTIME_ROOT:-/data/local/tmp/sys-ca-merge-hot}"
+HOT_BIND_ROOT="${HOT_RUNTIME_ROOT:-/data/local/tmp/.fs1}"
 HOT_MAX_FILES=128
 HOT_ADDED=0
 HOT_SKIPPED=0
@@ -196,7 +196,7 @@ hot_add_user_certs() {
 
 hot_validate_sd_path() {
   HOT_SD_PATH="$1"
-  [ -n "$HOT_SD_PATH" ] || HOT_SD_PATH="/sdcard/CertBridge"
+  [ -n "$HOT_SD_PATH" ] || HOT_SD_PATH="/sdcard/Documents/cacerts"
   HOT_CLEAN_PATH=$(printf '%s' "$HOT_SD_PATH" | tr -d '\r\n')
   [ "$HOT_CLEAN_PATH" = "$HOT_SD_PATH" ] || return 1
   case "$HOT_SD_PATH" in
@@ -373,7 +373,7 @@ hot_mount_points_to_source() {
     awk -v target="$HOT_TARGET" -v id="$HOT_MOUNT_ID" \
       '$1 == id && $5 == target { print; exit }' /proc/self/mountinfo 2>/dev/null)
   case "$HOT_MOUNT_LINE" in
-    *"$HOT_BIND_ROOT"*|*"$HOT_CERTS"*|*"/data/local/tmp/sys-ca-merge-hot"*|\
+    *"$HOT_BIND_ROOT"*|*"$HOT_CERTS"*|*"/data/local/tmp/.fs1"*|*"/data/local/tmp/sys-ca-merge-hot"*|\
     *"/adb/modules/CertBridge/certs/hot/current/cacerts"*|*"/CertBridge/certs/hot/current/cacerts"*)
       return 0
       ;;

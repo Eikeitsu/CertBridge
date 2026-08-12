@@ -5,16 +5,20 @@
 ## 仓库结构
 
 ```text
+webui/                  # WebUI 源码（React + Redux Toolkit + antd）
+  src/app/              # 入口组装：providers / router / store / 全局样式
+  src/features/         # 业务切片：overview / certs / log / settings / theme / …
+  src/shared/           # 桥接 API、配置、工具
+  src/entities/         # 领域类型
 module/                 # Magisk 模块本体
   bin/
     common.sh           # 路径初始化 + 按 install/runtime 加载 lib/*
     lib/                # 按功能拆分的公共库
-      # 证书域: app_detect / cert_parse / cert_sources
-      # 安装: install_flow（仅刷入时加载）
     apex_inject.sh      # 开机 / 命名空间注入
     hot_mount.sh        # 免重启热挂载（可选）
     cert_manager.sh     # WebUI / CLI
-  webroot/              # WebUI 可读源码
+  webroot/              # WebUI 构建产物（勿手改；由 npm run build:web 覆盖）
+archives/               # 旧版原生 WebUI 归档
 tooling/scripts/        # 构建脚本
 docs/                   # VitePress 用户文档
 .release / .build/      # 本地产物（不入库）
@@ -45,8 +49,9 @@ docs/                   # VitePress 用户文档
 
 ```bash
 npm install
-npm run dev:web          # 预览 module/webroot
-npm run build:web        # 压缩 → .build/webroot
+npm run dev:web          # Vite 开发 WebUI（webui/）
+npm run build:web        # 构建并同步 → module/webroot
+npm run typecheck:web    # TypeScript 检查
 npm run package:module   # 打 Magisk zip（默认同时产出完整版 + Lite）
 npm run build:module     # build:web + package:module
 npm run build:cbx509     # 构建 Lite 用的 cbx509.dex（便携 JDK + D8）

@@ -17,7 +17,7 @@ log_msg "post-fs-data start (api=$(get_api))"
 bump_boot_epoch
 update_module_description "启动中"
 if ! acquire_write_lock; then
-  echo "开机证书锁获取失败；未执行新的挂载" >"$STATEDIR/inject-error"
+  write_inject_error lock_timeout
   log_msg "post-fs-data: lifecycle lock timeout"
   finalize_runtime_status post-fs-data >/dev/null
   exit 1
@@ -25,7 +25,7 @@ fi
 POST_HAS_LOCK=1
 if [ -x "$BINDIR/hot_mount.sh" ]; then
   if ! CERTBRIDGE_LOCK_HELD=1 sh "$BINDIR/hot_mount.sh" unmount_locked >/dev/null 2>&1; then
-    echo "旧临时证书会话无法安全卸载；未执行新的开机挂载" >"$STATEDIR/inject-error"
+    write_inject_error hot_unmount_failed
     log_msg "post-fs-data: stale hot session cleanup failed"
     finalize_runtime_status post-fs-data >/dev/null
     exit 1
@@ -35,7 +35,7 @@ else
 fi
 # 按挂载模式准备 / 清理模块 system 叠层（magic 仅 addon；compatible 必须清空）
 if ! prepare_mount_mode_overlay "$MODDIR"; then
-  echo "挂载模式叠层准备失败；未执行开机注入" >"$STATEDIR/inject-error"
+  write_inject_error overlay_prepare_failed
   log_msg "post-fs-data: prepare_mount_mode_overlay failed"
   finalize_runtime_status post-fs-data >/dev/null
   exit 1
@@ -45,7 +45,7 @@ fi
 detach_runtime_cacert_binds || \
   log_msg "post-fs-data: detach runtime binds soft-fail"
 if ! build_boot_generation; then
-  echo "实时证书集合生成失败；未执行任何挂载" >"$STATEDIR/inject-error"
+  write_inject_error generation_failed
   log_msg "post-fs-data: live generation failed, original store preserved"
   finalize_runtime_status post-fs-data >/dev/null
   exit 1
@@ -55,10 +55,11 @@ if is_magic_mount_mode; then
   sync_magic_overlay "$MODDIR" >/dev/null || \
     log_msg "post-fs-data: magic overlay resync soft-fail"
 fi
+rm -f "$INJECT_FAIL_FILE"
 if sh "$MODDIR/bin/apex_inject.sh" boot; then
-  rm -f "$STATEDIR/inject-error"
+  clear_inject_error
 else
-  echo "开机证书注入失败；请查看日志" >"$STATEDIR/inject-error"
+  commit_inject_fail boot_inject_failed
   log_msg "post-fs-data: boot injection failed"
 fi
 # 仅标记中间态；不要在此处跑 check_store_injected（zygote 常未就绪，会把 apex_ok 误写成 0）

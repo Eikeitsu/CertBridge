@@ -8,7 +8,6 @@ import type { ThemeMode, ThemePack } from "@/entities/module/types";
 export function AppearancePanel() {
   const {
     theme,
-    selectedPackHint,
     isMonetAvailable,
     fontScalePercent,
     packOptions,
@@ -27,18 +26,25 @@ export function AppearancePanel() {
   return (
     <section className="cb-card">
       <div className="cb-section-title">外观</div>
+
       <div className="cb-stack">
         <div className="cb-field-label">主题包</div>
-        <Segmented
-          block
-          value={theme.pack}
-          onChange={(value) => handleThemePackChange(value as ThemePack)}
-          options={packOptions.map((option) => ({
-            label: option.label,
-            value: option.value,
-          }))}
-        />
-        {selectedPackHint && <p className="cb-pack-hint">{selectedPackHint}</p>}
+        <div className="cb-theme-grid" role="radiogroup" aria-label="主题包">
+          {packOptions.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              role="radio"
+              aria-checked={theme.pack === option.value}
+              className={`cb-theme-card${theme.pack === option.value ? " active" : ""}`}
+              onClick={() => handleThemePackChange(option.value as ThemePack)}
+            >
+              <div className="cb-theme-preview" data-pack={option.value} aria-hidden />
+              <strong>{option.label}</strong>
+              <span>{option.hint}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="cb-stack">
@@ -56,7 +62,7 @@ export function AppearancePanel() {
       </div>
 
       <div className="cb-pref-row">
-        <span>自定义外观</span>
+        <span>高级选项</span>
         <Switch checked={theme.uiCustom} onChange={handleUiCustomChange} />
       </div>
 

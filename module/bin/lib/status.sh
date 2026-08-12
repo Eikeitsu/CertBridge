@@ -140,9 +140,8 @@ applied_cert_fallback_display() {
 }
 
 # 从 applied-certs.list 生成摘要（第 4 列为证书 CN/名称）
-# $1=compact（模块简介：自定义收成「自定义×N」）| named（WebUI：每张都列名）
 compose_applied_cert_summary() {
-  mode="${1:-compact}"
+  mode="compact"
   [ -s "$APPLIED_MAP" ] || return 1
   names=""
   custom_n=0
@@ -230,9 +229,10 @@ format_module_description() {
   echo "${head} ${outer}"
 }
 
-# 管理器列表简介。可选 hint：启动中 | 注入中
+# 管理器列表简介
 compose_module_description() {
-  hint="$1"
+  # 目前所有调用点都不传参；保持 hint 为空即可避免 shellcheck 报 SC2120。
+  hint=""
 
   if [ -f "$MODDIR/disable" ]; then
     format_module_description "⛔已禁用" "模块未运行" \
@@ -442,10 +442,9 @@ compute_status_tag() {
 
 update_module_description() {
   # 可选：启动中 | 注入中
-  hint="$1"
   prop="$MODDIR/module.prop"
   [ -f "$prop" ] || return 0
-  desc=$(compose_module_description "$hint")
+  desc=$(compose_module_description)
   tmp="$prop.tmp.$$"
   awk -F= -v desc="$desc" '
     BEGIN { done=0 }

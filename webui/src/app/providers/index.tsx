@@ -36,6 +36,12 @@ function ThemeBridge({ children }: { children: ReactNode }) {
     return fallbackColor;
   }, [accentId, isMonetEnabled, themePack, resolvedTheme]);
 
+  const packRadius = useMemo(() => {
+    if (themePack === "material") return isCompact ? 8 : 12;
+    if (themePack === "fluid") return isCompact ? 16 : 20;
+    return isCompact ? 12 : 16;
+  }, [themePack, isCompact]);
+
   useEffect(() => {
     dispatch(hydrateTheme());
     void dispatch(bootstrapStatus()).then(() => {
@@ -58,9 +64,20 @@ function ThemeBridge({ children }: { children: ReactNode }) {
         token: {
           colorPrimary: primaryColor,
           colorInfo: primaryColor,
-          borderRadius: isCompact ? 12 : 16,
+          borderRadius: packRadius,
           fontFamily:
             '"Segoe UI", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif',
+          colorBgContainer: resolvedTheme === "dark" ? "#171e26" : "#ffffff",
+          colorBorder:
+            resolvedTheme === "dark" ? "rgba(148,163,184,0.14)" : "rgba(15,23,42,0.08)",
+        },
+        components: {
+          Segmented: {
+            borderRadius: packRadius,
+          },
+          Button: {
+            borderRadius: packRadius,
+          },
         },
       }}
     >

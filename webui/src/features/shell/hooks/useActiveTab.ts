@@ -15,8 +15,9 @@ export function useActiveTab() {
   const activeTab = resolveTabFromPath(location.pathname);
 
   const switchTab = (name: string) => {
-    if (!isTabName(name)) return;
-    navigate(TAB_PATH[name]);
+    if (!isTabName(name) || name === activeTab) return;
+    // replace：Tab 不入历史栈，侧滑/虚拟返回可直接退出 WebUI
+    navigate(TAB_PATH[name], { replace: true });
   };
 
   return { activeTab, pathname: location.pathname, switchTab };

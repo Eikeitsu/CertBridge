@@ -40,7 +40,7 @@ function initialFromStorage(): ThemeState {
     pack: ["classic", "material", "fluid"].includes(pack) ? pack : "classic",
     compact: readBool(STORAGE_KEYS.compact, false),
     fontScale: Math.min(FONT_SCALE.MAX, Math.max(FONT_SCALE.MIN, fontScale)),
-    floatDock: readBool(STORAGE_KEYS.floatDock, true),
+    floatDock: readBool(STORAGE_KEYS.floatDock, false),
     dockGlass: readBool(STORAGE_KEYS.dockGlass, true),
     barBlur: readBool(STORAGE_KEYS.barBlur, true),
     monet: readBool(STORAGE_KEYS.monet, true),
@@ -74,11 +74,13 @@ const themeSlice = createSlice({
       state.pack = action.payload;
       localStorage.setItem(STORAGE_KEYS.themePack, action.payload);
       applyThemeToDom(state);
+      syncChromeBars(state.resolved, state.barBlur);
     },
     setCompact(state, action: PayloadAction<boolean>) {
       state.compact = action.payload;
       persistFlag(STORAGE_KEYS.compact, action.payload);
       applyThemeToDom(state);
+      syncChromeBars(state.resolved, state.barBlur);
     },
     setFontScale(state, action: PayloadAction<number>) {
       state.fontScale = Math.min(
@@ -92,11 +94,13 @@ const themeSlice = createSlice({
       state.floatDock = action.payload;
       persistFlag(STORAGE_KEYS.floatDock, action.payload);
       applyThemeToDom(state);
+      syncChromeBars(state.resolved, state.barBlur);
     },
     setDockGlass(state, action: PayloadAction<boolean>) {
       state.dockGlass = action.payload;
       persistFlag(STORAGE_KEYS.dockGlass, action.payload);
       applyThemeToDom(state);
+      syncChromeBars(state.resolved, state.barBlur);
     },
     setBarBlur(state, action: PayloadAction<boolean>) {
       state.barBlur = action.payload;

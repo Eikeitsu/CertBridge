@@ -6,7 +6,7 @@ CBX509_DIR="${CBX509_DIR:-}"
 if [ -z "$CBX509_DIR" ]; then
   _self=$0
   case "$_self" in
-    */*) CBX509_DIR=$(CDPATH= cd -- "${_self%/*}/cbx509" 2>/dev/null && pwd) ;;
+    */*) CBX509_DIR=$(CDPATH='' cd -- "${_self%/*}/cbx509" 2>/dev/null && pwd) ;;
   esac
 fi
 if [ -z "$CBX509_DIR" ] || [ ! -f "$CBX509_DIR/classes.dex" ]; then

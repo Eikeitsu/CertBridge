@@ -57,7 +57,7 @@ export function applyThemeToDom(
 }
 
 export const PACK_OPTIONS: { value: ThemePack; label: string; hint: string }[] = [
-  { value: "classic", label: "经典印记", hint: "青绿信任印、圆角卡片" },
-  { value: "material", label: "Material", hint: "大标题、强调色块" },
-  { value: "fluid", label: "流体", hint: "更强毛玻璃与悬浮感" },
+  { value: "classic", label: "经典印记", hint: "证书印记 · 虚线边框" },
+  { value: "material", label: "Material", hint: "大标题 · 分层表面" },
+  { value: "fluid", label: "流体", hint: "玻璃拟态 · 悬浮层次" },
 ];

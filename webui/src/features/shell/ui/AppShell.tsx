@@ -9,7 +9,7 @@ import { Outlet } from "react-router-dom";
 import { useAppSelector } from "@/app/store/hooks";
 import { TABS } from "@/shared/config/navigation";
 import type { TabName } from "@/entities/module/types";
-import { syncChromeBars } from "@/features/theme/lib/chrome";
+import { pinSafeInsets, syncChromeBars } from "@/features/theme/lib/chrome";
 import { useActiveTab } from "@/features/shell/hooks/useActiveTab";
 import {
   selectBarBlurEnabled,
@@ -31,22 +31,46 @@ export function AppShell() {
   const resolvedTheme = useAppSelector(selectResolvedTheme);
   const isBarBlurEnabled = useAppSelector(selectBarBlurEnabled);
   const { activeTab, pathname, switchTab } = useActiveTab();
-  const isMaterialPack = themePack === "material";
 
   useEffect(() => {
+    pinSafeInsets(true);
     syncChromeBars(resolvedTheme, isBarBlurEnabled);
-  }, [resolvedTheme, isBarBlurEnabled, pathname]);
+    const frame = requestAnimationFrame(() => {
+      syncChromeBars(resolvedTheme, isBarBlurEnabled);
+    });
+    const t1 = window.setTimeout(
+      () => syncChromeBars(resolvedTheme, isBarBlurEnabled),
+      120,
+    );
+    const t2 = window.setTimeout(
+      () => syncChromeBars(resolvedTheme, isBarBlurEnabled),
+      400,
+    );
+    const onResume = () => {
+      pinSafeInsets(true);
+      syncChromeBars(resolvedTheme, isBarBlurEnabled);
+    };
+    window.addEventListener("focus", onResume);
+    document.addEventListener("visibilitychange", onResume);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      window.removeEventListener("focus", onResume);
+      document.removeEventListener("visibilitychange", onResume);
+    };
+  }, [resolvedTheme, isBarBlurEnabled, pathname, themePack]);
 
   return (
-    <div className={`app-shell pack-${themePack}`}>
+    <div className={`app-shell pack-${themePack}`} data-shell-pack={themePack}>
       <header className="app-topbar">
-        {!isMaterialPack && (
+        {themePack !== "material" && (
           <img className="logo" src={`${import.meta.env.BASE_URL}img/icon.png`} alt="" />
         )}
         <div className="titles">
-          {isMaterialPack && <p className="eyebrow">{deviceLabel}</p>}
+          {themePack === "material" && <p className="eyebrow">{deviceLabel}</p>}
           <h1>证书桥</h1>
-          {!isMaterialPack && <p>{deviceLabel}</p>}
+          {themePack !== "material" && <p>{deviceLabel}</p>}
         </div>
       </header>
 

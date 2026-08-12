@@ -13,8 +13,7 @@ export function useMountMode() {
   const dispatch = useAppDispatch();
   const status = useAppSelector(selectModuleStatus);
   const { isPending, runExclusive } = useAsyncLock();
-  const mountMode: MountMode =
-    status.mount_mode === "magic" ? "magic" : "compatible";
+  const mountMode: MountMode = status.mount_mode === "magic" ? "magic" : "compatible";
 
   const handleChange = useCallback(
     async (mode: MountMode) => {

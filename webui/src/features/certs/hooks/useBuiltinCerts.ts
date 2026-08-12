@@ -42,9 +42,7 @@ export function useBuiltinCerts(): BuiltinCertItem[] {
 
 export function resolveBuiltinSubtitle(item: BuiltinCertItem): string {
   if (!item.isAvailable) {
-    return item.kind === "reqable"
-      ? "未检测到证书（请先在 App 中生成）"
-      : "未检测到证书";
+    return item.kind === "reqable" ? "未检测到证书（请先在 App 中生成）" : "未检测到证书";
   }
   if (!item.isEnabled && item.isActive) {
     return "已关闭，仍在生效（重启后移除）· 点击查看详情";

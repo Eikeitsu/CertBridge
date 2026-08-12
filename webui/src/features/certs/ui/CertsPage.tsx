@@ -61,9 +61,7 @@ export function CertsPage() {
             <CertBrandIcon kind={item.kind} />
             <div className="cb-cert-row__body">
               <div className="cb-cert-row__title">{item.title}</div>
-              <div className="cb-cert-row__sub">
-                {resolveBuiltinSubtitle(item)}
-              </div>
+              <div className="cb-cert-row__sub">{resolveBuiltinSubtitle(item)}</div>
             </div>
             <Button
               type="text"
@@ -78,8 +76,8 @@ export function CertsPage() {
           </div>
         ))}
         <p className="cb-muted is-lead">
-          点击详情可查看主题、颁发者与指纹。Reqable / ProxyPin 优先读本机
-          App；ProxyPin 若未检测到则用模块内置兜底。永久变更需重启后生效。
+          点击详情可查看主题、颁发者与指纹。Reqable / ProxyPin 优先读本机 App；ProxyPin
+          若未检测到则用模块内置兜底。永久变更需重启后生效。
         </p>
       </section>
 
@@ -114,9 +112,7 @@ export function CertsPage() {
               <Button
                 type="text"
                 icon={<InfoCircleOutlined />}
-                onClick={() =>
-                  void openDetail(`custom:${cert.name}`, cert.display)
-                }
+                onClick={() => void openDetail(`custom:${cert.name}`, cert.display)}
               />
               <Button
                 type="text"
@@ -176,7 +172,7 @@ export function CertsPage() {
                 <Input
                   value={sdPath}
                   onChange={(event) => setSdPath(event.target.value)}
-                    placeholder="/sdcard/Documents/cacerts"
+                  placeholder="/sdcard/Documents/cacerts"
                   allowClear
                 />
                 <span className="cb-muted is-tiny">
@@ -243,9 +239,7 @@ export function CertsPage() {
         width="100%"
       >
         <Space direction="vertical" className="cb-full-width" size={10}>
-          {Object.keys(fields).length === 0 && (
-            <span className="cb-muted">暂无详情</span>
-          )}
+          {Object.keys(fields).length === 0 && <span className="cb-muted">暂无详情</span>}
           {Object.entries(fields).map(([key, value]) => (
             <div key={key}>
               <div className="cb-detail-key">{key}</div>

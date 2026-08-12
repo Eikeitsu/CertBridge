@@ -41,11 +41,7 @@ export function AppShell() {
     <div className={`app-shell pack-${themePack}`}>
       <header className="app-topbar">
         {!isMaterialPack && (
-          <img
-            className="logo"
-            src={`${import.meta.env.BASE_URL}img/icon.png`}
-            alt=""
-          />
+          <img className="logo" src={`${import.meta.env.BASE_URL}img/icon.png`} alt="" />
         )}
         <div className="titles">
           {isMaterialPack && <p className="eyebrow">{deviceLabel}</p>}

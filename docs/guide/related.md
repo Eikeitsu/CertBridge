@@ -2,9 +2,9 @@
 
 模块会自动检测已安装抓包 App 并导入其 CA：
 
-- [Reqable](https://reqable.com) — 从 App 导入（**不内置**样例证书）  
-- [ProxyPin](https://github.com/wanghongenpin/proxypin) — 优先 App；未检测到且安装时启用了 ProxyPin 时用模块内置兜底  
-- [HttpCanary](https://github.com/MegatronKing/HttpCanary) / [ADGuard](https://adguard.com) — **仅二者**在安装时可能询问是否导入为**自定义**证书  
+- [Reqable](https://reqable.com) — 从 App 导入（**不内置**样例证书）
+- [ProxyPin](https://github.com/wanghongenpin/proxypin) — 优先 App；未检测到且安装时启用了 ProxyPin 时用模块内置兜底
+- [HttpCanary](https://github.com/MegatronKing/HttpCanary) / [ADGuard](https://adguard.com) — **仅二者**在安装时可能询问是否导入为**自定义**证书
 
 Charles、mitmproxy 等请用 WebUI 自定义上传，或放入 `certs/custom/`。
 

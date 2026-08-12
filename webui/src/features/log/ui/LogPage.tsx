@@ -1,10 +1,7 @@
 import { Button, Modal, Space, Spin } from "antd";
 import { ClearOutlined, ReloadOutlined } from "@ant-design/icons";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
-import {
-  clearActivityLog,
-  fetchActivityLog,
-} from "@/features/log/model/logSlice";
+import { clearActivityLog, fetchActivityLog } from "@/features/log/model/logSlice";
 import { selectActivityLog } from "@/features/log/model/selectors";
 import { formatByteSize } from "@/features/log/lib/formatByteSize";
 import { toast } from "@/shared/api/ksu";
@@ -36,19 +33,10 @@ export function LogPage() {
       <div className="cb-section-title is-toolbar">
         <span>安装 / 注入日志</span>
         <Space size={8}>
-          <Button
-            size="small"
-            icon={<ReloadOutlined />}
-            onClick={handleRefresh}
-          >
+          <Button size="small" icon={<ReloadOutlined />} onClick={handleRefresh}>
             刷新
           </Button>
-          <Button
-            size="small"
-            danger
-            icon={<ClearOutlined />}
-            onClick={handleClear}
-          >
+          <Button size="small" danger icon={<ClearOutlined />} onClick={handleClear}>
             清空
           </Button>
         </Space>

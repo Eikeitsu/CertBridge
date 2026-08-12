@@ -13,8 +13,7 @@ export function useTmpfsStyle() {
   const dispatch = useAppDispatch();
   const status = useAppSelector(selectModuleStatus);
   const { isPending, runExclusive } = useAsyncLock();
-  const tmpfsStyle: TmpfsStyle =
-    status.tmpfs_style === "legacy" ? "legacy" : "short";
+  const tmpfsStyle: TmpfsStyle = status.tmpfs_style === "legacy" ? "legacy" : "short";
 
   const handleChange = useCallback(
     async (style: TmpfsStyle) => {

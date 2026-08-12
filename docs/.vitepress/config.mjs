@@ -1,12 +1,12 @@
 import { defineConfig } from "vitepress";
 
 const repoName =
-  process.env.VITEPRESS_BASE?.replace(/^\//, "").replace(/\/$/, "") ||
-  "CertBridge";
+  process.env.VITEPRESS_BASE?.replace(/^\//, "").replace(/\/$/, "") || "CertBridge";
 
 export default defineConfig({
   title: "证书桥",
-  description: "将 Reqable / ProxyPin / 自定义 CA 合并进 Android 系统信任库；完整版与 Lite 双包",
+  description:
+    "将 Reqable / ProxyPin / 自定义 CA 合并进 Android 系统信任库；完整版与 Lite 双包",
   base: `/${repoName}/`,
   lang: "zh-CN",
   head: [

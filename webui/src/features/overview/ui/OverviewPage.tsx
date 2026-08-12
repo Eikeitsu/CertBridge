@@ -1,15 +1,8 @@
 import { Button, Modal, Space, Tag, Spin } from "antd";
-import {
-  ReloadOutlined,
-  PoweroffOutlined,
-  ThunderboltOutlined,
-} from "@ant-design/icons";
+import { ReloadOutlined, PoweroffOutlined, ThunderboltOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch } from "@/app/store/hooks";
-import {
-  refreshStatus,
-  requestReboot,
-} from "@/features/status/model/statusSlice";
+import { refreshStatus, requestReboot } from "@/features/status/model/statusSlice";
 import { useTrustOverview } from "@/features/overview/hooks/useTrustOverview";
 
 export function OverviewPage() {
@@ -158,21 +151,14 @@ export function OverviewPage() {
             <div className="cb-reboot-row__title">重启设备</div>
             <div className="cb-muted">应用挂载变更建议重启</div>
           </div>
-          <Button
-            danger
-            icon={<PoweroffOutlined />}
-            onClick={handleReboot}
-          >
+          <Button danger icon={<PoweroffOutlined />} onClick={handleReboot}>
             重启
           </Button>
         </div>
         <Space wrap className="cb-stack-top">
           <Button onClick={() => navigate("/certs")}>管理证书</Button>
           {isHotMountSupported && (
-            <Button
-              icon={<ThunderboltOutlined />}
-              onClick={() => navigate("/certs")}
-            >
+            <Button icon={<ThunderboltOutlined />} onClick={() => navigate("/certs")}>
               临时证书
             </Button>
           )}

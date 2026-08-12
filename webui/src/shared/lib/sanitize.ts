@@ -27,9 +27,7 @@ export function resolveTrustLabel(status: {
       tone: "warn",
       title:
         shortLabel ||
-        (isFlagOn(status.hot_active)
-          ? "🔥热挂载（永久配置待重启）"
-          : "⏳待重启"),
+        (isFlagOn(status.hot_active) ? "🔥热挂载（永久配置待重启）" : "⏳待重启"),
       hint: status.desc_body || hint,
     };
   }

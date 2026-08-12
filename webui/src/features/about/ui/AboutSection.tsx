@@ -1,9 +1,5 @@
 import { Button, Space } from "antd";
-import {
-  BookOutlined,
-  GithubOutlined,
-  SmileOutlined,
-} from "@ant-design/icons";
+import { BookOutlined, GithubOutlined, SmileOutlined } from "@ant-design/icons";
 import {
   COOLAPK_URL,
   DOCS_URL,
@@ -59,11 +55,7 @@ export function AboutSection() {
         <Button block icon={<GithubOutlined />} onClick={() => void openUrl(REPO_URL)}>
           开源仓库
         </Button>
-        <Button
-          block
-          icon={<SmileOutlined />}
-          onClick={() => void openUrl(COOLAPK_URL)}
-        >
+        <Button block icon={<SmileOutlined />} onClick={() => void openUrl(COOLAPK_URL)}>
           酷安主页
         </Button>
         <Button block onClick={() => void openUrl(REQABLE_URL)}>
@@ -81,7 +73,9 @@ export function AboutSection() {
       </Space>
 
       <div className="cb-section-title is-spaced">打赏</div>
-      <p className="cb-muted">许小墨 · 微信 / 支付宝。如果证书桥帮到了你，欢迎请作者喝杯奶茶。</p>
+      <p className="cb-muted">
+        许小墨 · 微信 / 支付宝。如果证书桥帮到了你，欢迎请作者喝杯奶茶。
+      </p>
       <img
         className="tip-qr"
         src={`${import.meta.env.BASE_URL}assets/tip.png`}

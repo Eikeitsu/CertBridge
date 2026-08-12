@@ -8,10 +8,10 @@
 
 ## 下载哪个包？
 
-| 包名 | 内容 | 适用 |
-| --- | --- | --- |
-| `CertBridge_v*.zip` | **完整版**：内置静态 OpenSSL（默认 arm + arm64；安装后再按设备 ABI 只留一份，约 7MB） | 推荐大多数用户；Recovery 刷入更稳 |
-| `CertBridge_v*_lite.zip` | **Lite**：约 8KB `cbx509` dex，**无** OpenSSL | 体积敏感；依赖 `app_process`/`dalvikvm`。纯 Recovery 环境可能无法在安装阶段解析 App 证书，可重启后用 WebUI 导入 |
+| 包名                     | 内容                                                                                  | 适用                                                                                                            |
+| ------------------------ | ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `CertBridge_v*.zip`      | **完整版**：内置静态 OpenSSL（默认 arm + arm64；安装后再按设备 ABI 只留一份，约 7MB） | 推荐大多数用户；Recovery 刷入更稳                                                                               |
+| `CertBridge_v*_lite.zip` | **Lite**：约 8KB `cbx509` dex，**无** OpenSSL                                         | 体积敏感；依赖 `app_process`/`dalvikvm`。纯 Recovery 环境可能无法在安装阶段解析 App 证书，可重启后用 WebUI 导入 |
 
 二者模块 ID 相同（`CertBridge`），不要同时安装；覆盖刷入即可切换。
 
@@ -19,33 +19,33 @@
 
 ## 安装步骤
 
-1. 从 [GitHub Releases](https://github.com/Eikeitsu/CertBridge/releases) 下载最新 zip（完整版或 Lite）  
-2. 在模块管理器中刷入  
-3. 在 20 秒内用音量键选择：  
-   - **音量上：默认安装（推荐）**——检测 Reqable / ProxyPin；ProxyPin 无 App 证时用内置兜底；安装 WebUI 与免重启热挂载；挂载模式固定为**完整兼容**  
-   - **音量下：自定义安装**——依次选择 Reqable、ProxyPin、WebUI、免重启热挂载，并选择**挂载模式**（完整兼容 / 轻量 Magic）  
-   - 若检测到 **HttpCanary**、**ADGuard**，会再依次询问是否导入为自定义  
-   - 未检测到按键或超时 → 默认完整安装  
-4. **重启**手机  
-5. 若安装了 WebUI，打开页面确认状态；详见 [WebUI 使用说明](/guide/webui)  
-6. 可在「更多 → 挂载模式」切换（需再重启）  
+1. 从 [GitHub Releases](https://github.com/Eikeitsu/CertBridge/releases) 下载最新 zip（完整版或 Lite）
+2. 在模块管理器中刷入
+3. 在 20 秒内用音量键选择：
+   - **音量上：默认安装（推荐）**——检测 Reqable / ProxyPin；ProxyPin 无 App 证时用内置兜底；安装 WebUI 与免重启热挂载；挂载模式固定为**完整兼容**
+   - **音量下：自定义安装**——依次选择 Reqable、ProxyPin、WebUI、免重启热挂载，并选择**挂载模式**（完整兼容 / 轻量 Magic）
+   - 若检测到 **HttpCanary**、**ADGuard**，会再依次询问是否导入为自定义
+   - 未检测到按键或超时 → 默认完整安装
+4. **重启**手机
+5. 若安装了 WebUI，打开页面确认状态；详见 [WebUI 使用说明](/guide/webui)
+6. 可在「更多 → 挂载模式」切换（需再重启）
 
 自定义安装中每个组件均需明确按音量上；音量下或超时会跳过该项。挂载模式询问：音量上=完整兼容，音量下=轻量 Magic；超时则完整兼容。
 
 ### 挂载模式与元模块（摘要）
 
-| 模式 | 默认安装 | 说明 |
-| --- | --- | --- |
-| 完整兼容 `compatible` | ✅ | 运行时 bind，**不需要** Magic Mount 元模块 |
-| 轻量 Magic `magic` | 仅自定义可选 | 模块 `system/` **只叠 addon**；**Magisk** 一般自带即可；**KernelSU** 常需确认挂载/元模块，否则可能整目录遮蔽 |
+| 模式                  | 默认安装     | 说明                                                                                                         |
+| --------------------- | ------------ | ------------------------------------------------------------------------------------------------------------ |
+| 完整兼容 `compatible` | ✅           | 运行时 bind，**不需要** Magic Mount 元模块                                                                   |
+| 轻量 Magic `magic`    | 仅自定义可选 | 模块 `system/` **只叠 addon**；**Magisk** 一般自带即可；**KernelSU** 常需确认挂载/元模块，否则可能整目录遮蔽 |
 
 详见 [配置说明 · 挂载模式](/guide/config#挂载模式)。
 
 补充行为：
 
-- **Reqable**：未从 App 导入成功时，安装会关掉 Reqable 开关（模块不内置 Reqable 样例）  
-- **ProxyPin**：无 App 证但安装时选了 ProxyPin → 使用内置兜底；App 与内置都没有 → 跳过并关掉开关  
-- 安装日志：`data/install.log`（含 OpenSSL / Lite 探测与导入诊断）  
+- **Reqable**：未从 App 导入成功时，安装会关掉 Reqable 开关（模块不内置 Reqable 样例）
+- **ProxyPin**：无 App 证但安装时选了 ProxyPin → 使用内置兜底；App 与内置都没有 → 跳过并关掉开关
+- 安装日志：`data/install.log`（含 OpenSSL / Lite 探测与导入诊断）
 
 支持管理器在线更新：`module.prop` 的 `updateJson` 指向文档站 `update.json`。
 

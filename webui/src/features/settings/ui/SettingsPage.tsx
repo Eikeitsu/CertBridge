@@ -36,14 +36,13 @@ export function SettingsPage() {
           <p>
             <strong>完整兼容（默认）</strong>
             <br />
-            运行时整库合并后绑定，不写 system 叠层。不依赖 Magic Mount
-            元模块；Magisk / KernelSU / APatch 均可。
+            运行时整库合并后绑定，不写 system 叠层。不依赖 Magic Mount 元模块；Magisk /
+            KernelSU / APatch 均可。
           </p>
           <p>
             <strong>轻量 Magic Mount</strong>
             <br />
-            只把当前启用的附加证书叠进系统信任库；Android 14+ 仍对 APEX
-            做脚本注入。
+            只把当前启用的附加证书叠进系统信任库；Android 14+ 仍对 APEX 做脚本注入。
           </p>
           <ul className="cb-tips">
             <li>
@@ -77,15 +76,13 @@ export function SettingsPage() {
           <p>
             <strong>短路径（默认）</strong>
             <br />
-            使用 <code>/data/local/tmp/.fs0</code> /{" "}
-            <code>.fs1</code>
+            使用 <code>/data/local/tmp/.fs0</code> / <code>.fs1</code>
             。mountinfo 里更不容易被按「证书合并」关键词扫到，收益有限但成本低。
           </p>
           <p>
             <strong>传统路径</strong>
             <br />
-            使用 <code>/data/local/tmp/sys-ca-merge</code> /{" "}
-            <code>sys-ca-merge-hot</code>
+            使用 <code>/data/local/tmp/sys-ca-merge</code> / <code>sys-ca-merge-hot</code>
             。名称更直观，便于排障与对照旧版文档。
           </p>
           <p className="cb-muted">

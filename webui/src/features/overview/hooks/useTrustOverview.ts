@@ -42,15 +42,17 @@ export function useTrustOverview() {
   const statusError = useAppSelector(selectStatusError);
   const trust = useMemo(() => {
     if (statusError) {
-      return { tone: "idle" as const, title: statusError, hint: "当前环境无法执行 shell" };
+      return {
+        tone: "idle" as const,
+        title: statusError,
+        hint: "当前环境无法执行 shell",
+      };
     }
     return resolveTrustLabel(status);
   }, [status, statusError]);
 
   const activeCount = Number(status.active_count || 0);
-  const customCount = Number(
-    status.custom_count || customCertificates.length || 0,
-  );
+  const customCount = Number(status.custom_count || customCertificates.length || 0);
   const isPendingReboot = isFlagOn(status.pending_reboot);
   const isHotMountActive = isFlagOn(status.hot_active);
   const isHotMountSupported = isFlagOn(status.hot_supported);
@@ -61,9 +63,7 @@ export function useTrustOverview() {
       names.push(status.reqable_title || status.reqable_display || "Reqable");
     }
     if (isFlagOn(status.proxypin_active)) {
-      names.push(
-        status.proxypin_title || status.proxypin_display || "ProxyPin",
-      );
+      names.push(status.proxypin_title || status.proxypin_display || "ProxyPin");
     }
     for (const cert of customCertificates) {
       names.push(cert.display || cert.name);

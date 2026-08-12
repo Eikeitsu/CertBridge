@@ -26,22 +26,22 @@ docs/                   # VitePress 用户文档
 
 ### bin/lib 职责
 
-| 文件 | 职责 |
-| --- | --- |
-| `log.sh` | 安装/运行日志 |
-| `keys.sh` | 音量键选择 |
-| `conf.sh` | `certs.conf` 读写 |
-| `lock.sh` | 写锁 |
-| `store.sh` | 信任库路径、SELinux、路径身份 |
-| `certs.sh` | 证书文件名、复制、addon 合并 |
-| `openssl.sh` | OpenSSL 定位（优先模块内置静态二进制） |
-| `app_detect.sh` | 已安装抓包 App 的 CA 路径探测 |
-| `cert_parse.sh` | 显示名 / 详情解析、规范化导入 |
-| `cert_sources.sh` | sources 同步与 addon 查找（含 ProxyPin 内置） |
+| 文件              | 职责                                            |
+| ----------------- | ----------------------------------------------- |
+| `log.sh`          | 安装/运行日志                                   |
+| `keys.sh`         | 音量键选择                                      |
+| `conf.sh`         | `certs.conf` 读写                               |
+| `lock.sh`         | 写锁                                            |
+| `store.sh`        | 信任库路径、SELinux、路径身份                   |
+| `certs.sh`        | 证书文件名、复制、addon 合并                    |
+| `openssl.sh`      | OpenSSL 定位（优先模块内置静态二进制）          |
+| `app_detect.sh`   | 已安装抓包 App 的 CA 路径探测                   |
+| `cert_parse.sh`   | 显示名 / 详情解析、规范化导入                   |
+| `cert_sources.sh` | sources 同步与 addon 查找（含 ProxyPin 内置）   |
 | `install_flow.sh` | 刷入安装编排（仅 `CERTBRIDGE_PROFILE=install`） |
-| `verify.sh` | 注入结果校验 |
-| `generation.sh` | 开机证书集合生成 |
-| `status.sh` | 模块状态标签与描述 |
+| `verify.sh`       | 注入结果校验                                    |
+| `generation.sh`   | 开机证书集合生成                                |
+| `status.sh`       | 模块状态标签与描述                              |
 
 `common.sh` 按 `CERTBRIDGE_PROFILE` 加载：`install` 仅装入安装所需库；默认 `runtime` 装入开机 / WebUI / Action 所需库。
 

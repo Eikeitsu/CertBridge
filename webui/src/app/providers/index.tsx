@@ -4,10 +4,7 @@ import zhCN from "antd/locale/zh_CN";
 import { Provider } from "react-redux";
 import { store } from "@/app/store";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
-import {
-  hydrateTheme,
-  refreshSystemTheme,
-} from "@/features/theme/model/themeSlice";
+import { hydrateTheme, refreshSystemTheme } from "@/features/theme/model/themeSlice";
 import { bootstrapStatus } from "@/features/status/model/statusSlice";
 import { fetchActivityLog } from "@/features/log/model/logSlice";
 import {
@@ -55,9 +52,7 @@ function ThemeBridge({ children }: { children: ReactNode }) {
       locale={zhCN}
       theme={{
         algorithm: [
-          resolvedTheme === "dark"
-            ? antdTheme.darkAlgorithm
-            : antdTheme.defaultAlgorithm,
+          resolvedTheme === "dark" ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
           ...(isCompact ? [antdTheme.compactAlgorithm] : []),
         ],
         token: {

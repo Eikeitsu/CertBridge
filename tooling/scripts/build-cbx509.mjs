@@ -30,14 +30,7 @@ const srcMain = join(
   "x509",
   "Main.java",
 );
-const sampleCert = join(
-  repoRoot,
-  "module",
-  "certs",
-  "builtin",
-  "proxypin",
-  "243f0bfb.0",
-);
+const sampleCert = join(repoRoot, "module", "certs", "builtin", "proxypin", "243f0bfb.0");
 
 function log(msg) {
   console.log(`[build-cbx509] ${msg}`);
@@ -96,10 +89,7 @@ function hostJdkAsset() {
 
 async function ensureJdk() {
   const asset = hostJdkAsset();
-  const archive = join(
-    cacheDir,
-    asset.kind === "zip" ? "jdk17.zip" : "jdk17.tar.gz",
-  );
+  const archive = join(cacheDir, asset.kind === "zip" ? "jdk17.zip" : "jdk17.tar.gz");
   const home = join(cacheDir, "jdk");
   const javac = join(home, ...asset.javacRel);
   if (existsSync(javac)) return { javac, java: join(home, ...asset.javaRel) };
@@ -175,13 +165,7 @@ async function main() {
     { stdio: "inherit" },
   );
 
-  const classFile = join(
-    classesDir,
-    "com",
-    "certbridge",
-    "x509",
-    "Main.class",
-  );
+  const classFile = join(classesDir, "com", "certbridge", "x509", "Main.class");
   if (!existsSync(classFile)) throw new Error("Main.class missing");
 
   // Clear previous dex

@@ -100,14 +100,12 @@ export async function readLog(
   );
   const rawOutput = result.stdout || "";
   const separatorIndex = rawOutput.indexOf("---");
-  const byteHead =
-    separatorIndex >= 0 ? rawOutput.slice(0, separatorIndex) : "";
+  const byteHead = separatorIndex >= 0 ? rawOutput.slice(0, separatorIndex) : "";
   const text =
     separatorIndex >= 0
       ? rawOutput.slice(separatorIndex + 3).replace(/^\r?\n/, "")
       : rawOutput;
-  const bytes =
-    Number(String(byteHead).trim().split(/\s+/)[0] || 0) || 0;
+  const bytes = Number(String(byteHead).trim().split(/\s+/)[0] || 0) || 0;
   return { text, bytes };
 }
 
@@ -123,10 +121,7 @@ export async function fetchDeviceLabel(): Promise<string> {
   const result = await exec(
     "getprop ro.product.marketname; getprop ro.product.model; getprop ro.build.version.release; getprop ro.mi.os.version.name",
   );
-  if (
-    result.errno === -1 &&
-    /no_bridge|no_ksu_bridge/.test(result.stderr || "")
-  ) {
+  if (result.errno === -1 && /no_bridge|no_ksu_bridge/.test(result.stderr || "")) {
     return "未检测到 WebUI 桥接";
   }
   const lines = String(result.stdout || "")

@@ -91,17 +91,11 @@ export function AppearancePanel() {
 
           <div className="cb-pref-row">
             <span>悬浮底栏</span>
-            <Switch
-              checked={theme.floatDock}
-              onChange={handleFloatDockChange}
-            />
+            <Switch checked={theme.floatDock} onChange={handleFloatDockChange} />
           </div>
           <div className="cb-pref-row">
             <span>底栏毛玻璃</span>
-            <Switch
-              checked={theme.dockGlass}
-              onChange={handleDockGlassChange}
-            />
+            <Switch checked={theme.dockGlass} onChange={handleDockGlassChange} />
           </div>
           <div className="cb-pref-row">
             <span>顶/底栏模糊</span>

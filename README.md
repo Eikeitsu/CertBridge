@@ -20,20 +20,20 @@
 
 ## 功能概览
 
-- 默认安装自动检测 App CA；也可用音量键逐项自定义  
-- Reqable / ProxyPin 优先从已安装 App 导入；ProxyPin 可内置兜底；**不内置 Reqable**  
-- 仅 HttpCanary、ADGuard 在安装时可能询问导入为自定义；也可上传 PEM / DER  
-- Android 7–16；Android 14+ APEX + system 双路径  
-- 每次开机从实时系统信任库**完整合并**，不保存系统 CA 基线  
-- 可选用户凭据区 / 存储卡证书免重启热挂载（合并永久 addon），可按会话无痕卸载  
-- 可选 WebUI（React 四页）：状态、证书管理与详情、注入诊断、日志；主题与挂载设置  
-- 生成或校验失败时不挂载，保留系统原始证书库  
+- 默认安装自动检测 App CA；也可用音量键逐项自定义
+- Reqable / ProxyPin 优先从已安装 App 导入；ProxyPin 可内置兜底；**不内置 Reqable**
+- 仅 HttpCanary、ADGuard 在安装时可能询问导入为自定义；也可上传 PEM / DER
+- Android 7–16；Android 14+ APEX + system 双路径
+- 每次开机从实时系统信任库**完整合并**，不保存系统 CA 基线
+- 可选用户凭据区 / 存储卡证书免重启热挂载（合并永久 addon），可按会话无痕卸载
+- 可选 WebUI（React 四页）：状态、证书管理与详情、注入诊断、日志；主题与挂载设置
+- 生成或校验失败时不挂载，保留系统原始证书库
 
 ## 快速开始
 
-1. 从 [Releases](https://github.com/Eikeitsu/CertBridge/releases) 下载 `CertBridge_v*.zip`（完整版）或 `*_lite.zip`  
-2. 刷入模块，音量上默认安装，或音量下自定义  
-3. 重启；若安装了 WebUI，打开页面确认状态  
+1. 从 [Releases](https://github.com/Eikeitsu/CertBridge/releases) 下载 `CertBridge_v*.zip`（完整版）或 `*_lite.zip`
+2. 刷入模块，音量上默认安装，或音量下自定义
+3. 重启；若安装了 WebUI，打开页面确认状态
 
 详细说明见 [在线文档](https://eikeitsu.github.io/CertBridge/) 或 `docs/`。
 

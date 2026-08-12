@@ -9,7 +9,6 @@ export const selectStatusLoading = (state: RootState) => state.status.loading;
 
 export const selectDeviceLabel = (state: RootState) => state.status.deviceLabel;
 
-export const selectLastRefreshedAt = (state: RootState) =>
-  state.status.lastRefreshedAt;
+export const selectLastRefreshedAt = (state: RootState) => state.status.lastRefreshedAt;
 
 export const selectStatusError = (state: RootState) => state.status.error;

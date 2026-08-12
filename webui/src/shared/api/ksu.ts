@@ -55,9 +55,7 @@ export function exec(
 
 export function openUrl(url: string): Promise<ExecResult> {
   const safe = String(url || "").replace(/'/g, "");
-  return exec(
-    `am start -a android.intent.action.VIEW -d '${safe}' >/dev/null 2>&1`,
-  );
+  return exec(`am start -a android.intent.action.VIEW -d '${safe}' >/dev/null 2>&1`);
 }
 
 export function toast(message: string) {

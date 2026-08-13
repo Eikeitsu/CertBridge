@@ -1,15 +1,8 @@
-import type { BuiltinCertKind } from "@/entities/module/types";
-
-const BRAND_ICON: Record<BuiltinCertKind, { src: string; label: string }> = {
-  reqable: {
-    src: `${import.meta.env.BASE_URL}img/brands/reqable.png`,
-    label: "Reqable",
-  },
-  proxypin: {
-    src: `${import.meta.env.BASE_URL}img/brands/proxypin.png`,
-    label: "ProxyPin",
-  },
-};
+import type { BuiltinCertKind } from "@/entities/module/enums";
+import { useAppSelector } from "@/app/store/hooks";
+import { selectResolvedTheme } from "@/features/theme/model/selectors";
+import { BUILTIN_BRAND_ICON, resolveBrandIconSrc } from "@/shared/config/certs";
+import { assetUrl } from "@/shared/config/assets";
 
 type CertBrandIconProps = {
   kind: BuiltinCertKind;
@@ -17,15 +10,26 @@ type CertBrandIconProps = {
 };
 
 export function CertBrandIcon({ kind, className }: CertBrandIconProps) {
-  const brand = BRAND_ICON[kind];
+  const theme = useAppSelector(selectResolvedTheme);
+  const brand = BUILTIN_BRAND_ICON[kind];
+  const inline = Boolean(className?.includes("is-inline"));
+  const src = resolveBrandIconSrc(kind, theme, inline);
+
   return (
     <span
       className={className ? `cb-brand-icon ${className}` : "cb-brand-icon"}
       data-kind={kind}
+      data-theme={theme}
       title={brand.label}
       aria-hidden
     >
-      <img src={brand.src} alt="" width={40} height={40} decoding="async" />
+      <img
+        src={assetUrl(src)}
+        alt=""
+        width={inline ? 22 : 40}
+        height={inline ? 22 : 40}
+        decoding="async"
+      />
     </span>
   );
 }

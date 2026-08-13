@@ -1,6 +1,6 @@
 # 证书桥（CertBridge）
 
-将 **Reqable** / **ProxyPin** / 自定义 CA 合并进 Android **系统信任库**的 Magisk 模块，支持 KernelSU 等管理器 WebUI。Android 14+ 自动 APEX Conscrypt 注入。提供 **完整版**（内置 OpenSSL）与 **Lite**（约 8KB dex）双包。
+将 **Reqable** / **ProxyPin** / 自定义 CA 合并进 Android **系统信任库**的 Magisk 模块，支持 KernelSU 等管理器 WebUI。Android 14+ 自动 APEX Conscrypt 注入。提供 **完整版**（内置 OpenSSL）与 **Lite**（约 14KB dex）双包。
 
 - **仓库**：[Eikeitsu/CertBridge](https://github.com/Eikeitsu/CertBridge)
 - **文档**：[eikeitsu.github.io/CertBridge](https://eikeitsu.github.io/CertBridge/)

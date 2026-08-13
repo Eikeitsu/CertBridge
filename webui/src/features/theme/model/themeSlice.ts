@@ -1,7 +1,9 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import { ACCENTS, STORAGE_KEYS } from "@/shared/config/paths";
+import { STORAGE_KEYS } from "@/shared/config/paths";
+import { ACCENTS, THEME_DEFAULTS } from "@/shared/config/theme";
 import { FLAG_OFF, FLAG_ON, FONT_SCALE } from "@/shared/config/constants";
-import type { ResolvedTheme, ThemeMode, ThemePack } from "@/entities/module/types";
+import { ThemeMode, ThemePack, type ResolvedTheme } from "@/entities/module/enums";
+import { parseEnum } from "@/shared/lib/enum";
 import { applyThemeToDom, resolveThemeMode } from "../lib/applyTheme";
 import { syncChromeBars } from "../lib/chrome";
 
@@ -31,21 +33,33 @@ function persistFlag(key: string, enabled: boolean) {
 }
 
 function initialFromStorage(): ThemeState {
-  const mode = (localStorage.getItem(STORAGE_KEYS.themeMode) as ThemeMode) || "system";
-  const pack = (localStorage.getItem(STORAGE_KEYS.themePack) as ThemePack) || "classic";
-  const accentId = localStorage.getItem(STORAGE_KEYS.accent) || "teal";
-  const fontScale = Number(localStorage.getItem(STORAGE_KEYS.fontScale) || "1") || 1;
+  const mode = parseEnum(
+    ThemeMode,
+    localStorage.getItem(STORAGE_KEYS.themeMode),
+    THEME_DEFAULTS.mode,
+  );
+  const pack = parseEnum(
+    ThemePack,
+    localStorage.getItem(STORAGE_KEYS.themePack),
+    THEME_DEFAULTS.pack,
+  );
+  const accentId = localStorage.getItem(STORAGE_KEYS.accent) || THEME_DEFAULTS.accentId;
+  const fontScale =
+    Number(localStorage.getItem(STORAGE_KEYS.fontScale) || THEME_DEFAULTS.fontScale) ||
+    THEME_DEFAULTS.fontScale;
   return {
     mode,
-    pack: ["classic", "material", "fluid"].includes(pack) ? pack : "classic",
-    compact: readBool(STORAGE_KEYS.compact, false),
+    pack,
+    compact: readBool(STORAGE_KEYS.compact, THEME_DEFAULTS.compact),
     fontScale: Math.min(FONT_SCALE.MAX, Math.max(FONT_SCALE.MIN, fontScale)),
-    floatDock: readBool(STORAGE_KEYS.floatDock, false),
-    dockGlass: readBool(STORAGE_KEYS.dockGlass, true),
-    barBlur: readBool(STORAGE_KEYS.barBlur, true),
-    monet: readBool(STORAGE_KEYS.monet, true),
-    accentId: ACCENTS.some((accent) => accent.id === accentId) ? accentId : "teal",
-    uiCustom: readBool(STORAGE_KEYS.uiCustom, false),
+    floatDock: readBool(STORAGE_KEYS.floatDock, THEME_DEFAULTS.floatDock),
+    dockGlass: readBool(STORAGE_KEYS.dockGlass, THEME_DEFAULTS.dockGlass),
+    barBlur: readBool(STORAGE_KEYS.barBlur, THEME_DEFAULTS.barBlur),
+    monet: readBool(STORAGE_KEYS.monet, THEME_DEFAULTS.monet),
+    accentId: ACCENTS.some((accent) => accent.id === accentId)
+      ? accentId
+      : THEME_DEFAULTS.accentId,
+    uiCustom: readBool(STORAGE_KEYS.uiCustom, THEME_DEFAULTS.uiCustom),
     resolved: resolveThemeMode(mode),
     hydrated: false,
   };
@@ -123,8 +137,8 @@ const themeSlice = createSlice({
       persistFlag(STORAGE_KEYS.uiCustom, action.payload);
     },
     refreshSystemTheme(state) {
-      if (state.mode !== "system") return;
-      state.resolved = resolveThemeMode("system");
+      if (state.mode !== ThemeMode.System) return;
+      state.resolved = resolveThemeMode(ThemeMode.System);
       applyThemeToDom(state);
       syncChromeBars(state.resolved, state.barBlur);
     },

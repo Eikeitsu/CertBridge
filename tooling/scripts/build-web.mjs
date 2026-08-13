@@ -7,6 +7,7 @@ import { execSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, rmSync, readdirSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { pruneUnusedWebImages } from "./lib/prune-unused-web-images.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const outDir = join(repoRoot, ".build", "webroot");
@@ -25,6 +26,9 @@ execSync("npx vite build --config webui/vite.config.ts", {
 if (!existsSync(outDir)) {
   throw new Error("missing .build/webroot after vite build");
 }
+
+log("prune unused images");
+pruneUnusedWebImages(outDir, log);
 
 log("sync → module/webroot");
 rmSync(moduleWeb, { recursive: true, force: true });

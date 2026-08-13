@@ -6,14 +6,17 @@ import { setMountMode } from "@/shared/api/cli";
 import { errorFromResult } from "@/shared/api/errors";
 import { toast } from "@/shared/api/ksu";
 import { isCliFailure } from "@/shared/lib/cliResult";
+import { parseKv } from "@/shared/lib/parse";
+import { toastByRebootFlag } from "@/shared/lib/rebootToast";
+import { parseEnum } from "@/shared/lib/enum";
 import { useAsyncLock } from "@/shared/hooks/useAsyncLock";
-import type { MountMode } from "@/entities/module/types";
+import { MountMode } from "@/entities/module/enums";
 
 export function useMountMode() {
   const dispatch = useAppDispatch();
   const status = useAppSelector(selectModuleStatus);
   const { isPending, runExclusive } = useAsyncLock();
-  const mountMode: MountMode = status.mount_mode === "magic" ? "magic" : "compatible";
+  const mountMode = parseEnum(MountMode, status.mount_mode, MountMode.Compatible);
 
   const handleChange = useCallback(
     async (mode: MountMode) => {
@@ -23,7 +26,12 @@ export function useMountMode() {
           toast(errorFromResult(result.stdout, result.stderr));
           return;
         }
-        toast("兼容策略已更新，重启后生效");
+        const kv = parseKv(result.stdout || "");
+        toastByRebootFlag(
+          kv,
+          "兼容策略已更新，重启后生效",
+          "兼容策略已恢复为当前生效配置",
+        );
         await dispatch(refreshStatus(false));
       });
     },

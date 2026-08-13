@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { DEFAULT_SD_CERT_DIR } from "@/shared/config/constants";
 import { STORAGE_KEYS } from "@/shared/config/paths";
-import type { HotMountMode } from "@/entities/module/types";
+import { HotMountMode } from "@/entities/module/enums";
 
 function readStoredSdPath(): string {
   try {
@@ -12,7 +12,7 @@ function readStoredSdPath(): string {
 }
 
 export function useHotMountPanel() {
-  const [mode, setMode] = useState<HotMountMode>("user");
+  const [mode, setMode] = useState<HotMountMode>(HotMountMode.User);
   const [sdPath, setSdPath] = useState(readStoredSdPath);
 
   useEffect(() => {

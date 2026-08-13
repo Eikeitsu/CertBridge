@@ -28,9 +28,9 @@
     "preview:docs": "vitepress preview docs"
   },
   "dependencies": {
-    "@ant-design/icons": "^5.6.1",
     "@reduxjs/toolkit": "^2.6.1",
-    "antd": "^5.24.2",
+    "antd-mobile": "^5.42.3",
+    "antd-mobile-icons": "^0.3.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-redux": "^9.2.0",
@@ -57,6 +57,7 @@
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.26.1",
     "vite": "^6.2.2",
-    "vitepress": "^1.6.3"
+    "vitepress": "^1.6.3",
+    "yazl": "^3.3.1"
   }
 }

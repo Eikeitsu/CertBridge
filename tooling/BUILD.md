@@ -6,6 +6,8 @@
 
 ```text
 webui/                  # WebUI 源码（React + Redux Toolkit + antd）
+  public/               # 会打进模块的静态资源（构建时再剔除未引用图片）
+  stock/                # 库存图，不参与 Vite / 模块打包
   src/app/              # 入口组装：providers / router / store / 全局样式
   src/features/         # 业务切片：overview / certs / log / settings / theme / …
   src/shared/           # 桥接 API、配置、工具
@@ -50,9 +52,9 @@ docs/                   # VitePress 用户文档
 ```bash
 npm install
 npm run dev:web          # Vite 开发 WebUI（webui/）
-npm run build:web        # 构建并同步 → module/webroot
+npm run build:web        # 构建并同步 → module/webroot（未引用的静态图不打入）
 npm run typecheck:web    # TypeScript 检查
-npm run package:module   # 打 Magisk zip（默认同时产出完整版 + Lite）
+npm run package:module   # 打 Magisk zip（Node 统一打包，默认完整版 + Lite）
 npm run build:module     # build:web + package:module
 npm run build:cbx509     # 构建 Lite 用的 cbx509.dex（便携 JDK + D8）
 npm run dev:docs

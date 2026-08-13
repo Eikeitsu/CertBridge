@@ -1,5 +1,4 @@
 import { useCallback } from "react";
-import { Modal } from "antd";
 import { useAppDispatch } from "@/app/store/hooks";
 import { refreshStatus } from "@/features/status/model/statusSlice";
 import {
@@ -12,17 +11,14 @@ import {
 import { errorFromResult } from "@/shared/api/errors";
 import { toast } from "@/shared/api/ksu";
 import { isCliFailure } from "@/shared/lib/cliResult";
+import { confirmAction } from "@/shared/lib/confirmAction";
 import { fileToBase64, parseKv } from "@/shared/lib/parse";
+import { toastByRebootFlag } from "@/shared/lib/rebootToast";
 import { isSafeSdPath } from "@/shared/lib/sdPath";
 import { FLAG_OFF, FLAG_ON } from "@/shared/config/constants";
 import { useAsyncLock } from "@/shared/hooks/useAsyncLock";
-import type { BuiltinCertKind, HotMountMode } from "@/entities/module/types";
-
-const HOT_MOUNT_LABEL: Record<HotMountMode, string> = {
-  user: "用户凭据区",
-  sd: "存储卡目录",
-  all: "用户凭据区与存储卡目录",
-};
+import { HotMountMode, type BuiltinCertKind } from "@/entities/module/enums";
+import { HOT_MOUNT_CONFIRM_LABEL } from "@/shared/config/certs";
 
 export function useCertActions() {
   const dispatch = useAppDispatch();
@@ -40,7 +36,12 @@ export function useCertActions() {
           toast(errorFromResult(result.stdout, result.stderr));
           return;
         }
-        toast(checked ? "已开启，重启后生效" : "已关闭，重启后移除");
+        const kv = parseKv(result.stdout || "");
+        toastByRebootFlag(
+          kv,
+          checked ? "已开启，重启后生效" : "已关闭，重启后移除",
+          checked ? "已开启（与当前生效一致）" : "已关闭（与当前生效一致）",
+        );
         await refresh();
       });
     },
@@ -57,7 +58,8 @@ export function useCertActions() {
             toast(errorFromResult(result.stdout, result.stderr));
             return;
           }
-          toast("已导入，重启后生效");
+          const kv = parseKv(result.stdout || "");
+          toastByRebootFlag(kv, "已导入，重启后生效", "已导入（无需重启）");
           await refresh();
         } catch {
           toast("读取文件失败");
@@ -70,18 +72,19 @@ export function useCertActions() {
 
   const handleRemoveCustom = useCallback(
     (fileName: string) => {
-      Modal.confirm({
+      confirmAction({
         title: "移除自定义证书？",
         content: "重启后才会从系统信任库撤下。",
         okText: "移除",
-        cancelText: "取消",
+        danger: true,
         onOk: async () => {
           const result = await removeCustom(fileName);
           if (isCliFailure(result)) {
             toast(errorFromResult(result.stdout, result.stderr));
             return;
           }
-          toast("已移除，重启后生效");
+          const kv = parseKv(result.stdout || "");
+          toastByRebootFlag(kv, "已移除，重启后生效", "已移除（与当前生效一致）");
           await refresh();
         },
       });
@@ -91,22 +94,21 @@ export function useCertActions() {
 
   const handleHotMount = useCallback(
     (mode: HotMountMode, sdPath?: string) => {
-      if (mode !== "user" && !isSafeSdPath(sdPath || "")) {
+      if (mode !== HotMountMode.User && !isSafeSdPath(sdPath || "")) {
         toast("存储卡路径不安全或不受支持");
         return;
       }
 
-      Modal.confirm({
-        title: `立即挂载${HOT_MOUNT_LABEL[mode]}中的有效 CA？`,
+      confirmAction({
+        title: `立即挂载${HOT_MOUNT_CONFIRM_LABEL[mode]}中的有效 CA？`,
         content: "无需重启，仅建立临时会话；重启后自动失效。",
         okText: "挂载",
-        cancelText: "取消",
         onOk: () =>
           runExclusive(async () => {
             toast("正在建立临时证书会话…");
             const result = await hotMount(
               mode,
-              mode === "user" ? undefined : sdPath?.trim(),
+              mode === HotMountMode.User ? undefined : sdPath?.trim(),
             );
             const fields = parseKv(result.stdout);
             if (isCliFailure(result) || fields.ok !== FLAG_ON) {
@@ -129,11 +131,11 @@ export function useCertActions() {
   );
 
   const handleHotUnmount = useCallback(() => {
-    Modal.confirm({
+    confirmAction({
       title: "无痕卸载当前临时证书会话？",
       content: "永久配置与系统文件不会改变。",
       okText: "卸载",
-      cancelText: "取消",
+      danger: true,
       onOk: () =>
         runExclusive(async () => {
           toast("正在安全卸载临时证书…");

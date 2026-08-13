@@ -29,15 +29,5 @@ export const STORAGE_KEYS = {
   hotSdPath: "cb_hot_sd_path",
 } as const;
 
-export const DOCS_URL = "https://eikeitsu.github.io/CertBridge/";
-export const REPO_URL = "https://github.com/eikeitsu/CertBridge";
-export const COOLAPK_URL = "https://www.coolapk.com/u/7602666";
-export const REQABLE_URL = "https://reqable.com";
-export const PROXYPIN_URL = "https://github.com/wanghongenpin/proxypin";
-
-export const ACCENTS = [
-  { id: "teal", label: "青绿", color: "#0F766E" },
-  { id: "cyan", label: "青蓝", color: "#0891B2" },
-  { id: "emerald", label: "翠绿", color: "#059669" },
-  { id: "slate", label: "墨灰", color: "#475569" },
-] as const;
+export { LINKS } from "./brand";
+export { ACCENTS } from "./theme";

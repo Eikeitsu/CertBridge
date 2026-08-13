@@ -3,6 +3,7 @@ import { exec } from "@/shared/api/ksu";
 import { parseKv } from "@/shared/lib/parse";
 import {
   CLI_TIMEOUT_MS,
+  FLAG_ON,
   LOG_LINE_MAX,
   LOG_LINE_MIN,
   LOG_TAIL_LINES,
@@ -17,6 +18,8 @@ import type {
   ModuleStatus,
   TmpfsStyle,
 } from "@/entities/module/types";
+
+const CUSTOM_LIST_PREFIX = "custom|";
 
 export async function cli(args: string, timeoutMs?: number): Promise<ExecResult> {
   return exec(`sh '${PATHS.CLI}' ${args}`, timeoutMs);
@@ -34,7 +37,7 @@ export async function listCustom(): Promise<CustomCertificate[]> {
   const result = await cli("list_custom");
   const rows: CustomCertificate[] = [];
   for (const line of String(result.stdout || "").split("\n")) {
-    if (!line.startsWith("custom|")) continue;
+    if (!line.startsWith(CUSTOM_LIST_PREFIX)) continue;
     const parts = line.split("|");
     if (parts.length < 3) continue;
     rows.push({ name: parts[1], display: parts.slice(2).join("|") || parts[1] });
@@ -58,7 +61,7 @@ export async function syncAppSources(): Promise<{
     updated: Number(kv.updated || 0),
     kept: Number(kv.kept || 0),
     miss: Number(kv.miss || 0),
-    rebootRequired: kv.reboot_required === "1" || Number(kv.updated || 0) > 0,
+    rebootRequired: kv.reboot_required === FLAG_ON,
   };
 }
 

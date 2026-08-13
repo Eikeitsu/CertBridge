@@ -1,22 +1,19 @@
-import { ACCENTS } from "@/shared/config/paths";
+import { ACCENTS, MONET_TOKEN_KEYS, supportsMonet } from "@/shared/config/theme";
 import { FLAG_OFF, FLAG_ON } from "@/shared/config/constants";
-import type { ThemeMode, ThemePack } from "@/entities/module/types";
+import { ResolvedTheme, ThemeMode } from "@/entities/module/enums";
 import type { ThemeState } from "../model/themeSlice";
 
-export function resolveThemeMode(mode: ThemeMode): "light" | "dark" {
-  if (mode === "light" || mode === "dark") return mode;
-  return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+export function resolveThemeMode(mode: ThemeMode): ResolvedTheme {
+  if (mode === ThemeMode.Light) return ResolvedTheme.Light;
+  if (mode === ThemeMode.Dark) return ResolvedTheme.Dark;
+  return window.matchMedia?.("(prefers-color-scheme: dark)").matches
+    ? ResolvedTheme.Dark
+    : ResolvedTheme.Light;
 }
 
 function monetSeed(): string | null {
   const styles = getComputedStyle(document.documentElement);
-  const tokenKeys = [
-    "--wallpaper-main",
-    "--monet-primary",
-    "--qi-color-primary",
-    "--theme-color",
-  ];
-  for (const tokenKey of tokenKeys) {
+  for (const tokenKey of MONET_TOKEN_KEYS) {
     const tokenValue = styles.getPropertyValue(tokenKey).trim();
     if (tokenValue) return tokenValue;
   }
@@ -49,15 +46,9 @@ export function applyThemeToDom(
   const accentColor: string =
     ACCENTS.find((accent) => accent.id === state.accentId)?.color || ACCENTS[0].color;
   let primary: string = accentColor;
-  if (state.monet && (state.pack === "fluid" || state.pack === "material")) {
+  if (state.monet && supportsMonet(state.pack)) {
     primary = monetSeed() || accentColor;
   }
   root.style.setProperty("--cb-primary", primary);
   root.style.setProperty("--cb-accent", primary);
 }
-
-export const PACK_OPTIONS: { value: ThemePack; label: string; hint: string }[] = [
-  { value: "classic", label: "经典印记", hint: "证书印记 · 虚线边框" },
-  { value: "material", label: "Material", hint: "大标题 · 分层表面" },
-  { value: "fluid", label: "流体", hint: "玻璃拟态 · 悬浮层次" },
-];

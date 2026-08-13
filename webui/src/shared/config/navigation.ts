@@ -1,19 +1,20 @@
-import type { TabName } from "@/entities/module/types";
+import { TabName } from "@/entities/module/enums";
+import { isEnumValue } from "@/shared/lib/enum";
 
 export const TABS: { key: TabName; label: string }[] = [
-  { key: "home", label: "概览" },
-  { key: "certs", label: "证书" },
-  { key: "log", label: "日志" },
-  { key: "more", label: "更多" },
+  { key: TabName.Home, label: "概览" },
+  { key: TabName.Certs, label: "证书" },
+  { key: TabName.Log, label: "日志" },
+  { key: TabName.More, label: "更多" },
 ];
 
 export function isTabName(name: unknown): name is TabName {
-  return TABS.some((t) => t.key === name);
+  return isEnumValue(TabName, name);
 }
 
 export const TAB_PATH: Record<TabName, string> = {
-  home: "/",
-  certs: "/certs",
-  log: "/log",
-  more: "/more",
+  [TabName.Home]: "/",
+  [TabName.Certs]: "/certs",
+  [TabName.Log]: "/log",
+  [TabName.More]: "/more",
 };

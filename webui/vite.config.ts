@@ -20,7 +20,7 @@ export default defineConfig({
     emptyOutDir: true,
     assetsDir: "assets",
     cssCodeSplit: false,
-    chunkSizeWarningLimit: 900,
+    chunkSizeWarningLimit: 500,
     rollupOptions: {
       output: {
         entryFileNames: "js/app.js",

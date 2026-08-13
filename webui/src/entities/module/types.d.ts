@@ -1,6 +1,15 @@
-export type ThemeMode = "system" | "light" | "dark";
-export type ThemePack = "classic" | "material" | "fluid";
-export type ResolvedTheme = "light" | "dark";
+export type {
+  ThemeMode,
+  ThemePack,
+  ResolvedTheme,
+  TabName,
+  BuiltinCertKind,
+  MountMode,
+  TmpfsStyle,
+  HotMountMode,
+  TrustTone,
+  FlagTone,
+} from "./enums";
 
 export type ExecResult = {
   errno: number;
@@ -55,13 +64,3 @@ export type CustomCertificate = {
   name: string;
   display: string;
 };
-
-export type TabName = "home" | "certs" | "log" | "more";
-
-export type BuiltinCertKind = "reqable" | "proxypin";
-
-export type MountMode = "compatible" | "magic";
-
-export type TmpfsStyle = "short" | "legacy";
-
-export type HotMountMode = "user" | "sd" | "all";

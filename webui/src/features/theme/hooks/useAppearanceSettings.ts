@@ -13,8 +13,8 @@ import {
   setThemePack,
   setUiCustom,
 } from "@/features/theme/model/themeSlice";
-import { PACK_OPTIONS } from "@/features/theme/lib/applyTheme";
-import type { ThemeMode, ThemePack } from "@/entities/module/types";
+import { PACK_OPTIONS, supportsMonet } from "@/shared/config/theme";
+import type { ThemeMode, ThemePack } from "@/entities/module/enums";
 
 export function useAppearanceSettings() {
   const dispatch = useAppDispatch();
@@ -23,7 +23,7 @@ export function useAppearanceSettings() {
     () => PACK_OPTIONS.find((option) => option.value === theme.pack)?.hint,
     [theme.pack],
   );
-  const isMonetAvailable = theme.pack === "fluid" || theme.pack === "material";
+  const isMonetAvailable = supportsMonet(theme.pack);
   const fontScalePercent = Math.round(theme.fontScale * 100);
 
   return {

@@ -13,6 +13,7 @@ import {
 } from "node:fs";
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createZipFromDir } from "./lib/create-zip.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const moduleRoot = join(repoRoot, "module");
@@ -337,24 +338,6 @@ function copyDirFromModule(relPath) {
   }
 }
 
-function createZip(zipPath) {
-  if (process.platform === "win32") {
-    const escapedZip = zipPath.replace(/'/g, "''");
-    const escapedStaging = staging.replace(/'/g, "''");
-    const ps = [
-      `$staging = '${escapedStaging}'`,
-      `$zip = '${escapedZip}'`,
-      "if (Test-Path $zip) { Remove-Item $zip -Force }",
-      "Push-Location $staging",
-      "Compress-Archive -Path * -DestinationPath $zip -Force",
-      "Pop-Location",
-    ].join("; ");
-    execSync(`powershell -NoProfile -Command "${ps}"`, { stdio: "inherit" });
-    return;
-  }
-  execSync(`cd "${staging}" && zip -qr9 "${zipPath}" .`, { stdio: "inherit" });
-}
-
 function applyEdition(edition) {
   writeFileSync(join(staging, "bin", "edition"), `${edition}\n`, "utf8");
   if (edition === "lite") {
@@ -379,7 +362,7 @@ function applyEdition(edition) {
   log("edition=full (openssl only)");
 }
 
-function packageOne(edition, version) {
+async function packageOne(edition, version) {
   const zipName =
     edition === "lite" ? `CertBridge_${version}_lite.zip` : `CertBridge_${version}.zip`;
   const zipPath = join(releaseDir, zipName);
@@ -403,7 +386,7 @@ function packageOne(edition, version) {
 
   if (existsSync(zipPath)) rmSync(zipPath);
   log(`packaging ${zipName}...`);
-  createZip(zipPath);
+  await createZipFromDir(staging, zipPath);
   log(`created ${zipPath} (${(statSync(zipPath).size / 1024).toFixed(1)} KB)`);
   rmSync(staging, { recursive: true, force: true });
 }
@@ -433,6 +416,6 @@ if (editions.includes("full")) {
 validateSources();
 
 for (const edition of editions) {
-  packageOne(edition, version);
+  await packageOne(edition, version);
 }
 log(`done (${editions.join(", ")})`);

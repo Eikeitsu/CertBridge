@@ -6,14 +6,17 @@ import { setTmpfsStyle } from "@/shared/api/cli";
 import { errorFromResult } from "@/shared/api/errors";
 import { toast } from "@/shared/api/ksu";
 import { isCliFailure } from "@/shared/lib/cliResult";
+import { parseKv } from "@/shared/lib/parse";
+import { toastByRebootFlag } from "@/shared/lib/rebootToast";
+import { parseEnum } from "@/shared/lib/enum";
 import { useAsyncLock } from "@/shared/hooks/useAsyncLock";
-import type { TmpfsStyle } from "@/entities/module/types";
+import { TmpfsStyle } from "@/entities/module/enums";
 
 export function useTmpfsStyle() {
   const dispatch = useAppDispatch();
   const status = useAppSelector(selectModuleStatus);
   const { isPending, runExclusive } = useAsyncLock();
-  const tmpfsStyle: TmpfsStyle = status.tmpfs_style === "legacy" ? "legacy" : "short";
+  const tmpfsStyle = parseEnum(TmpfsStyle, status.tmpfs_style, TmpfsStyle.Short);
 
   const handleChange = useCallback(
     async (style: TmpfsStyle) => {
@@ -23,7 +26,12 @@ export function useTmpfsStyle() {
           toast(errorFromResult(result.stdout, result.stderr));
           return;
         }
-        toast("临时路径风格已更新，重启后生效");
+        const kv = parseKv(result.stdout || "");
+        toastByRebootFlag(
+          kv,
+          "临时路径风格已更新，重启后生效",
+          "临时路径风格已恢复为当前生效配置",
+        );
         await dispatch(refreshStatus(false));
       });
     },

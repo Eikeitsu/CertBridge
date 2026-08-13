@@ -1,9 +1,11 @@
-import type { CSSProperties } from "react";
-import { Segmented, Slider, Switch } from "antd";
-import { ACCENTS } from "@/shared/config/paths";
+import { List, Slider, Switch } from "antd-mobile";
 import { FONT_SCALE } from "@/shared/config/constants";
+import { THEME_MODE_OPTIONS } from "@/shared/config/theme";
 import { useAppearanceSettings } from "@/features/theme/hooks/useAppearanceSettings";
-import type { ThemeMode, ThemePack } from "@/entities/module/types";
+import type { ThemeMode } from "@/entities/module/enums";
+import { FieldLabel, Panel, PrefRow, Segmented, Stack } from "@/shared/ui";
+import { ThemePackPicker } from "./ThemePackPicker";
+import { AccentPicker } from "./AccentPicker";
 
 export function AppearancePanel() {
   const {
@@ -24,108 +26,95 @@ export function AppearancePanel() {
   } = useAppearanceSettings();
 
   return (
-    <section className="cb-card">
-      <div className="cb-section-title">外观</div>
+    <Panel title="外观">
+      <ThemePackPicker
+        value={theme.pack}
+        options={[...packOptions]}
+        onChange={handleThemePackChange}
+      />
 
-      <div className="cb-stack">
-        <div className="cb-field-label">主题包</div>
-        <div className="cb-theme-grid" role="radiogroup" aria-label="主题包">
-          {packOptions.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              role="radio"
-              aria-checked={theme.pack === option.value}
-              className={`cb-theme-card${theme.pack === option.value ? " active" : ""}`}
-              onClick={() => handleThemePackChange(option.value as ThemePack)}
-            >
-              <div className="cb-theme-preview" data-pack={option.value} aria-hidden />
-              <strong>{option.label}</strong>
-              <span>{option.hint}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="cb-stack">
-        <div className="cb-field-label">深浅色</div>
+      <Stack>
+        <FieldLabel>深浅色</FieldLabel>
         <Segmented
-          block
           value={theme.mode}
           onChange={(value) => handleThemeModeChange(value as ThemeMode)}
-          options={[
-            { label: "跟随系统", value: "system" },
-            { label: "浅色", value: "light" },
-            { label: "深色", value: "dark" },
-          ]}
+          options={THEME_MODE_OPTIONS.map((option) => ({
+            label: option.label,
+            value: option.value,
+          }))}
         />
-      </div>
+      </Stack>
 
-      <div className="cb-pref-row">
-        <span>高级选项</span>
-        <Switch checked={theme.uiCustom} onChange={handleUiCustomChange} />
-      </div>
+      <List>
+        <PrefRow label="高级选项">
+          <Switch
+            checked={theme.uiCustom}
+            onChange={(checked) => {
+              handleUiCustomChange(checked);
+            }}
+          />
+        </PrefRow>
 
-      {theme.uiCustom && (
-        <>
-          <div className="cb-stack">
-            <div className="cb-field-label">强调色</div>
-            <div className="accent-row">
-              {ACCENTS.map((accent) => (
-                <button
-                  key={accent.id}
-                  type="button"
-                  title={accent.label}
-                  className={`accent-dot${theme.accentId === accent.id ? " active" : ""}`}
-                  style={
-                    {
-                      "--accent-swatch": accent.color,
-                    } as CSSProperties
-                  }
-                  onClick={() => handleAccentChange(accent.id)}
+        {theme.uiCustom ? (
+          <>
+            <List.Item>
+              <AccentPicker value={theme.accentId} onChange={handleAccentChange} />
+            </List.Item>
+            {isMonetAvailable ? (
+              <PrefRow label="系统取色">
+                <Switch
+                  checked={theme.monet}
+                  onChange={(checked) => {
+                    handleMonetChange(checked);
+                  }}
                 />
-              ))}
-            </div>
-          </div>
-
-          {isMonetAvailable && (
-            <div className="cb-pref-row">
-              <span>系统取色</span>
-              <Switch checked={theme.monet} onChange={handleMonetChange} />
-            </div>
-          )}
-
-          <div className="cb-pref-row">
-            <span>悬浮底栏</span>
-            <Switch checked={theme.floatDock} onChange={handleFloatDockChange} />
-          </div>
-          <div className="cb-pref-row">
-            <span>底栏毛玻璃</span>
-            <Switch checked={theme.dockGlass} onChange={handleDockGlassChange} />
-          </div>
-          <div className="cb-pref-row">
-            <span>顶/底栏模糊</span>
-            <Switch checked={theme.barBlur} onChange={handleBarBlurChange} />
-          </div>
-          <div className="cb-pref-row">
-            <span>紧凑布局</span>
-            <Switch checked={theme.compact} onChange={handleCompactChange} />
-          </div>
-          <div>
-            <div className="cb-field-label">字号 {fontScalePercent}%</div>
-            <Slider
-              min={FONT_SCALE.MIN}
-              max={FONT_SCALE.MAX}
-              step={FONT_SCALE.STEP}
-              value={theme.fontScale}
-              onChange={(value) => handleFontScaleChange(Number(value))}
-              tooltip={{
-                formatter: (value) => `${Math.round(Number(value) * 100)}%`,
-              }}
-            />
-          </div>
-        </>
-      )}
-    </section>
+              </PrefRow>
+            ) : null}
+            <PrefRow label="悬浮底栏">
+              <Switch
+                checked={theme.floatDock}
+                onChange={(checked) => {
+                  handleFloatDockChange(checked);
+                }}
+              />
+            </PrefRow>
+            <PrefRow label="底栏毛玻璃">
+              <Switch
+                checked={theme.dockGlass}
+                onChange={(checked) => {
+                  handleDockGlassChange(checked);
+                }}
+              />
+            </PrefRow>
+            <PrefRow label="顶/底栏模糊">
+              <Switch
+                checked={theme.barBlur}
+                onChange={(checked) => {
+                  handleBarBlurChange(checked);
+                }}
+              />
+            </PrefRow>
+            <PrefRow label="紧凑布局">
+              <Switch
+                checked={theme.compact}
+                onChange={(checked) => {
+                  handleCompactChange(checked);
+                }}
+              />
+            </PrefRow>
+            <List.Item>
+              <FieldLabel>字号 {fontScalePercent}%</FieldLabel>
+              <Slider
+                min={FONT_SCALE.MIN}
+                max={FONT_SCALE.MAX}
+                step={FONT_SCALE.STEP}
+                value={theme.fontScale}
+                onChange={(value) => handleFontScaleChange(Number(value))}
+              />
+            </List.Item>
+          </>
+        ) : null}
+      </List>
+    </Panel>
   );
 }

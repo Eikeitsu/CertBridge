@@ -168,6 +168,27 @@ async function main() {
   const classFile = join(classesDir, "com", "certbridge", "x509", "Main.class");
   if (!existsSync(classFile)) throw new Error("Main.class missing");
 
+  if (existsSync(sampleCert)) {
+    const dump = execFileSync(
+      java,
+      [
+        "-cp",
+        classesDir,
+        "com.certbridge.x509.Main",
+        "x509",
+        "-in",
+        sampleCert,
+        "-noout",
+        "-certbridge_info",
+      ],
+      { encoding: "utf8" },
+    );
+    if (!dump.includes("ok=1") || !dump.includes("fingerprint_sha256=")) {
+      throw new Error("cbx509 -certbridge_info smoke test failed");
+    }
+    log("certbridge_info smoke test ok");
+  }
+
   // Clear previous dex
   const dexOut = join(outDir, "classes.dex");
   if (existsSync(dexOut)) rmSync(dexOut);

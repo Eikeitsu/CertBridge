@@ -1,4 +1,4 @@
-/* Material — 大标题、分层表面、色块统计 */
+/* Material — 大标题、分层表面、色块指标 */
 html[data-pack="material"] {
   --cb-radius: 12px;
   --cb-radius-sm: 8px;
@@ -7,88 +7,75 @@ html[data-pack="material"] {
   --cb-topbar-h: 72px;
   --cb-chrome: #eceff1;
   --cb-paper: #eceff1;
-  --cb-body-gradient-base: #eceff1;
-  --cb-body-gradient-tint: #e8edf0;
-  --cb-body-gradient-a: color-mix(in srgb, var(--cb-primary) 8%, transparent);
-  --cb-body-gradient-b: transparent;
+  --cb-stage: #fff;
   --cb-surface: #fff;
-  --cb-card: var(--cb-surface);
+  --cb-surface-2: #f5f7f8;
+  --cb-panel: var(--cb-surface);
   --cb-stroke: rgba(15, 23, 42, 0.06);
   --cb-shadow: none;
-  --cb-shadow-lg: 0 1px 3px rgba(15, 23, 42, 0.08), 0 8px 24px rgba(15, 23, 42, 0.06);
-  --cb-card-border-width: 0;
+  --cb-shadow-lg: 0 1px 3px rgba(15, 23, 42, 0.08), 0 10px 28px rgba(15, 23, 42, 0.06);
+  --cb-panel-border: 0;
+  --cb-body-gradient-a: color-mix(in srgb, var(--cb-primary) 8%, transparent);
+  --cb-body-gradient-b: transparent;
+  --cb-body-gradient-tint: #e8edf0;
   --cb-topbar-bg: var(--cb-chrome);
   --cb-dock-bg: var(--cb-chrome);
 
   .app-topbar {
-    padding-bottom: 14px;
+    min-height: calc(var(--cb-topbar-h) + var(--cb-inset-top));
+    padding: var(--cb-inset-top) 0 0;
     border-bottom: 0;
     box-shadow: 0 1px 0 var(--cb-stroke);
 
-    h1 {
-      font-size: 1.85rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
+    .logo,
+    .device-chip {
+      display: none;
     }
 
-    .eyebrow {
-      color: var(--cb-primary);
-      font-weight: 600;
+    .nav-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
     }
   }
 
   .app-main {
-    padding-top: 8px;
+    padding-top: calc(var(--cb-topbar-h) + var(--cb-inset-top) + 8px);
   }
 
-  .cb-card {
+  .cb-section-label {
+    letter-spacing: 0.1em;
+  }
+
+  .cb-panel,
+  .cb-list,
+  .cb-help,
+  .adm-card,
+  .adm-list-card,
+  .adm-collapse {
     box-shadow: var(--cb-shadow-lg);
-    border: 0;
-    padding: 18px;
   }
 
-  .cb-section-title {
-    font-size: 0.78rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--cb-ink-3);
-    margin-bottom: 12px;
-  }
-
-  .cb-hero {
+  .cb-stage {
     background: var(--cb-primary-container);
-    border: 0;
-    box-shadow: none;
+    box-shadow: var(--cb-shadow-lg);
 
     &::before {
-      display: none;
+      width: 0;
     }
 
-    h2 {
-      font-size: 1.75rem;
-      letter-spacing: -0.02em;
+    .cb-stage__title {
+      font-size: 1.8rem;
     }
   }
 
-  .cb-stat {
-    border: 0;
-    border-radius: var(--cb-radius-sm);
+  .cb-metric {
     background: var(--cb-primary-container);
-
-    .value {
-      font-size: 1.5rem;
-    }
+    box-shadow: none;
   }
 
-  .cb-mini-item {
+  .cb-detail-cell {
     background: color-mix(in srgb, var(--cb-ink) 4%, transparent);
-    border-radius: var(--cb-radius-sm);
-    border: 0;
-  }
-
-  .cb-status-badge {
-    border-radius: var(--cb-radius-sm);
-    font-weight: 700;
   }
 
   .app-dock {
@@ -101,23 +88,24 @@ html[data-pack="material"] {
       border-radius: 0;
       left: 0;
       right: 0;
+      bottom: 0;
+      padding-bottom: calc(8px + var(--cb-inset-bottom));
+      min-height: calc(var(--cb-dock-h) + var(--cb-inset-bottom));
     }
 
-    button.active {
-      border-radius: var(--cb-radius-sm);
+    .adm-tab-bar-item-active {
+      color: var(--cb-primary);
       background: var(--cb-primary-container);
+      border-radius: var(--cb-radius-sm);
     }
   }
 
-  .log-box {
-    background: color-mix(in srgb, var(--cb-ink) 4%, var(--cb-surface));
+  .cb-console {
     border-radius: var(--cb-radius-sm);
-    padding: 12px;
   }
 
   .cb-theme-preview[data-pack="material"] {
     background: linear-gradient(180deg, #fff 0 55%, var(--cb-primary-container) 55% 100%);
-    border: 0;
     box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08);
   }
 }
@@ -125,9 +113,10 @@ html[data-pack="material"] {
 html[data-theme="dark"][data-pack="material"] {
   --cb-chrome: #0f1419;
   --cb-paper: #0f1419;
-  --cb-body-gradient-base: #0f1419;
-  --cb-body-gradient-tint: #121820;
+  --cb-stage: #171e26;
   --cb-surface: #171e26;
+  --cb-panel: var(--cb-surface);
   --cb-topbar-bg: var(--cb-chrome);
   --cb-dock-bg: var(--cb-chrome);
+  --cb-body-gradient-tint: #121820;
 }

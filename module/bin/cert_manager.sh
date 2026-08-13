@@ -112,12 +112,16 @@ cmd_toggle() {
   if is_magic_mount_mode; then
     sync_magic_overlay "$MODDIR" >/dev/null 2>&1 || true
   fi
-  mark_reboot_required
+  pending_line=$(update_reboot_required_flag)
   release_write_lock
-  log_msg "config: $name=$value (reboot required)"
+  if echo "$pending_line" | grep -q 'reboot_required=1'; then
+    log_msg "config: $name=$value (reboot required)"
+  else
+    log_msg "config: $name=$value (matches applied, pending cleared)"
+  fi
   refresh_module_description >/dev/null 2>&1
   echo "ok=1"
-  echo "reboot_required=1"
+  echo "$pending_line"
 }
 
 cmd_sync_apps() {
@@ -125,8 +129,8 @@ cmd_sync_apps() {
   echo "$out"
   updated=$(echo "$out" | awk -F= '$1 == "updated" { print $2; exit }')
   if [ "${updated:-0}" -gt 0 ] 2>/dev/null; then
-    mark_reboot_required
-    echo "reboot_required=1"
+    pending_line=$(update_reboot_required_flag)
+    echo "$pending_line"
     refresh_module_description >/dev/null 2>&1
   else
     refresh_module_description >/dev/null 2>&1
@@ -209,18 +213,22 @@ cmd_install_custom() {
   display=$(cert_display_name_from_file "$CUSTOM_DIR/$name" "$name")
   printf 'display_name=%s\n' "$display" >"$CUSTOM_DIR/$name.meta"
   chmod 0600 "$CUSTOM_DIR/$name.meta" 2>/dev/null
-  mark_reboot_required
+  pending_line=$(update_reboot_required_flag)
   if is_magic_mount_mode; then
     sync_magic_overlay "$MODDIR" >/dev/null 2>&1 || true
   fi
   release_write_lock
   rm -f "$raw" "$normalized"
-  log_msg "custom: installed $name ($display, reboot required)"
+  if echo "$pending_line" | grep -q 'reboot_required=1'; then
+    log_msg "custom: installed $name ($display, reboot required)"
+  else
+    log_msg "custom: installed $name ($display, matches applied)"
+  fi
   refresh_module_description >/dev/null 2>&1
   echo "ok=1"
   echo "filename=$name"
   echo "display_name=$display"
-  echo "reboot_required=1"
+  echo "$pending_line"
 }
 
 cmd_remove_custom() {
@@ -237,15 +245,19 @@ cmd_remove_custom() {
     echo "error=remove_failed"
     return 1
   }
-  mark_reboot_required
+  pending_line=$(update_reboot_required_flag)
   if is_magic_mount_mode; then
     sync_magic_overlay "$MODDIR" >/dev/null 2>&1 || true
   fi
   release_write_lock
-  log_msg "custom: removed $filename (reboot required)"
+  if echo "$pending_line" | grep -q 'reboot_required=1'; then
+    log_msg "custom: removed $filename (reboot required)"
+  else
+    log_msg "custom: removed $filename (matches applied, pending cleared)"
+  fi
   refresh_module_description >/dev/null 2>&1
   echo "ok=1"
-  echo "reboot_required=1"
+  echo "$pending_line"
 }
 
 cmd_cert_info() {
@@ -286,13 +298,17 @@ cmd_set_mount_mode() {
   else
     clear_magic_overlay "$MODDIR" >/dev/null 2>&1 || true
   fi
-  mark_reboot_required
+  pending_line=$(update_reboot_required_flag)
   release_write_lock
-  log_msg "config: mount_mode=$mode (reboot required)"
+  if echo "$pending_line" | grep -q 'reboot_required=1'; then
+    log_msg "config: mount_mode=$mode (reboot required)"
+  else
+    log_msg "config: mount_mode=$mode (matches applied, pending cleared)"
+  fi
   refresh_module_description >/dev/null 2>&1
   echo "ok=1"
   echo "mount_mode=$mode"
-  echo "reboot_required=1"
+  echo "$pending_line"
 }
 
 cmd_set_tmpfs_style() {
@@ -304,13 +320,17 @@ cmd_set_tmpfs_style() {
   acquire_write_lock || { echo "error=busy"; return 1; }
   write_conf tmpfs_style "$style" || { release_write_lock; echo "error=write_failed"; return 1; }
   apply_tmpfs_style
-  mark_reboot_required
+  pending_line=$(update_reboot_required_flag)
   release_write_lock
-  log_msg "config: tmpfs_style=$style (reboot required)"
+  if echo "$pending_line" | grep -q 'reboot_required=1'; then
+    log_msg "config: tmpfs_style=$style (reboot required)"
+  else
+    log_msg "config: tmpfs_style=$style (matches applied, pending cleared)"
+  fi
   refresh_module_description >/dev/null 2>&1
   echo "ok=1"
   echo "tmpfs_style=$style"
-  echo "reboot_required=1"
+  echo "$pending_line"
 }
 
 cmd_hot_mount() {

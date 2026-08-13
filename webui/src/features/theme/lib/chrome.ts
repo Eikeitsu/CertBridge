@@ -1,5 +1,16 @@
-import type { ResolvedTheme } from "@/entities/module/types";
+import { ResolvedTheme } from "@/entities/module/enums";
 import { cssColorToHex, relativeLuminanceCss } from "@/shared/lib/color";
+import { FLAG_ON } from "@/shared/config/constants";
+import { parseEnum } from "@/shared/lib/enum";
+
+const CHROME_BG_VARS = ["--cb-chrome", "--cb-body-gradient-base", "--cb-paper"];
+const FALLBACK_BG: Record<ResolvedTheme, string> = {
+  [ResolvedTheme.Light]: "#F4F7F6",
+  [ResolvedTheme.Dark]: "#0B1220",
+};
+const LUMINANCE_LIGHT = 0.45;
+const RESTORE_DELAYS = [50, 200, 450, 700];
+export const CHROME_SYNC_DELAYS = [120, 400];
 
 type ChromeHost = {
   setInsets?: (css: string) => void;
@@ -30,18 +41,28 @@ function readChromeHost(): ChromeHost | undefined {
 /** 读取页面沉浸底色（必须是实色，系统栏不支持渐变） */
 function readChromeBg(resolved: ResolvedTheme): string {
   const styles = getComputedStyle(document.documentElement);
-  const candidates = ["--cb-chrome", "--cb-body-gradient-base", "--cb-paper"];
-  for (const name of candidates) {
+  for (const name of CHROME_BG_VARS) {
     const raw = styles.getPropertyValue(name).trim();
     if (!raw) continue;
     const hex = cssColorToHex(raw, "");
     if (hex) return hex;
   }
-  return resolved === "dark" ? "#0B1220" : "#F4F7F6";
+  return FALLBACK_BG[resolved];
+}
+
+/** 仅恢复已钉死的安全区，不清 pin、不重测（刷新/回弹时用） */
+export function restorePinnedInsets(): void {
+  if (typeof document === "undefined") return;
+  const root = document.documentElement;
+  const pinnedTop = root.style.getPropertyValue("--cb-inset-top-pinned").trim();
+  const pinnedBottom = root.style.getPropertyValue("--cb-inset-bottom-pinned").trim();
+  if (pinnedTop) root.style.setProperty("--cb-inset-top", pinnedTop);
+  if (pinnedBottom) root.style.setProperty("--cb-inset-bottom", pinnedBottom);
 }
 
 /**
  * 钉死安全区：下拉回弹时 WebView 常短暂报 0，导致顶/底栏「接不住」。
+ * force 仅用于旋转/首次进入等需要重测的场景。
  */
 export function pinSafeInsets(force = false): void {
   if (!document.body) return;
@@ -81,6 +102,14 @@ export function pinSafeInsets(force = false): void {
   }
 }
 
+function scheduleInsetRestore(): void {
+  restorePinnedInsets();
+  requestAnimationFrame(() => restorePinnedInsets());
+  for (const delay of RESTORE_DELAYS) {
+    window.setTimeout(() => restorePinnedInsets(), delay);
+  }
+}
+
 function applyNativeBars(bg: string, lightContentIcons: boolean): void {
   const host = readChromeHost();
   try {
@@ -101,12 +130,12 @@ function applyNativeBars(bg: string, lightContentIcons: boolean): void {
 export function syncChromeBars(resolved: ResolvedTheme, _barBlur: boolean) {
   pinSafeInsets(false);
   const bg = readChromeBg(resolved);
-  const lightIcons = relativeLuminanceCss(bg) > 0.45;
+  const lightIcons = relativeLuminanceCss(bg) > LUMINANCE_LIGHT;
 
   document.documentElement.style.backgroundColor = bg;
   if (document.body) document.body.style.backgroundColor = bg;
   document.documentElement.style.colorScheme =
-    resolved === "dark" ? "only dark" : "only light";
+    resolved === ResolvedTheme.Dark ? "only dark" : "only light";
 
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute("content", bg);
@@ -114,19 +143,20 @@ export function syncChromeBars(resolved: ResolvedTheme, _barBlur: boolean) {
   applyNativeBars(bg, lightIcons);
 }
 
+/**
+ * 刷新/列表操作后：只恢复钉死 inset，禁止清空宿主或 force 重测（否则顶栏高度塌陷）。
+ */
 export function restoreChromeInsets() {
-  const host = readChromeHost();
-  try {
-    // 清空宿主可能注入的错误 inset，改由 CSS 安全区驱动
-    host?.setInsets?.("");
-  } catch {
-    /* ignore */
-  }
-  const theme = (document.documentElement.dataset.theme as "light" | "dark") || "light";
-  const barBlur = document.documentElement.dataset.barBlur === "1";
-  pinSafeInsets(true);
+  const theme = parseEnum(
+    ResolvedTheme,
+    document.documentElement.dataset.theme,
+    ResolvedTheme.Light,
+  );
+  const barBlur = document.documentElement.dataset.barBlur === FLAG_ON;
+  scheduleInsetRestore();
   syncChromeBars(theme, barBlur);
   requestAnimationFrame(() => syncChromeBars(theme, barBlur));
-  window.setTimeout(() => syncChromeBars(theme, barBlur), 120);
-  window.setTimeout(() => syncChromeBars(theme, barBlur), 400);
+  for (const delay of CHROME_SYNC_DELAYS) {
+    window.setTimeout(() => syncChromeBars(theme, barBlur), delay);
+  }
 }

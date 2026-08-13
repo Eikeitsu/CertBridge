@@ -1,12 +1,12 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { TAB_PATH, isTabName } from "@/shared/config/navigation";
-import type { TabName } from "@/entities/module/types";
+import { TabName } from "@/entities/module/enums";
 
 function resolveTabFromPath(pathname: string): TabName {
-  if (pathname.startsWith("/certs")) return "certs";
-  if (pathname.startsWith("/log")) return "log";
-  if (pathname.startsWith("/more")) return "more";
-  return "home";
+  if (pathname.startsWith(TAB_PATH[TabName.Certs])) return TabName.Certs;
+  if (pathname.startsWith(TAB_PATH[TabName.Log])) return TabName.Log;
+  if (pathname.startsWith(TAB_PATH[TabName.More])) return TabName.More;
+  return TabName.Home;
 }
 
 export function useActiveTab() {
@@ -16,7 +16,6 @@ export function useActiveTab() {
 
   const switchTab = (name: string) => {
     if (!isTabName(name) || name === activeTab) return;
-    // replace：Tab 不入历史栈，侧滑/虚拟返回可直接退出 WebUI
     navigate(TAB_PATH[name], { replace: true });
   };
 

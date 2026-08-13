@@ -1,0 +1,159 @@
+/* antd-mobile 跟随证书桥 token */
+:root:root {
+  --adm-color-primary: var(--cb-primary);
+  --adm-color-success: var(--cb-ok);
+  --adm-color-warning: var(--cb-warn);
+  --adm-color-danger: var(--cb-bad);
+  --adm-color-text: var(--cb-ink);
+  --adm-color-text-secondary: var(--cb-ink-2);
+  --adm-color-weak: var(--cb-ink-3);
+  --adm-color-border: var(--cb-stroke);
+  --adm-color-background: var(--cb-paper);
+  --adm-color-box: var(--cb-surface);
+  --adm-color-white: var(--cb-surface);
+  --adm-font-family: var(--cb-font-body);
+}
+
+.adm-button {
+  --border-radius: var(--cb-radius-sm);
+
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.adm-segmented {
+  --segmented-item-selected-color: var(--cb-primary);
+  --border-radius: var(--cb-radius-sm);
+}
+
+.adm-switch {
+  --checked-color: var(--cb-primary);
+}
+
+.adm-slider {
+  --fill-color: var(--cb-primary);
+}
+
+.cb-spin {
+  position: relative;
+}
+
+.cb-spin__mask {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--cb-paper) 55%, transparent);
+}
+
+.cb-spin__mask.is-embedded {
+  position: relative;
+  min-height: 120px;
+}
+
+.adm-card,
+.adm-list-card,
+.adm-collapse {
+  margin-bottom: var(--cb-space-md);
+  overflow: hidden;
+  background: var(--cb-panel);
+  border: var(--cb-panel-border) solid var(--cb-stroke);
+  border-radius: var(--cb-radius);
+  box-shadow: var(--cb-shadow);
+}
+
+.adm-card {
+  padding: 0;
+}
+
+.adm-card-header {
+  border-bottom-color: var(--cb-stroke);
+}
+
+.adm-card-body {
+  padding: 12px 14px;
+}
+
+.adm-list {
+  --border-inner: var(--cb-stroke);
+  --border-top: var(--cb-stroke);
+  --border-bottom: var(--cb-stroke);
+  --adm-color-background: var(--cb-panel);
+
+  font-size: 0.92rem;
+}
+
+.adm-list-card {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.adm-list-header {
+  padding-inline: 4px;
+}
+
+.cb-adm-list-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.cb-adm-list-meta {
+  margin: 4px 0 0;
+  color: var(--cb-ink-3);
+  font-size: 0.72rem;
+  font-weight: 400;
+  line-height: 1.4;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.adm-card .adm-list,
+.adm-card .adm-collapse {
+  margin: 8px 0 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.adm-card .adm-list-body,
+.adm-collapse .adm-list-body {
+  border: 0;
+  background: transparent;
+}
+
+.adm-list-item-content-extra {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.adm-empty {
+  padding: 18px 8px;
+}
+
+.adm-notice-bar {
+  margin: 10px 0 0;
+  border-radius: var(--cb-radius-sm);
+}
+
+.adm-steps {
+  padding: 4px 0;
+}
+
+.cb-brand-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.adm-collapse-panel-content ul,
+.adm-collapse-panel-content ol {
+  margin: 0;
+  padding-left: 1.15em;
+}

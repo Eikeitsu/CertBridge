@@ -10,29 +10,12 @@ import {
 import { resolveTrustLabel } from "@/shared/lib/sanitize";
 import { isFlagOn } from "@/shared/lib/flag";
 import { EMPTY_PLACEHOLDER } from "@/shared/config/constants";
-
-const DEFAULT_STATUS_DESC =
-  "安全合并 Reqable / ProxyPin / 自定义 CA，并支持用户区、存储卡证书免重启挂载与无痕卸载。";
-
-function resolveApexLabel(apexOk?: string): string {
-  if (apexOk === "2") return "N/A";
-  if (apexOk === "1") return "已注入";
-  return "失败";
-}
-
-function resolveHotLabel(status: {
-  hot_supported?: string;
-  hot_stale?: string;
-  hot_active?: string;
-  hot_partial?: string;
-}): string {
-  if (!isFlagOn(status.hot_supported)) return "N/A";
-  if (isFlagOn(status.hot_stale)) return "异常";
-  if (isFlagOn(status.hot_active)) {
-    return isFlagOn(status.hot_partial) ? "部分" : "已挂载";
-  }
-  return "未挂载";
-}
+import { BUILTIN_CERTS, builtinStatusKeys } from "@/shared/config/certs";
+import { MOUNT_MODES } from "@/shared/config/mount";
+import { DEFAULT_STATUS_DESC } from "../lib/labels";
+import { parseEnum } from "@/shared/lib/enum";
+import { MountMode, TrustTone } from "@/entities/module/enums";
+import { resolveApexLabel, resolveHotLabel } from "../lib/labels";
 
 export function useTrustOverview() {
   const status = useAppSelector(selectModuleStatus);
@@ -43,7 +26,7 @@ export function useTrustOverview() {
   const trust = useMemo(() => {
     if (statusError) {
       return {
-        tone: "idle" as const,
+        tone: TrustTone.Idle,
         title: statusError,
         hint: "当前环境无法执行 shell",
       };
@@ -59,11 +42,10 @@ export function useTrustOverview() {
 
   const activeNames = useMemo(() => {
     const names: string[] = [];
-    if (isFlagOn(status.reqable_active)) {
-      names.push(status.reqable_title || status.reqable_display || "Reqable");
-    }
-    if (isFlagOn(status.proxypin_active)) {
-      names.push(status.proxypin_title || status.proxypin_display || "ProxyPin");
+    for (const cert of BUILTIN_CERTS) {
+      const keys = builtinStatusKeys(cert.kind);
+      if (!isFlagOn(status[keys.active])) continue;
+      names.push(status[keys.title] || status[keys.display] || cert.fallbackTitle);
     }
     for (const cert of customCertificates) {
       names.push(cert.display || cert.name);
@@ -82,7 +64,9 @@ export function useTrustOverview() {
     isHotMountSupported,
     rootLabel: status.root || "--",
     apexLabel: resolveApexLabel(status.apex_ok),
-    mountModeLabel: status.mount_mode === "magic" ? "轻量" : "兼容",
+    mountModeLabel:
+      MOUNT_MODES[parseEnum(MountMode, status.mount_mode, MountMode.Compatible)]
+        .shortLabel,
     androidLabel: status.release || "--",
     versionLabel: status.version || "--",
     hotStatusLabel: resolveHotLabel(status),

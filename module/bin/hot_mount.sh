@@ -105,13 +105,7 @@ hot_normalize_cert() {
   $HOT_OPENSSL x509 $HOT_INFORM -in "$HOT_INPUT" -checkend 0 -noout >/dev/null 2>&1 || return 1
   $HOT_OPENSSL x509 $HOT_INFORM -in "$HOT_INPUT" -noout -text 2>/dev/null | \
     grep -q 'CA:TRUE' || return 1
-  HOT_HASH=$($HOT_OPENSSL x509 $HOT_INFORM -in "$HOT_INPUT" -subject_hash_old -noout 2>/dev/null | \
-    tr 'A-F' 'a-f')
-  case "$HOT_HASH" in
-    ????????) ;;
-    *) return 1 ;;
-  esac
-  case "$HOT_HASH" in *[!0-9a-f]*) return 1 ;; esac
+  HOT_HASH=$(openssl_subject_hash "$HOT_OPENSSL" "$HOT_INFORM" "$HOT_INPUT") || return 1
   $HOT_OPENSSL x509 $HOT_INFORM -in "$HOT_INPUT" -out "$HOT_OUTPUT" >/dev/null 2>&1 || return 1
 }
 

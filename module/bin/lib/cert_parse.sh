@@ -128,7 +128,7 @@ cert_info_from_file() {
   issuer=$($openssl_cmd x509 $inform -in "$file" -noout -issuer -nameopt RFC2253 2>/dev/null | sed 's/^issuer=//')
   not_before=$($openssl_cmd x509 $inform -in "$file" -noout -startdate 2>/dev/null | sed 's/^notBefore=//')
   not_after=$($openssl_cmd x509 $inform -in "$file" -noout -enddate 2>/dev/null | sed 's/^notAfter=//')
-  hash=$($openssl_cmd x509 $inform -in "$file" -subject_hash_old -noout 2>/dev/null | tr 'A-F' 'a-f')
+  hash=$(openssl_subject_hash "$openssl_cmd" "$inform" "$file")
   fp=$($openssl_cmd x509 $inform -in "$file" -noout -fingerprint -sha256 2>/dev/null | sed 's/^sha256 Fingerprint=//')
   fp1=$($openssl_cmd x509 $inform -in "$file" -noout -fingerprint -sha1 2>/dev/null | sed 's/^SHA1 Fingerprint=//; s/^sha1 Fingerprint=//')
   serial=$($openssl_cmd x509 $inform -in "$file" -noout -serial 2>/dev/null | sed 's/^serial=//')
@@ -169,6 +169,33 @@ cert_fingerprint_sha256() {
   echo "$fp"
 }
 
+# 取出 subject_hash_old（8 位 hex）。Lite 的 app_process 可能在 stdout 夹杂日志或 \\r。
+openssl_subject_hash() {
+  openssl_cmd="$1"
+  inform="$2"
+  file="$3"
+  raw=$($openssl_cmd x509 $inform -in "$file" -subject_hash_old -noout 2>/dev/null) || true
+  hash=$(printf '%s\n' "$raw" | tr -d '\r' | tr 'A-F' 'a-f')
+  case "$hash" in
+    [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f])
+      printf '%s\n' "$hash"
+      return 0
+      ;;
+  esac
+  hash=$(printf '%s\n' "$hash" | awk '{
+    gsub(/[^0-9a-f]/, " ")
+    n = split($0, a, " ")
+    for (i = 1; i <= n; i++) if (length(a[i]) == 8) h = a[i]
+  } END { if (h != "") print h }')
+  case "$hash" in
+    [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f])
+      printf '%s\n' "$hash"
+      return 0
+      ;;
+  esac
+  return 1
+}
+
 # 将任意 CA 规范化为 hash.N 写入目标目录，并写 .meta 显示名
 # 返回文件名到 stdout
 import_ca_into_dir() {
@@ -206,20 +233,10 @@ import_ca_into_dir() {
     echo "不是 CA 证书（缺少 CA:TRUE）" >&2
     return 1
   }
-  hash=$($openssl_cmd x509 $inform -in "$src" -subject_hash_old -noout 2>/dev/null | tr 'A-F' 'a-f')
-  case "$hash" in
-    ????????) ;;
-    *)
-      echo "无法计算系统库文件名" >&2
-      return 1
-      ;;
-  esac
-  case "$hash" in
-    *[!0-9a-f]*)
-      echo "无法计算系统库文件名" >&2
-      return 1
-      ;;
-  esac
+  hash=$(openssl_subject_hash "$openssl_cmd" "$inform" "$src") || {
+    echo "无法计算系统库文件名" >&2
+    return 1
+  }
   $openssl_cmd x509 $inform -in "$src" -out "$tmp" >/dev/null 2>&1 || {
     rm -f "$tmp"
     echo "写入规范化 PEM 失败" >&2

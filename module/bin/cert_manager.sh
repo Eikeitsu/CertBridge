@@ -195,12 +195,11 @@ cmd_install_custom() {
       echo "error=not_ca_certificate"
       return 1
     }
-  hash=$($openssl_cmd x509 $inform -in "$raw" -subject_hash_old -noout 2>/dev/null | tr 'A-F' 'a-f')
-  case "$hash" in
-    ????????) ;;
-    *) rm -f "$raw" "$normalized"; echo "error=hash_failed"; return 1 ;;
-  esac
-  case "$hash" in *[!0-9a-f]*) rm -f "$raw" "$normalized"; echo "error=hash_failed"; return 1 ;; esac
+  hash=$(openssl_subject_hash "$openssl_cmd" "$inform" "$raw") || {
+    rm -f "$raw" "$normalized"
+    echo "error=hash_failed"
+    return 1
+  }
   $openssl_cmd x509 $inform -in "$raw" -out "$normalized" >/dev/null 2>&1 || {
     rm -f "$raw" "$normalized"
     echo "error=normalize_failed"

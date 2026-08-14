@@ -187,6 +187,26 @@ async function main() {
       throw new Error("cbx509 -certbridge_info smoke test failed");
     }
     log("certbridge_info smoke test ok");
+    const hashOut = execFileSync(
+      java,
+      [
+        "-cp",
+        classesDir,
+        "com.certbridge.x509.Main",
+        "x509",
+        "-in",
+        sampleCert,
+        "-noout",
+        "-subject_hash_old",
+      ],
+      { encoding: "utf8" },
+    )
+      .trim()
+      .toLowerCase();
+    if (hashOut !== "243f0bfb") {
+      throw new Error(`subject_hash_old smoke test failed: ${hashOut}`);
+    }
+    log("subject_hash_old smoke test ok");
   }
 
   // Clear previous dex

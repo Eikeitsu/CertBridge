@@ -8,10 +8,12 @@ export function useCertDetail() {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
+  const [sourceId, setSourceId] = useState("");
   const [fields, setFields] = useState<Record<string, string>>({});
 
   const openDetail = useCallback(async (target: string, detailTitle: string) => {
     setTitle(detailTitle);
+    setSourceId(target);
     setFields({});
     setIsOpen(true);
     setLoading(true);
@@ -30,5 +32,5 @@ export function useCertDetail() {
     setLoading(false);
   }, []);
 
-  return { isOpen, loading, title, fields, openDetail, closeDetail };
+  return { isOpen, loading, title, sourceId, fields, openDetail, closeDetail };
 }

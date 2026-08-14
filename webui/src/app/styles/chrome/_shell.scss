@@ -49,62 +49,83 @@
       background: var(--cb-chrome);
     }
   }
+}
 
-  .adm-nav-bar {
-    --height: var(--cb-topbar-h);
-    --border-bottom: transparent;
+.app-topbar__inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--cb-topbar-h);
+  padding: 0 16px;
+}
 
-    position: relative;
-    z-index: 1;
-    background: transparent;
-    color: var(--cb-ink);
-  }
+.app-topbar__mark {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--cb-ink) 5%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cb-ink) 8%, transparent);
 
-  .nav-title {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 0;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-family: var(--cb-font-display);
-    font-weight: 700;
-    letter-spacing: -0.03em;
-  }
-
-  .adm-nav-bar-title {
-    flex: 1 1 auto;
-    min-width: 0;
-    overflow: hidden;
-  }
-
-  .logo {
-    width: 30px;
-    height: 30px;
-    border-radius: 9px;
-    box-shadow: none;
-    flex-shrink: 0;
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
   }
+}
 
-  .device-chip {
-    display: inline-block;
-    max-width: 38vw;
-    padding: 5px 11px;
-    border-radius: var(--cb-radius-pill);
-    background: color-mix(in srgb, var(--cb-ink) 5%, transparent);
-    border: 1px solid color-mix(in srgb, var(--cb-ink) 6%, transparent);
-    color: var(--cb-ink-3);
-    font-size: 0.68rem;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    vertical-align: middle;
-  }
+.app-topbar__titles {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+}
+
+.app-topbar__kicker {
+  color: var(--cb-ink-3);
+  font-size: 0.62rem;
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.nav-title {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--cb-font-display);
+  font-size: 1.08rem;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: var(--cb-ink);
+}
+
+.device-chip {
+  flex: 0 0 auto;
+  display: inline-block;
+  max-width: 36vw;
+  padding: 5px 11px;
+  border-radius: var(--cb-radius-pill);
+  background: color-mix(in srgb, var(--cb-ink) 5%, transparent);
+  border: 1px solid color-mix(in srgb, var(--cb-ink) 6%, transparent);
+  color: var(--cb-ink-3);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .app-main {
@@ -257,4 +278,12 @@ html[data-float-dock="1"] .app-shell {
 
 html[data-float-dock="1"] .app-main {
   padding-bottom: calc(var(--cb-dock-h) + 24px + var(--cb-inset-bottom));
+}
+
+.app-main:has(.cb-log-page) {
+  padding-bottom: 12px;
+}
+
+html[data-float-dock="1"] .app-main:has(.cb-log-page) {
+  padding-bottom: calc(var(--cb-dock-h) + 16px + var(--cb-inset-bottom));
 }

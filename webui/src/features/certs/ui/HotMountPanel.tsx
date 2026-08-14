@@ -101,9 +101,7 @@ export function HotMountPanel({
               <Button
                 color="primary"
                 block
-                onClick={() =>
-                  onMount(mode, needsSdPath ? sdPath : undefined)
-                }
+                onClick={() => onMount(mode, needsSdPath ? sdPath : undefined)}
               >
                 开始临时挂载
               </Button>

@@ -29,6 +29,7 @@ export type PackVoice = {
   settingsModule: string;
   settingsAbout: string;
   topbarBrand: string;
+  topbarKicker: string;
 };
 
 export const PACK_VOICE: Record<ThemePack, PackVoice> = {
@@ -60,6 +61,7 @@ export const PACK_VOICE: Record<ThemePack, PackVoice> = {
     settingsModule: "模块",
     settingsAbout: "关于",
     topbarBrand: "证书桥",
+    topbarKicker: "印记",
   },
   [ThemePack.Material]: {
     stageKicker: "系统信任层",
@@ -89,6 +91,7 @@ export const PACK_VOICE: Record<ThemePack, PackVoice> = {
     settingsModule: "挂载与路径",
     settingsAbout: "模块信息",
     topbarBrand: "证书桥",
+    topbarKicker: "层积",
   },
   [ThemePack.Fluid]: {
     stageKicker: "桥接状态",
@@ -118,6 +121,7 @@ export const PACK_VOICE: Record<ThemePack, PackVoice> = {
     settingsModule: "桥接方式",
     settingsAbout: "关于证书桥",
     topbarBrand: "证书桥",
+    topbarKicker: "虹桥",
   },
 };
 

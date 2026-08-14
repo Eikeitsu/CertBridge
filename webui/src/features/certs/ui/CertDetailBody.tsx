@@ -1,6 +1,7 @@
 import { Flag, FlagList, SheetSection } from "@/shared/ui";
-import { FlagTone } from "@/entities/module/enums";
+import { FlagTone, type BuiltinCertKind } from "@/entities/module/enums";
 import type { FormattedCertDetail } from "../lib/types";
+import { CertBrandIcon } from "./CertBrandIcon";
 import { CertDnBlock } from "./CertDnBlock";
 import {
   CertFieldGrid,
@@ -10,13 +11,19 @@ import {
 
 type CertDetailBodyProps = {
   detail: FormattedCertDetail;
+  brandKind?: BuiltinCertKind;
 };
 
-export function CertDetailBody({ detail }: CertDetailBodyProps) {
+export function CertDetailBody({ detail, brandKind }: CertDetailBodyProps) {
   return (
     <>
       <header className="cb-sheet__hero">
-        <div className="cb-sheet__hero-mark" aria-hidden />
+        <div
+          className={`cb-sheet__hero-mark${brandKind ? " has-brand" : ""}`}
+          aria-hidden
+        >
+          {brandKind ? <CertBrandIcon kind={brandKind} className="is-hero" /> : null}
+        </div>
         <div className="cb-sheet__hero-body">
           <p className="cb-sheet__kicker">
             {detail.isCa ? "证书颁发机构" : "终端 / 其他证书"}
@@ -28,7 +35,11 @@ export function CertDetailBody({ detail }: CertDetailBodyProps) {
               {detail.flags.map((flag) => (
                 <Flag
                   key={flag}
-                  tone={flag === "已过期" || flag === "即将到期" ? FlagTone.Warn : FlagTone.Info}
+                  tone={
+                    flag === "已过期" || flag === "即将到期"
+                      ? FlagTone.Warn
+                      : FlagTone.Info
+                  }
                 >
                   {flag}
                 </Flag>

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Button, Popup } from "antd-mobile";
+import { Popup } from "antd-mobile";
 import { Loader } from "./Loader";
 
 type BottomSheetProps = {
@@ -7,6 +7,7 @@ type BottomSheetProps = {
   onClose: () => void;
   loading?: boolean;
   height?: string;
+  title?: string;
   children: ReactNode;
 };
 
@@ -15,6 +16,7 @@ export function BottomSheet({
   onClose,
   loading,
   height = "min(92dvh, 860px)",
+  title = "详情",
   children,
 }: BottomSheetProps) {
   return (
@@ -36,7 +38,18 @@ export function BottomSheet({
         padding: 0,
       }}
     >
-      <div className="cb-sheet__handle" aria-hidden />
+      <div className="cb-sheet__chrome">
+        <div className="cb-sheet__handle" aria-hidden />
+        <div className="cb-sheet__bar">
+          <span className="cb-sheet__bar-title">{title}</span>
+          <button
+            type="button"
+            className="cb-sheet__close"
+            onClick={onClose}
+            aria-label="关闭"
+          />
+        </div>
+      </div>
       <div className="cb-sheet__scroll">
         {loading ? (
           <div className="cb-spin__mask is-embedded">
@@ -45,11 +58,6 @@ export function BottomSheet({
         ) : (
           children
         )}
-      </div>
-      <div className="cb-sheet__foot">
-        <Button block onClick={onClose}>
-          关闭
-        </Button>
       </div>
     </Popup>
   );

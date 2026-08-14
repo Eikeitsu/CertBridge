@@ -25,10 +25,7 @@ export function SettingsPage() {
   } = useTmpfsStyle();
 
   return (
-    <PageSpin
-      spinning={isMountPending || isTmpfsPending}
-      label={voice.applyingHint}
-    >
+    <PageSpin spinning={isMountPending || isTmpfsPending} label={voice.applyingHint}>
       <SectionLabel>{voice.settingsUi}</SectionLabel>
       <AppearancePanel />
 

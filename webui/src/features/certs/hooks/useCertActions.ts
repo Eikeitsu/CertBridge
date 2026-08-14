@@ -103,11 +103,7 @@ export function useCertActions() {
             await refresh();
             return;
           }
-          toast(
-            checked
-              ? "已允许手动临时挂载"
-              : "已关闭临时挂载",
-          );
+          toast(checked ? "已允许手动临时挂载" : "已关闭临时挂载");
           await refresh();
         });
 

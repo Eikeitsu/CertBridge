@@ -9,7 +9,9 @@ type BrandHeaderProps = {
 export function BrandHeader({ markSrc, version, androidLabel }: BrandHeaderProps) {
   return (
     <div className="brand-about">
-      <img src={markSrc} alt="" />
+      <span className="cb-brand-mark">
+        <img src={markSrc} alt="" />
+      </span>
       <div>
         <h3>{BRAND.name}</h3>
         <p>

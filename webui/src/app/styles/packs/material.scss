@@ -6,7 +6,7 @@ html[data-pack="material"] {
   --cb-radius-sm: 12px;
   --cb-radius-lg: 20px;
   --cb-dock-h: 70px;
-  --cb-topbar-h: 76px;
+  --cb-topbar-h: 80px;
   --cb-chrome: #e8ebf0;
   --cb-paper: #e8ebf0;
   --cb-stage: var(--cb-primary-container);
@@ -34,54 +34,50 @@ html[data-pack="material"] {
 
   .app-topbar {
     border-bottom: 0;
-    min-height: calc(var(--cb-topbar-h) + var(--cb-inset-top));
 
-    .logo {
-      display: none;
-    }
-
-    .adm-nav-bar {
-      --height: var(--cb-topbar-h);
-
+    .app-topbar__inner {
       align-items: flex-end;
-      padding: 0 4px 10px;
-      gap: 10px;
+      min-height: var(--cb-topbar-h);
+      padding: 10px 18px 14px;
+      gap: 12px;
     }
 
-    .adm-nav-bar-left,
-    .adm-nav-bar-right {
-      flex: 0 0 auto;
+    .app-topbar__titles {
+      gap: 4px;
     }
 
-    .adm-nav-bar-title {
-      flex: 1 1 auto;
-      min-width: 0;
-      padding: 0;
-      text-align: left;
-      justify-content: flex-start;
+    .app-topbar__kicker {
+      text-transform: none;
+      letter-spacing: 0.02em;
+      font-size: 0.74rem;
+      font-weight: 650;
+      color: var(--cb-ink-2);
     }
 
     .nav-title {
-      display: block;
-      max-width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-size: 1.85rem;
-      font-weight: 700;
-      letter-spacing: -0.04em;
-      line-height: 1.1;
+      font-size: 1.92rem;
+      font-weight: 760;
+      letter-spacing: -0.045em;
+      line-height: 1.05;
     }
 
     .device-chip {
       align-self: flex-end;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
       max-width: 34vw;
       border-radius: var(--cb-radius-pill);
       background: color-mix(in srgb, var(--cb-ink) 6%, transparent);
       border: 0;
       font-size: 0.7rem;
     }
+  }
+
+  .cb-brand-mark {
+    border-radius: 14px;
+  }
+
+  .cb-log-view__chrome {
+    display: none;
   }
 
   .app-main {
@@ -268,15 +264,15 @@ html[data-pack="material"] {
       margin: 4px 2px;
     }
 
-  .adm-tab-bar-item-active {
-    color: var(--cb-primary);
-    background: var(--cb-primary-container);
-    font-weight: 700;
+    .adm-tab-bar-item-active {
+      color: var(--cb-primary);
+      background: var(--cb-primary-container);
+      font-weight: 700;
 
-    &::after {
-      display: none;
+      &::after {
+        display: none;
+      }
     }
-  }
   }
 
   /* 日志：色调 chips */
@@ -311,7 +307,11 @@ html[data-pack="material"] {
 
   .cb-log-view {
     border-radius: var(--cb-radius);
-    max-height: min(48vh, 380px);
+  }
+
+  .cb-sheet__close {
+    border-radius: 12px;
+    background: var(--cb-surface);
   }
 
   /* 证书详情：层积卡片 */
@@ -355,6 +355,15 @@ html[data-pack="material"] {
     padding: 4px 11px;
     font-size: 0.7rem;
   }
+}
+
+html[data-pack="material"] body::after {
+  opacity: 0.07;
+  background-image: radial-gradient(
+    90% 50% at 0% -8%,
+    color-mix(in srgb, var(--cb-primary) 55%, transparent),
+    transparent 62%
+  );
 }
 
 html[data-theme="dark"][data-pack="material"] {

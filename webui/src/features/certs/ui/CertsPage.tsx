@@ -30,6 +30,7 @@ export function CertsPage() {
     isOpen,
     loading: isDetailLoading,
     title,
+    sourceId,
     fields,
     openDetail,
     closeDetail,
@@ -63,6 +64,7 @@ export function CertsPage() {
       <CertDetailSheet
         open={isOpen}
         title={title}
+        sourceId={sourceId}
         fields={fields}
         loading={isDetailLoading}
         onClose={closeDetail}

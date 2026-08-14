@@ -6,7 +6,7 @@ html[data-pack="fluid"] {
   --cb-radius-sm: 16px;
   --cb-radius-lg: 30px;
   --cb-dock-h: 60px;
-  --cb-topbar-h: 54px;
+  --cb-topbar-h: 60px;
   --cb-chrome: #d5e6e3;
   --cb-paper: #d5e6e3;
   --cb-stage: color-mix(in srgb, #fff 72%, transparent);
@@ -44,15 +44,35 @@ html[data-pack="fluid"] {
     border-bottom-color: transparent;
     background: var(--cb-topbar-bg);
 
-    .nav-title {
-      font-size: 1.12rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
+    .app-topbar__inner {
+      padding: 0 14px;
     }
 
-    .logo {
-      border-radius: 14px;
-      box-shadow: 0 6px 16px color-mix(in srgb, var(--cb-primary) 18%, transparent);
+    .nav-title {
+      font-size: 1.12rem;
+      font-weight: 750;
+      letter-spacing: -0.03em;
+    }
+
+    .app-topbar__kicker {
+      letter-spacing: 0.14em;
+      color: var(--cb-primary);
+      font-size: 0.58rem;
+    }
+
+    .app-topbar__mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--cb-primary) 16%, transparent);
+      box-shadow:
+        0 6px 16px color-mix(in srgb, var(--cb-primary) 20%, transparent),
+        inset 0 0 0 1px color-mix(in srgb, #fff 40%, transparent);
+
+      img {
+        transform: scale(1.32);
+        transform-origin: center;
+      }
     }
 
     .device-chip {
@@ -60,6 +80,16 @@ html[data-pack="fluid"] {
       background: color-mix(in srgb, #fff 55%, transparent);
       border: 1px solid color-mix(in srgb, #fff 70%, transparent);
       backdrop-filter: blur(8px);
+    }
+  }
+
+  .cb-brand-mark {
+    border-radius: 50%;
+    box-shadow: 0 8px 20px color-mix(in srgb, var(--cb-primary) 18%, transparent);
+
+    img {
+      transform: scale(1.32);
+      transform-origin: center;
     }
   }
 
@@ -314,7 +344,23 @@ html[data-pack="fluid"] {
     border-color: color-mix(in srgb, var(--cb-primary) 18%, transparent);
     -webkit-backdrop-filter: blur(12px);
     backdrop-filter: blur(12px);
-    max-height: min(50vh, 400px);
+  }
+
+  .cb-sheet__close {
+    background: color-mix(in srgb, #fff 55%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, #fff 40%, transparent);
+  }
+
+  .cb-stage::after {
+    content: "";
+    position: absolute;
+    right: -56px;
+    top: -80px;
+    width: 168px;
+    height: 168px;
+    border: 16px solid color-mix(in srgb, var(--cb-primary) 16%, transparent);
+    border-radius: 50%;
+    pointer-events: none;
   }
 
   /* 证书详情：虹桥玻璃抽屉 */
@@ -373,6 +419,16 @@ html[data-pack="fluid"] {
   }
 }
 
+html[data-pack="fluid"] body::after {
+  opacity: 0.16;
+  background-image: radial-gradient(
+    circle at 50% 122%,
+    transparent 36%,
+    color-mix(in srgb, var(--cb-primary) 55%, transparent) 38%,
+    transparent 45%
+  );
+}
+
 html[data-theme="dark"][data-pack="fluid"] {
   --cb-chrome: #0a1212;
   --cb-paper: #0a1212;
@@ -389,4 +445,14 @@ html[data-theme="dark"][data-pack="fluid"] {
   --cb-glass-b: color-mix(in srgb, #15201f 72%, transparent);
   --cb-glass-c: color-mix(in srgb, #fff 6%, transparent);
   --cb-card-bg: color-mix(in srgb, #15201f 74%, transparent);
+
+  .cb-sheet__close {
+    background: color-mix(in srgb, #fff 10%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, #fff 12%, transparent);
+  }
+
+  .app-topbar .device-chip {
+    background: color-mix(in srgb, #fff 8%, transparent);
+    border-color: color-mix(in srgb, #fff 14%, transparent);
+  }
 }

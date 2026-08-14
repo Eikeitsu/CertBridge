@@ -79,14 +79,53 @@
 }
 
 .cb-log-view {
+  position: relative;
   border-radius: var(--cb-radius-sm);
   background: color-mix(in srgb, var(--cb-ink) 88%, #0a1620);
   border: 1px solid color-mix(in srgb, #fff 8%, transparent);
   box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 4%, transparent);
-  max-height: min(46vh, 360px);
+  height: clamp(
+    48dvh,
+    calc(
+      100dvh - var(--cb-topbar-h) - var(--cb-inset-top) - var(--cb-dock-h) - var(
+          --cb-inset-bottom
+        ) - var(--cb-log-reserve)
+    ),
+    78dvh
+  );
   overflow: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+}
+
+.cb-log-view__chrome {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px 6px;
+  background: color-mix(in srgb, #071018 94%, transparent);
+
+  i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #64748b;
+
+    &:nth-child(1) {
+      background: #f87171;
+    }
+
+    &:nth-child(2) {
+      background: #fbbf24;
+    }
+
+    &:nth-child(3) {
+      background: #34d399;
+    }
+  }
 }
 
 .cb-log-lines {

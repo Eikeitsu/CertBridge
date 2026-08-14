@@ -1,10 +1,12 @@
 import { BottomSheet } from "@/shared/ui";
 import { formatCertDetail } from "../lib/formatCertDetail";
+import { resolveCertBrandKind } from "../lib/resolveCertBrand";
 import { CertDetailBody } from "./CertDetailBody";
 
 type CertDetailSheetProps = {
   open: boolean;
   title: string;
+  sourceId?: string;
   fields: Record<string, string> | null;
   loading: boolean;
   onClose: () => void;
@@ -13,16 +15,22 @@ type CertDetailSheetProps = {
 export function CertDetailSheet({
   open,
   title,
+  sourceId,
   fields,
   loading,
   onClose,
 }: CertDetailSheetProps) {
   const detail = fields ? formatCertDetail(fields, title) : null;
+  const brandKind = resolveCertBrandKind(
+    sourceId,
+    detail?.displayName || title,
+    detail?.filename || fields?.filename,
+  );
 
   return (
-    <BottomSheet open={open} onClose={onClose} loading={loading}>
+    <BottomSheet open={open} onClose={onClose} loading={loading} title="证书详情">
       {detail ? (
-        <CertDetailBody detail={detail} />
+        <CertDetailBody detail={detail} brandKind={brandKind} />
       ) : (
         <p className="cb-empty">
           {fields?.error ||

@@ -175,9 +175,18 @@ import_ca_into_dir() {
   src="$1"
   dest_dir="$2"
   fallback_name="${3:-CA 证书}"
-  [ -f "$src" ] || return 1
-  openssl_cmd=$(find_openssl) || return 1
-  mkdir -p "$dest_dir" 2>/dev/null || return 1
+  [ -f "$src" ] || {
+    echo "文件不存在" >&2
+    return 1
+  }
+  openssl_cmd=$(find_openssl) || {
+    echo "X509 工具不可用" >&2
+    return 1
+  }
+  mkdir -p "$dest_dir" 2>/dev/null || {
+    echo "无法创建目标目录" >&2
+    return 1
+  }
   tmp="$DATADIR/import.$$.pem"
   mkdir -p "$DATADIR" 2>/dev/null
   inform=""
@@ -186,27 +195,45 @@ import_ca_into_dir() {
   elif $openssl_cmd x509 -inform DER -in "$src" -noout >/dev/null 2>&1; then
     inform="-inform DER"
   else
+    echo "无法解析为 X.509" >&2
     return 1
   fi
-  $openssl_cmd x509 $inform -in "$src" -checkend 0 -noout >/dev/null 2>&1 || return 1
-  $openssl_cmd x509 $inform -in "$src" -noout -text 2>/dev/null | grep -q 'CA:TRUE' || return 1
+  $openssl_cmd x509 $inform -in "$src" -checkend 0 -noout >/dev/null 2>&1 || {
+    echo "证书已过期" >&2
+    return 1
+  }
+  $openssl_cmd x509 $inform -in "$src" -noout -text 2>/dev/null | grep -q 'CA:TRUE' || {
+    echo "不是 CA 证书（缺少 CA:TRUE）" >&2
+    return 1
+  }
   hash=$($openssl_cmd x509 $inform -in "$src" -subject_hash_old -noout 2>/dev/null | tr 'A-F' 'a-f')
   case "$hash" in
     ????????) ;;
-    *) return 1 ;;
+    *)
+      echo "无法计算系统库文件名" >&2
+      return 1
+      ;;
   esac
-  case "$hash" in *[!0-9a-f]*) return 1 ;; esac
+  case "$hash" in
+    *[!0-9a-f]*)
+      echo "无法计算系统库文件名" >&2
+      return 1
+      ;;
+  esac
   $openssl_cmd x509 $inform -in "$src" -out "$tmp" >/dev/null 2>&1 || {
     rm -f "$tmp"
+    echo "写入规范化 PEM 失败" >&2
     return 1
   }
   name=$(next_collision_name "$tmp" "$dest_dir" "$hash.0") || {
     rm -f "$tmp"
+    echo "文件名冲突处理失败" >&2
     return 1
   }
   if [ ! -f "$dest_dir/$name" ]; then
     cp -f "$tmp" "$dest_dir/$name" || {
       rm -f "$tmp"
+      echo "复制证书失败" >&2
       return 1
     }
   fi

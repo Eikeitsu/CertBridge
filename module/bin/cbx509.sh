@@ -1,6 +1,15 @@
 #!/system/bin/sh
 # openssl 兼容入口：把 x509 / version 交给 cbx509 dex（CertBridge Lite）
 # 用法与 openssl 相同：cbx509.sh x509 -in FILE ...
+#
+# Magisk/KSU 安装脚本会注入 busybox 的 LD_LIBRARY_PATH，ART 无法加载 libart，
+# 表现为「找到证书但校验/转换失败」。启动前清掉这些变量。
+
+unset LD_LIBRARY_PATH
+unset LD_PRELOAD
+unset LD_CONFIG
+export ANDROID_DATA="${ANDROID_DATA:-/data}"
+export ANDROID_ROOT="${ANDROID_ROOT:-/system}"
 
 CBX509_DIR="${CBX509_DIR:-}"
 if [ -z "$CBX509_DIR" ]; then
@@ -29,13 +38,19 @@ fi
 DEX="$CBX509_DIR/classes.dex"
 CLASS=com.certbridge.x509.Main
 
+cbx509_run() {
+  ap="$1"
+  shift
+  CLASSPATH="$DEX" "$ap" -Djava.class.path="$DEX" /system/bin "$CLASS" "$@"
+}
+
 for ap in \
   /system/bin/app_process64 \
   /system/bin/app_process \
   /system/bin/app_process32
 do
   [ -x "$ap" ] || continue
-  CLASSPATH="$DEX" "$ap" /system/bin "$CLASS" "$@"
+  cbx509_run "$ap" "$@"
   exit $?
 done
 

@@ -17,12 +17,20 @@ diagnose_app_cert_import() {
     return 2
   }
   echo "live=$live"
-  if ! import_ca_into_dir "$live" "$DATADIR/diag_import.$$" "$(app_cert_label "$kind")" >/dev/null 2>&1; then
+  errf="$DATADIR/diag_import.$$.err"
+  mkdir -p "$DATADIR" 2>/dev/null
+  if ! import_ca_into_dir "$live" "$DATADIR/diag_import.$$" "$(app_cert_label "$kind")" \
+    >/dev/null 2>"$errf"; then
     rm -rf "$DATADIR/diag_import.$$"
     echo "reason=import_failed"
+    if [ -s "$errf" ]; then
+      echo "import_err=$(tr '\n' ' ' <"$errf" | tr -d '\r')"
+    fi
+    rm -f "$errf"
     return 3
   fi
   rm -rf "$DATADIR/diag_import.$$"
+  rm -f "$errf"
   echo "reason=ok"
   return 0
 }

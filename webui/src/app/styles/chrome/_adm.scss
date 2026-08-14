@@ -340,3 +340,70 @@
   align-items: center;
   gap: 8px;
 }
+
+/* 确认框：贴合证书桥表面，左右按钮，而不是默认堆叠的 H5 Dialog */
+.adm-dialog {
+  --adm-center-popup-background-color: var(--cb-surface);
+  --adm-center-popup-border-radius: var(--cb-radius-lg);
+  --adm-center-popup-max-width: min(86vw, 340px);
+  --adm-center-popup-min-width: 268px;
+}
+
+.adm-dialog .adm-center-popup-body {
+  overflow: hidden;
+  background: var(--cb-surface);
+  border: var(--cb-panel-border) solid var(--cb-card-border-color);
+  border-radius: var(--cb-radius-lg);
+  box-shadow: var(--cb-shadow-lg);
+}
+
+.adm-dialog-body:not(.adm-dialog-with-image) {
+  padding-top: 22px;
+}
+
+.adm-dialog-title {
+  margin-bottom: 10px;
+  padding: 0 22px;
+  color: var(--cb-ink);
+  font-family: var(--cb-font-display);
+  font-size: 1.12rem;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.adm-dialog-content {
+  padding: 0 22px 20px;
+  color: var(--cb-ink-2);
+  font-size: 0.88rem;
+  font-weight: 400;
+  line-height: 1.55;
+  text-align: center;
+}
+
+.adm-dialog-footer .adm-dialog-action-row {
+  border-top: 1px solid var(--cb-stroke);
+}
+
+.adm-dialog-footer .adm-dialog-action-row > .adm-dialog-button {
+  padding: 14px 10px;
+  font-size: 1rem;
+  line-height: 1.25;
+  border-right-color: var(--cb-stroke);
+}
+
+.adm-dialog-footer .adm-dialog-button.adm-button {
+  color: var(--cb-ink-2);
+  font-weight: 600;
+}
+
+.adm-dialog-footer .adm-dialog-button-bold.adm-button:not(.adm-button-danger) {
+  color: var(--cb-primary);
+  font-weight: 750;
+}
+
+.adm-dialog-footer .adm-dialog-button.adm-button-danger {
+  color: var(--cb-bad);
+  font-weight: 750;
+}

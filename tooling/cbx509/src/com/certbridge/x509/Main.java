@@ -3,7 +3,6 @@ package com.certbridge.x509;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.PublicKey;
@@ -33,7 +32,7 @@ public final class Main {
       System.exit(1);
     }
     if ("version".equals(args[0])) {
-      System.out.println("cbx509 1.1.0 (CertBridge Lite)");
+      System.out.println("cbx509 1.1.1 (CertBridge Lite)");
       return;
     }
     if (!"x509".equals(args[0])) {
@@ -186,19 +185,55 @@ public final class Main {
 
   private static X509Certificate parseCert(byte[] data, String inform) throws Exception {
     CertificateFactory cf = CertificateFactory.getInstance("X.509");
-    InputStream in;
-    if ("DER".equals(inform)) {
-      in = new ByteArrayInputStream(data);
-    } else {
-      String text = new String(data, StandardCharsets.ISO_8859_1);
-      if (!text.contains("BEGIN CERTIFICATE")) {
-        // try DER anyway
-        in = new ByteArrayInputStream(data);
-      } else {
-        in = new ByteArrayInputStream(data);
+    if (!"DER".equals(inform)) {
+      byte[] pemDer = extractPemDer(data);
+      if (pemDer != null) {
+        return (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(pemDer));
       }
     }
-    return (X509Certificate) cf.generateCertificate(in);
+    try {
+      return (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(data));
+    } catch (Exception e) {
+      if ("DER".equals(inform)) throw e;
+      byte[] pemDer = extractPemDer(data);
+      if (pemDer != null) {
+        return (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(pemDer));
+      }
+      throw e;
+    }
+  }
+
+  /** PEM（含 TRUSTED CERTIFICATE / 前后杂质）→ DER；不是 PEM 则返回 null。 */
+  private static byte[] extractPemDer(byte[] data) {
+    String text = new String(data, StandardCharsets.ISO_8859_1);
+    if (text.length() > 0 && text.charAt(0) == '\ufeff') {
+      text = text.substring(1);
+    }
+    int begin = indexOfIgnoreCase(text, "-----BEGIN ");
+    if (begin < 0) return null;
+    int headerEnd = text.indexOf('\n', begin);
+    if (headerEnd < 0) return null;
+    String header = text.substring(begin, headerEnd).toUpperCase(Locale.US);
+    if (header.indexOf("CERTIFICATE") < 0) return null;
+    int end = indexOfIgnoreCase(text, "-----END ", headerEnd);
+    if (end < 0) return null;
+    String b64 = text.substring(headerEnd + 1, end).replaceAll("[^A-Za-z0-9+/=]", "");
+    if (b64.length() < 64) return null;
+    try {
+      return Base64.decode(b64);
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  private static int indexOfIgnoreCase(String hay, String needle) {
+    return indexOfIgnoreCase(hay, needle, 0);
+  }
+
+  private static int indexOfIgnoreCase(String hay, String needle, int from) {
+    String h = hay.toUpperCase(Locale.US);
+    String n = needle.toUpperCase(Locale.US);
+    return h.indexOf(n, from);
   }
 
   private static void dumpInfo(X509Certificate cert) throws Exception {
@@ -608,6 +643,34 @@ public final class Main {
         }
       }
       return sb.toString();
+    }
+
+    static byte[] decode(String s) {
+      int pad = 0;
+      if (s.endsWith("==")) pad = 2;
+      else if (s.endsWith("=")) pad = 1;
+      int len = s.length();
+      byte[] out = new byte[len / 4 * 3 - pad];
+      int[] dec = new int[128];
+      java.util.Arrays.fill(dec, -1);
+      for (int i = 0; i < ENC.length; i++) {
+        dec[ENC[i]] = i;
+      }
+      int o = 0;
+      for (int i = 0; i + 3 < len; i += 4) {
+        int a = dec[s.charAt(i) & 127];
+        int b = dec[s.charAt(i + 1) & 127];
+        int c = s.charAt(i + 2) == '=' ? 0 : dec[s.charAt(i + 2) & 127];
+        int d = s.charAt(i + 3) == '=' ? 0 : dec[s.charAt(i + 3) & 127];
+        if (a < 0 || b < 0 || c < 0 || d < 0) {
+          throw new IllegalArgumentException("bad base64");
+        }
+        int v = (a << 18) | (b << 12) | (c << 6) | d;
+        if (o < out.length) out[o++] = (byte) (v >> 16);
+        if (o < out.length) out[o++] = (byte) (v >> 8);
+        if (o < out.length) out[o++] = (byte) v;
+      }
+      return out;
     }
   }
 }

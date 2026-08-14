@@ -140,8 +140,10 @@ certbridge_install_try_app() {
       ;;
     *)
       live=$(echo "$diag" | awk -F= '$1=="live"{print substr($0,6); exit}')
+      imp=$(echo "$diag" | awk -F= '$1=="import_err"{print substr($0,12); exit}')
       ui_print "! ${label}：找到文件但校验/转换失败"
       [ -n "$live" ] && ui_print "  文件：$live"
+      [ -n "$imp" ] && ui_print "  原因：$imp"
       ui_print "  需为有效 CA、未过期；详见 data/install.log"
       return 1
       ;;

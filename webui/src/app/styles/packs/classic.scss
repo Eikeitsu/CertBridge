@@ -252,6 +252,21 @@ html[data-pack="classic"] {
     box-shadow: none;
   }
 
+  .adm-dialog {
+    --adm-center-popup-border-radius: 8px;
+  }
+
+  .adm-dialog .adm-center-popup-body {
+    border: 1px solid var(--cb-stroke);
+    border-radius: 8px;
+    box-shadow: none;
+  }
+
+  .adm-dialog-title {
+    font-size: 1.02rem;
+    letter-spacing: 0.06em;
+  }
+
   .cb-flag {
     border-radius: 3px;
     font-size: 0.62rem;

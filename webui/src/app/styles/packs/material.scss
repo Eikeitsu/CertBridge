@@ -289,6 +289,47 @@ html[data-pack="material"] {
     box-shadow: 0 8px 24px rgba(26, 35, 50, 0.22);
   }
 
+  .adm-dialog {
+    --adm-center-popup-border-radius: 28px;
+    --adm-center-popup-max-width: min(88vw, 360px);
+  }
+
+  .adm-dialog .adm-center-popup-body {
+    border: 0;
+    border-radius: 28px;
+    box-shadow: var(--cb-shadow-lg);
+  }
+
+  .adm-dialog-title {
+    font-size: 1.36rem;
+    letter-spacing: -0.04em;
+    text-align: left;
+  }
+
+  .adm-dialog-content {
+    text-align: left;
+  }
+
+  .adm-dialog-footer .adm-dialog-action-row {
+    border-top: 0;
+    padding: 0 10px 10px;
+    gap: 8px;
+  }
+
+  .adm-dialog-footer .adm-dialog-action-row > .adm-dialog-button {
+    border-right: 0;
+    border-radius: 999px;
+    background: var(--cb-surface-2);
+  }
+
+  .adm-dialog-footer .adm-dialog-button-bold.adm-button:not(.adm-button-danger) {
+    background: var(--cb-primary-container);
+  }
+
+  .adm-dialog-footer .adm-dialog-button.adm-button-danger {
+    background: color-mix(in srgb, var(--cb-bad) 12%, var(--cb-surface));
+  }
+
   /* 日志：色调 chips */
   .cb-log-filter {
     gap: 8px;

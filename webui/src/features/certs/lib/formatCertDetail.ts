@@ -42,12 +42,21 @@ export function formatCertDetail(
   const sha256 = formatFingerprint(fields.fingerprint_sha256 || "");
   const sha1 = formatFingerprint(fields.fingerprint_sha1 || "");
   const notAfter = parseOpenSslDate(fields.not_after || "");
+  const notBefore = parseOpenSslDate(fields.not_before || "");
   const now = Date.now();
   const isExpired = Boolean(notAfter && notAfter.getTime() < now);
   const daysLeft =
     notAfter && !isExpired
       ? Math.max(0, Math.ceil((notAfter.getTime() - now) / MS_PER_DAY))
       : undefined;
+  let validityProgress: number | undefined;
+  if (notBefore && notAfter && notAfter.getTime() > notBefore.getTime()) {
+    const total = notAfter.getTime() - notBefore.getTime();
+    validityProgress = Math.min(
+      100,
+      Math.max(0, ((now - notBefore.getTime()) / total) * 100),
+    );
+  }
   const isSelfSigned =
     fields.self_signed === FLAG_ON ||
     (Boolean(fields.subject && fields.issuer) &&
@@ -83,6 +92,7 @@ export function formatCertDetail(
     notAfterLabel: formatDateLabel(fields.not_after || ""),
     isExpired,
     daysLeft,
+    validityProgress,
     flags,
     identity: compact([
       field("文件名", fields.filename, { mono: true }),

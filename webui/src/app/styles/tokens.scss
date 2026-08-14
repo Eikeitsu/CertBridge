@@ -68,7 +68,13 @@
   --cb-body-gradient-tint: color-mix(in srgb, var(--cb-chrome) 92%, #d5ddd6);
   --cb-panel-blur: 0px;
   --cb-panel-border: 1px;
-  --cb-ease: 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  --cb-ease: 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  --cb-ease-out: 0.16s cubic-bezier(0.33, 1, 0.68, 1);
+  --cb-shadow-sm: 0 1px 2px rgba(26, 35, 50, 0.05);
+  --cb-shadow-md: 0 4px 16px rgba(26, 35, 50, 0.07);
+  --cb-elev-1: var(--cb-shadow-sm);
+  --cb-elev-2: var(--cb-shadow-md);
+  --cb-elev-3: var(--cb-shadow-lg);
   --cb-card: var(--cb-panel);
   --cb-card-blur: var(--cb-panel-blur);
   --cb-card-border-width: var(--cb-panel-border);
@@ -122,6 +128,10 @@ html[data-theme="dark"] {
   --cb-card: var(--cb-panel);
 }
 
+html[data-theme="dark"] body::after {
+  opacity: 0.016;
+}
+
 /*
  * 系统取色：宿主 colors.css 提供 md-sys 与 camelCase 两条通道，都取不到时回落到用户强调色。
  * 必须排在 data-theme 之后（同特异性靠顺序取胜），且只接管主色系——
@@ -171,22 +181,35 @@ body {
   color: var(--cb-ink);
   -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizelegibility;
   overscroll-behavior: none;
 }
 
-/* 背景氛围层：独立固定层比 background-attachment: fixed 便宜得多，
-   后者会让 WebView 每帧重绘整屏，动画直接卡住 */
+/* 背景氛围层：独立固定层比 background-attachment: fixed 便宜得多 */
 body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-color: var(--cb-chrome);
+  background-image:
+    radial-gradient(900px 420px at 6% -14%, var(--cb-body-gradient-a), transparent 60%),
+    radial-gradient(640px 320px at 102% -6%, var(--cb-body-gradient-b), transparent 54%),
+    radial-gradient(480px 240px at 50% 100%, color-mix(in srgb, var(--cb-primary) 4%, transparent), transparent 70%),
+    linear-gradient(180deg, transparent 40%, var(--cb-body-gradient-tint));
+}
+
+/* 极淡纹理：打破大色块「塑料感」，几乎不影响性能 */
+body::after {
   content: "";
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background-color: var(--cb-chrome);
-  background-image:
-    radial-gradient(780px 360px at 8% -12%, var(--cb-body-gradient-a), transparent 58%),
-    radial-gradient(560px 280px at 100% 0%, var(--cb-body-gradient-b), transparent 52%),
-    linear-gradient(180deg, transparent 45%, var(--cb-body-gradient-tint));
+  opacity: 0.028;
+  background-image: radial-gradient(circle at 20% 30%, var(--cb-ink) 0.6px, transparent 0.7px);
+  background-size: 14px 14px;
 }
 
 button,

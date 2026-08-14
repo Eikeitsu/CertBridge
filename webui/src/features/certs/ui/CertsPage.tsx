@@ -22,6 +22,7 @@ export function CertsPage() {
     handleToggleBuiltin,
     handleImportFile,
     handleRemoveCustom,
+    handleSetHotAllow,
     handleHotMount,
     handleHotUnmount,
   } = useCertActions();
@@ -53,6 +54,7 @@ export function CertsPage() {
         <HotMountPanel
           sectionLabel={voice.certSession}
           panelTitle={voice.hotMountTitle}
+          onSetHotAllow={(checked) => void handleSetHotAllow(checked)}
           onMount={handleHotMount}
           onUnmount={handleHotUnmount}
         />

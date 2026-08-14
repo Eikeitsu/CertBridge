@@ -47,6 +47,7 @@ export type ModuleStatus = {
   proxypin_available?: string;
   proxypin_display?: string;
   proxypin_title?: string;
+  hot_allow?: string;
   mount_mode?: string;
   tmpfs_style?: string;
   version?: string;

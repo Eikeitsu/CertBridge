@@ -23,6 +23,7 @@ export type FormattedCertDetail = {
   notAfterLabel: string;
   isExpired: boolean;
   daysLeft?: number;
+  validityProgress?: number;
   flags: string[];
   identity: DetailField[];
   validity: DetailField[];

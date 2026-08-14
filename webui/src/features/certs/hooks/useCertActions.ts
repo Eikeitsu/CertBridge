@@ -6,6 +6,7 @@ import {
   hotUnmount,
   installCustom,
   removeCustom,
+  setHotAllow,
   toggleBuiltin,
 } from "@/shared/api/cli";
 import { errorFromResult } from "@/shared/api/errors";
@@ -92,6 +93,40 @@ export function useCertActions() {
     [refresh],
   );
 
+  const handleSetHotAllow = useCallback(
+    (checked: boolean) => {
+      const apply = () =>
+        runExclusive(async () => {
+          const result = await setHotAllow(checked ? FLAG_ON : FLAG_OFF);
+          if (isCliFailure(result)) {
+            toast(errorFromResult(result.stdout, result.stderr));
+            await refresh();
+            return;
+          }
+          toast(
+            checked
+              ? "已允许手动临时挂载"
+              : "已关闭临时挂载",
+          );
+          await refresh();
+        });
+
+      if (!checked) {
+        confirmAction({
+          title: "关闭临时挂载？",
+          content: "关闭后无法新建临时会话；若当前有会话，将一并无痕卸载。",
+          okText: "关闭",
+          danger: true,
+          onOk: apply,
+        });
+        return;
+      }
+
+      void apply();
+    },
+    [refresh, runExclusive],
+  );
+
   const handleHotMount = useCallback(
     (mode: HotMountMode, sdPath?: string) => {
       if (mode !== HotMountMode.User && !isSafeSdPath(sdPath || "")) {
@@ -161,6 +196,7 @@ export function useCertActions() {
     handleToggleBuiltin,
     handleImportFile,
     handleRemoveCustom,
+    handleSetHotAllow,
     handleHotMount,
     handleHotUnmount,
   };

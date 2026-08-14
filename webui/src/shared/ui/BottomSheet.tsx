@@ -27,21 +27,25 @@ export function BottomSheet({
       bodyClassName="cb-sheet"
       bodyStyle={{
         height,
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
         borderTopLeftRadius: "var(--cb-radius-lg)",
         borderTopRightRadius: "var(--cb-radius-lg)",
         background: "var(--cb-chrome)",
-        overflow: "auto",
-        padding: "8px 16px calc(16px + var(--cb-inset-bottom))",
+        padding: 0,
       }}
     >
       <div className="cb-sheet__handle" aria-hidden />
-      {loading ? (
-        <div className="cb-spin__mask is-embedded">
-          <Loader label="正在解析证书" />
-        </div>
-      ) : (
-        children
-      )}
+      <div className="cb-sheet__scroll">
+        {loading ? (
+          <div className="cb-spin__mask is-embedded">
+            <Loader label="正在解析证书" />
+          </div>
+        ) : (
+          children
+        )}
+      </div>
       <div className="cb-sheet__foot">
         <Button block onClick={onClose}>
           关闭

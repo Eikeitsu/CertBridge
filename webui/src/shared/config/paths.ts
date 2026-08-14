@@ -30,6 +30,7 @@ export const STORAGE_KEYS = {
   accentPair: "cb_accent_pair",
   uiCustom: "cb_ui_custom",
   hotSdPath: "cb_hot_sd_path",
+  logLevelFilter: "cb_log_level_filter",
 } as const;
 
 export { LINKS } from "./brand";

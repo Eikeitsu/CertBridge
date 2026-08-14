@@ -1,15 +1,48 @@
 .page-enter {
-  animation: rise 0.28s ease;
+  animation: page-rise 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-@keyframes rise {
+@keyframes page-rise {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(10px);
   }
 
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+/* 卡片错峰：首屏内容轻微依次入场 */
+.page-enter .cb-stage {
+  animation: card-rise 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.04s both;
+}
+
+.page-enter .cb-metrics,
+.page-enter .adm-card:first-of-type,
+.page-enter .adm-list-card:first-of-type {
+  animation: card-rise 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+}
+
+@keyframes card-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter,
+  .page-enter .cb-stage,
+  .page-enter .cb-metrics,
+  .page-enter .adm-card:first-of-type,
+  .page-enter .adm-list-card:first-of-type {
+    animation: none;
   }
 }

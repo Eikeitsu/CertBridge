@@ -9,6 +9,8 @@ import {
 } from "@/features/theme/model/selectors";
 import { selectDeviceLabel } from "@/features/status/model/selectors";
 import { getPackVoice } from "@/shared/config/packVoice";
+import { TABS } from "@/shared/config/navigation";
+import { ThemePack } from "@/entities/module/enums";
 import { AppTopbar } from "./AppTopbar";
 import { AppDock } from "./AppDock";
 
@@ -19,6 +21,10 @@ export function AppShell() {
   const isBarBlurEnabled = useAppSelector(selectBarBlurEnabled);
   const { activeTab, pathname, switchTab } = useActiveTab();
   const voice = getPackVoice(themePack);
+  const topbarTitle =
+    themePack === ThemePack.Material
+      ? (TABS.find((tab) => tab.key === activeTab)?.label ?? voice.topbarBrand)
+      : voice.topbarBrand;
 
   useImmersiveChrome(resolvedTheme, isBarBlurEnabled, themePack, pathname);
 
@@ -26,7 +32,7 @@ export function AppShell() {
     <div className={`app-shell pack-${themePack}`} data-shell-pack={themePack}>
       <AppTopbar
         pack={themePack}
-        brandTitle={voice.topbarBrand}
+        brandTitle={topbarTitle}
         deviceLabel={deviceLabel}
       />
       <main className="app-main">

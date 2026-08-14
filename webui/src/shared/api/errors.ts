@@ -20,6 +20,8 @@ export function friendlyError(code?: string): string {
     expired_certificate: "证书已过期",
     not_ca_certificate: "需要 CA 根证书",
     hot_feature_not_installed: "未安装临时证书功能",
+    hot_allow_disabled: "临时挂载已关闭，请先在上方开启",
+    invalid_hot_allow: "无效的临时挂载开关",
     hot_unmount_incomplete: "临时证书未能完全卸除，建议重启",
     hot_reload_disabled: "该操作已停用",
     invalid_sd_path: "存储卡路径不受支持",

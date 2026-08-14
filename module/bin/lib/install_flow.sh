@@ -267,6 +267,13 @@ certbridge_install_write_config() {
   if ! grep -q '^tmpfs_style=' "$MODPATH/config/certs.conf" 2>/dev/null; then
     echo "tmpfs_style=short" >>"$MODPATH/config/certs.conf"
   fi
+  if [ "$INSTALL_HOT" = "1" ]; then
+    if grep -q '^hot_allow=' "$MODPATH/config/certs.conf" 2>/dev/null; then
+      sed -i "s/^hot_allow=.*/hot_allow=1/" "$MODPATH/config/certs.conf"
+    else
+      echo "hot_allow=1" >>"$MODPATH/config/certs.conf"
+    fi
+  fi
   cat >"$MODPATH/config/install-profile.conf" <<EOF
 install_mode=$INSTALL_MODE
 webui=$INSTALL_WEBUI

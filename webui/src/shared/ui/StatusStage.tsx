@@ -31,13 +31,19 @@ export function StatusStage({
         <div className="cb-stage__hero">
           <div className="cb-stage__hero-num">{heroValue ?? "—"}</div>
           <div className="cb-stage__hero-copy">
-            <p className="cb-stage__kicker">{kicker}</p>
+            <p className="cb-stage__kicker">
+              <span className={`cb-stage__tone-dot tone-${tone}`} aria-hidden />
+              {kicker}
+            </p>
             <h2 className="cb-stage__title">{title}</h2>
           </div>
         </div>
       ) : (
         <>
-          <p className="cb-stage__kicker">{kicker}</p>
+          <p className="cb-stage__kicker">
+            <span className={`cb-stage__tone-dot tone-${tone}`} aria-hidden />
+            {kicker}
+          </p>
           <h2 className="cb-stage__title">{title}</h2>
         </>
       )}

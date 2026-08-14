@@ -1,16 +1,28 @@
+import { useMemo } from "react";
 import { Button } from "antd-mobile";
 import { DeleteOutline, LoopOutline } from "antd-mobile-icons";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { clearActivityLog, fetchActivityLog } from "@/features/log/model/logSlice";
 import { selectActivityLog } from "@/features/log/model/selectors";
+import { useLogLevelFilter } from "@/features/log/hooks/useLogLevelFilter";
 import { formatByteSize } from "@/features/log/lib/formatByteSize";
 import { toast } from "@/shared/api/ksu";
 import { confirmAction } from "@/shared/lib/confirmAction";
+import { filterLogEntries, parseLogText } from "@/shared/lib/log";
 import { PageRefresh, PageSpin, Panel } from "@/shared/ui";
+import { LogFilter } from "./LogFilter";
+import { LogLines } from "./LogLines";
 
 export function LogPage() {
   const dispatch = useAppDispatch();
   const { text, loading, bytes, lines } = useAppSelector(selectActivityLog);
+  const [levelFilter, setLevelFilter] = useLogLevelFilter();
+
+  const entries = useMemo(() => parseLogText(text), [text]);
+  const filteredEntries = useMemo(
+    () => filterLogEntries(entries, levelFilter),
+    [entries, levelFilter],
+  );
 
   const handleRefresh = async () => {
     const action = await dispatch(fetchActivityLog());
@@ -49,8 +61,11 @@ export function LogPage() {
           </div>
         }
       >
+        <LogFilter value={levelFilter} onChange={setLevelFilter} />
         <PageSpin spinning={loading}>
-          <pre className="log-box">{text}</pre>
+          <div className="cb-log-view">
+            <LogLines entries={filteredEntries} filtered={Boolean(levelFilter)} />
+          </div>
         </PageSpin>
       </Panel>
     </PageRefresh>

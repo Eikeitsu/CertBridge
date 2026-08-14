@@ -44,13 +44,29 @@ html[data-pack="material"] {
       --height: var(--cb-topbar-h);
 
       align-items: flex-end;
-      padding-bottom: 10px;
+      padding: 0 4px 10px;
+      gap: 10px;
+    }
+
+    .adm-nav-bar-left,
+    .adm-nav-bar-right {
+      flex: 0 0 auto;
+    }
+
+    .adm-nav-bar-title {
+      flex: 1 1 auto;
+      min-width: 0;
+      padding: 0;
+      text-align: left;
+      justify-content: flex-start;
     }
 
     .nav-title {
       display: block;
-      width: 100%;
-      text-align: left;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
       font-size: 1.85rem;
       font-weight: 700;
       letter-spacing: -0.04em;
@@ -60,6 +76,7 @@ html[data-pack="material"] {
     .device-chip {
       align-self: flex-end;
       margin-bottom: 6px;
+      max-width: 34vw;
       border-radius: var(--cb-radius-pill);
       background: color-mix(in srgb, var(--cb-ink) 6%, transparent);
       border: 0;
@@ -251,11 +268,92 @@ html[data-pack="material"] {
       margin: 4px 2px;
     }
 
-    .adm-tab-bar-item-active {
-      color: var(--cb-primary);
-      background: var(--cb-primary-container);
-      font-weight: 700;
+  .adm-tab-bar-item-active {
+    color: var(--cb-primary);
+    background: var(--cb-primary-container);
+    font-weight: 700;
+
+    &::after {
+      display: none;
     }
+  }
+  }
+
+  /* 日志：色调 chips */
+  .cb-log-filter {
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .cb-log-filter__seg {
+    flex: 1 1 0;
+    border-radius: 10px;
+    padding: 8px 6px;
+    background: var(--cb-surface-2);
+  }
+
+  .cb-log-filter__seg.active {
+    font-weight: 700;
+    background: var(--cb-primary-container);
+    color: var(--cb-primary);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cb-primary) 28%, transparent);
+  }
+
+  .cb-log-filter__seg.active.tone-warn {
+    background: color-mix(in srgb, var(--cb-warn) 16%, var(--cb-surface));
+    color: var(--cb-warn);
+  }
+
+  .cb-log-filter__seg.active.tone-error {
+    background: color-mix(in srgb, var(--cb-bad) 14%, var(--cb-surface));
+    color: var(--cb-bad);
+  }
+
+  .cb-log-view {
+    border-radius: var(--cb-radius);
+    max-height: min(48vh, 380px);
+  }
+
+  /* 证书详情：层积卡片 */
+  .cb-sheet__hero {
+    border: 0;
+    border-radius: var(--cb-radius-lg);
+    box-shadow: var(--cb-shadow-lg);
+    background: var(--cb-primary-container);
+  }
+
+  .cb-sheet__hero-mark {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    border: 0;
+    background: color-mix(in srgb, var(--cb-primary) 24%, transparent);
+    box-shadow:
+      inset 0 -8px 0 color-mix(in srgb, var(--cb-primary) 18%, transparent),
+      inset 0 0 0 1px color-mix(in srgb, var(--cb-primary) 20%, transparent);
+  }
+
+  .cb-sheet__section {
+    border: 0;
+    border-radius: var(--cb-radius);
+    box-shadow: var(--cb-shadow-lg);
+  }
+
+  .cb-sheet__section h4::before {
+    width: 12px;
+    height: 10px;
+    border-radius: 1px;
+    background: repeating-linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--cb-primary) 55%, transparent) 0 2px,
+      transparent 2px 5px
+    );
+  }
+
+  .cb-flag {
+    border-radius: 8px;
+    padding: 4px 11px;
+    font-size: 0.7rem;
   }
 }
 

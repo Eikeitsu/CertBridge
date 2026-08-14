@@ -20,6 +20,26 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition:
+    transform var(--cb-ease-out),
+    opacity var(--cb-ease-out),
+    background var(--cb-ease);
+
+  &:active {
+    transform: scale(0.97);
+  }
+
+  &.adm-button-fill-outline {
+    border-color: color-mix(in srgb, var(--cb-primary) 32%, var(--cb-stroke));
+    color: var(--cb-primary);
+    background: color-mix(in srgb, var(--cb-primary) 4%, transparent);
+  }
+
+  &.adm-button-fill-none {
+    font-weight: 650;
+  }
 }
 
 .adm-segmented {
@@ -70,6 +90,9 @@
   border: var(--cb-panel-border) solid var(--cb-card-border-color);
   border-radius: var(--cb-card-radius);
   box-shadow: var(--cb-card-shadow);
+  transition:
+    box-shadow var(--cb-ease),
+    border-color var(--cb-ease);
 }
 
 .adm-card,
@@ -173,6 +196,11 @@
   --active-background-color: var(--cb-row-hover);
 
   background: transparent;
+  transition: background var(--cb-ease-out);
+}
+
+.adm-list-item-content {
+  transition: opacity var(--cb-ease-out);
 }
 
 .adm-list-item-content-main {
@@ -258,13 +286,19 @@
 }
 
 .adm-empty {
-  padding: 20px 12px;
+  padding: 28px 14px;
+}
+
+.adm-empty-image {
+  opacity: 0.72;
 }
 
 .adm-empty-description {
-  padding: 0 8px;
-  line-height: 1.5;
+  padding: 0 10px;
+  line-height: 1.55;
   overflow-wrap: anywhere;
+  color: var(--cb-ink-3);
+  font-size: 0.8rem;
 }
 
 .adm-notice-bar {

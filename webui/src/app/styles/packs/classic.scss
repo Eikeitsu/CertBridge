@@ -224,6 +224,87 @@ html[data-pack="classic"] {
   .adm-tab-bar-item-active {
     color: var(--cb-primary);
     font-weight: 700;
+
+    &::after {
+      width: 20px;
+      height: 2px;
+      top: auto;
+      bottom: 6px;
+      border-radius: 0;
+      background: var(--cb-primary);
+    }
+  }
+
+  .cb-flag {
+    border-radius: 3px;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+
+    &::before {
+      display: none;
+    }
+  }
+
+  .cb-stage__foot {
+    border-top-style: dashed;
+  }
+
+  /* 日志：账本式分段 */
+  .cb-log-filter {
+    gap: 2px;
+    padding: 2px;
+    border: 1px solid var(--cb-stroke);
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--cb-ink) 3%, transparent);
+  }
+
+  .cb-log-filter__seg {
+    flex: 1 1 0;
+    border-radius: 4px;
+    padding: 7px 4px;
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .cb-log-filter__seg.active {
+    background: var(--cb-surface);
+    color: var(--cb-ink);
+    font-weight: 700;
+    box-shadow: inset 0 0 0 1px var(--cb-stroke);
+  }
+
+  .cb-log-view {
+    border-radius: 6px;
+    border-style: dashed;
+    max-height: min(44vh, 340px);
+  }
+
+  /* 证书详情：骑缝印 hero + 编号 section */
+  .cb-sheet__hero {
+    border-radius: 8px;
+    box-shadow: none;
+    border-style: dashed;
+  }
+
+  .cb-sheet__hero-mark {
+    border-radius: 4px;
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--cb-primary) 18%, transparent);
+  }
+
+  .cb-sheet__section h4::before {
+    border-radius: 1px;
+    width: 10px;
+    height: 10px;
+    background: transparent;
+    border: 2px solid var(--cb-primary);
+  }
+
+  .cb-sheet__cell {
+    border-radius: 4px;
+    border: 1px dashed color-mix(in srgb, var(--cb-ink) 12%, transparent);
+    background: transparent;
   }
 }
 

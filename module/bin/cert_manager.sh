@@ -32,6 +32,11 @@ hot_failed=0"
   [ -f "$MODDIR/module.prop" ] && [ -x "$BINDIR/apex_inject.sh" ] && [ -f "$CONF" ] && module_ok=1
   echo "module_ok=$module_ok"
   echo "hot_supported=$hot_supported"
+  if [ "$hot_supported" = "1" ]; then
+    echo "hot_allow=$(read_conf hot_allow 1)"
+  else
+    echo "hot_allow=0"
+  fi
   echo "disabled=$disabled"
   echo "api=$api"
   echo "release=$release"
@@ -333,10 +338,35 @@ cmd_set_tmpfs_style() {
   echo "$pending_line"
 }
 
+cmd_set_hot_allow() {
+  val="$1"
+  case "$val" in
+    0|1) ;;
+    *) echo "error=invalid_hot_allow"; return 1 ;;
+  esac
+  [ -x "$BINDIR/hot_mount.sh" ] || { echo "error=hot_feature_not_installed"; return 1; }
+  acquire_write_lock || { echo "error=busy"; return 1; }
+  write_conf hot_allow "$val" || { release_write_lock; echo "error=write_failed"; return 1; }
+  release_write_lock
+  if [ "$val" = "0" ]; then
+    hot_status=$(sh "$BINDIR/hot_mount.sh" status light 2>/dev/null)
+    hot_active=$(echo "$hot_status" | awk -F= '$1 == "hot_active" { print $2; exit }')
+    if [ "$hot_active" = "1" ]; then
+      cmd_hot_unmount
+      return $?
+    fi
+  fi
+  log_msg "config: hot_allow=$val"
+  refresh_module_description >/dev/null 2>&1
+  echo "ok=1"
+  echo "hot_allow=$val"
+}
+
 cmd_hot_mount() {
   mode="$1"
   sd_path="$2"
   [ -x "$BINDIR/hot_mount.sh" ] || { echo "error=hot_feature_not_installed"; return 1; }
+  [ "$(read_conf hot_allow 1)" = "1" ] || { echo "error=hot_allow_disabled"; return 1; }
   case "$mode" in user|sd|all) ;; *) echo "error=invalid_mode"; return 1 ;; esac
   sh "$BINDIR/hot_mount.sh" mount "$mode" "$sd_path"
 }
@@ -358,13 +388,14 @@ case "$1" in
   cert_info) cmd_cert_info "$2" ;;
   hot_mount) cmd_hot_mount "$2" "$3" ;;
   hot_unmount) cmd_hot_unmount ;;
+  set_hot_allow) cmd_set_hot_allow "$2" ;;
   reinject|sync)
     echo "error=hot_reload_disabled"
     echo "reboot_required=1"
     exit 1
     ;;
   *)
-    echo "usage: cert_manager.sh {status|list_custom|toggle|sync_apps|set_mount_mode|set_tmpfs_style|install_custom|remove_custom|cert_info|hot_mount|hot_unmount}"
+    echo "usage: cert_manager.sh {status|list_custom|toggle|sync_apps|set_mount_mode|set_tmpfs_style|set_hot_allow|install_custom|remove_custom|cert_info|hot_mount|hot_unmount}"
     exit 1
     ;;
 esac

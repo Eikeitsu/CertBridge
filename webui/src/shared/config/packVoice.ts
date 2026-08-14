@@ -88,7 +88,7 @@ export const PACK_VOICE: Record<ThemePack, PackVoice> = {
     settingsUi: "显示与主题",
     settingsModule: "挂载与路径",
     settingsAbout: "模块信息",
-    topbarBrand: "概览",
+    topbarBrand: "证书桥",
   },
   [ThemePack.Fluid]: {
     stageKicker: "桥接状态",

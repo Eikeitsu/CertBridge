@@ -6,9 +6,11 @@
 
 .cb-panel__meta {
   margin: 0 0 var(--cb-space-sm);
-  color: var(--cb-ink-3);
-  font-size: 0.79rem;
-  line-height: 1.55;
+  padding: 8px 0 8px 11px;
+  border-left: 2px solid color-mix(in srgb, var(--cb-primary) 42%, transparent);
+  color: var(--cb-ink-2);
+  font-size: 0.78rem;
+  line-height: 1.58;
   overflow-wrap: anywhere;
 }
 
@@ -16,15 +18,15 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 18px 4px 8px;
-  font-size: 0.8125rem;
+  margin: 20px 4px 10px;
+  font-size: 0.8rem;
   font-weight: 650;
-  letter-spacing: 0;
+  letter-spacing: 0.01em;
   text-transform: none;
   color: var(--cb-ink-2);
 
   &:first-child {
-    margin-top: 4px;
+    margin-top: 6px;
   }
 }
 
@@ -40,28 +42,36 @@
 .cb-metric {
   position: relative;
   overflow: hidden;
-  padding: 13px 10px;
+  padding: 14px 10px 13px;
   border-radius: var(--cb-radius-sm);
   background: var(--cb-card-bg);
   border: var(--cb-panel-border) solid var(--cb-card-border-color);
   text-align: center;
   box-shadow: var(--cb-card-shadow);
+  transition:
+    transform var(--cb-ease-out),
+    box-shadow var(--cb-ease);
+
+  &:active {
+    transform: scale(0.98);
+  }
 
   .value {
     font-family: var(--cb-font-display);
-    font-size: 1.32rem;
+    font-size: 1.34rem;
     font-weight: 720;
-    letter-spacing: -0.03em;
-    line-height: 1.1;
+    letter-spacing: -0.035em;
+    line-height: 1.08;
     font-variant-numeric: tabular-nums;
     color: var(--cb-ink);
   }
 
   .label {
-    margin-top: 5px;
+    margin-top: 6px;
     color: var(--cb-ink-3);
-    font-size: 0.68rem;
+    font-size: 0.67rem;
     font-weight: 600;
-    line-height: 1.3;
+    line-height: 1.35;
+    letter-spacing: 0.02em;
   }
 }

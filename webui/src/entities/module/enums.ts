@@ -57,3 +57,15 @@ export enum FlagTone {
   Warn = "warn",
   Info = "info",
 }
+
+/** 安装 / 注入日志等级（与 shell [LEVEL] 前缀一致） */
+export enum LogLevel {
+  Info = "info",
+  Warn = "warn",
+  Error = "error",
+  Debug = "debug",
+}
+
+export function isLogLevel(value: unknown): value is LogLevel {
+  return Object.values(LogLevel).includes(value as LogLevel);
+}

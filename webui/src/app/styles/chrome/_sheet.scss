@@ -1,34 +1,78 @@
 /* ── Certificate detail sheet ── */
 
 .cb-sheet {
+  display: flex;
+  flex-direction: column;
   background: var(--cb-chrome);
 }
 
 .cb-sheet__handle {
   width: 36px;
   height: 4px;
-  margin: 4px auto 12px;
+  margin: 8px auto 0;
   border-radius: 2px;
   background: color-mix(in srgb, var(--cb-ink) 18%, transparent);
+  flex-shrink: 0;
+}
+
+.cb-sheet__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 8px 16px 12px;
+}
+
+.cb-sheet__foot {
+  flex-shrink: 0;
+  padding: 10px 16px calc(12px + var(--cb-inset-bottom));
+  border-top: 1px solid var(--cb-stroke);
+  background: color-mix(in srgb, var(--cb-chrome) 92%, transparent);
 }
 
 .cb-sheet__hero {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: start;
   margin-bottom: var(--cb-space-md);
+  padding: 15px 15px 14px;
+  border-radius: var(--cb-radius);
+  background: var(--cb-panel);
+  border: var(--cb-panel-border) solid var(--cb-stroke);
+  box-shadow: var(--cb-elev-2);
+}
+
+.cb-sheet__hero-mark {
+  width: 42px;
+  height: 42px;
+  border-radius: calc(var(--cb-radius-sm) + 2px);
+  background:
+    radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--cb-primary) 28%, transparent), transparent 55%),
+    color-mix(in srgb, var(--cb-primary) 12%, var(--cb-surface));
+  border: 1px solid color-mix(in srgb, var(--cb-primary) 22%, transparent);
+  box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--cb-primary) 8%, transparent);
+}
+
+.cb-sheet__hero-body {
+  min-width: 0;
 
   h2 {
     margin: 0;
     font-family: var(--cb-font-display);
-    font-size: 1.35rem;
+    font-size: 1.28rem;
     font-weight: 750;
     letter-spacing: -0.03em;
-    line-height: 1.2;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
   }
 }
 
 .cb-sheet__kicker {
   margin: 0 0 6px;
   color: var(--cb-ink-3);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 650;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -38,7 +82,8 @@
   margin: 6px 0 0;
   color: var(--cb-ink-3);
   font-family: var(--cb-font-mono);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
+  overflow-wrap: anywhere;
 }
 
 .cb-sheet__flags {
@@ -50,23 +95,37 @@
 
 .cb-sheet__section {
   margin: 0 0 var(--cb-space-md);
-  padding: 12px 14px;
+  padding: 13px 14px 14px;
   border-radius: var(--cb-radius);
   background: var(--cb-panel);
   border: var(--cb-panel-border) solid var(--cb-stroke);
+  box-shadow: var(--cb-shadow);
 
   h4 {
-    margin: 0 0 10px;
-    font-size: 0.78rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 12px;
+    font-size: 0.76rem;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--cb-ink-3);
+
+    &::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      background: var(--cb-primary);
+      opacity: 0.75;
+      flex-shrink: 0;
+    }
   }
 }
 
 .cb-sheet__self {
-  margin: -4px 0 10px;
+  margin: -6px 0 10px;
   color: var(--cb-primary);
   font-size: 0.78rem;
   font-weight: 650;
@@ -76,50 +135,56 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px 12px;
-  margin-bottom: 10px;
-
-  span {
-    display: block;
-    color: var(--cb-ink-3);
-    font-size: 0.68rem;
-    font-weight: 600;
-  }
-
-  strong {
-    display: block;
-    margin-top: 2px;
-    font-size: 0.9rem;
-    font-weight: 700;
-    word-break: break-word;
-  }
+  margin-bottom: 4px;
 }
 
 .cb-sheet__cell {
   appearance: none;
   border: 0;
   margin: 0;
-  padding: 0;
-  background: transparent;
+  padding: 10px 10px 9px;
+  border-radius: var(--cb-radius-sm);
+  background: var(--cb-card-inset-bg);
   text-align: left;
   color: inherit;
   cursor: pointer;
+  transition: background var(--cb-ease);
+
+  span {
+    display: block;
+    color: var(--cb-ink-3);
+    font-size: 0.66rem;
+    font-weight: 600;
+  }
+
+  strong {
+    display: block;
+    margin-top: 3px;
+    font-size: 0.86rem;
+    font-weight: 700;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  &:active {
+    background: color-mix(in srgb, var(--cb-primary) 10%, var(--cb-card-inset-bg));
+  }
 
   &.is-mono strong {
     font-family: var(--cb-font-mono);
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     font-weight: 600;
   }
 }
 
-.cb-sheet__mono,
-.cb-sheet__fp {
+.cb-sheet__mono {
   display: block;
   width: 100%;
-  margin: 0;
-  padding: 8px 10px;
+  margin: 8px 0 0;
+  padding: 9px 10px;
   border: 0;
   border-radius: var(--cb-radius-sm);
-  background: color-mix(in srgb, var(--cb-ink) 4%, transparent);
+  background: var(--cb-card-inset-bg);
   color: var(--cb-ink-2);
   font-family: var(--cb-font-mono);
   font-size: 0.68rem;
@@ -129,24 +194,74 @@
   cursor: pointer;
 }
 
-.cb-sheet__fp {
-  margin-bottom: 8px;
+.cb-sheet__fp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
-  span {
-    display: block;
-    margin-bottom: 4px;
-    color: var(--cb-ink-3);
-    font-family: var(--cb-font-body);
-    font-size: 0.68rem;
-    font-weight: 650;
-    letter-spacing: 0.04em;
+.cb-sheet__fp {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 4px 8px;
+  width: 100%;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--cb-stroke);
+  border-radius: var(--cb-radius-sm);
+  background: var(--cb-card-inset-bg);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--cb-ease),
+    background var(--cb-ease);
+
+  &:active {
+    background: color-mix(in srgb, var(--cb-primary) 8%, var(--cb-card-inset-bg));
+    border-color: color-mix(in srgb, var(--cb-primary) 24%, var(--cb-stroke));
+  }
+}
+
+.cb-sheet__fp-label {
+  grid-column: 1;
+  color: var(--cb-ink-3);
+  font-family: var(--cb-font-body);
+  font-size: 0.66rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+}
+
+.cb-sheet__fp code {
+  grid-column: 1;
+  font-family: var(--cb-font-mono);
+  font-size: 0.68rem;
+  color: var(--cb-ink);
+  word-break: break-word;
+  line-height: 1.45;
+}
+
+.cb-sheet__fp-hint {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  color: var(--cb-primary);
+  font-size: 0.62rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.cb-sheet__validity-wrap {
+  &.tone-warn {
+    --cb-validity-fill: var(--cb-warn);
   }
 
-  code {
-    font-family: inherit;
-    font-size: 0.72rem;
-    color: var(--cb-ink);
-    word-break: break-word;
+  &.tone-bad {
+    --cb-validity-fill: var(--cb-bad);
+  }
+
+  &.tone-ok {
+    --cb-validity-fill: var(--cb-ok);
   }
 }
 
@@ -159,7 +274,7 @@
   span {
     display: block;
     color: var(--cb-ink-3);
-    font-size: 0.68rem;
+    font-size: 0.66rem;
     font-weight: 600;
   }
 
@@ -169,6 +284,7 @@
     font-family: var(--cb-font-display);
     font-size: 0.82rem;
     line-height: 1.35;
+    overflow-wrap: anywhere;
 
     &.is-bad {
       color: var(--cb-bad);
@@ -192,12 +308,50 @@
   }
 }
 
-.cb-sheet__hint {
-  margin: 10px 0 0;
-  color: var(--cb-ink-3);
-  font-size: 0.76rem;
+.cb-sheet__validity-track {
+  position: relative;
+  height: 6px;
+  margin-top: 12px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--cb-ink) 8%, transparent);
+  overflow: visible;
 }
 
-.cb-sheet__foot {
-  padding-top: 4px;
+.cb-sheet__validity-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--cb-validity-fill, var(--cb-ok)) 70%, transparent),
+    var(--cb-validity-fill, var(--cb-ok))
+  );
+}
+
+.cb-sheet__validity-pin {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--cb-validity-fill, var(--cb-ok));
+  border: 2px solid var(--cb-panel);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--cb-validity-fill, var(--cb-ok)) 35%, transparent);
+}
+
+.cb-sheet__validity-meta {
+  margin: 8px 0 0;
+  color: var(--cb-ink-2);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.cb-sheet__copy-hint {
+  margin: 0 0 8px;
+  padding: 0 2px;
+  color: var(--cb-ink-3);
+  font-size: 0.74rem;
+  line-height: 1.5;
+  text-align: center;
 }

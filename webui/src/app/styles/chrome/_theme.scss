@@ -38,8 +38,10 @@
 
   &.active {
     border-color: var(--cb-primary);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--cb-primary) 16%, transparent);
-    transform: translateY(-1px);
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--cb-primary) 18%, transparent),
+      0 6px 16px color-mix(in srgb, var(--cb-primary) 12%, transparent);
+    transform: translateY(-2px);
   }
 }
 
@@ -166,15 +168,26 @@ html[data-theme="dark"] {
 }
 
 .accent-dot {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   border: 2px solid transparent;
   cursor: pointer;
   background: var(--accent-swatch);
+  transition:
+    transform var(--cb-ease-out),
+    box-shadow var(--cb-ease),
+    border-color var(--cb-ease);
+
+  &:active {
+    transform: scale(0.92);
+  }
 
   &.active {
     border-color: var(--cb-ink);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--cb-ink) 12%, transparent);
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--cb-ink) 10%, transparent),
+      0 4px 12px color-mix(in srgb, var(--accent-swatch) 35%, transparent);
+    transform: scale(1.06);
   }
 }

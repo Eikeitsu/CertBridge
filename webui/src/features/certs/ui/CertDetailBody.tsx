@@ -16,20 +16,26 @@ export function CertDetailBody({ detail }: CertDetailBodyProps) {
   return (
     <>
       <header className="cb-sheet__hero">
-        <p className="cb-sheet__kicker">
-          {detail.isCa ? "证书颁发机构" : "终端 / 其他证书"}
-        </p>
-        <h2>{detail.displayName}</h2>
-        {detail.filename ? <p className="cb-sheet__file">{detail.filename}</p> : null}
-        {detail.flags.length ? (
-          <FlagList className="cb-sheet__flags">
-            {detail.flags.map((flag) => (
-              <Flag key={flag} tone={flag === "已过期" ? FlagTone.Warn : FlagTone.Info}>
-                {flag}
-              </Flag>
-            ))}
-          </FlagList>
-        ) : null}
+        <div className="cb-sheet__hero-mark" aria-hidden />
+        <div className="cb-sheet__hero-body">
+          <p className="cb-sheet__kicker">
+            {detail.isCa ? "证书颁发机构" : "终端 / 其他证书"}
+          </p>
+          <h2>{detail.displayName}</h2>
+          {detail.filename ? <p className="cb-sheet__file">{detail.filename}</p> : null}
+          {detail.flags.length ? (
+            <FlagList className="cb-sheet__flags">
+              {detail.flags.map((flag) => (
+                <Flag
+                  key={flag}
+                  tone={flag === "已过期" || flag === "即将到期" ? FlagTone.Warn : FlagTone.Info}
+                >
+                  {flag}
+                </Flag>
+              ))}
+            </FlagList>
+          ) : null}
+        </div>
       </header>
 
       <SheetSection title="有效期">
@@ -37,10 +43,9 @@ export function CertDetailBody({ detail }: CertDetailBodyProps) {
           notBefore={detail.notBeforeLabel}
           notAfter={detail.notAfterLabel}
           expired={detail.isExpired}
+          daysLeft={detail.daysLeft}
+          progress={detail.validityProgress}
         />
-        {detail.daysLeft != null ? (
-          <p className="cb-sheet__hint">剩余约 {detail.daysLeft} 天</p>
-        ) : null}
       </SheetSection>
 
       <CertDnBlock title="主体" dn={detail.subject} />
@@ -81,7 +86,7 @@ export function CertDetailBody({ detail }: CertDetailBodyProps) {
         </SheetSection>
       ) : null}
 
-      <p className="cb-muted">点击任意字段即可复制。</p>
+      <p className="cb-sheet__copy-hint">点击任意字段即可复制到剪贴板</p>
     </>
   );
 }

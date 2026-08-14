@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { Space, Tag } from "antd-mobile";
 import { FlagTone } from "@/entities/module/enums";
 
 type FlagProps = {
@@ -8,11 +7,8 @@ type FlagProps = {
 };
 
 export function Flag({ children, tone = FlagTone.Warn }: FlagProps) {
-  return (
-    <Tag color={tone === FlagTone.Info ? "primary" : "warning"} fill="outline" round>
-      {children}
-    </Tag>
-  );
+  const toneClass = tone === FlagTone.Info ? "info" : "warn";
+  return <span className={`cb-flag tone-${toneClass}`}>{children}</span>;
 }
 
 type FlagListProps = {
@@ -20,10 +16,6 @@ type FlagListProps = {
   className?: string;
 };
 
-export function FlagList({ children, className = "cb-stage__flags" }: FlagListProps) {
-  return (
-    <Space className={className} wrap>
-      {children}
-    </Space>
-  );
+export function FlagList({ children, className }: FlagListProps) {
+  return <div className={className || "cb-flag-list"}>{children}</div>;
 }

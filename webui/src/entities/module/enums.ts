@@ -56,6 +56,7 @@ export enum TrustTone {
 export enum FlagTone {
   Warn = "warn",
   Info = "info",
+  Ok = "ok",
 }
 
 /** 安装 / 注入日志等级（与 shell [LEVEL] 前缀一致） */

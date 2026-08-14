@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { refreshStatus, requestReboot } from "@/features/status/model/statusSlice";
+import { selectStatusRefreshing } from "@/features/status/model/selectors";
 import { useTrustOverview } from "@/features/overview/hooks/useTrustOverview";
 import { selectThemePack } from "@/features/theme/model/selectors";
 import { MetricGrid, PageRefresh, PageSpin } from "@/shared/ui";
@@ -19,6 +20,7 @@ export function OverviewPage() {
   const pack = useAppSelector(selectThemePack);
   const voice = getPackVoice(pack);
   const overview = useTrustOverview();
+  const isRefreshing = useAppSelector(selectStatusRefreshing);
   const statusText =
     overview.injectDiagnosis?.hint ||
     (overview.trust.tone === TrustTone.Idle && overview.isLoading
@@ -61,6 +63,7 @@ export function OverviewPage() {
       diagnosisMessage={overview.injectDiagnosis?.message}
       isPendingReboot={overview.isPendingReboot}
       isHotMountActive={overview.isHotMountActive}
+      isRefreshing={isRefreshing}
       onRefresh={() => void dispatch(refreshStatus(true))}
       onViewLog={() => navigate(TAB_PATH[TabName.Log], { replace: true })}
     />
@@ -86,6 +89,7 @@ export function OverviewPage() {
           names={overview.activeNames}
         />
         <OverviewRuntime
+          pack={pack}
           title={voice.runtimeTitle}
           androidLabel={overview.androidLabel}
           rootLabel={overview.rootLabel}

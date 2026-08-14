@@ -49,11 +49,13 @@
   text-align: center;
   box-shadow: var(--cb-card-shadow);
   transition:
-    transform var(--cb-ease-out),
+    transform var(--cb-press-out),
     box-shadow var(--cb-ease);
 
   &:active {
-    transform: scale(0.98);
+    transform: scale(0.97);
+    transition-duration: 0.08s;
+    transition-timing-function: cubic-bezier(0.4, 0, 1, 1);
   }
 
   .value {
@@ -73,5 +75,34 @@
     font-weight: 600;
     line-height: 1.35;
     letter-spacing: 0.02em;
+  }
+}
+
+/* ── Runtime spec ── */
+
+.cb-runtime {
+  display: grid;
+  gap: 8px;
+}
+
+.cb-runtime__item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+
+  span {
+    color: var(--cb-ink-3);
+    font-size: 0.66rem;
+    font-weight: 650;
+    letter-spacing: 0.04em;
+  }
+
+  strong {
+    color: var(--cb-ink);
+    font-size: 0.92rem;
+    font-weight: 700;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
   }
 }

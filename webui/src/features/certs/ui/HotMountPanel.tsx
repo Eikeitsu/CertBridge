@@ -16,6 +16,7 @@ import { resolveHotSessionLabel } from "../lib/hotSession";
 type HotMountPanelProps = {
   sectionLabel?: string;
   panelTitle?: string;
+  busy?: boolean;
   onSetHotAllow: (checked: boolean) => void;
   onMount: (mode: HotMountMode, sdPath?: string) => void;
   onUnmount: () => void;
@@ -24,6 +25,7 @@ type HotMountPanelProps = {
 export function HotMountPanel({
   sectionLabel = "临时会话",
   panelTitle = "免重启挂载",
+  busy = false,
   onSetHotAllow,
   onMount,
   onUnmount,
@@ -47,11 +49,8 @@ export function HotMountPanel({
       <SectionLabel>{sectionLabel}</SectionLabel>
       <Panel title={panelTitle} meta={panelMeta}>
         <List mode="card" className="cb-hot-panel__prefs">
-          <PrefRow
-            label="允许临时挂载"
-            description="关闭后不会自动扫描目录；仅禁止新建会话，不影响上方永久证书"
-          >
-            <Switch checked={isHotAllow} onChange={onSetHotAllow} />
+          <PrefRow label="允许临时挂载" description="关闭后无法新建临时会话">
+            <Switch checked={isHotAllow} loading={busy} onChange={onSetHotAllow} />
           </PrefRow>
         </List>
 
@@ -71,7 +70,7 @@ export function HotMountPanel({
             ) : null}
             <div className="cb-actions__row" style={{ marginTop: 12 }}>
               {isHotPartial ? <Flag>部分未覆盖</Flag> : null}
-              <Button color="danger" onClick={onUnmount}>
+              <Button color="danger" loading={busy} onClick={onUnmount}>
                 无痕卸载
               </Button>
             </div>
@@ -101,6 +100,7 @@ export function HotMountPanel({
               <Button
                 color="primary"
                 block
+                loading={busy}
                 onClick={() => onMount(mode, needsSdPath ? sdPath : undefined)}
               >
                 开始临时挂载

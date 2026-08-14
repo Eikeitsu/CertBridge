@@ -38,10 +38,12 @@
     background var(--cb-ease),
     color var(--cb-ease),
     box-shadow var(--cb-ease),
-    transform 0.12s ease;
+    transform var(--cb-press-out);
 
   &:active {
     transform: scale(0.97);
+    transition-duration: 0.08s;
+    transition-timing-function: cubic-bezier(0.4, 0, 1, 1);
   }
 }
 

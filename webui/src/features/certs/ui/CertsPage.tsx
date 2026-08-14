@@ -19,6 +19,7 @@ export function CertsPage() {
   const isStatusLoading = useAppSelector(selectStatusLoading);
   const {
     isPending,
+    pendingKind,
     handleToggleBuiltin,
     handleImportFile,
     handleRemoveCustom,
@@ -37,13 +38,11 @@ export function CertsPage() {
   } = useCertDetail();
 
   return (
-    <PageSpin
-      spinning={isStatusLoading || isPending}
-      label={isPending ? voice.applyingHint : voice.loadingHint}
-    >
+    <PageSpin spinning={isStatusLoading} label={voice.loadingHint}>
       <PageRefresh onRefresh={() => dispatch(refreshStatus(true)).unwrap()}>
         <SectionLabel>{voice.certPermanent}</SectionLabel>
         <BuiltinCertsGroup
+          pendingKind={pendingKind}
           onOpenDetail={(id, name) => void openDetail(id, name)}
           onToggle={(kind, checked) => void handleToggleBuiltin(kind, checked)}
         />
@@ -55,6 +54,7 @@ export function CertsPage() {
         <HotMountPanel
           sectionLabel={voice.certSession}
           panelTitle={voice.hotMountTitle}
+          busy={isPending}
           onSetHotAllow={(checked) => void handleSetHotAllow(checked)}
           onMount={handleHotMount}
           onUnmount={handleHotUnmount}

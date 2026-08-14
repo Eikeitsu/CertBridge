@@ -72,3 +72,9 @@
 .cb-stack {
   margin-bottom: 14px;
 }
+
+.cb-seg.is-busy {
+  opacity: 0.58;
+  pointer-events: none;
+  transition: opacity var(--cb-ease);
+}

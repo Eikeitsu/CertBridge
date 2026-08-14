@@ -4,8 +4,8 @@ export async function copyText(value: string, okMessage = "已复制") {
   if (!value) return;
   try {
     await navigator.clipboard.writeText(value);
-    toast(okMessage);
+    toast(okMessage, "ok");
   } catch {
-    toast("复制失败");
+    toast("复制失败", "bad");
   }
 }

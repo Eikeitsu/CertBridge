@@ -1,6 +1,10 @@
-import { DetailGrid, HelpCollapse } from "@/shared/ui";
+import { ThemePack } from "@/entities/module/enums";
+import { Panel } from "@/shared/ui";
+
+type RuntimeItem = { label: string; value: string };
 
 type OverviewRuntimeProps = {
+  pack: ThemePack;
   title: string;
   androidLabel: string;
   rootLabel: string;
@@ -12,6 +16,7 @@ type OverviewRuntimeProps = {
 };
 
 export function OverviewRuntime({
+  pack,
   title,
   androidLabel,
   rootLabel,
@@ -21,21 +26,25 @@ export function OverviewRuntime({
   hotStatusLabel,
   lastRefreshedAt,
 }: OverviewRuntimeProps) {
+  const items: RuntimeItem[] = [
+    { label: "Android", value: androidLabel },
+    { label: "Root", value: rootLabel },
+    { label: "APEX", value: apexLabel },
+    { label: "挂载", value: mountModeLabel },
+    { label: "版本", value: versionLabel },
+    { label: "热挂载", value: hotStatusLabel },
+  ];
+
   return (
-    <HelpCollapse title={title}>
-      <DetailGrid
-        items={[
-          { label: "Android", value: androidLabel },
-          { label: "Root", value: rootLabel },
-          { label: "APEX", value: apexLabel },
-          { label: "挂载", value: mountModeLabel },
-          { label: "版本", value: versionLabel },
-          { label: "热挂载", value: hotStatusLabel },
-        ]}
-      />
-      <p className="cb-muted" style={{ marginTop: 12 }}>
-        最近刷新 · {lastRefreshedAt}
-      </p>
-    </HelpCollapse>
+    <Panel title={title} meta={`最近刷新 · ${lastRefreshedAt}`}>
+      <div className={`cb-runtime is-${pack}`}>
+        {items.map((item) => (
+          <div key={item.label} className="cb-runtime__item">
+            <span>{item.label}</span>
+            <strong>{item.value}</strong>
+          </div>
+        ))}
+      </div>
+    </Panel>
   );
 }

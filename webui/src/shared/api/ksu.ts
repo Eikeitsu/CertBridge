@@ -1,5 +1,7 @@
 import type { ExecResult } from "@/entities/module/types";
 import { CLI_TIMEOUT_MS } from "@/shared/config/constants";
+import { haptic, type HapticKind } from "@/shared/lib/haptic";
+import { showSnack, type SnackTone } from "@/shared/lib/snack";
 
 export function hasBridge(): boolean {
   return typeof ksu !== "undefined" && typeof ksu?.exec === "function";
@@ -58,10 +60,8 @@ export function openUrl(url: string): Promise<ExecResult> {
   return exec(`am start -a android.intent.action.VIEW -d '${safe}' >/dev/null 2>&1`);
 }
 
-export function toast(message: string) {
-  if (typeof ksu !== "undefined" && typeof ksu.toast === "function") {
-    ksu.toast(message);
-    return;
-  }
-  console.warn(message);
+export function toast(message: string, tone: SnackTone = "info") {
+  const kind: HapticKind = tone === "bad" ? "error" : tone === "ok" ? "success" : "light";
+  haptic(kind);
+  showSnack(message, tone);
 }

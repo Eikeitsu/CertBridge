@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { TAB_PATH, isTabName } from "@/shared/config/navigation";
 import { TabName } from "@/entities/module/enums";
+import { haptic } from "@/shared/lib/haptic";
 
 function resolveTabFromPath(pathname: string): TabName {
   if (pathname.startsWith(TAB_PATH[TabName.Certs])) return TabName.Certs;
@@ -16,6 +17,7 @@ export function useActiveTab() {
 
   const switchTab = (name: string) => {
     if (!isTabName(name) || name === activeTab) return;
+    haptic("light");
     navigate(TAB_PATH[name], { replace: true });
   };
 

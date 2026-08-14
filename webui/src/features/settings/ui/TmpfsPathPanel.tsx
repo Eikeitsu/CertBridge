@@ -8,14 +8,16 @@ import { HelpCollapse, Panel, Segmented } from "@/shared/ui";
 
 type TmpfsPathPanelProps = {
   tmpfsStyle: TmpfsStyle;
+  pending?: boolean;
   onChange: (style: TmpfsStyle) => void;
 };
 
-export function TmpfsPathPanel({ tmpfsStyle, onChange }: TmpfsPathPanelProps) {
+export function TmpfsPathPanel({ tmpfsStyle, pending, onChange }: TmpfsPathPanelProps) {
   return (
     <Panel title="临时挂载路径" meta={TMPFS_STYLES[tmpfsStyle].meta}>
       <Segmented
         value={tmpfsStyle}
+        disabled={pending}
         onChange={onChange}
         options={TMPFS_STYLE_OPTIONS.map((option) => ({
           label: option.label,

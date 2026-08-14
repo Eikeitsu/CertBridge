@@ -98,7 +98,7 @@ export const BUILTIN_CERTS = [
   {
     kind: BuiltinCertKind.Reqable,
     fallbackTitle: BUILTIN_BRAND_ICON[BuiltinCertKind.Reqable].label,
-    missingHint: "未检测到证书（请先在 App 中生成）",
+    missingHint: "未检测到证书",
   },
   {
     kind: BuiltinCertKind.ProxyPin,

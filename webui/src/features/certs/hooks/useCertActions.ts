@@ -1,6 +1,6 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useAppDispatch } from "@/app/store/hooks";
-import { refreshStatus } from "@/features/status/model/statusSlice";
+import { patchStatus, refreshStatus } from "@/features/status/model/statusSlice";
 import {
   hotMount,
   hotUnmount,
@@ -21,32 +21,42 @@ import { useAsyncLock } from "@/shared/hooks/useAsyncLock";
 import { HotMountMode, type BuiltinCertKind } from "@/entities/module/enums";
 import { HOT_MOUNT_CONFIRM_LABEL } from "@/shared/config/certs";
 
+const REFRESH_AFTER_MUTATE = { syncApps: false } as const;
+
 export function useCertActions() {
   const dispatch = useAppDispatch();
   const { isPending, runExclusive } = useAsyncLock();
+  const [pendingKind, setPendingKind] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    await dispatch(refreshStatus(false));
+    await dispatch(refreshStatus(REFRESH_AFTER_MUTATE));
   }, [dispatch]);
 
   const handleToggleBuiltin = useCallback(
     async (kind: BuiltinCertKind, checked: boolean) => {
       await runExclusive(async () => {
-        const result = await toggleBuiltin(kind, checked ? FLAG_ON : FLAG_OFF);
-        if (isCliFailure(result)) {
-          toast(errorFromResult(result.stdout, result.stderr));
-          return;
+        setPendingKind(kind);
+        dispatch(patchStatus({ [`${kind}_enabled`]: checked ? FLAG_ON : FLAG_OFF }));
+        try {
+          const result = await toggleBuiltin(kind, checked ? FLAG_ON : FLAG_OFF);
+          if (isCliFailure(result)) {
+            toast(errorFromResult(result.stdout, result.stderr), "bad");
+            await refresh();
+            return;
+          }
+          const kv = parseKv(result.stdout || "");
+          toastByRebootFlag(
+            kv,
+            checked ? "已开启，重启后生效" : "已关闭，重启后移除",
+            checked ? "已开启（与当前生效一致）" : "已关闭（与当前生效一致）",
+          );
+          await refresh();
+        } finally {
+          setPendingKind(null);
         }
-        const kv = parseKv(result.stdout || "");
-        toastByRebootFlag(
-          kv,
-          checked ? "已开启，重启后生效" : "已关闭，重启后移除",
-          checked ? "已开启（与当前生效一致）" : "已关闭（与当前生效一致）",
-        );
-        await refresh();
       });
     },
-    [refresh, runExclusive],
+    [dispatch, refresh, runExclusive],
   );
 
   const handleImportFile = useCallback(
@@ -56,14 +66,14 @@ export function useCertActions() {
           const payload = await fileToBase64(file);
           const result = await installCustom(payload);
           if (isCliFailure(result)) {
-            toast(errorFromResult(result.stdout, result.stderr));
+            toast(errorFromResult(result.stdout, result.stderr), "bad");
             return;
           }
           const kv = parseKv(result.stdout || "");
           toastByRebootFlag(kv, "已导入，重启后生效", "已导入（无需重启）");
           await refresh();
         } catch {
-          toast("读取文件失败");
+          toast("读取文件失败", "bad");
         }
       });
       return false;
@@ -81,7 +91,7 @@ export function useCertActions() {
         onOk: async () => {
           const result = await removeCustom(fileName);
           if (isCliFailure(result)) {
-            toast(errorFromResult(result.stdout, result.stderr));
+            toast(errorFromResult(result.stdout, result.stderr), "bad");
             return;
           }
           const kv = parseKv(result.stdout || "");
@@ -97,13 +107,14 @@ export function useCertActions() {
     (checked: boolean) => {
       const apply = () =>
         runExclusive(async () => {
+          dispatch(patchStatus({ hot_allow: checked ? FLAG_ON : FLAG_OFF }));
           const result = await setHotAllow(checked ? FLAG_ON : FLAG_OFF);
           if (isCliFailure(result)) {
-            toast(errorFromResult(result.stdout, result.stderr));
+            toast(errorFromResult(result.stdout, result.stderr), "bad");
             await refresh();
             return;
           }
-          toast(checked ? "已允许手动临时挂载" : "已关闭临时挂载");
+          toast(checked ? "已允许手动临时挂载" : "已关闭临时挂载", "ok");
           await refresh();
         });
 
@@ -120,13 +131,13 @@ export function useCertActions() {
 
       void apply();
     },
-    [refresh, runExclusive],
+    [dispatch, refresh, runExclusive],
   );
 
   const handleHotMount = useCallback(
     (mode: HotMountMode, sdPath?: string) => {
       if (mode !== HotMountMode.User && !isSafeSdPath(sdPath || "")) {
-        toast("存储卡路径不安全或不受支持");
+        toast("存储卡路径不安全或不受支持", "warn");
         return;
       }
 
@@ -143,7 +154,7 @@ export function useCertActions() {
             );
             const fields = parseKv(result.stdout);
             if (isCliFailure(result) || fields.ok !== FLAG_ON) {
-              toast(errorFromResult(result.stdout, result.stderr));
+              toast(errorFromResult(result.stdout, result.stderr), "bad");
               await refresh();
               return;
             }
@@ -153,6 +164,7 @@ export function useCertActions() {
               failedCount > 0
                 ? `已挂载 ${addedCount} 张，${failedCount} 个会话未覆盖`
                 : `已免重启挂载 ${addedCount} 张证书`,
+              failedCount > 0 ? "warn" : "ok",
             );
             await refresh();
           }),
@@ -177,11 +189,12 @@ export function useCertActions() {
               fields.hot_remaining
                 ? `卸载未完成，仍有 ${fields.hot_remaining} 个会话，请重试或重启`
                 : errorFromResult(result.stdout, result.stderr),
+              "bad",
             );
             await refresh();
             return;
           }
-          toast("临时证书已无痕卸载");
+          toast("临时证书已无痕卸载", "ok");
           await refresh();
         }),
     });
@@ -189,6 +202,7 @@ export function useCertActions() {
 
   return {
     isPending,
+    pendingKind,
     handleToggleBuiltin,
     handleImportFile,
     handleRemoveCustom,

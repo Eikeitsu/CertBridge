@@ -9,14 +9,16 @@ import { HelpCollapse, Panel, Segmented } from "@/shared/ui";
 
 type MountModePanelProps = {
   mountMode: MountMode;
+  pending?: boolean;
   onChange: (mode: MountMode) => void;
 };
 
-export function MountModePanel({ mountMode, onChange }: MountModePanelProps) {
+export function MountModePanel({ mountMode, pending, onChange }: MountModePanelProps) {
   return (
     <Panel title="挂载模式" meta={MOUNT_MODES[mountMode].meta}>
       <Segmented
         value={mountMode}
+        disabled={pending}
         onChange={onChange}
         options={MOUNT_MODE_OPTIONS.map((option) => ({
           label: option.label,

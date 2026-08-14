@@ -5,5 +5,8 @@ export function toastByRebootFlag(
   whenRequired: string,
   whenCleared: string,
 ) {
-  toast(kv.reboot_required === "1" ? whenRequired : whenCleared);
+  toast(
+    kv.reboot_required === "1" ? whenRequired : whenCleared,
+    kv.reboot_required === "1" ? "warn" : "ok",
+  );
 }

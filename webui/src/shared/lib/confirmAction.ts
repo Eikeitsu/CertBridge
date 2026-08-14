@@ -1,4 +1,5 @@
 import { Dialog } from "antd-mobile";
+import { haptic } from "@/shared/lib/haptic";
 
 type ConfirmActionOptions = {
   title: string;
@@ -15,6 +16,7 @@ export function confirmAction({
   danger,
   onOk,
 }: ConfirmActionOptions) {
+  haptic("medium");
   void Dialog.show({
     title,
     content,

@@ -29,7 +29,9 @@ export function AppTopbar({
         )}
         <div className="app-topbar__titles">
           {isStrata ? <span className="app-topbar__kicker">{brandTitle}</span> : null}
-          <h1 className="nav-title">{title}</h1>
+          <h1 key={title} className="nav-title">
+            {title}
+          </h1>
           {isStrata || !kicker ? null : (
             <span className="app-topbar__kicker">{kicker}</span>
           )}

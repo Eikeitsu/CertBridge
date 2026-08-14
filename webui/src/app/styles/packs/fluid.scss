@@ -301,10 +301,24 @@ html[data-pack="fluid"] {
   .app-dock {
     border-top: 0;
 
+    .adm-tab-bar-item:active {
+      transform: scale(0.96);
+      transition-duration: 80ms;
+    }
+
     .adm-tab-bar-item-active {
       color: var(--cb-primary);
       font-weight: 750;
+
+      .adm-tab-bar-item-icon {
+        transform: scale(1.06);
+      }
     }
+  }
+
+  .cb-snack {
+    border-radius: 999px;
+    padding-inline: 22px;
   }
 
   &[data-float-dock="1"] .app-dock {
@@ -416,6 +430,30 @@ html[data-pack="fluid"] {
     bottom: 7px;
     border-radius: 999px;
     box-shadow: 0 0 10px color-mix(in srgb, var(--cb-primary) 45%, transparent);
+  }
+
+  .cb-runtime {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .cb-runtime__item {
+    flex: 1 1 calc(50% - 8px);
+    min-width: 132px;
+    padding: 12px 14px;
+    border-radius: 999px;
+    background: var(--cb-glass-c);
+    border: 1px solid color-mix(in srgb, #fff 45%, var(--cb-stroke));
+
+    span {
+      color: var(--cb-primary);
+      letter-spacing: 0.06em;
+    }
+
+    strong {
+      font-size: 0.9rem;
+    }
   }
 }
 

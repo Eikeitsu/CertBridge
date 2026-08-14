@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import {
   fetchDeviceLabel,
   fetchStatus,
@@ -14,6 +14,7 @@ import { formatClockTime } from "@/shared/lib/clock";
 
 type StatusState = {
   loading: boolean;
+  refreshing: boolean;
   status: ModuleStatus;
   customCertificates: CustomCertificate[];
   deviceLabel: string;
@@ -21,8 +22,28 @@ type StatusState = {
   error?: string;
 };
 
+export type RefreshStatusArg =
+  | boolean
+  | {
+      toast?: boolean;
+      syncApps?: boolean;
+    }
+  | undefined;
+
+function resolveRefreshArg(arg: RefreshStatusArg) {
+  if (arg === true) return { toast: true, syncApps: true };
+  if (arg && typeof arg === "object") {
+    return {
+      toast: Boolean(arg.toast),
+      syncApps: arg.syncApps !== false,
+    };
+  }
+  return { toast: false, syncApps: true };
+}
+
 const initialState: StatusState = {
   loading: true,
+  refreshing: false,
   status: {},
   customCertificates: [],
   deviceLabel: "本机",
@@ -57,13 +78,16 @@ function formatSyncToast(sync: {
 
 export const refreshStatus = createAsyncThunk(
   "status/refresh",
-  async (showToast: boolean | undefined) => {
-    const sync = await syncAppSources().catch(() => ({
-      updated: 0,
-      kept: 0,
-      miss: 0,
-      rebootRequired: false,
-    }));
+  async (arg: RefreshStatusArg) => {
+    const { toast: showToast, syncApps } = resolveRefreshArg(arg);
+    const sync = syncApps
+      ? await syncAppSources().catch(() => ({
+          updated: 0,
+          kept: 0,
+          miss: 0,
+          rebootRequired: false,
+        }))
+      : { updated: 0, kept: 0, miss: 0, rebootRequired: false };
     const [status, customCertificates] = await Promise.all([
       fetchStatus(),
       listCustom().catch(() => [] as CustomCertificate[]),
@@ -77,14 +101,18 @@ export const refreshStatus = createAsyncThunk(
 );
 
 export const requestReboot = createAsyncThunk("status/reboot", async () => {
-  toast("正在重启…");
+  toast("正在重启…", "warn");
   await rebootDevice();
 });
 
 const statusSlice = createSlice({
   name: "status",
   initialState,
-  reducers: {},
+  reducers: {
+    patchStatus(state, action: PayloadAction<Record<string, string>>) {
+      state.status = { ...state.status, ...action.payload };
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(bootstrapStatus.pending, (state) => {
@@ -101,22 +129,29 @@ const statusSlice = createSlice({
       .addCase(bootstrapStatus.rejected, (state, action) => {
         state.loading = false;
         state.error = friendlyError(action.error.message);
-        toast(state.error);
+        toast(state.error, "bad");
       })
       .addCase(refreshStatus.pending, (state) => {
-        state.loading = true;
+        state.refreshing = true;
+        if (!state.status.version && !state.status.module_ok) {
+          state.loading = true;
+        }
       })
       .addCase(refreshStatus.fulfilled, (state, action) => {
         state.loading = false;
+        state.refreshing = false;
         state.status = action.payload.status;
         state.customCertificates = action.payload.customCertificates;
         state.lastRefreshedAt = formatClockTime();
       })
       .addCase(refreshStatus.rejected, (state, action) => {
         state.loading = false;
-        toast(friendlyError(action.error.message));
+        state.refreshing = false;
+        toast(friendlyError(action.error.message), "bad");
       });
   },
 });
+
+export const { patchStatus } = statusSlice.actions;
 
 export default statusSlice.reducer;

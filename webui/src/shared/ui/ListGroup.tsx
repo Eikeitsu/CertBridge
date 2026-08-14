@@ -31,12 +31,24 @@ type ListRowProps = {
   leading?: ReactNode;
   title: string;
   subtitle?: string;
+  flags?: ReactNode;
   actions?: ReactNode;
 };
 
-export function ListRow({ leading, title, subtitle, actions }: ListRowProps) {
+export function ListRow({ leading, title, subtitle, flags, actions }: ListRowProps) {
   return (
-    <List.Item prefix={leading} extra={actions} description={subtitle}>
+    <List.Item
+      prefix={leading}
+      extra={actions}
+      description={
+        subtitle || flags ? (
+          <div className="cb-list-row__meta">
+            {subtitle ? <span className="cb-list-row__sub">{subtitle}</span> : null}
+            {flags}
+          </div>
+        ) : undefined
+      }
+    >
       {title}
     </List.Item>
   );

@@ -20,7 +20,7 @@ export function useCertDetail() {
     const result = await certInfo(target);
     setLoading(false);
     if (result.errno !== 0 && !result.stdout) {
-      toast(friendlyError(result.stderr));
+      toast(friendlyError(result.stderr), "bad");
       setIsOpen(false);
       return;
     }

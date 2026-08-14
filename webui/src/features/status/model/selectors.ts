@@ -7,6 +7,11 @@ export const selectCustomCertificates = (state: RootState) =>
 
 export const selectStatusLoading = (state: RootState) => state.status.loading;
 
+export const selectStatusRefreshing = (state: RootState) => state.status.refreshing;
+
+export const selectHasModuleStatus = (state: RootState) =>
+  Boolean(state.status.status.version || state.status.status.module_ok);
+
 export const selectDeviceLabel = (state: RootState) => state.status.deviceLabel;
 
 export const selectLastRefreshedAt = (state: RootState) => state.status.lastRefreshedAt;

@@ -272,7 +272,21 @@ html[data-pack="material"] {
       &::after {
         display: none;
       }
+
+      .adm-tab-bar-item-icon {
+        transform: scale(1.08);
+      }
     }
+
+    .adm-tab-bar-item:active {
+      transform: scale(0.96);
+      transition-duration: 80ms;
+    }
+  }
+
+  .cb-snack {
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(26, 35, 50, 0.22);
   }
 
   /* 日志：色调 chips */
@@ -354,6 +368,27 @@ html[data-pack="material"] {
     border-radius: 8px;
     padding: 4px 11px;
     font-size: 0.7rem;
+  }
+
+  .cb-runtime {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .cb-runtime__item {
+    padding: 14px 14px 12px;
+    border-radius: var(--cb-radius);
+    background: var(--cb-surface-2);
+
+    span {
+      letter-spacing: 0;
+      font-size: 0.7rem;
+    }
+
+    strong {
+      font-size: 1.02rem;
+      letter-spacing: -0.02em;
+    }
   }
 }
 

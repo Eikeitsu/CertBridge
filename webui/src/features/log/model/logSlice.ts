@@ -35,7 +35,7 @@ export const clearActivityLog = createAsyncThunk("log/clear", async () => {
   if (result.errno !== 0) {
     throw new Error(errorFromResult(result.stdout, result.stderr));
   }
-  toast("日志已清空");
+  toast("日志已清空", "ok");
   restoreChromeInsets();
   return true;
 });
@@ -58,7 +58,7 @@ const logSlice = createSlice({
       .addCase(fetchActivityLog.rejected, (state, action) => {
         state.loading = false;
         state.text = "暂无法读取日志";
-        toast(friendlyError(action.error.message));
+        toast(friendlyError(action.error.message), "bad");
       })
       .addCase(clearActivityLog.fulfilled, (state) => {
         state.text = "暂无日志";
@@ -66,7 +66,7 @@ const logSlice = createSlice({
         state.lines = 0;
       })
       .addCase(clearActivityLog.rejected, (_state, action) => {
-        toast(friendlyError(action.error.message));
+        toast(friendlyError(action.error.message), "bad");
       });
   },
 });

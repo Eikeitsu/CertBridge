@@ -71,6 +71,8 @@
   --cb-panel-border: 1px;
   --cb-ease: 0.22s cubic-bezier(0.22, 1, 0.36, 1);
   --cb-ease-out: 0.16s cubic-bezier(0.33, 1, 0.68, 1);
+  --cb-press-in: 0.08s cubic-bezier(0.4, 0, 1, 1);
+  --cb-press-out: 0.32s cubic-bezier(0.16, 1, 0.3, 1);
   --cb-shadow-sm: 0 1px 2px rgba(26, 35, 50, 0.05);
   --cb-shadow-md: 0 4px 16px rgba(26, 35, 50, 0.07);
   --cb-elev-1: var(--cb-shadow-sm);
@@ -173,6 +175,7 @@ body,
 #root {
   margin: 0;
   min-height: 100%;
+  touch-action: manipulation;
 }
 
 html {

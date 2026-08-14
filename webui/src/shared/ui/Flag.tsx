@@ -7,8 +7,7 @@ type FlagProps = {
 };
 
 export function Flag({ children, tone = FlagTone.Warn }: FlagProps) {
-  const toneClass = tone === FlagTone.Info ? "info" : "warn";
-  return <span className={`cb-flag tone-${toneClass}`}>{children}</span>;
+  return <span className={`cb-flag tone-${tone}`}>{children}</span>;
 }
 
 type FlagListProps = {

@@ -14,6 +14,7 @@ type OverviewStageProps = {
   diagnosisMessage?: string;
   isPendingReboot: boolean;
   isHotMountActive: boolean;
+  isRefreshing?: boolean;
   onRefresh: () => void;
   onViewLog: () => void;
 };
@@ -29,6 +30,7 @@ export function OverviewStage({
   diagnosisMessage,
   isPendingReboot,
   isHotMountActive,
+  isRefreshing,
   onRefresh,
   onViewLog,
 }: OverviewStageProps) {
@@ -65,7 +67,13 @@ export function OverviewStage({
         </>
       }
       footer={
-        <Button size="small" fill="outline" color="primary" onClick={onRefresh}>
+        <Button
+          size="small"
+          fill="outline"
+          color="primary"
+          loading={isRefreshing}
+          onClick={onRefresh}
+        >
           <LoopOutline />
           {refreshLabel}
         </Button>

@@ -5,7 +5,7 @@ import { useTmpfsStyle } from "@/features/settings/hooks/useTmpfsStyle";
 import { useAppSelector } from "@/app/store/hooks";
 import { selectThemePack } from "@/features/theme/model/selectors";
 import { getPackVoice } from "@/shared/config/packVoice";
-import { PageSpin, SectionLabel } from "@/shared/ui";
+import { SectionLabel } from "@/shared/ui";
 import { MountModePanel } from "./MountModePanel";
 import { TmpfsPathPanel } from "./TmpfsPathPanel";
 import { SettingsWorkflow } from "./SettingsWorkflow";
@@ -25,23 +25,25 @@ export function SettingsPage() {
   } = useTmpfsStyle();
 
   return (
-    <PageSpin spinning={isMountPending || isTmpfsPending} label={voice.applyingHint}>
+    <>
       <SectionLabel>{voice.settingsUi}</SectionLabel>
       <AppearancePanel />
 
       <SectionLabel>{voice.settingsModule}</SectionLabel>
       <MountModePanel
         mountMode={mountMode}
+        pending={isMountPending}
         onChange={(mode) => void handleMountChange(mode)}
       />
       <TmpfsPathPanel
         tmpfsStyle={tmpfsStyle}
+        pending={isTmpfsPending}
         onChange={(style) => void handleTmpfsChange(style)}
       />
       <SettingsWorkflow />
 
       <SectionLabel>{voice.settingsAbout}</SectionLabel>
       <AboutSection />
-    </PageSpin>
+    </>
   );
 }

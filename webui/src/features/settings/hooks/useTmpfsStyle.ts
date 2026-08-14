@@ -1,7 +1,7 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { selectModuleStatus } from "@/features/status/model/selectors";
-import { refreshStatus } from "@/features/status/model/statusSlice";
+import { patchStatus, refreshStatus } from "@/features/status/model/statusSlice";
 import { setTmpfsStyle } from "@/shared/api/cli";
 import { errorFromResult } from "@/shared/api/errors";
 import { toast } from "@/shared/api/ksu";
@@ -16,14 +16,25 @@ export function useTmpfsStyle() {
   const dispatch = useAppDispatch();
   const status = useAppSelector(selectModuleStatus);
   const { isPending, runExclusive } = useAsyncLock();
-  const tmpfsStyle = parseEnum(TmpfsStyle, status.tmpfs_style, TmpfsStyle.Short);
+  const statusStyle = parseEnum(TmpfsStyle, status.tmpfs_style, TmpfsStyle.Short);
+  const [draft, setDraft] = useState<TmpfsStyle | null>(null);
+  const tmpfsStyle = draft ?? statusStyle;
+
+  useEffect(() => {
+    if (draft && statusStyle === draft) setDraft(null);
+  }, [draft, statusStyle]);
 
   const handleChange = useCallback(
     async (style: TmpfsStyle) => {
+      if (style === tmpfsStyle || isPending) return;
+      setDraft(style);
+      dispatch(patchStatus({ tmpfs_style: style }));
       await runExclusive(async () => {
         const result = await setTmpfsStyle(style);
         if (isCliFailure(result)) {
-          toast(errorFromResult(result.stdout, result.stderr));
+          setDraft(null);
+          toast(errorFromResult(result.stdout, result.stderr), "bad");
+          await dispatch(refreshStatus({ syncApps: false }));
           return;
         }
         const kv = parseKv(result.stdout || "");
@@ -32,10 +43,10 @@ export function useTmpfsStyle() {
           "临时路径风格已更新，重启后生效",
           "临时路径风格已恢复为当前生效配置",
         );
-        await dispatch(refreshStatus(false));
+        await dispatch(refreshStatus({ syncApps: false }));
       });
     },
-    [dispatch, runExclusive],
+    [dispatch, isPending, runExclusive, tmpfsStyle],
   );
 
   return { tmpfsStyle, isPending, handleChange };

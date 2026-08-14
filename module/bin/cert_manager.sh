@@ -66,6 +66,9 @@ hot_failed=0"
   if req_file=$(find_addon_cert reqable 0 2>/dev/null); then
     echo "reqable_available=1"
     echo "reqable_display=$(read_cert_meta_display "$req_file" "Reqable")"
+  elif is_addon_applied reqable; then
+    echo "reqable_available=1"
+    echo "reqable_display=$(get_applied_display reqable Reqable)"
   else
     echo "reqable_available=0"
     echo "reqable_display=Reqable"
@@ -77,6 +80,9 @@ hot_failed=0"
   if pp_file=$(find_addon_cert proxypin 0 2>/dev/null); then
     echo "proxypin_available=1"
     echo "proxypin_display=$(read_cert_meta_display "$pp_file" "ProxyPin")"
+  elif is_addon_applied proxypin; then
+    echo "proxypin_available=1"
+    echo "proxypin_display=$(get_applied_display proxypin ProxyPin)"
   else
     echo "proxypin_available=0"
     echo "proxypin_display=ProxyPin"
@@ -105,8 +111,9 @@ cmd_toggle() {
   [ "$value" = "1" ] || [ "$value" = "0" ] || { echo "error=invalid_value"; return 1; }
   if [ "$value" = "1" ]; then
     # 开启时尽量从 App 刷新；无来源则拒绝开启（ProxyPin 可用 builtin）
+    # 刚关闭、证书仍在生效时允许重新打开，不必再从 App 抓一份
     sync_source_from_app "$name" >/dev/null 2>&1 || true
-    if ! find_addon_cert "$name" 0 >/dev/null 2>&1; then
+    if ! find_addon_cert "$name" 0 >/dev/null 2>&1 && ! is_addon_applied "$name"; then
       echo "error=certificate_unavailable"
       echo "hint=请先在对应 App 中生成根证书，或使用自定义导入"
       return 1

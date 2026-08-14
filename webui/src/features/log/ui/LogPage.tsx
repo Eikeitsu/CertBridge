@@ -27,7 +27,7 @@ export function LogPage() {
   const handleRefresh = async () => {
     const action = await dispatch(fetchActivityLog());
     if (fetchActivityLog.fulfilled.match(action)) {
-      toast("日志已刷新");
+      toast("日志已刷新", "ok");
     }
   };
 

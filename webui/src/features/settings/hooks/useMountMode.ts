@@ -1,7 +1,7 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { selectModuleStatus } from "@/features/status/model/selectors";
-import { refreshStatus } from "@/features/status/model/statusSlice";
+import { patchStatus, refreshStatus } from "@/features/status/model/statusSlice";
 import { setMountMode } from "@/shared/api/cli";
 import { errorFromResult } from "@/shared/api/errors";
 import { toast } from "@/shared/api/ksu";
@@ -16,14 +16,25 @@ export function useMountMode() {
   const dispatch = useAppDispatch();
   const status = useAppSelector(selectModuleStatus);
   const { isPending, runExclusive } = useAsyncLock();
-  const mountMode = parseEnum(MountMode, status.mount_mode, MountMode.Compatible);
+  const statusMode = parseEnum(MountMode, status.mount_mode, MountMode.Compatible);
+  const [draft, setDraft] = useState<MountMode | null>(null);
+  const mountMode = draft ?? statusMode;
+
+  useEffect(() => {
+    if (draft && statusMode === draft) setDraft(null);
+  }, [draft, statusMode]);
 
   const handleChange = useCallback(
     async (mode: MountMode) => {
+      if (mode === mountMode || isPending) return;
+      setDraft(mode);
+      dispatch(patchStatus({ mount_mode: mode }));
       await runExclusive(async () => {
         const result = await setMountMode(mode);
         if (isCliFailure(result)) {
-          toast(errorFromResult(result.stdout, result.stderr));
+          setDraft(null);
+          toast(errorFromResult(result.stdout, result.stderr), "bad");
+          await dispatch(refreshStatus({ syncApps: false }));
           return;
         }
         const kv = parseKv(result.stdout || "");
@@ -32,10 +43,10 @@ export function useMountMode() {
           "兼容策略已更新，重启后生效",
           "兼容策略已恢复为当前生效配置",
         );
-        await dispatch(refreshStatus(false));
+        await dispatch(refreshStatus({ syncApps: false }));
       });
     },
-    [dispatch, runExclusive],
+    [dispatch, isPending, mountMode, runExclusive],
   );
 
   return { mountMode, isPending, handleChange };

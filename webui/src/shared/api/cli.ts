@@ -18,6 +18,7 @@ import type {
   ModuleStatus,
   TmpfsStyle,
 } from "@/entities/module/types";
+import { DEVICE_INFO_SHELL, formatDeviceLabel } from "@/shared/lib/device";
 
 const CUSTOM_LIST_PREFIX = "custom|";
 
@@ -121,22 +122,9 @@ export async function rebootDevice() {
 }
 
 export async function fetchDeviceLabel(): Promise<string> {
-  const result = await exec(
-    "getprop ro.product.marketname; getprop ro.product.model; getprop ro.build.version.release; getprop ro.mi.os.version.name",
-  );
+  const result = await exec(DEVICE_INFO_SHELL);
   if (result.errno === -1 && /no_bridge|no_ksu_bridge/.test(result.stderr || "")) {
     return "未检测到 WebUI 桥接";
   }
-  const lines = String(result.stdout || "")
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
-  const deviceName = lines[0] || lines[1] || "本机";
-  const androidRelease = lines[2] ? `Android ${lines[2]}` : "";
-  const hyperOsLabel = lines[3]
-    ? ` · ${lines[3]}`
-    : androidRelease
-      ? ` · ${androidRelease}`
-      : "";
-  return `${deviceName}${hyperOsLabel || (androidRelease ? ` · ${androidRelease}` : "")}`;
+  return formatDeviceLabel(result.stdout);
 }

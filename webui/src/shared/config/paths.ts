@@ -25,6 +25,8 @@ export const STORAGE_KEYS = {
   barBlur: "cb_bar_blur",
   monet: "cb_monet",
   accent: "cb_accent",
+  /** 首帧引导脚本直接读它，避免重复维护色板 */
+  accentColor: "cb_accent_color",
   uiCustom: "cb_ui_custom",
   hotSdPath: "cb_hot_sd_path",
 } as const;

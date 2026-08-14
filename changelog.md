@@ -11,6 +11,7 @@
 - WebUI 使用说明与界面示意图（文档站 [WebUI](/guide/webui) 专页）
 - WebUI：证书详情展示序列号、公钥与签名、密钥用法、SAN、SKI/AKI、SHA-1/SHA-256 等可解析字段，点按可复制
 - Lite `cbx509` 增加 `-certbridge_info` 一次导出完整证书详情（完整版 OpenSSL 从 `-text` 补全同等字段）
+- WebUI：机型/系统改为多厂商 getprop 兜底（小米 / 一加 / OPPO / vivo / 荣耀等），避免空属性只显示 Android 或内部型号
 
 ## v2.2.1
 

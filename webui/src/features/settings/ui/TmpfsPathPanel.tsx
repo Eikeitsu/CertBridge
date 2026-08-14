@@ -22,7 +22,7 @@ export function TmpfsPathPanel({ tmpfsStyle, onChange }: TmpfsPathPanelProps) {
           value: option.value,
         }))}
       />
-      <HelpCollapse title="路径说明">
+      <HelpCollapse title="路径说明" inset>
         {TMPFS_STYLE_OPTIONS.map((option) => (
           <p key={option.value}>
             <strong>{option.helpTitle}</strong>

@@ -1,4 +1,6 @@
-/* 层积 — 信任分层：大标题、色块表面、2×2 指标 */
+@use "../mixins" as m;
+
+/* 层积 — 信任分层：大标题、无边框色块、层顶色带、2×2 指标 */
 html[data-pack="material"] {
   --cb-radius: 16px;
   --cb-radius-sm: 12px;
@@ -13,12 +15,22 @@ html[data-pack="material"] {
   --cb-panel: var(--cb-surface);
   --cb-stroke: transparent;
   --cb-shadow: none;
-  --cb-shadow-lg: 0 2px 8px rgba(26, 35, 50, 0.06);
+  --cb-shadow-lg: 0 2px 10px rgba(26, 35, 50, 0.07);
   --cb-panel-border: 0;
   --cb-body-gradient-a: color-mix(in srgb, var(--cb-primary) 10%, transparent);
   --cb-body-gradient-b: transparent;
   --cb-body-gradient-tint: #e4e8ee;
   --cb-metrics-columns: 2;
+  --cb-card-border-color: transparent;
+  --cb-card-shadow: var(--cb-shadow-lg);
+  --cb-card-pad-x: 18px;
+  --cb-card-pad-t: 18px;
+  --cb-card-pad-b: 18px;
+  --cb-card-gap: 12px;
+  --cb-card-radius: 18px;
+  --cb-card-rule: color-mix(in srgb, var(--cb-ink) 7%, transparent);
+  --cb-card-inset-bg: color-mix(in srgb, var(--cb-primary) 8%, transparent);
+  --cb-row-pad-y: 13px;
 
   .app-topbar {
     border-bottom: 0;
@@ -60,20 +72,82 @@ html[data-pack="material"] {
   }
 
   .cb-section-label {
-    margin: 22px 4px 10px;
-    font-size: 0.9rem;
+    margin: 24px 4px 10px;
+    font-size: 0.92rem;
     font-weight: 700;
     letter-spacing: -0.01em;
     text-transform: none;
     color: var(--cb-ink);
   }
 
+  /* 卡片：无边框 + 层顶色带 */
+  @include m.card-surfaces {
+    border: 0;
+    box-shadow: var(--cb-shadow-lg);
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: 5px;
+      background: linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--cb-primary) 55%, transparent),
+        color-mix(in srgb, var(--cb-primary) 12%, transparent) 62%,
+        transparent
+      );
+      pointer-events: none;
+    }
+  }
+
+  /* 标题前的分层标记 */
+  .adm-card-header-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.06rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+
+    &::before {
+      content: "";
+      width: 13px;
+      height: 11px;
+      flex: 0 0 auto;
+      border-radius: 1px;
+      background: repeating-linear-gradient(
+        to bottom,
+        color-mix(in srgb, var(--cb-primary) 55%, transparent) 0 2px,
+        transparent 2px 5px
+      );
+    }
+  }
+
+  .cb-adm-list-head {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .adm-list-item {
+    min-height: 56px;
+  }
+
+  .adm-list-item-content {
+    border-top-color: var(--cb-card-rule);
+  }
+
+  a.adm-list-item:active:not(.adm-list-item-disabled) {
+    background: color-mix(in srgb, var(--cb-primary) 9%, transparent);
+  }
+
+  /* 状态台：色块托底 + 巨号计数 */
   .cb-stage {
     border: 0;
     border-radius: var(--cb-radius-lg);
     background: var(--cb-primary-container);
     box-shadow: var(--cb-shadow-lg);
-    padding: 22px 18px 18px;
+    padding: 24px 20px 20px;
     text-align: left;
   }
 
@@ -127,10 +201,9 @@ html[data-pack="material"] {
     color: var(--cb-ink);
   }
 
+  /* 指标：2×2 大卡，左上角层号点 */
   .cb-metrics {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
+    gap: 12px;
     padding: 0;
     background: transparent;
     border: 0;
@@ -138,30 +211,35 @@ html[data-pack="material"] {
   }
 
   .cb-metric {
-    padding: 16px 14px;
+    padding: 18px 16px 16px;
+    border: 0;
     border-radius: var(--cb-radius);
     background: var(--cb-surface);
     text-align: left;
     box-shadow: var(--cb-shadow-lg);
 
+    &::before {
+      content: "";
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--cb-primary) 26%, transparent);
+    }
+
     .value {
-      font-size: 1.6rem;
+      font-size: 1.7rem;
       font-weight: 750;
     }
 
     .label {
       margin-top: 6px;
-      font-size: 0.75rem;
+      font-size: 0.76rem;
       font-weight: 600;
       color: var(--cb-ink-2);
     }
-  }
-
-  .adm-card,
-  .adm-list-card,
-  .adm-collapse {
-    border: 0;
-    box-shadow: var(--cb-shadow-lg);
   }
 
   .app-dock {
@@ -179,10 +257,6 @@ html[data-pack="material"] {
       font-weight: 700;
     }
   }
-
-  .cb-theme-preview[data-pack="material"] {
-    background: linear-gradient(180deg, var(--cb-primary-container) 0 42%, #fff 42% 100%);
-  }
 }
 
 html[data-theme="dark"][data-pack="material"] {
@@ -195,4 +269,5 @@ html[data-theme="dark"][data-pack="material"] {
   --cb-topbar-bg: var(--cb-chrome);
   --cb-dock-bg: var(--cb-chrome);
   --cb-body-gradient-tint: #151920;
+  --cb-shadow-lg: 0 2px 12px rgba(0, 0, 0, 0.4);
 }

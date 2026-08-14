@@ -1,0 +1,202 @@
+/* ── Loader：三套主题各自的等待语言 ── */
+
+.cb-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.cb-loader__spin {
+  position: relative;
+  display: block;
+  width: 40px;
+  height: 40px;
+}
+
+.cb-loader__spin i {
+  position: absolute;
+  inset: 0;
+  border: 2.5px solid color-mix(in srgb, var(--cb-primary) 16%, transparent);
+  border-top-color: var(--cb-primary);
+  border-radius: 50%;
+  animation: cb-loader-spin 0.85s linear infinite;
+  will-change: transform;
+}
+
+.cb-loader__spin i:nth-child(2) {
+  inset: 8px;
+  border-width: 2px;
+  border-top-color: var(--cb-accent);
+  animation-duration: 1.4s;
+  animation-direction: reverse;
+}
+
+.cb-loader__spin i:nth-child(3) {
+  display: none;
+}
+
+.cb-loader__label {
+  color: var(--cb-ink-3);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+@keyframes cb-loader-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 印记：账本上依次落下的三枚印章条 */
+html[data-pack="classic"] {
+  .cb-loader__spin {
+    width: 46px;
+    height: 16px;
+  }
+
+  .cb-loader__spin i {
+    inset: auto auto 0 0;
+    width: 10px;
+    height: 16px;
+    border: 0;
+    border-radius: 2px;
+    background: var(--cb-primary);
+    transform-origin: bottom center;
+    animation: cb-loader-tick 1.05s ease-in-out infinite;
+  }
+
+  .cb-loader__spin i:nth-child(2) {
+    left: 18px;
+    animation-delay: 0.14s;
+  }
+
+  .cb-loader__spin i:nth-child(3) {
+    left: 36px;
+    display: block;
+    background: var(--cb-accent);
+    animation-delay: 0.28s;
+  }
+
+  .cb-loader__label {
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.7rem;
+  }
+}
+
+@keyframes cb-loader-tick {
+  0%,
+  100% {
+    opacity: 0.28;
+    transform: scaleY(0.4);
+  }
+
+  45% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+/* 层积：一层层叠起来的方块 */
+html[data-pack="material"] {
+  .cb-loader__spin {
+    width: 44px;
+    height: 44px;
+  }
+
+  .cb-loader__spin i {
+    inset: 0;
+    border: 0;
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--cb-primary) 18%, transparent);
+    animation: cb-loader-stack 1.5s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  }
+
+  .cb-loader__spin i:nth-child(2) {
+    inset: 7px;
+    border-radius: 11px;
+    background: color-mix(in srgb, var(--cb-primary) 34%, transparent);
+    animation-delay: 0.18s;
+  }
+
+  .cb-loader__spin i:nth-child(3) {
+    inset: 14px;
+    display: block;
+    border-radius: 8px;
+    background: var(--cb-primary);
+    animation-delay: 0.36s;
+  }
+}
+
+@keyframes cb-loader-stack {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.82);
+  }
+
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 虹桥：通路上扩散的双环 */
+html[data-pack="fluid"] {
+  .cb-loader__spin {
+    width: 46px;
+    height: 46px;
+  }
+
+  .cb-loader__spin i {
+    inset: 0;
+    border: 2px solid color-mix(in srgb, var(--cb-primary) 45%, transparent);
+    border-radius: 50%;
+    animation: cb-loader-ripple 1.6s ease-out infinite;
+  }
+
+  .cb-loader__spin i:nth-child(2) {
+    inset: 0;
+    border-width: 2px;
+    border-color: color-mix(in srgb, var(--cb-accent) 45%, transparent);
+    animation-delay: 0.55s;
+    animation-direction: normal;
+    animation-duration: 1.6s;
+  }
+
+  .cb-loader__spin i:nth-child(3) {
+    display: block;
+    inset: 15px;
+    border: 0;
+    background: var(--cb-primary);
+    border-radius: 50%;
+    animation: cb-loader-breathe 1.6s ease-in-out infinite;
+  }
+}
+
+@keyframes cb-loader-ripple {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.4);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+@keyframes cb-loader-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.75);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

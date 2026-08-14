@@ -50,6 +50,7 @@
   color: var(--cb-ink-3);
   font-size: 0.74rem;
   font-weight: 650;
+  overflow-wrap: anywhere;
 }
 
 .cb-stage__title {
@@ -59,9 +60,10 @@
   font-size: 1.6rem;
   font-weight: 720;
   letter-spacing: -0.03em;
-  line-height: 1.15;
+  line-height: 1.2;
   color: var(--cb-ink);
   font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
 
 .tone-ok .cb-stage__title {
@@ -85,7 +87,8 @@
   margin: 10px 0 0;
   color: var(--cb-ink-2);
   font-size: 0.86rem;
-  line-height: 1.5;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
 }
 
 .cb-stage__foot {

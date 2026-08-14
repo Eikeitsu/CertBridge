@@ -11,7 +11,7 @@
   border: 2px solid var(--cb-stroke);
   border-radius: var(--cb-radius-sm);
   background: var(--cb-surface-2);
-  padding: 8px;
+  padding: 8px 8px 10px;
   cursor: pointer;
   text-align: left;
   color: inherit;
@@ -23,7 +23,7 @@
   strong {
     display: block;
     margin-top: 8px;
-    font-size: 0.76rem;
+    font-size: 0.8rem;
     font-weight: 700;
   }
 
@@ -32,7 +32,8 @@
     margin-top: 2px;
     color: var(--cb-ink-3);
     font-size: 0.65rem;
-    line-height: 1.35;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
   }
 
   &.active {
@@ -42,32 +43,121 @@
   }
 }
 
+/* 预览缩略图：与当前生效主题无关，三块必须同时可见可辨 */
 .cb-theme-preview {
-  height: 48px;
-  border-radius: calc(var(--cb-radius-sm) - 2px);
   position: relative;
+  height: 52px;
   overflow: hidden;
 
   &::before,
   &::after {
     content: "";
     position: absolute;
-    border-radius: 3px;
   }
+}
+
+/* 印记：方正、账本横线 */
+.cb-theme-preview[data-pack="classic"] {
+  border: 1px solid color-mix(in srgb, var(--cb-ink) 14%, transparent);
+  border-radius: 5px;
+  background: linear-gradient(180deg, #fbfcfa 0 62%, #e6e9e4 62% 100%);
+  box-shadow: inset 3px 0 0 var(--cb-primary);
 
   &::before {
-    inset: 10px 24px auto 8px;
-    height: 7px;
-    background: color-mix(in srgb, var(--cb-primary) 55%, #fff);
-    opacity: 0.9;
+    inset: 9px 8px auto 10px;
+    height: 3px;
+    background: color-mix(in srgb, var(--cb-primary) 70%, transparent);
   }
 
   &::after {
-    inset: auto 8px 8px;
-    height: 16px;
-    background: color-mix(in srgb, var(--cb-ink) 10%, transparent);
+    inset: 18px 8px auto 10px;
+    height: 1px;
+    border-top: 1px dashed color-mix(in srgb, var(--cb-ink) 22%, transparent);
+    box-shadow:
+      0 6px 0 -5px color-mix(in srgb, var(--cb-ink) 16%, transparent),
+      0 12px 0 -5px color-mix(in srgb, var(--cb-ink) 16%, transparent);
   }
 }
+
+/* 层积：大圆角色块、层顶色带 */
+.cb-theme-preview[data-pack="material"] {
+  border-radius: 14px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--cb-primary) 18%, #fff) 0 46%,
+    #fff 46% 100%
+  );
+
+  &::before {
+    inset: 8px auto auto 9px;
+    width: 26px;
+    height: 9px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--cb-primary) 78%, transparent);
+  }
+
+  &::after {
+    inset: auto 9px 8px;
+    height: 15px;
+    border-radius: 7px;
+    background: color-mix(in srgb, var(--cb-primary) 22%, transparent);
+  }
+}
+
+/* 虹桥：超大圆角、玻璃斜光 */
+.cb-theme-preview[data-pack="fluid"] {
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 20px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.92),
+    color-mix(in srgb, var(--cb-primary) 38%, transparent)
+  );
+
+  &::before {
+    inset: 11px 10px auto 12px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.9);
+  }
+
+  &::after {
+    inset: auto 12px 9px;
+    height: 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.55);
+  }
+}
+
+html[data-theme="dark"] {
+  .cb-theme-preview[data-pack="classic"] {
+    background: linear-gradient(180deg, #1c221c 0 62%, #101410 62% 100%);
+  }
+
+  .cb-theme-preview[data-pack="material"] {
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--cb-primary) 30%, #1a1f27) 0 46%,
+      #1a1f27 46% 100%
+    );
+  }
+
+  .cb-theme-preview[data-pack="fluid"] {
+    border-color: rgba(255, 255, 255, 0.16);
+    background: linear-gradient(
+      135deg,
+      rgba(30, 46, 44, 0.95),
+      color-mix(in srgb, var(--cb-primary) 45%, transparent)
+    );
+
+    &::before,
+    &::after {
+      background: rgba(255, 255, 255, 0.42);
+    }
+  }
+}
+
+/* ── Accent picker ── */
 
 .accent-row {
   display: flex;
@@ -85,5 +175,6 @@
 
   &.active {
     border-color: var(--cb-ink);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--cb-ink) 12%, transparent);
   }
 }

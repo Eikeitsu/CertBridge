@@ -1,5 +1,6 @@
 import { ACCENTS, MONET_TOKEN_KEYS, supportsMonet } from "@/shared/config/theme";
 import { FLAG_OFF, FLAG_ON } from "@/shared/config/constants";
+import { STORAGE_KEYS } from "@/shared/config/paths";
 import { ResolvedTheme, ThemeMode } from "@/entities/module/enums";
 import type { ThemeState } from "../model/themeSlice";
 
@@ -51,4 +52,5 @@ export function applyThemeToDom(
   }
   root.style.setProperty("--cb-primary", primary);
   root.style.setProperty("--cb-accent", primary);
+  localStorage.setItem(STORAGE_KEYS.accentColor, primary);
 }

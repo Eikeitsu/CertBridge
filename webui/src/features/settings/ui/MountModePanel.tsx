@@ -23,7 +23,7 @@ export function MountModePanel({ mountMode, onChange }: MountModePanelProps) {
           value: option.value,
         }))}
       />
-      <HelpCollapse title="挂载说明">
+      <HelpCollapse title="挂载说明" inset>
         {MOUNT_MODE_OPTIONS.map((option) => (
           <p key={option.value}>
             <strong>{option.helpTitle}</strong>

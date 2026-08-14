@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { Button, Popup, SpinLoading } from "antd-mobile";
+import { Button, Popup } from "antd-mobile";
+import { Loader } from "./Loader";
 
 type BottomSheetProps = {
   open: boolean;
@@ -36,7 +37,7 @@ export function BottomSheet({
       <div className="cb-sheet__handle" aria-hidden />
       {loading ? (
         <div className="cb-spin__mask is-embedded">
-          <SpinLoading color="primary" />
+          <Loader label="正在解析证书" />
         </div>
       ) : (
         children

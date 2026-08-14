@@ -1,17 +1,21 @@
 /* ── Panel / Section ── */
 
 .cb-panel {
-  background: var(--cb-panel);
+  background: var(--cb-card-bg);
 }
 
 .cb-panel__meta {
   margin: 0 0 var(--cb-space-sm);
   color: var(--cb-ink-3);
-  font-size: 0.78rem;
-  line-height: 1.45;
+  font-size: 0.79rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
 }
 
 .cb-section-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin: 18px 4px 8px;
   font-size: 0.8125rem;
   font-weight: 650;
@@ -34,16 +38,18 @@
 }
 
 .cb-metric {
-  padding: 12px 8px;
+  position: relative;
+  overflow: hidden;
+  padding: 13px 10px;
   border-radius: var(--cb-radius-sm);
-  background: var(--cb-surface);
-  border: var(--cb-panel-border) solid var(--cb-stroke);
+  background: var(--cb-card-bg);
+  border: var(--cb-panel-border) solid var(--cb-card-border-color);
   text-align: center;
-  box-shadow: var(--cb-shadow);
+  box-shadow: var(--cb-card-shadow);
 
   .value {
     font-family: var(--cb-font-display);
-    font-size: 1.35rem;
+    font-size: 1.32rem;
     font-weight: 720;
     letter-spacing: -0.03em;
     line-height: 1.1;
@@ -52,9 +58,10 @@
   }
 
   .label {
-    margin-top: 4px;
+    margin-top: 5px;
     color: var(--cb-ink-3);
     font-size: 0.68rem;
-    font-weight: 550;
+    font-weight: 600;
+    line-height: 1.3;
   }
 }

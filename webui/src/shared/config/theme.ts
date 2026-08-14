@@ -25,17 +25,17 @@ export const PACK_OPTIONS = [
   {
     value: ThemePack.Classic,
     label: "印记",
-    hint: "凭证文书 · 冷静权威",
+    hint: "凭证文书",
   },
   {
     value: ThemePack.Material,
     label: "层积",
-    hint: "大标题 · 信任分层",
+    hint: "信任分层",
   },
   {
     value: ThemePack.Fluid,
     label: "虹桥",
-    hint: "桥接通道 · 通透流动",
+    hint: "桥接通道",
   },
 ] as const;
 

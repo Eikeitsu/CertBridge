@@ -35,7 +35,10 @@ export function CertsPage() {
   } = useCertDetail();
 
   return (
-    <PageSpin spinning={isStatusLoading || isPending}>
+    <PageSpin
+      spinning={isStatusLoading || isPending}
+      label={isPending ? voice.applyingHint : voice.loadingHint}
+    >
       <PageRefresh onRefresh={() => dispatch(refreshStatus(true)).unwrap()}>
         <SectionLabel>{voice.certPermanent}</SectionLabel>
         <BuiltinCertsGroup

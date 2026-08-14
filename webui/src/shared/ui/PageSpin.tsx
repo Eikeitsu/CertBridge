@@ -1,18 +1,19 @@
 import type { ReactNode } from "react";
-import { SpinLoading } from "antd-mobile";
+import { Loader } from "./Loader";
 
 type PageSpinProps = {
   spinning?: boolean;
+  label?: string;
   children: ReactNode;
 };
 
-export function PageSpin({ spinning, children }: PageSpinProps) {
+export function PageSpin({ spinning, label, children }: PageSpinProps) {
   return (
     <div className="cb-spin">
       {children}
       {spinning ? (
         <div className="cb-spin__mask">
-          <SpinLoading color="primary" />
+          <Loader label={label} />
         </div>
       ) : null}
     </div>

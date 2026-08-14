@@ -15,6 +15,7 @@ export { CopyField } from "./CopyField";
 export { BottomSheet } from "./BottomSheet";
 export { FieldLabel, Stack } from "./FieldLabel";
 export { SheetSection } from "./SheetSection";
+export { Loader } from "./Loader";
 export { PageSpin } from "./PageSpin";
 export { PageRefresh } from "./PageRefresh";
 export { Segmented } from "./Segmented";

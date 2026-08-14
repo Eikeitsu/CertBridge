@@ -67,7 +67,7 @@ export function OverviewPage() {
   );
 
   return (
-    <PageSpin spinning={overview.isLoading}>
+    <PageSpin spinning={overview.isLoading} label={voice.loadingHint}>
       <PageRefresh onRefresh={() => dispatch(refreshStatus(true)).unwrap()}>
         {pack === ThemePack.Fluid ? (
           <div className="cb-bridge-stack">

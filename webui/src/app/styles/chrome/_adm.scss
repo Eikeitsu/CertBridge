@@ -35,6 +35,8 @@
   --fill-color: var(--cb-primary);
 }
 
+/* ── Loading mask ── */
+
 .cb-spin {
   position: relative;
 }
@@ -44,63 +46,100 @@
   inset: 0;
   z-index: 5;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  background: color-mix(in srgb, var(--cb-paper) 72%, transparent);
+  padding-top: 22vh;
+  background: color-mix(in srgb, var(--cb-chrome) 82%, transparent);
 }
 
 .cb-spin__mask.is-embedded {
   position: relative;
-  min-height: 120px;
+  min-height: 180px;
+  padding-top: 48px;
+  background: transparent;
+}
+
+/* ── Card surfaces ──
+   三类容器共享同一套表面变量：Card / List(card 模式的 body) / Collapse */
+.adm-card,
+.adm-list-card > .adm-list-body,
+.adm-collapse {
+  position: relative;
+  overflow: hidden;
+  background: var(--cb-card-bg);
+  border: var(--cb-panel-border) solid var(--cb-card-border-color);
+  border-radius: var(--cb-card-radius);
+  box-shadow: var(--cb-card-shadow);
 }
 
 .adm-card,
 .adm-list-card,
 .adm-collapse {
   margin-bottom: var(--cb-space-md);
-  overflow: hidden;
-  background: var(--cb-panel);
-  border: var(--cb-panel-border) solid var(--cb-stroke);
-  border-radius: var(--cb-radius);
-  box-shadow: var(--cb-shadow);
 }
 
 .adm-card {
-  padding: 0;
+  --adm-card-padding-inline: var(--cb-card-pad-x);
+  --adm-card-header-border-width: 0;
 }
 
 .adm-card-header {
-  border-bottom: 0;
-  padding: 14px 16px 0;
+  gap: var(--cb-space-sm);
+  align-items: flex-start;
+  padding: var(--cb-card-pad-t) 0 0;
 }
 
 .adm-card-header-title {
-  font-size: 0.95rem;
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--cb-ink);
+  font-size: 0.96rem;
   font-weight: 650;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.adm-card-header > :not(.adm-card-header-title) {
+  flex: 0 0 auto;
 }
 
 .adm-card-body {
-  padding: 12px 16px 16px;
+  padding: var(--cb-card-gap) 0 var(--cb-card-pad-b);
 }
+
+.adm-card > .adm-card-body:first-child {
+  padding-top: var(--cb-card-pad-t);
+}
+
+/* ── List ── */
 
 .adm-list {
-  --border-inner: var(--cb-stroke);
+  --border-inner: var(--cb-card-rule);
   --border-top: transparent;
   --border-bottom: transparent;
-  --adm-color-background: var(--cb-panel);
-  --padding-left: 16px;
-  --padding-right: 16px;
+  --adm-color-background: transparent;
+  --padding-left: var(--cb-card-pad-x);
+  --padding-right: var(--cb-card-pad-x);
+  --extra-max-width: 62%;
 
-  font-size: 0.94rem;
+  font-size: 0.93rem;
 }
 
+/* card 模式下 header 在卡片之外，卡片表面只落在 body 上 */
 .adm-list-card {
   margin-left: 0;
   margin-right: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.adm-list-card > .adm-list-header {
+  padding: 0 6px 8px;
 }
 
 .adm-list-header {
-  padding: 0 4px 8px;
+  padding: 0 6px 8px;
   color: var(--cb-ink-2);
   font-size: 0.8125rem;
   font-weight: 650;
@@ -110,18 +149,22 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 10px;
+  gap: var(--cb-space-sm);
   color: var(--cb-ink);
   font-size: 0.95rem;
   font-weight: 650;
 }
 
+.cb-adm-list-head > div:first-child {
+  min-width: 0;
+}
+
 .cb-adm-list-meta {
   margin: 4px 0 0;
   color: var(--cb-ink-3);
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 400;
-  line-height: 1.4;
+  line-height: 1.45;
   text-transform: none;
   letter-spacing: 0;
 }
@@ -129,15 +172,53 @@
 .adm-list-item {
   --active-background-color: var(--cb-row-hover);
 
-  min-height: 52px;
+  background: transparent;
 }
 
-.adm-card .adm-list,
-.adm-card .adm-collapse {
-  margin: 8px 0 0;
-  background: transparent;
+.adm-list-item-content-main {
+  min-width: 0;
+  padding: var(--cb-row-pad-y) 0;
+  overflow-wrap: anywhere;
+}
+
+.adm-list-item-title,
+.adm-list-item-description {
+  color: var(--cb-ink-3);
+  font-size: 0.75rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.adm-list-item-content-extra {
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 0;
+  padding-left: var(--cb-space-sm);
+  color: var(--cb-ink-2);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+/* 卡片内嵌套的 List / Collapse 变成「内衬块」，不再套两层内边距。
+   类名叠写是为了压过主题包里针对卡片表面的装饰规则。 */
+.adm-card .adm-list.adm-list,
+.adm-card .adm-collapse.cb-inset {
+  --padding-left: var(--cb-space-sm);
+  --padding-right: var(--cb-space-sm);
+
+  margin: var(--cb-card-gap) 0 0;
+  background: var(--cb-card-inset-bg);
   border: 0;
+  border-radius: var(--cb-radius-sm);
   box-shadow: none;
+}
+
+.adm-card .adm-collapse.cb-inset::before {
+  display: none;
 }
 
 .adm-card .adm-list-body,
@@ -146,16 +227,44 @@
   background: transparent;
 }
 
-.adm-list-item-content-extra {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
+.adm-collapse-panel-header .adm-list-item-content-main {
+  padding: var(--cb-space-sm) 0;
+  color: var(--cb-ink);
+  font-weight: 650;
+}
+
+.adm-collapse-panel-content .adm-list-item-content-main {
+  padding-top: 0;
+}
+
+.adm-collapse-panel-content ul,
+.adm-collapse-panel-content ol {
+  margin: 0;
+  padding-left: 1.15em;
   color: var(--cb-ink-2);
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+
+.adm-collapse-panel-content p {
+  margin: 0 0 10px;
+  color: var(--cb-ink-2);
+  font-size: 0.86rem;
+  line-height: 1.6;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
 }
 
 .adm-empty {
-  padding: 22px 8px;
+  padding: 20px 12px;
+}
+
+.adm-empty-description {
+  padding: 0 8px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .adm-notice-bar {
@@ -175,13 +284,4 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-}
-
-.adm-collapse-panel-content ul,
-.adm-collapse-panel-content ol {
-  margin: 0;
-  padding-left: 1.15em;
-  color: var(--cb-ink-2);
-  font-size: 0.86rem;
-  line-height: 1.55;
 }

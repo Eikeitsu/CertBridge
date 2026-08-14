@@ -1,4 +1,6 @@
-/* 印记 — 凭证文书：冷静权威、账本式分割、克制圆角 */
+@use "../mixins" as m;
+
+/* 印记 — 凭证文书：冷静权威、账本式分割、克制圆角、骑缝印 */
 html[data-pack="classic"] {
   --cb-radius: 12px;
   --cb-radius-sm: 8px;
@@ -17,6 +19,14 @@ html[data-pack="classic"] {
   --cb-body-gradient-a: color-mix(in srgb, var(--cb-primary) 7%, transparent);
   --cb-body-gradient-b: color-mix(in srgb, var(--cb-accent) 4%, transparent);
   --cb-metrics-columns: 4;
+  --cb-card-pad-x: 16px;
+  --cb-card-pad-t: 15px;
+  --cb-card-pad-b: 16px;
+  --cb-card-gap: 12px;
+  --cb-card-radius: 12px;
+  --cb-card-rule: color-mix(in srgb, var(--cb-ink) 11%, transparent);
+  --cb-card-inset-bg: color-mix(in srgb, var(--cb-accent) 6%, transparent);
+  --cb-row-pad-y: 12px;
 
   .app-topbar {
     border-bottom: 1px solid var(--cb-stroke);
@@ -41,15 +51,82 @@ html[data-pack="classic"] {
     }
   }
 
+  /* 分组标题：账本条目编号感 */
   .cb-section-label {
-    margin: 20px 2px 8px;
-    font-size: 0.68rem;
+    margin: 22px 2px 9px;
+    font-size: 0.7rem;
     font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    letter-spacing: 0.1em;
     color: var(--cb-ink-3);
+
+    &::before {
+      content: "";
+      width: 12px;
+      height: 2px;
+      flex: 0 0 auto;
+      background: var(--cb-primary);
+    }
   }
 
+  /* 卡片：方正边框 + 表头分隔线 + 右上骑缝印 */
+  @include m.card-surfaces {
+    border: 1px solid var(--cb-stroke);
+    box-shadow: none;
+  }
+
+  /* 骑缝印：用 ::before 落在内容之下 */
+  .adm-card::before,
+  .adm-list-card > .adm-list-body::before {
+    content: "";
+    position: absolute;
+    top: -16px;
+    right: -16px;
+    width: 52px;
+    height: 52px;
+    border: 7px solid color-mix(in srgb, var(--cb-primary) 10%, transparent);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .adm-card-header {
+    padding-bottom: 11px;
+    border-bottom: 1px dashed var(--cb-card-rule);
+  }
+
+  .adm-card-header-title {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 0.93rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+
+    &::before {
+      content: "";
+      width: 3px;
+      height: 13px;
+      flex: 0 0 auto;
+      background: var(--cb-primary);
+      transform: translateY(1px);
+    }
+  }
+
+  .adm-card-header + .adm-card-body {
+    padding-top: 13px;
+  }
+
+  /* 列表：账本隔行底纹 */
+  .adm-list-card > .adm-list-body .adm-list-item:nth-child(even) {
+    background: color-mix(in srgb, var(--cb-ink) 2.5%, transparent);
+  }
+
+  .cb-adm-list-head {
+    font-size: 0.93rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  /* 状态台：左侧凭证条 + 淡印章 */
   .cb-stage {
     border: 1px solid var(--cb-stroke);
     border-radius: var(--cb-radius);
@@ -68,18 +145,23 @@ html[data-pack="classic"] {
     }
   }
 
+  /* 光晕位改画成大号骑缝印 */
   .cb-stage__glow {
-    display: none;
+    inset: -30px -30px auto auto;
+    width: 108px;
+    height: 108px;
+    border: 11px solid color-mix(in srgb, var(--cb-primary) 9%, transparent);
+    border-radius: 50%;
+    background: none;
   }
 
   .cb-stage__kicker {
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    font-size: 0.66rem;
+    letter-spacing: 0.12em;
+    font-size: 0.68rem;
   }
 
   .cb-stage__title {
-    font-size: 1.55rem;
+    font-size: 1.52rem;
     font-weight: 720;
     letter-spacing: -0.02em;
   }
@@ -88,9 +170,8 @@ html[data-pack="classic"] {
     display: none;
   }
 
+  /* 指标：一整条账目表，内部竖线分栏 */
   .cb-metrics {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0;
     padding: 0;
     background: var(--cb-surface);
@@ -101,48 +182,48 @@ html[data-pack="classic"] {
   }
 
   .cb-metric {
-    position: relative;
-    padding: 14px 8px;
+    padding: 15px 6px 13px;
+    border: 0;
     border-radius: 0;
     background: transparent;
+    box-shadow: none;
 
     &:not(:last-child)::after {
       content: "";
       position: absolute;
-      top: 12px;
-      bottom: 12px;
+      top: 13px;
+      bottom: 13px;
       right: 0;
       width: 1px;
       background: var(--cb-stroke);
     }
 
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 18px;
+      height: 2px;
+      background: color-mix(in srgb, var(--cb-primary) 45%, transparent);
+      transform: translateX(-50%);
+    }
+
     .value {
-      font-size: 1.25rem;
+      font-size: 1.28rem;
       font-weight: 700;
     }
 
     .label {
-      font-size: 0.64rem;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
+      margin-top: 4px;
+      font-size: 0.66rem;
+      letter-spacing: 0.04em;
     }
-  }
-
-  .adm-card,
-  .adm-list-card,
-  .adm-collapse {
-    border: 1px solid var(--cb-stroke);
-    box-shadow: none;
   }
 
   .adm-tab-bar-item-active {
     color: var(--cb-primary);
     font-weight: 700;
-  }
-
-  .cb-theme-preview[data-pack="classic"] {
-    background: linear-gradient(180deg, #fbfcfa 0 58%, #e6e9e4 58% 100%);
-    box-shadow: inset 3px 0 0 var(--cb-primary);
   }
 }
 
@@ -155,4 +236,5 @@ html[data-theme="dark"][data-pack="classic"] {
   --cb-panel: var(--cb-surface);
   --cb-topbar-bg: var(--cb-chrome);
   --cb-dock-bg: var(--cb-chrome);
+  --cb-card-inset-bg: color-mix(in srgb, var(--cb-accent) 12%, transparent);
 }

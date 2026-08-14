@@ -69,6 +69,19 @@
   --cb-card-blur: var(--cb-panel-blur);
   --cb-card-border-width: var(--cb-panel-border);
   --cb-metrics-columns: 4;
+
+  /* 卡片表面与留白：三套主题只改这几个变量即可拉开差异 */
+  --cb-card-bg: var(--cb-panel);
+  --cb-card-border-color: var(--cb-stroke);
+  --cb-card-shadow: var(--cb-shadow);
+  --cb-card-pad-x: 16px;
+  --cb-card-pad-t: 14px;
+  --cb-card-pad-b: 16px;
+  --cb-card-gap: 10px;
+  --cb-card-radius: var(--cb-radius);
+  --cb-card-rule: color-mix(in srgb, var(--cb-ink) 8%, transparent);
+  --cb-card-inset-bg: color-mix(in srgb, var(--cb-ink) 3.5%, transparent);
+  --cb-row-pad-y: 11px;
 }
 
 html[data-theme="dark"] {
@@ -122,25 +135,39 @@ body,
 #root {
   margin: 0;
   min-height: 100%;
-  background-color: var(--cb-chrome);
 }
 
 html {
+  background-color: var(--cb-chrome);
   font-size: calc(16px * var(--cb-font-scale));
+}
+
+body,
+#root {
+  background: transparent;
 }
 
 body {
   font-family: var(--cb-font-body);
   color: var(--cb-ink);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+/* 背景氛围层：独立固定层比 background-attachment: fixed 便宜得多，
+   后者会让 WebView 每帧重绘整屏，动画直接卡住 */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   background-color: var(--cb-chrome);
   background-image:
     radial-gradient(780px 360px at 8% -12%, var(--cb-body-gradient-a), transparent 58%),
     radial-gradient(560px 280px at 100% 0%, var(--cb-body-gradient-b), transparent 52%),
     linear-gradient(180deg, transparent 45%, var(--cb-body-gradient-tint));
-  background-attachment: fixed;
-  -webkit-tap-highlight-color: transparent;
-  -webkit-font-smoothing: antialiased;
-  overscroll-behavior: none;
 }
 
 button,

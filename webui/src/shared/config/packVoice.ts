@@ -7,6 +7,8 @@ export type PackVoice = {
   trustEmpty: string;
   activePrefix: string;
   idleDesc: string;
+  loadingHint: string;
+  applyingHint: string;
   metrics: {
     active: string;
     custom: string;
@@ -36,6 +38,8 @@ export const PACK_VOICE: Record<ThemePack, PackVoice> = {
     trustEmpty: "账本为空。可在「证书」页启用或导入 CA。",
     activePrefix: "当前凭证：",
     idleDesc: "正在核对系统信任账本…",
+    loadingHint: "核对账本",
+    applyingHint: "写入账本",
     metrics: {
       active: "启用",
       custom: "自定义",
@@ -63,6 +67,8 @@ export const PACK_VOICE: Record<ThemePack, PackVoice> = {
     trustEmpty: "本层尚无附加证书。前往证书页配置。",
     activePrefix: "注入集：",
     idleDesc: "正在读取信任层…",
+    loadingHint: "读取信任层",
+    applyingHint: "正在应用",
     metrics: {
       active: "启用数",
       custom: "自定义",
@@ -90,6 +96,8 @@ export const PACK_VOICE: Record<ThemePack, PackVoice> = {
     trustEmpty: "通道空闲。去「证书」接通 Reqable / ProxyPin 或其他 CA。",
     activePrefix: "正在桥接：",
     idleDesc: "正在探测桥接通路…",
+    loadingHint: "探测通路",
+    applyingHint: "切换通道",
     metrics: {
       active: "接通",
       custom: "自建",

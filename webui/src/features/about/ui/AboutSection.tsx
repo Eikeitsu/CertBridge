@@ -23,7 +23,7 @@ export function AboutSection() {
         androidLabel={androidLabel}
       />
       <AboutLinks />
-      <HelpCollapse title={ABOUT_TIP.title}>
+      <HelpCollapse title={ABOUT_TIP.title} inset>
         <p>{ABOUT_TIP.body}</p>
         <img className="tip-qr" src={assetUrl(ABOUT_TIP.src)} alt={ABOUT_TIP.alt} />
       </HelpCollapse>

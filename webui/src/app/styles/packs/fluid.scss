@@ -1,4 +1,6 @@
-/* 虹桥 — 桥接通道：大圆角、光晕、指标嵌进 Hero、通透流动 */
+@use "../mixins" as m;
+
+/* 虹桥 — 桥接通道：大圆角、玻璃质感、高光边、指标嵌进 Hero */
 html[data-pack="fluid"] {
   --cb-radius: 24px;
   --cb-radius-sm: 16px;
@@ -22,6 +24,21 @@ html[data-pack="fluid"] {
   --cb-body-gradient-tint: color-mix(in srgb, var(--cb-chrome) 85%, #b8d8d4);
   --cb-topbar-bg: color-mix(in srgb, var(--cb-chrome) 70%, transparent);
   --cb-metrics-columns: 4;
+
+  /* 玻璃层：深色下整套换掉，避免白到发光 */
+  --cb-glass-hi: color-mix(in srgb, #fff 85%, transparent);
+  --cb-glass-a: color-mix(in srgb, #fff 82%, transparent);
+  --cb-glass-b: color-mix(in srgb, #fff 68%, transparent);
+  --cb-glass-c: color-mix(in srgb, #fff 46%, transparent);
+  --cb-card-bg: color-mix(in srgb, #fff 74%, transparent);
+  --cb-card-radius: 24px;
+  --cb-card-pad-x: 18px;
+  --cb-card-pad-t: 16px;
+  --cb-card-pad-b: 18px;
+  --cb-card-gap: 12px;
+  --cb-card-rule: color-mix(in srgb, var(--cb-primary) 12%, transparent);
+  --cb-card-inset-bg: var(--cb-glass-c);
+  --cb-row-pad-y: 12px;
 
   .app-topbar {
     border-bottom-color: transparent;
@@ -56,27 +73,110 @@ html[data-pack="fluid"] {
     padding-right: 14px;
   }
 
+  /* 分组标题：一段通路线 */
   .cb-section-label {
-    margin: 18px 8px 10px;
+    margin: 20px 10px 10px;
     font-size: 0.84rem;
     font-weight: 650;
     letter-spacing: 0;
     text-transform: none;
     color: var(--cb-ink-2);
+
+    &::before {
+      content: "";
+      width: 16px;
+      height: 2px;
+      flex: 0 0 auto;
+      border-radius: 2px;
+      background: linear-gradient(90deg, var(--cb-primary), var(--cb-accent));
+    }
   }
 
+  /* 卡片：玻璃 + 顶部高光 + 右上角光斑 */
+  @include m.card-surfaces {
+    border: 1px solid var(--cb-stroke);
+    -webkit-backdrop-filter: blur(var(--cb-panel-blur)) saturate(1.2);
+    backdrop-filter: blur(var(--cb-panel-blur)) saturate(1.2);
+    box-shadow: var(--cb-shadow);
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(
+          90deg,
+          transparent,
+          var(--cb-glass-hi) 22%,
+          var(--cb-glass-hi) 78%,
+          transparent
+        ),
+        radial-gradient(
+          120px 90px at 100% 0%,
+          color-mix(in srgb, var(--cb-primary) 14%, transparent),
+          transparent 70%
+        );
+      background-repeat: no-repeat;
+      background-size:
+        100% 1px,
+        100% 100%;
+    }
+  }
+
+  .adm-card-header {
+    padding-bottom: 11px;
+    border-bottom: 1px solid color-mix(in srgb, #fff 45%, var(--cb-card-rule));
+  }
+
+  .adm-card-header + .adm-card-body {
+    padding-top: 12px;
+  }
+
+  /* 标题前的通路点 */
+  .adm-card-header-title {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 0.98rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+
+    &::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      background: var(--cb-primary);
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--cb-primary) 16%, transparent);
+    }
+  }
+
+  .cb-adm-list-head {
+    font-size: 0.96rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .adm-list-item-content {
+    border-top-color: color-mix(in srgb, #fff 60%, var(--cb-card-rule));
+  }
+
+  /* 状态台：与指标条拼成一段桥面 */
   .cb-stage {
     border: 1px solid var(--cb-stroke);
     border-radius: var(--cb-radius-lg);
     background: linear-gradient(
       145deg,
-      color-mix(in srgb, #fff 82%, transparent),
+      var(--cb-glass-a),
       color-mix(in srgb, var(--cb-primary) 12%, transparent) 55%,
       color-mix(in srgb, var(--cb-accent) 8%, transparent)
     );
+    -webkit-backdrop-filter: blur(var(--cb-panel-blur)) saturate(1.25);
     backdrop-filter: blur(var(--cb-panel-blur)) saturate(1.25);
     box-shadow: var(--cb-shadow);
-    padding: 20px 16px 12px;
+    padding: 22px 18px 14px;
     margin-bottom: 0;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
@@ -99,51 +199,71 @@ html[data-pack="fluid"] {
   }
 
   .cb-stage__title {
-    font-size: 1.7rem;
+    font-size: 1.68rem;
     font-weight: 750;
     letter-spacing: -0.04em;
   }
 
-  .cb-stage + .cb-metrics,
   .cb-bridge-stack .cb-metrics {
+    position: relative;
     margin-top: 0;
     margin-bottom: var(--cb-space-md);
     border: 1px solid var(--cb-stroke);
     border-top: 0;
     border-radius: 0 0 var(--cb-radius-lg) var(--cb-radius-lg);
-    background: color-mix(in srgb, #fff 70%, transparent);
+    background: var(--cb-glass-b);
+    -webkit-backdrop-filter: blur(16px);
     backdrop-filter: blur(16px);
     box-shadow: var(--cb-shadow);
-    padding: 4px 6px 10px;
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    padding: 8px 8px 12px;
     gap: 4px;
+
+    /* 桥面接缝 */
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0 18px auto;
+      height: 1px;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        color-mix(in srgb, var(--cb-primary) 24%, transparent),
+        transparent
+      );
+    }
   }
 
   .cb-metric {
-    border-radius: 16px;
+    border: 0;
+    border-radius: 14px;
     background: transparent;
-    padding: 12px 4px;
+    box-shadow: none;
+    padding: 12px 4px 10px;
+
+    &::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: 6px;
+      width: 14px;
+      height: 2px;
+      border-radius: 2px;
+      background: color-mix(in srgb, var(--cb-primary) 30%, transparent);
+      transform: translateX(-50%);
+    }
 
     .value {
-      font-size: 1.35rem;
+      font-size: 1.34rem;
       font-weight: 750;
       color: var(--cb-primary);
     }
 
     .label {
+      margin-top: 4px;
+      margin-bottom: 6px;
       font-size: 0.68rem;
       font-weight: 600;
     }
-  }
-
-  .adm-card,
-  .adm-list-card,
-  .adm-collapse {
-    border: 1px solid var(--cb-stroke);
-    background: color-mix(in srgb, #fff 74%, transparent);
-    backdrop-filter: blur(var(--cb-panel-blur)) saturate(1.2);
-    box-shadow: var(--cb-shadow);
   }
 
   .app-dock {
@@ -162,15 +282,6 @@ html[data-pack="fluid"] {
     -webkit-backdrop-filter: blur(32px) saturate(1.5);
     backdrop-filter: blur(32px) saturate(1.5);
   }
-
-  .cb-theme-preview[data-pack="fluid"] {
-    background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.9),
-      color-mix(in srgb, var(--cb-primary) 35%, transparent)
-    );
-    border: 1px solid rgba(255, 255, 255, 0.7);
-  }
 }
 
 html[data-theme="dark"][data-pack="fluid"] {
@@ -184,4 +295,9 @@ html[data-theme="dark"][data-pack="fluid"] {
   --cb-dock-bg: var(--cb-chrome);
   --cb-stroke: rgba(180, 220, 210, 0.12);
   --cb-body-gradient-tint: #0c1817;
+  --cb-glass-hi: color-mix(in srgb, #fff 16%, transparent);
+  --cb-glass-a: color-mix(in srgb, #1b2a29 82%, transparent);
+  --cb-glass-b: color-mix(in srgb, #15201f 72%, transparent);
+  --cb-glass-c: color-mix(in srgb, #fff 6%, transparent);
+  --cb-card-bg: color-mix(in srgb, #15201f 74%, transparent);
 }

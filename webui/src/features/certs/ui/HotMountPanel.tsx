@@ -10,11 +10,18 @@ import { useHotMountPanel } from "../hooks/useHotMountPanel";
 import { resolveHotSessionLabel } from "../lib/hotSession";
 
 type HotMountPanelProps = {
+  sectionLabel?: string;
+  panelTitle?: string;
   onMount: (mode: HotMountMode, sdPath?: string) => void;
   onUnmount: () => void;
 };
 
-export function HotMountPanel({ onMount, onUnmount }: HotMountPanelProps) {
+export function HotMountPanel({
+  sectionLabel = "临时会话",
+  panelTitle = "免重启挂载",
+  onMount,
+  onUnmount,
+}: HotMountPanelProps) {
   const status = useAppSelector(selectModuleStatus);
   const { mode, setMode, sdPath, setSdPath } = useHotMountPanel();
 
@@ -26,8 +33,8 @@ export function HotMountPanel({ onMount, onUnmount }: HotMountPanelProps) {
 
   return (
     <>
-      <SectionLabel>临时会话</SectionLabel>
-      <Panel title="免重启挂载" meta={isHotActive ? sessionLabel : HOT_MOUNT_META}>
+      <SectionLabel>{sectionLabel}</SectionLabel>
+      <Panel title={panelTitle} meta={isHotActive ? sessionLabel : HOT_MOUNT_META}>
         {isHotActive ? (
           <>
             <KvList

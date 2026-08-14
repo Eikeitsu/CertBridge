@@ -1,110 +1,187 @@
-/* 流体 — 玻璃拟态 / 悬浮层次（青绿，无紫渐变） */
+/* 虹桥 — 桥接通道：大圆角、光晕、指标嵌进 Hero、通透流动 */
 html[data-pack="fluid"] {
-  --cb-radius: 22px;
-  --cb-radius-sm: 14px;
-  --cb-radius-lg: 28px;
-  --cb-chrome: #dfeceb;
-  --cb-paper: #dfeceb;
-  --cb-stage: rgba(255, 255, 255, 0.55);
-  --cb-surface: rgba(255, 255, 255, 0.58);
-  --cb-surface-2: rgba(255, 255, 255, 0.42);
+  --cb-radius: 24px;
+  --cb-radius-sm: 16px;
+  --cb-radius-lg: 30px;
+  --cb-dock-h: 60px;
+  --cb-topbar-h: 54px;
+  --cb-chrome: #d5e6e3;
+  --cb-paper: #d5e6e3;
+  --cb-stage: color-mix(in srgb, #fff 72%, transparent);
+  --cb-surface: color-mix(in srgb, #fff 78%, transparent);
+  --cb-surface-2: color-mix(in srgb, #fff 55%, transparent);
   --cb-panel: var(--cb-surface);
-  --cb-stroke: rgba(255, 255, 255, 0.55);
+  --cb-stroke: color-mix(in srgb, #fff 55%, rgba(15, 92, 92, 0.12));
   --cb-stroke-strong: color-mix(in srgb, var(--cb-primary) 22%, transparent);
-  --cb-shadow: 0 12px 32px color-mix(in srgb, var(--cb-primary) 12%, transparent);
+  --cb-shadow: 0 14px 36px color-mix(in srgb, var(--cb-primary) 14%, transparent);
   --cb-shadow-lg: 0 20px 48px color-mix(in srgb, var(--cb-primary) 18%, transparent);
-  --cb-panel-blur: 18px;
+  --cb-panel-blur: 20px;
   --cb-panel-border: 1px;
-  --cb-body-gradient-a: color-mix(in srgb, var(--cb-accent) 22%, transparent);
-  --cb-body-gradient-b: color-mix(in srgb, var(--cb-primary) 16%, transparent);
-  --cb-body-gradient-tint: color-mix(in srgb, var(--cb-chrome) 88%, #cfe8e6);
-  --cb-topbar-bg: color-mix(in srgb, var(--cb-chrome) 72%, transparent);
-  --cb-dock-bg: var(--cb-chrome);
+  --cb-body-gradient-a: color-mix(in srgb, var(--cb-primary) 22%, transparent);
+  --cb-body-gradient-b: color-mix(in srgb, var(--cb-accent) 12%, transparent);
+  --cb-body-gradient-tint: color-mix(in srgb, var(--cb-chrome) 85%, #b8d8d4);
+  --cb-topbar-bg: color-mix(in srgb, var(--cb-chrome) 70%, transparent);
+  --cb-metrics-columns: 4;
 
   .app-topbar {
     border-bottom-color: transparent;
     background: var(--cb-topbar-bg);
 
     html[data-bar-blur="1"] & {
-      -webkit-backdrop-filter: blur(24px) saturate(1.35);
-      backdrop-filter: blur(24px) saturate(1.35);
+      -webkit-backdrop-filter: blur(26px) saturate(1.4);
+      backdrop-filter: blur(26px) saturate(1.4);
+    }
+
+    .nav-title {
+      font-size: 1.12rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .logo {
+      border-radius: 14px;
+      box-shadow: 0 6px 16px color-mix(in srgb, var(--cb-primary) 18%, transparent);
+    }
+
+    .device-chip {
+      border-radius: var(--cb-radius-pill);
+      background: color-mix(in srgb, #fff 55%, transparent);
+      border: 1px solid color-mix(in srgb, #fff 70%, transparent);
+      backdrop-filter: blur(8px);
     }
   }
 
-  .cb-stage,
-  .cb-panel,
-  .cb-list,
-  .cb-metric,
-  .cb-help,
-  .cb-sheet__section,
-  .adm-card,
-  .adm-list-card,
-  .adm-collapse {
-    backdrop-filter: blur(var(--cb-panel-blur)) saturate(1.2);
-    border-color: color-mix(in srgb, #fff 70%, var(--cb-stroke-strong));
+  .app-main {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .cb-section-label {
+    margin: 18px 8px 10px;
+    font-size: 0.84rem;
+    font-weight: 650;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--cb-ink-2);
   }
 
   .cb-stage {
+    border: 1px solid var(--cb-stroke);
+    border-radius: var(--cb-radius-lg);
     background: linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--cb-primary) 16%, var(--cb-stage)),
-      color-mix(in srgb, var(--cb-accent) 10%, var(--cb-surface-2))
+      145deg,
+      color-mix(in srgb, #fff 82%, transparent),
+      color-mix(in srgb, var(--cb-primary) 12%, transparent) 55%,
+      color-mix(in srgb, var(--cb-accent) 8%, transparent)
     );
+    backdrop-filter: blur(var(--cb-panel-blur)) saturate(1.25);
+    box-shadow: var(--cb-shadow);
+    padding: 20px 16px 12px;
+    margin-bottom: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  .cb-stage__glow {
+    opacity: 1;
+  }
+
+  .cb-stage__hero-num {
+    display: none;
+  }
+
+  .cb-stage__kicker {
+    letter-spacing: 0.04em;
+    text-transform: none;
+    font-size: 0.76rem;
+    color: var(--cb-primary);
+    font-weight: 700;
+  }
+
+  .cb-stage__title {
+    font-size: 1.7rem;
+    font-weight: 750;
+    letter-spacing: -0.04em;
+  }
+
+  .cb-stage + .cb-metrics,
+  .cb-bridge-stack .cb-metrics {
+    margin-top: 0;
+    margin-bottom: var(--cb-space-md);
+    border: 1px solid var(--cb-stroke);
+    border-top: 0;
+    border-radius: 0 0 var(--cb-radius-lg) var(--cb-radius-lg);
+    background: color-mix(in srgb, #fff 70%, transparent);
+    backdrop-filter: blur(16px);
+    box-shadow: var(--cb-shadow);
+    padding: 4px 6px 10px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
   }
 
   .cb-metric {
-    background: var(--cb-surface-2);
+    border-radius: 16px;
+    background: transparent;
+    padding: 12px 4px;
+
+    .value {
+      font-size: 1.35rem;
+      font-weight: 750;
+      color: var(--cb-primary);
+    }
+
+    .label {
+      font-size: 0.68rem;
+      font-weight: 600;
+    }
   }
 
-  .cb-detail-cell {
-    background: var(--cb-surface-2);
-    backdrop-filter: blur(10px);
-    border: 1px solid color-mix(in srgb, #fff 50%, transparent);
+  .adm-card,
+  .adm-list-card,
+  .adm-collapse {
+    border: 1px solid var(--cb-stroke);
+    background: color-mix(in srgb, #fff 74%, transparent);
+    backdrop-filter: blur(var(--cb-panel-blur)) saturate(1.2);
+    box-shadow: var(--cb-shadow);
   }
 
   .app-dock {
-    button.active {
-      background: color-mix(in srgb, var(--cb-primary) 18%, rgba(255, 255, 255, 0.45));
+    border-top: 0;
+
+    .adm-tab-bar-item-active {
+      color: var(--cb-primary);
+      font-weight: 750;
     }
   }
 
   html[data-float-dock="1"] .app-dock {
-    border-color: color-mix(in srgb, #fff 65%, var(--cb-stroke-strong));
-    background: color-mix(in srgb, var(--cb-surface) 72%, transparent);
-    box-shadow: var(--cb-shadow-lg);
-  }
-
-  html[data-float-dock="1"][data-dock-glass="1"] .app-dock {
-    background: color-mix(in srgb, var(--cb-surface) 48%, transparent);
-    -webkit-backdrop-filter: blur(32px) saturate(1.55);
-    backdrop-filter: blur(32px) saturate(1.55);
-  }
-
-  .cb-console {
-    background: color-mix(in srgb, #0a1620 78%, transparent);
-    backdrop-filter: blur(16px);
+    border-radius: 28px;
+    border: 1px solid color-mix(in srgb, #fff 70%, var(--cb-stroke-strong));
+    background: color-mix(in srgb, #fff 55%, transparent);
+    -webkit-backdrop-filter: blur(32px) saturate(1.5);
+    backdrop-filter: blur(32px) saturate(1.5);
   }
 
   .cb-theme-preview[data-pack="fluid"] {
     background: linear-gradient(
       135deg,
-      rgba(255, 255, 255, 0.75),
-      rgba(20, 145, 155, 0.28)
+      rgba(255, 255, 255, 0.9),
+      color-mix(in srgb, var(--cb-primary) 35%, transparent)
     );
-    border: 1px solid rgba(255, 255, 255, 0.65);
-    box-shadow: 0 8px 20px color-mix(in srgb, var(--cb-primary) 16%, transparent);
+    border: 1px solid rgba(255, 255, 255, 0.7);
   }
 }
 
 html[data-theme="dark"][data-pack="fluid"] {
-  --cb-chrome: #0a1018;
-  --cb-paper: #0a1018;
-  --cb-stage: rgba(15, 23, 42, 0.55);
-  --cb-surface: rgba(15, 23, 42, 0.62);
-  --cb-surface-2: rgba(15, 23, 42, 0.45);
+  --cb-chrome: #0a1212;
+  --cb-paper: #0a1212;
+  --cb-stage: color-mix(in srgb, #15201f 75%, transparent);
+  --cb-surface: color-mix(in srgb, #15201f 78%, transparent);
+  --cb-surface-2: color-mix(in srgb, #1a2826 65%, transparent);
   --cb-panel: var(--cb-surface);
-  --cb-topbar-bg: color-mix(in srgb, var(--cb-chrome) 78%, transparent);
+  --cb-topbar-bg: color-mix(in srgb, var(--cb-chrome) 72%, transparent);
   --cb-dock-bg: var(--cb-chrome);
-  --cb-stroke: rgba(148, 163, 184, 0.12);
-  --cb-body-gradient-tint: #0f172a;
+  --cb-stroke: rgba(180, 220, 210, 0.12);
+  --cb-body-gradient-tint: #0c1817;
 }

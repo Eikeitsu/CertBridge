@@ -1,11 +1,13 @@
 import { useNavigate } from "react-router-dom";
-import { useAppDispatch } from "@/app/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { refreshStatus, requestReboot } from "@/features/status/model/statusSlice";
 import { useTrustOverview } from "@/features/overview/hooks/useTrustOverview";
+import { selectThemePack } from "@/features/theme/model/selectors";
 import { MetricGrid, PageRefresh, PageSpin } from "@/shared/ui";
 import { confirmAction } from "@/shared/lib/confirmAction";
 import { TAB_PATH } from "@/shared/config/navigation";
-import { TabName } from "@/entities/module/enums";
+import { getPackVoice } from "@/shared/config/packVoice";
+import { TabName, ThemePack, TrustTone } from "@/entities/module/enums";
 import { OverviewStage } from "./OverviewStage";
 import { OverviewTrust } from "./OverviewTrust";
 import { OverviewRuntime } from "./OverviewRuntime";
@@ -14,43 +16,77 @@ import { OverviewActions } from "./OverviewActions";
 export function OverviewPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const pack = useAppSelector(selectThemePack);
+  const voice = getPackVoice(pack);
   const overview = useTrustOverview();
   const statusText =
-    overview.injectDiagnosis?.hint || overview.description || overview.trust.hint;
+    overview.injectDiagnosis?.hint ||
+    (overview.trust.tone === TrustTone.Idle && overview.isLoading
+      ? voice.idleDesc
+      : overview.activeNames.length
+        ? `${voice.activePrefix}${overview.activeNames.join("、")}`
+        : overview.trust.hint || overview.description);
 
   const handleReboot = () => {
     confirmAction({
       title: "确认重启设备？",
-      content: "应用挂载变更建议重启。",
+      content: voice.rebootHint,
       okText: "重启",
       danger: true,
       onOk: () => dispatch(requestReboot()),
     });
   };
 
+  const metrics = (
+    <MetricGrid
+      columns={pack === ThemePack.Material ? 2 : 4}
+      items={[
+        { label: voice.metrics.active, value: overview.activeCount },
+        { label: voice.metrics.custom, value: overview.customCount },
+        { label: voice.metrics.baseline, value: overview.baselineCount },
+        { label: voice.metrics.store, value: overview.storeCount },
+      ]}
+    />
+  );
+
+  const stage = (
+    <OverviewStage
+      pack={pack}
+      tone={overview.trust.tone}
+      title={overview.trust.title}
+      description={statusText}
+      kicker={voice.stageKicker}
+      refreshLabel={voice.refresh}
+      heroValue={overview.activeCount}
+      diagnosisMessage={overview.injectDiagnosis?.message}
+      isPendingReboot={overview.isPendingReboot}
+      isHotMountActive={overview.isHotMountActive}
+      onRefresh={() => void dispatch(refreshStatus(true))}
+      onViewLog={() => navigate(TAB_PATH[TabName.Log], { replace: true })}
+    />
+  );
+
   return (
     <PageSpin spinning={overview.isLoading}>
       <PageRefresh onRefresh={() => dispatch(refreshStatus(true)).unwrap()}>
-        <OverviewStage
-          tone={overview.trust.tone}
-          title={overview.trust.title}
-          description={statusText}
-          diagnosisMessage={overview.injectDiagnosis?.message}
-          isPendingReboot={overview.isPendingReboot}
-          isHotMountActive={overview.isHotMountActive}
-          onRefresh={() => void dispatch(refreshStatus(true))}
-          onViewLog={() => navigate(TAB_PATH[TabName.Log], { replace: true })}
+        {pack === ThemePack.Fluid ? (
+          <div className="cb-bridge-stack">
+            {stage}
+            {metrics}
+          </div>
+        ) : (
+          <>
+            {stage}
+            {metrics}
+          </>
+        )}
+        <OverviewTrust
+          title={voice.trustTitle}
+          emptyText={voice.trustEmpty}
+          names={overview.activeNames}
         />
-        <MetricGrid
-          items={[
-            { label: "启用", value: overview.activeCount },
-            { label: "自定义", value: overview.customCount },
-            { label: "基线", value: overview.baselineCount },
-            { label: "总量", value: overview.storeCount },
-          ]}
-        />
-        <OverviewTrust names={overview.activeNames} />
         <OverviewRuntime
+          title={voice.runtimeTitle}
           androidLabel={overview.androidLabel}
           rootLabel={overview.rootLabel}
           apexLabel={overview.apexLabel}
@@ -60,6 +96,11 @@ export function OverviewPage() {
           lastRefreshedAt={overview.lastRefreshedAt}
         />
         <OverviewActions
+          title={voice.actionsTitle}
+          rebootTitle={voice.rebootTitle}
+          rebootHint={voice.rebootHint}
+          manageLabel={voice.manageCerts}
+          tempLabel={voice.tempCerts}
           isHotMountSupported={overview.isHotMountSupported}
           onReboot={handleReboot}
           onManageCerts={() => navigate(TAB_PATH[TabName.Certs], { replace: true })}

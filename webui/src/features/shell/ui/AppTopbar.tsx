@@ -1,23 +1,26 @@
 import { NavBar } from "antd-mobile";
-import { BRAND } from "@/shared/config/brand";
 import { ASSETS, assetUrl } from "@/shared/config/assets";
+import { ThemePack } from "@/entities/module/enums";
 
 type AppTopbarProps = {
-  isMaterial: boolean;
+  pack: ThemePack;
+  brandTitle: string;
   deviceLabel: string;
 };
 
-export function AppTopbar({ isMaterial, deviceLabel }: AppTopbarProps) {
+export function AppTopbar({ pack, brandTitle, deviceLabel }: AppTopbarProps) {
+  const isStrata = pack === ThemePack.Material;
+
   return (
-    <header className={`app-topbar${isMaterial ? " topbar-md3" : ""}`}>
+    <header className={`app-topbar topbar-${pack}`}>
       <NavBar
         backIcon={false}
         left={
-          isMaterial ? null : <img className="logo" src={assetUrl(ASSETS.icon)} alt="" />
+          isStrata ? null : <img className="logo" src={assetUrl(ASSETS.icon)} alt="" />
         }
         right={<span className="device-chip">{deviceLabel}</span>}
       >
-        <span className="nav-title">{BRAND.name}</span>
+        <span className="nav-title">{brandTitle}</span>
       </NavBar>
     </header>
   );

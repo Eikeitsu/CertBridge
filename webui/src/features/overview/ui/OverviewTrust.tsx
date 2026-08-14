@@ -1,17 +1,15 @@
 import { ChipList, EmptyHint, Panel } from "@/shared/ui";
 
 type OverviewTrustProps = {
+  title: string;
+  emptyText: string;
   names: string[];
 };
 
-export function OverviewTrust({ names }: OverviewTrustProps) {
+export function OverviewTrust({ title, emptyText, names }: OverviewTrustProps) {
   return (
-    <Panel title="当前信任">
-      {names.length ? (
-        <ChipList items={names} />
-      ) : (
-        <EmptyHint>暂无附加证书。可在「证书」页启用或导入。</EmptyHint>
-      )}
+    <Panel title={title}>
+      {names.length ? <ChipList items={names} /> : <EmptyHint>{emptyText}</EmptyHint>}
     </Panel>
   );
 }

@@ -22,7 +22,7 @@ type StatusState = {
 };
 
 const initialState: StatusState = {
-  loading: false,
+  loading: true,
   status: {},
   customCertificates: [],
   deviceLabel: "本机",

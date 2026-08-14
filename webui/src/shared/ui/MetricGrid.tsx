@@ -1,22 +1,22 @@
-import { Grid } from "antd-mobile";
-
 type Metric = { label: string; value: string | number };
 
 type MetricGridProps = {
   items: Metric[];
+  columns?: 2 | 4;
 };
 
-export function MetricGrid({ items }: MetricGridProps) {
+export function MetricGrid({ items, columns = 4 }: MetricGridProps) {
   return (
-    <Grid columns={4} gap={8} className="cb-metrics">
+    <div
+      className={`cb-metrics is-cols-${columns}`}
+      style={{ ["--cb-metrics-columns" as string]: columns }}
+    >
       {items.map((item) => (
-        <Grid.Item key={item.label}>
-          <div className="cb-metric">
-            <div className="value">{item.value}</div>
-            <div className="label">{item.label}</div>
-          </div>
-        </Grid.Item>
+        <div key={item.label} className="cb-metric">
+          <div className="value">{item.value}</div>
+          <div className="label">{item.label}</div>
+        </div>
       ))}
-    </Grid>
+    </div>
   );
 }

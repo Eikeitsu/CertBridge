@@ -31,8 +31,23 @@ export function useTrustOverview() {
         hint: "当前环境无法执行 shell",
       };
     }
+    const statusReady =
+      Boolean(status.desc_short) ||
+      status.apex_ok === "0" ||
+      status.apex_ok === "1" ||
+      status.apex_ok === "2" ||
+      isFlagOn(status.disabled) ||
+      isFlagOn(status.inject_error) ||
+      isFlagOn(status.pending_reboot);
+    if (isLoading && !statusReady) {
+      return {
+        tone: TrustTone.Idle,
+        title: "检测中…",
+        hint: "正在读取模块状态",
+      };
+    }
     return resolveTrustLabel(status);
-  }, [status, statusError]);
+  }, [status, statusError, isLoading]);
 
   const activeCount = Number(status.active_count || 0);
   const customCount = Number(status.custom_count || customCertificates.length || 0);

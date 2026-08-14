@@ -2,35 +2,45 @@ import { Button, List } from "antd-mobile";
 import { AppOutline, CloseCircleOutline, FileOutline } from "antd-mobile-icons";
 
 type OverviewActionsProps = {
+  title: string;
+  rebootTitle: string;
+  rebootHint: string;
+  manageLabel: string;
+  tempLabel: string;
   isHotMountSupported: boolean;
   onReboot: () => void;
   onManageCerts: () => void;
 };
 
 export function OverviewActions({
+  title,
+  rebootTitle,
+  rebootHint,
+  manageLabel,
+  tempLabel,
   isHotMountSupported,
   onReboot,
   onManageCerts,
 }: OverviewActionsProps) {
   return (
-    <List mode="card" header="快捷操作">
+    <List mode="card" header={title}>
       <List.Item
         prefix={<CloseCircleOutline />}
-        description="应用挂载变更建议重启"
+        description={rebootHint}
         extra={
           <Button size="mini" color="danger" onClick={onReboot}>
             重启
           </Button>
         }
       >
-        重启设备
+        {rebootTitle}
       </List.Item>
       <List.Item prefix={<AppOutline />} clickable arrowIcon onClick={onManageCerts}>
-        管理证书
+        {manageLabel}
       </List.Item>
       {isHotMountSupported ? (
         <List.Item prefix={<FileOutline />} clickable arrowIcon onClick={onManageCerts}>
-          临时证书
+          {tempLabel}
         </List.Item>
       ) : null}
     </List>

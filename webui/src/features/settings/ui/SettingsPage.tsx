@@ -2,12 +2,17 @@ import { AppearancePanel } from "@/features/theme/ui/AppearancePanel";
 import { AboutSection } from "@/features/about/ui/AboutSection";
 import { useMountMode } from "@/features/settings/hooks/useMountMode";
 import { useTmpfsStyle } from "@/features/settings/hooks/useTmpfsStyle";
+import { useAppSelector } from "@/app/store/hooks";
+import { selectThemePack } from "@/features/theme/model/selectors";
+import { getPackVoice } from "@/shared/config/packVoice";
 import { PageSpin, SectionLabel } from "@/shared/ui";
 import { MountModePanel } from "./MountModePanel";
 import { TmpfsPathPanel } from "./TmpfsPathPanel";
 import { SettingsWorkflow } from "./SettingsWorkflow";
 
 export function SettingsPage() {
+  const pack = useAppSelector(selectThemePack);
+  const voice = getPackVoice(pack);
   const {
     mountMode,
     isPending: isMountPending,
@@ -21,10 +26,10 @@ export function SettingsPage() {
 
   return (
     <PageSpin spinning={isMountPending || isTmpfsPending}>
-      <SectionLabel>界面</SectionLabel>
+      <SectionLabel>{voice.settingsUi}</SectionLabel>
       <AppearancePanel />
 
-      <SectionLabel>模块</SectionLabel>
+      <SectionLabel>{voice.settingsModule}</SectionLabel>
       <MountModePanel
         mountMode={mountMode}
         onChange={(mode) => void handleMountChange(mode)}
@@ -35,7 +40,7 @@ export function SettingsPage() {
       />
       <SettingsWorkflow />
 
-      <SectionLabel>关于</SectionLabel>
+      <SectionLabel>{voice.settingsAbout}</SectionLabel>
       <AboutSection />
     </PageSpin>
   );

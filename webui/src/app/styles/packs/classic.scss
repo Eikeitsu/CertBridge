@@ -1,90 +1,158 @@
-/* 经典印记 — 冷纸面 + 虚线信任印记（非奶油衬线） */
+/* 印记 — 凭证文书：冷静权威、账本式分割、克制圆角 */
 html[data-pack="classic"] {
-  --cb-radius: 14px;
-  --cb-radius-sm: 9px;
-  --cb-radius-lg: 18px;
-  --cb-chrome: #e6ecf0;
-  --cb-paper: #e6ecf0;
-  --cb-stage: #f2f6f8;
-  --cb-surface: #f8fbfc;
-  --cb-surface-2: #eef3f6;
+  --cb-radius: 12px;
+  --cb-radius-sm: 8px;
+  --cb-radius-lg: 16px;
+  --cb-dock-h: 56px;
+  --cb-topbar-h: 50px;
+  --cb-chrome: #e6e9e4;
+  --cb-paper: #e6e9e4;
+  --cb-stage: #fbfcfa;
+  --cb-surface: #fbfcfa;
+  --cb-surface-2: #f0f2ed;
   --cb-panel: var(--cb-surface);
-  --cb-stroke: color-mix(in srgb, var(--cb-primary) 16%, #c5ced8);
-  --cb-stroke-strong: color-mix(in srgb, var(--cb-primary) 26%, #aeb8c2);
-  --cb-shadow: 0 1px 0 color-mix(in srgb, var(--cb-stroke-strong) 45%, transparent);
-  --cb-panel-border: 1.5px;
-  --cb-body-gradient-a: color-mix(in srgb, var(--cb-primary) 12%, transparent);
-  --cb-body-gradient-b: color-mix(in srgb, #64748b 8%, transparent);
-  --cb-body-gradient-tint: color-mix(in srgb, var(--cb-chrome) 92%, #d5e8e6);
-  --cb-topbar-bg: var(--cb-chrome);
-  --cb-dock-bg: var(--cb-chrome);
+  --cb-stroke: rgba(26, 35, 50, 0.12);
+  --cb-shadow: none;
+  --cb-panel-border: 1px;
+  --cb-body-gradient-a: color-mix(in srgb, var(--cb-primary) 7%, transparent);
+  --cb-body-gradient-b: color-mix(in srgb, var(--cb-accent) 4%, transparent);
+  --cb-metrics-columns: 4;
 
   .app-topbar {
-    border-bottom-style: dashed;
+    border-bottom: 1px solid var(--cb-stroke);
+
+    .nav-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .logo {
+      border-radius: 6px;
+      outline: 1px solid color-mix(in srgb, var(--cb-primary) 25%, transparent);
+    }
+
+    .device-chip {
+      border-radius: 4px;
+      background: transparent;
+      border: 1px solid var(--cb-stroke);
+      font-size: 0.65rem;
+      letter-spacing: 0.02em;
+    }
   }
 
-  .app-shell[data-shell-pack="classic"] .logo {
-    border: 2px dashed color-mix(in srgb, var(--cb-primary) 30%, transparent);
-    border-radius: 12px;
-    box-shadow: none;
+  .cb-section-label {
+    margin: 20px 2px 8px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--cb-ink-3);
   }
 
   .cb-stage {
-    border-style: dashed;
+    border: 1px solid var(--cb-stroke);
+    border-radius: var(--cb-radius);
+    box-shadow: none;
+    padding: 18px 16px 16px 20px;
 
-    &::after {
-      content: "TRUST";
+    &::before {
+      content: "";
       position: absolute;
-      top: 14px;
-      right: 14px;
-      padding: 3px 8px;
-      border: 1.5px dashed color-mix(in srgb, var(--cb-primary) 45%, transparent);
-      border-radius: 4px;
-      color: color-mix(in srgb, var(--cb-primary) 65%, var(--cb-ink-3));
-      font-size: 0.58rem;
-      font-weight: 750;
-      letter-spacing: 0.16em;
-      transform: rotate(-8deg);
-      opacity: 0.5;
-      pointer-events: none;
+      left: 0;
+      top: 12px;
+      bottom: 12px;
+      width: 3px;
+      background: var(--cb-primary);
+      border-radius: 2px;
     }
   }
 
-  .cb-panel,
-  .cb-list,
-  .cb-metric,
-  .cb-help,
-  .cb-sheet__section {
-    border-style: dashed;
+  .cb-stage__glow {
+    display: none;
+  }
+
+  .cb-stage__kicker {
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-size: 0.66rem;
+  }
+
+  .cb-stage__title {
+    font-size: 1.55rem;
+    font-weight: 720;
+    letter-spacing: -0.02em;
+  }
+
+  .cb-stage__hero-num {
+    display: none;
+  }
+
+  .cb-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0;
+    padding: 0;
+    background: var(--cb-surface);
+    border: 1px solid var(--cb-stroke);
+    border-radius: var(--cb-radius);
     box-shadow: none;
+    overflow: hidden;
   }
 
   .cb-metric {
-    background: var(--cb-primary-container);
-  }
-
-  .app-dock button.active {
-    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--cb-primary) 35%, transparent);
+    position: relative;
+    padding: 14px 8px;
+    border-radius: 0;
     background: transparent;
 
-    &::before {
-      display: none;
+    &:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      top: 12px;
+      bottom: 12px;
+      right: 0;
+      width: 1px;
+      background: var(--cb-stroke);
+    }
+
+    .value {
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .label {
+      font-size: 0.64rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
     }
   }
 
+  .adm-card,
+  .adm-list-card,
+  .adm-collapse {
+    border: 1px solid var(--cb-stroke);
+    box-shadow: none;
+  }
+
+  .adm-tab-bar-item-active {
+    color: var(--cb-primary);
+    font-weight: 700;
+  }
+
   .cb-theme-preview[data-pack="classic"] {
-    background: linear-gradient(145deg, #f8fbfc, #dfecef);
-    border: 1.5px dashed color-mix(in srgb, var(--cb-primary) 35%, #c5ced8);
+    background: linear-gradient(180deg, #fbfcfa 0 58%, #e6e9e4 58% 100%);
+    box-shadow: inset 3px 0 0 var(--cb-primary);
   }
 }
 
 html[data-theme="dark"][data-pack="classic"] {
-  --cb-chrome: #0e141c;
-  --cb-paper: #0e141c;
-  --cb-stage: #121a24;
-  --cb-surface: #151e2a;
+  --cb-chrome: #101410;
+  --cb-paper: #101410;
+  --cb-stage: #181c18;
+  --cb-surface: #181c18;
+  --cb-surface-2: #1e241e;
   --cb-panel: var(--cb-surface);
   --cb-topbar-bg: var(--cb-chrome);
   --cb-dock-bg: var(--cb-chrome);
-  --cb-body-gradient-tint: #0f1c1a;
 }

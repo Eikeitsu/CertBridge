@@ -1,124 +1,114 @@
-/* KernelSU / MMRL：注入 --window-inset-*，供状态栏与小白条沉浸 */
+/* KernelSU / MMRL：注入 --window-inset-* */
 @import "https://mui.kernelsu.org/internal/insets.css";
 
 :root {
-  /* 安全区 */
   --cb-inset-top: var(--window-inset-top, env(safe-area-inset-top, 0px));
   --cb-inset-bottom: var(--window-inset-bottom, env(safe-area-inset-bottom, 0px));
   --cb-safe-top: var(--cb-inset-top);
   --cb-safe-bottom: var(--cb-inset-bottom);
-  --cb-dock-h: 62px;
-  --cb-topbar-h: 54px;
+  --cb-dock-h: 58px;
+  --cb-topbar-h: 52px;
   --cb-font-scale: 1;
-
-  /* Trust Bridge 字体：几何展示 + 可读正文 */
   --cb-font-display:
-    "Avenir Next", "DIN Alternate", "Segoe UI Variable Display", "PingFang SC",
-    "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    "Segoe UI Variable Display", "Avenir Next", "PingFang SC", "Noto Sans SC",
+    "Microsoft YaHei", system-ui, sans-serif;
   --cb-font-body:
-    "Avenir Next", "Segoe UI Variable Text", "PingFang SC", "Noto Sans SC",
-    "Microsoft YaHei", sans-serif;
+    "Segoe UI Variable Text", "PingFang SC", "Noto Sans SC", "Microsoft YaHei",
+    system-ui, sans-serif;
   --cb-font-mono:
     "Cascadia Code", "SF Mono", "JetBrains Mono", ui-monospace, consolas, monospace;
-
-  /* Rhythm */
   --cb-space-2xs: 4px;
   --cb-space-xs: 8px;
   --cb-space-sm: 12px;
   --cb-space-md: 16px;
-  --cb-space-lg: 20px;
+  --cb-space-lg: 22px;
   --cb-space-xl: 28px;
   --cb-space-2xl: 36px;
-
-  /* Shape */
-  --cb-radius: 16px;
+  --cb-radius: 14px;
   --cb-radius-sm: 10px;
-  --cb-radius-lg: 22px;
+  --cb-radius-lg: 18px;
   --cb-radius-pill: 999px;
 
-  /* Brand — ink teal */
-  --cb-primary: #0d7377;
-  --cb-accent: #14919b;
+  /* 证书桥基调：印章青绿（非电弧青照搬） */
+  --cb-primary: #0f5c5c;
+  --cb-accent: #8b6914;
   --cb-primary-soft: color-mix(in srgb, var(--cb-primary) 12%, transparent);
-  --cb-primary-container: color-mix(in srgb, var(--cb-primary) 14%, #fff);
-
-  /* Semantic */
-  --cb-ok: #0f766e;
-  --cb-warn: #b45309;
-  --cb-bad: #be123c;
-  --cb-ok-soft: color-mix(in srgb, var(--cb-ok) 14%, transparent);
-  --cb-warn-soft: color-mix(in srgb, var(--cb-warn) 14%, transparent);
-  --cb-bad-soft: color-mix(in srgb, var(--cb-bad) 12%, transparent);
-
-  /* Surfaces — cool gray paper */
-  --cb-ink: #0c1222;
-  --cb-ink-2: #3a4558;
-  --cb-ink-3: #6b778c;
-  --cb-paper: #e8eef2;
-  --cb-chrome: #e8eef2;
-  --cb-surface: #f7fafc;
-  --cb-surface-2: #eef3f7;
-  --cb-stage: #f4f8fa;
+  --cb-primary-container: color-mix(in srgb, var(--cb-primary) 11%, #fff);
+  --cb-hero-glow: color-mix(in srgb, var(--cb-primary) 10%, transparent);
+  --cb-ok: #1b7a4a;
+  --cb-warn: #a16207;
+  --cb-bad: #b42318;
+  --cb-ok-soft: color-mix(in srgb, var(--cb-ok) 12%, transparent);
+  --cb-warn-soft: color-mix(in srgb, var(--cb-warn) 12%, transparent);
+  --cb-bad-soft: color-mix(in srgb, var(--cb-bad) 10%, transparent);
+  --cb-ink: #1a2332;
+  --cb-ink-2: #4a5568;
+  --cb-ink-3: #7a8699;
+  --cb-paper: #e6e9e4;
+  --cb-chrome: #e6e9e4;
+  --cb-surface: #fbfcfa;
+  --cb-surface-2: #f1f3ef;
+  --cb-stage: #fbfcfa;
   --cb-panel: var(--cb-surface);
   --cb-row: transparent;
-  --cb-row-hover: color-mix(in srgb, var(--cb-ink) 4%, transparent);
-  --cb-stroke: rgba(12, 18, 34, 0.08);
-  --cb-stroke-strong: rgba(12, 18, 34, 0.14);
-  --cb-shadow: 0 1px 0 rgba(12, 18, 34, 0.04), 0 12px 32px rgba(12, 18, 34, 0.06);
-  --cb-shadow-lg: 0 4px 8px rgba(12, 18, 34, 0.04), 0 24px 48px rgba(12, 18, 34, 0.1);
-
-  /* Shell immersion (must be solid) */
+  --cb-row-hover: color-mix(in srgb, var(--cb-ink) 4.5%, transparent);
+  --cb-stroke: rgba(26, 35, 50, 0.1);
+  --cb-stroke-strong: rgba(26, 35, 50, 0.16);
+  --cb-shadow: 0 1px 0 rgba(26, 35, 50, 0.04);
+  --cb-shadow-lg: 0 10px 28px rgba(26, 35, 50, 0.08);
   --cb-topbar-bg: var(--cb-chrome);
   --cb-dock-bg: var(--cb-chrome);
-  --cb-body-gradient-a: color-mix(in srgb, var(--cb-primary) 10%, transparent);
-  --cb-body-gradient-b: color-mix(in srgb, #64748b 8%, transparent);
+  --cb-body-gradient-a: color-mix(in srgb, var(--cb-primary) 8%, transparent);
+  --cb-body-gradient-b: color-mix(in srgb, var(--cb-accent) 5%, transparent);
   --cb-body-gradient-base: var(--cb-chrome);
-  --cb-body-gradient-tint: color-mix(in srgb, var(--cb-chrome) 94%, #c5dfe0);
+  --cb-body-gradient-tint: color-mix(in srgb, var(--cb-chrome) 92%, #d5ddd6);
   --cb-panel-blur: 0px;
   --cb-panel-border: 1px;
   --cb-ease: 0.2s cubic-bezier(0.22, 1, 0.36, 1);
-
-  /* Legacy aliases used by packs */
   --cb-card: var(--cb-panel);
   --cb-card-blur: var(--cb-panel-blur);
   --cb-card-border-width: var(--cb-panel-border);
+  --cb-metrics-columns: 4;
 }
 
 html[data-theme="dark"] {
-  --cb-ok: #2dd4bf;
-  --cb-warn: #fbbf24;
-  --cb-bad: #fb7185;
-  --cb-ok-soft: color-mix(in srgb, var(--cb-ok) 16%, transparent);
-  --cb-warn-soft: color-mix(in srgb, var(--cb-warn) 16%, transparent);
-  --cb-bad-soft: color-mix(in srgb, var(--cb-bad) 16%, transparent);
-  --cb-ink: #e8eef5;
-  --cb-ink-2: #b6c2d1;
-  --cb-ink-3: #8491a4;
-  --cb-paper: #0a1018;
-  --cb-chrome: #0a1018;
-  --cb-surface: #121a24;
-  --cb-surface-2: #182230;
-  --cb-stage: #0f1620;
+  --cb-ok: #3dd68c;
+  --cb-warn: #f0b429;
+  --cb-bad: #f97066;
+  --cb-ok-soft: color-mix(in srgb, var(--cb-ok) 14%, transparent);
+  --cb-warn-soft: color-mix(in srgb, var(--cb-warn) 14%, transparent);
+  --cb-bad-soft: color-mix(in srgb, var(--cb-bad) 14%, transparent);
+  --cb-ink: #e8eee8;
+  --cb-ink-2: #a8b4a8;
+  --cb-ink-3: #7a8878;
+  --cb-paper: #101410;
+  --cb-chrome: #101410;
+  --cb-surface: #181c18;
+  --cb-surface-2: #1e241e;
+  --cb-stage: #181c18;
   --cb-panel: var(--cb-surface);
-  --cb-row-hover: color-mix(in srgb, #fff 5%, transparent);
-  --cb-stroke: rgba(148, 163, 184, 0.12);
-  --cb-stroke-strong: rgba(148, 163, 184, 0.2);
-  --cb-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 12px 32px rgba(0, 0, 0, 0.35);
-  --cb-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
-  --cb-primary-container: color-mix(in srgb, var(--cb-primary) 22%, #0f172a);
+  --cb-row-hover: color-mix(in srgb, #fff 6%, transparent);
+  --cb-stroke: rgba(232, 238, 232, 0.1);
+  --cb-stroke-strong: rgba(232, 238, 232, 0.16);
+  --cb-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+  --cb-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.45);
+  --cb-primary: #3d9a92;
+  --cb-accent: #c4a35a;
+  --cb-primary-soft: color-mix(in srgb, var(--cb-primary) 16%, transparent);
+  --cb-primary-container: color-mix(in srgb, var(--cb-primary) 18%, #181c18);
+  --cb-hero-glow: color-mix(in srgb, var(--cb-primary) 14%, transparent);
   --cb-topbar-bg: var(--cb-chrome);
   --cb-dock-bg: var(--cb-chrome);
-  --cb-body-gradient-base: var(--cb-chrome);
-  --cb-body-gradient-tint: color-mix(in srgb, var(--cb-chrome) 92%, #0f3d3c);
+  --cb-body-gradient-tint: color-mix(in srgb, var(--cb-chrome) 90%, #0d2a28);
   --cb-card: var(--cb-panel);
 }
 
 html[data-compact="1"] {
-  --cb-dock-h: 56px;
-  --cb-radius: 12px;
+  --cb-dock-h: 52px;
+  --cb-radius: 11px;
   --cb-radius-sm: 8px;
   --cb-space-md: 12px;
-  --cb-space-lg: 14px;
+  --cb-space-lg: 16px;
 }
 
 *,
@@ -144,9 +134,9 @@ body {
   color: var(--cb-ink);
   background-color: var(--cb-chrome);
   background-image:
-    radial-gradient(900px 420px at 0% -10%, var(--cb-body-gradient-a), transparent 55%),
-    radial-gradient(700px 380px at 100% 0%, var(--cb-body-gradient-b), transparent 50%),
-    linear-gradient(180deg, transparent 40%, var(--cb-body-gradient-tint));
+    radial-gradient(780px 360px at 8% -12%, var(--cb-body-gradient-a), transparent 58%),
+    radial-gradient(560px 280px at 100% 0%, var(--cb-body-gradient-b), transparent 52%),
+    linear-gradient(180deg, transparent 45%, var(--cb-body-gradient-tint));
   background-attachment: fixed;
   -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased;

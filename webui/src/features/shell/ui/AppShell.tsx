@@ -8,7 +8,7 @@ import {
   selectThemePack,
 } from "@/features/theme/model/selectors";
 import { selectDeviceLabel } from "@/features/status/model/selectors";
-import { ThemePack } from "@/entities/module/enums";
+import { getPackVoice } from "@/shared/config/packVoice";
 import { AppTopbar } from "./AppTopbar";
 import { AppDock } from "./AppDock";
 
@@ -18,16 +18,17 @@ export function AppShell() {
   const resolvedTheme = useAppSelector(selectResolvedTheme);
   const isBarBlurEnabled = useAppSelector(selectBarBlurEnabled);
   const { activeTab, pathname, switchTab } = useActiveTab();
-  const isMaterial = themePack === ThemePack.Material;
+  const voice = getPackVoice(themePack);
 
   useImmersiveChrome(resolvedTheme, isBarBlurEnabled, themePack, pathname);
 
   return (
-    <div
-      className={`app-shell pack-${themePack}${isMaterial ? " shell-md3" : ""}`}
-      data-shell-pack={themePack}
-    >
-      <AppTopbar isMaterial={isMaterial} deviceLabel={deviceLabel} />
+    <div className={`app-shell pack-${themePack}`} data-shell-pack={themePack}>
+      <AppTopbar
+        pack={themePack}
+        brandTitle={voice.topbarBrand}
+        deviceLabel={deviceLabel}
+      />
       <main className="app-main">
         <div key={pathname} className="page-enter">
           <Outlet />

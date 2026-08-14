@@ -1,12 +1,16 @@
 import { Button, NoticeBar } from "antd-mobile";
 import { LoopOutline } from "antd-mobile-icons";
 import { Flag, StatusStage } from "@/shared/ui";
-import { FlagTone, type TrustTone } from "@/entities/module/enums";
+import { FlagTone, ThemePack, type TrustTone } from "@/entities/module/enums";
 
 type OverviewStageProps = {
+  pack: ThemePack;
   tone: TrustTone;
   title: string;
   description: string;
+  kicker: string;
+  refreshLabel: string;
+  heroValue?: string | number;
   diagnosisMessage?: string;
   isPendingReboot: boolean;
   isHotMountActive: boolean;
@@ -15,32 +19,43 @@ type OverviewStageProps = {
 };
 
 export function OverviewStage({
+  pack,
   tone,
   title,
   description,
+  kicker,
+  refreshLabel,
+  heroValue,
   diagnosisMessage,
   isPendingReboot,
   isHotMountActive,
   onRefresh,
   onViewLog,
 }: OverviewStageProps) {
+  const showHeroValue = pack === ThemePack.Material;
+
   return (
     <StatusStage
       tone={tone}
+      kicker={kicker}
       title={title}
       description={description}
+      heroValue={heroValue}
+      showHeroValue={showHeroValue}
       diagnosis={
         diagnosisMessage ? (
-          <NoticeBar
-            color="alert"
-            content={diagnosisMessage}
-            extra={
-              <Button size="mini" fill="none" color="primary" onClick={onViewLog}>
-                日志
-              </Button>
-            }
-            wrap
-          />
+          <div className="cb-diag">
+            <NoticeBar
+              color="alert"
+              content={diagnosisMessage}
+              extra={
+                <Button size="mini" fill="none" color="primary" onClick={onViewLog}>
+                  日志
+                </Button>
+              }
+              wrap
+            />
+          </div>
         ) : null
       }
       flags={
@@ -50,9 +65,9 @@ export function OverviewStage({
         </>
       }
       footer={
-        <Button size="mini" fill="none" onClick={onRefresh}>
+        <Button size="small" fill="outline" color="primary" onClick={onRefresh}>
           <LoopOutline />
-          刷新状态
+          {refreshLabel}
         </Button>
       }
     />

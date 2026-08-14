@@ -1,6 +1,7 @@
 import { DetailGrid, HelpCollapse } from "@/shared/ui";
 
 type OverviewRuntimeProps = {
+  title: string;
   androidLabel: string;
   rootLabel: string;
   apexLabel: string;
@@ -11,6 +12,7 @@ type OverviewRuntimeProps = {
 };
 
 export function OverviewRuntime({
+  title,
   androidLabel,
   rootLabel,
   apexLabel,
@@ -20,7 +22,7 @@ export function OverviewRuntime({
   lastRefreshedAt,
 }: OverviewRuntimeProps) {
   return (
-    <HelpCollapse title="运行细节">
+    <HelpCollapse title={title}>
       <DetailGrid
         items={[
           { label: "Android", value: androidLabel },

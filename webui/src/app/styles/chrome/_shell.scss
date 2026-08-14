@@ -70,10 +70,10 @@
   }
 
   .logo {
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
-    box-shadow: var(--cb-shadow);
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    box-shadow: none;
     flex-shrink: 0;
     object-fit: cover;
   }
@@ -81,12 +81,12 @@
   .device-chip {
     display: inline-block;
     max-width: 38vw;
-    padding: 4px 10px;
+    padding: 5px 10px;
     border-radius: var(--cb-radius-pill);
     background: color-mix(in srgb, var(--cb-ink) 5%, transparent);
     color: var(--cb-ink-3);
-    font-size: 0.68rem;
-    font-weight: 600;
+    font-size: 0.7rem;
+    font-weight: 550;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -102,8 +102,7 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: none;
-  padding: calc(var(--cb-topbar-h) + var(--cb-inset-top) + 10px) var(--cb-space-md)
-    var(--cb-space-sm);
+  padding: calc(var(--cb-topbar-h) + var(--cb-inset-top) + 12px) 16px 28px;
   max-width: 720px;
   width: 100%;
   margin: 0 auto;
@@ -148,15 +147,15 @@
   }
 
   html[data-float-dock="1"] & {
-    left: 14px;
-    right: 14px;
+    left: 16px;
+    right: 16px;
     bottom: calc(10px + var(--cb-inset-bottom));
     width: auto;
-    min-height: 56px;
+    min-height: 58px;
     padding: 4px;
-    border: 1px solid color-mix(in srgb, #fff 40%, var(--cb-stroke));
-    border-radius: 22px;
-    background: color-mix(in srgb, var(--cb-surface) 82%, transparent);
+    border: 1px solid color-mix(in srgb, #fff 50%, var(--cb-stroke));
+    border-radius: 28px;
+    background: color-mix(in srgb, var(--cb-surface) 88%, transparent);
     box-shadow: var(--cb-shadow-lg);
 
     &::after {
@@ -197,6 +196,7 @@
 
   .adm-tab-bar-item-active {
     color: var(--cb-primary);
+    font-weight: 650;
   }
 
   .adm-tab-bar-item-icon svg {

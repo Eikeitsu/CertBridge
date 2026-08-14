@@ -18,6 +18,9 @@ export const FONT_SCALE = {
   STEP: 0.05,
 } as const;
 
+/** 宿主色板走远程 @import，首次读常为空，按这几个时刻补探 */
+export const MONET_PROBE_DELAYS_MS = [200, 800, 2_000] as const;
+
 export const EMPTY_PLACEHOLDER = "—";
 
 export const DEFAULT_SD_CERT_DIR = "/sdcard/Documents/cacerts";

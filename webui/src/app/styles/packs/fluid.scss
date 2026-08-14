@@ -44,11 +44,6 @@ html[data-pack="fluid"] {
     border-bottom-color: transparent;
     background: var(--cb-topbar-bg);
 
-    html[data-bar-blur="1"] & {
-      -webkit-backdrop-filter: blur(26px) saturate(1.4);
-      backdrop-filter: blur(26px) saturate(1.4);
-    }
-
     .nav-title {
       font-size: 1.12rem;
       font-weight: 700;
@@ -66,6 +61,13 @@ html[data-pack="fluid"] {
       border: 1px solid color-mix(in srgb, #fff 70%, transparent);
       backdrop-filter: blur(8px);
     }
+  }
+
+  /* 这些开关状态挂在同一个 html 上，必须用 &[attr] 组合；
+     写成 html[...] & 会展开成 html ... html ...，永远匹配不到 */
+  &[data-bar-blur="1"] .app-topbar {
+    -webkit-backdrop-filter: blur(26px) saturate(1.4);
+    backdrop-filter: blur(26px) saturate(1.4);
   }
 
   .app-main {
@@ -275,10 +277,10 @@ html[data-pack="fluid"] {
     }
   }
 
-  html[data-float-dock="1"] .app-dock {
+  &[data-float-dock="1"] .app-dock {
     border-radius: 28px;
     border: 1px solid color-mix(in srgb, #fff 70%, var(--cb-stroke-strong));
-    background: color-mix(in srgb, #fff 55%, transparent);
+    background: var(--cb-glass-b);
     -webkit-backdrop-filter: blur(32px) saturate(1.5);
     backdrop-filter: blur(32px) saturate(1.5);
   }

@@ -11,6 +11,7 @@ export function AppearancePanel() {
   const {
     theme,
     isMonetAvailable,
+    isMonetPaletteReady,
     fontScalePercent,
     packOptions,
     handleThemePackChange,
@@ -61,7 +62,14 @@ export function AppearancePanel() {
               <AccentPicker value={theme.accentId} onChange={handleAccentChange} />
             </List.Item>
             {isMonetAvailable ? (
-              <PrefRow label="系统取色">
+              <PrefRow
+                label="系统取色"
+                description={
+                  isMonetPaletteReady
+                    ? "跟随管理器提供的壁纸取色"
+                    : "当前管理器未提供取色，仍用强调色"
+                }
+              >
                 <Switch
                   checked={theme.monet}
                   onChange={(checked) => {

@@ -15,6 +15,7 @@ import {
 } from "@/features/theme/model/themeSlice";
 import { PACK_OPTIONS, supportsMonet } from "@/shared/config/theme";
 import type { ThemeMode, ThemePack } from "@/entities/module/enums";
+import { useMonetPalette } from "./useMonetPalette";
 
 export function useAppearanceSettings() {
   const dispatch = useAppDispatch();
@@ -24,12 +25,14 @@ export function useAppearanceSettings() {
     [theme.pack],
   );
   const isMonetAvailable = supportsMonet(theme.pack);
+  const isMonetPaletteReady = useMonetPalette();
   const fontScalePercent = Math.round(theme.fontScale * 100);
 
   return {
     theme,
     selectedPackHint,
     isMonetAvailable,
+    isMonetPaletteReady,
     fontScalePercent,
     packOptions: PACK_OPTIONS,
     handleThemePackChange: (pack: ThemePack) => dispatch(setThemePack(pack)),

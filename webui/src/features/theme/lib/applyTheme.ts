@@ -12,13 +12,12 @@ export function resolveThemeMode(mode: ThemeMode): ResolvedTheme {
     : ResolvedTheme.Light;
 }
 
-function monetSeed(): string | null {
+/** 宿主是否真的注入了莫奈色板（colors.css 是远程 @import，早期读可能还是空） */
+export function hasMonetPalette(): boolean {
   const styles = getComputedStyle(document.documentElement);
-  for (const tokenKey of MONET_TOKEN_KEYS) {
-    const tokenValue = styles.getPropertyValue(tokenKey).trim();
-    if (tokenValue) return tokenValue;
-  }
-  return null;
+  return MONET_TOKEN_KEYS.some(
+    (tokenKey) => styles.getPropertyValue(tokenKey).trim() !== "",
+  );
 }
 
 export function applyThemeToDom(
@@ -44,13 +43,14 @@ export function applyThemeToDom(
   root.dataset.barBlur = state.barBlur ? FLAG_ON : FLAG_OFF;
   root.style.setProperty("--cb-font-scale", String(state.fontScale));
 
-  const accentColor: string =
-    ACCENTS.find((accent) => accent.id === state.accentId)?.color || ACCENTS[0].color;
-  let primary: string = accentColor;
-  if (state.monet && supportsMonet(state.pack)) {
-    primary = monetSeed() || accentColor;
-  }
-  root.style.setProperty("--cb-primary", primary);
-  root.style.setProperty("--cb-accent", primary);
-  localStorage.setItem(STORAGE_KEYS.accentColor, primary);
+  const accent = ACCENTS.find((item) => item.id === state.accentId) || ACCENTS[0];
+  const isMonetOn = state.monet && supportsMonet(state.pack);
+
+  /* 强调色只作为兜底写入；主色交给 CSS 里的 data-monet 规则决定，
+     否则 inline 会压过宿主色板，开关就永远看不出差别 */
+  root.dataset.monet = isMonetOn ? FLAG_ON : FLAG_OFF;
+  root.style.setProperty("--cb-accent-pick", accent.color);
+  root.style.setProperty("--cb-accent-pair", accent.pair);
+  localStorage.setItem(STORAGE_KEYS.accentColor, accent.color);
+  localStorage.setItem(STORAGE_KEYS.accentPair, accent.pair);
 }

@@ -13,12 +13,15 @@ export const THEME_DEFAULTS = {
   uiCustom: false,
 } as const;
 
-/** 证书桥专属色相：印章青绿 / 钢蓝 / 铜印 / 墨灰 */
+/**
+ * 证书桥专属色相：印章青绿 / 钢蓝 / 铜印 / 墨灰。
+ * `pair` 是配套的第二色（--cb-accent），虹桥的渐变、印记的骑缝印都靠它拉出双色。
+ */
 export const ACCENTS = [
-  { id: "seal", label: "印章青", color: "#0F5C5C" },
-  { id: "steel", label: "钢蓝", color: "#2F5D8C" },
-  { id: "bronze", label: "铜印", color: "#8B6914" },
-  { id: "ink", label: "墨灰", color: "#3D4F5F" },
+  { id: "seal", label: "印章青", color: "#0F5C5C", pair: "#8B6914" },
+  { id: "steel", label: "钢蓝", color: "#2F5D8C", pair: "#B07C2B" },
+  { id: "bronze", label: "铜印", color: "#8B6914", pair: "#14514F" },
+  { id: "ink", label: "墨灰", color: "#3D4F5F", pair: "#9C3B34" },
 ] as const;
 
 export const PACK_OPTIONS = [
@@ -47,12 +50,11 @@ export const THEME_MODE_OPTIONS = [
 
 export const MONET_PACKS: ThemePack[] = [ThemePack.Fluid, ThemePack.Material];
 
-export const MONET_TOKEN_KEYS = [
-  "--wallpaper-main",
-  "--monet-primary",
-  "--qi-color-primary",
-  "--theme-color",
-] as const;
+/**
+ * WebUI-X（KernelSU / MMRL）通过 internal/colors.css 注入宿主取色，
+ * 同时提供 md-sys 与 camelCase 两条通道，两条都要探。
+ */
+export const MONET_TOKEN_KEYS = ["--md-sys-color-primary", "--primary"] as const;
 
 export function supportsMonet(pack: ThemePack): boolean {
   return MONET_PACKS.includes(pack);

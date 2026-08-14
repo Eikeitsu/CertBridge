@@ -38,11 +38,14 @@
           root.dataset.barBlur = flag("cb_bar_blur", "1");
           var scale = parseFloat(read("cb_font_scale", "1"));
           root.style.setProperty("--cb-font-scale", String(scale > 0 ? scale : 1));
-          var primary = read("cb_accent_color", "");
-          if (/^#[0-9a-fA-F]{3,8}$/.test(primary)) {
-            root.style.setProperty("--cb-primary", primary);
-            root.style.setProperty("--cb-accent", primary);
-          }
+          /* 莫奈只在层积 / 虹桥可用，与 MONET_PACKS 保持一致 */
+          root.dataset.monet =
+            pack !== "classic" && flag("cb_monet", "1") === "1" ? "1" : "0";
+          var hex = /^#[0-9a-fA-F]{3,8}$/;
+          var pick = read("cb_accent_color", "");
+          var pair = read("cb_accent_pair", "");
+          if (hex.test(pick)) root.style.setProperty("--cb-accent-pick", pick);
+          if (hex.test(pair)) root.style.setProperty("--cb-accent-pair", pair);
         } catch (error) {
           /* localStorage 不可用时退回默认主题 */
         }

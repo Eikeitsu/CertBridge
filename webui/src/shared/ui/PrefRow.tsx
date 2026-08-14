@@ -3,9 +3,14 @@ import { List } from "antd-mobile";
 
 type PrefRowProps = {
   label: string;
+  description?: string;
   children: ReactNode;
 };
 
-export function PrefRow({ label, children }: PrefRowProps) {
-  return <List.Item extra={children}>{label}</List.Item>;
+export function PrefRow({ label, description, children }: PrefRowProps) {
+  return (
+    <List.Item extra={children} description={description}>
+      {label}
+    </List.Item>
+  );
 }

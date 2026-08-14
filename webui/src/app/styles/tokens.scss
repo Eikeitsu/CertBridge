@@ -1,5 +1,6 @@
-/* KernelSU / MMRL：注入 --window-inset-* */
+/* KernelSU / MMRL：insets 注入 --window-inset-*，colors 注入宿主莫奈色板 */
 @import "https://mui.kernelsu.org/internal/insets.css";
+@import "https://mui.kernelsu.org/internal/colors.css";
 
 :root {
   --cb-inset-top: var(--window-inset-top, env(safe-area-inset-top, 0px));
@@ -29,9 +30,12 @@
   --cb-radius-lg: 18px;
   --cb-radius-pill: 999px;
 
-  /* 证书桥基调：印章青绿（非电弧青照搬） */
-  --cb-primary: #0f5c5c;
-  --cb-accent: #8b6914;
+  /* 证书桥基调：印章青绿 + 铜印（非电弧青照搬）。
+     --cb-accent-pick / --cb-accent-pair 由 JS 写成 inline，是莫奈失效时的兜底 */
+  --cb-accent-pick: #0f5c5c;
+  --cb-accent-pair: #8b6914;
+  --cb-primary: var(--cb-accent-pick);
+  --cb-accent: var(--cb-accent-pair);
   --cb-primary-soft: color-mix(in srgb, var(--cb-primary) 12%, transparent);
   --cb-primary-container: color-mix(in srgb, var(--cb-primary) 11%, #fff);
   --cb-hero-glow: color-mix(in srgb, var(--cb-primary) 10%, transparent);
@@ -105,8 +109,10 @@ html[data-theme="dark"] {
   --cb-stroke-strong: rgba(232, 238, 232, 0.16);
   --cb-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
   --cb-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.45);
-  --cb-primary: #3d9a92;
-  --cb-accent: #c4a35a;
+
+  /* 深色下自动提亮所选强调色，省掉再维护一套深色色板 */
+  --cb-primary: color-mix(in srgb, var(--cb-accent-pick) 72%, #eafffb);
+  --cb-accent: color-mix(in srgb, var(--cb-accent-pair) 72%, #fff4d8);
   --cb-primary-soft: color-mix(in srgb, var(--cb-primary) 16%, transparent);
   --cb-primary-container: color-mix(in srgb, var(--cb-primary) 18%, #181c18);
   --cb-hero-glow: color-mix(in srgb, var(--cb-primary) 14%, transparent);
@@ -114,6 +120,19 @@ html[data-theme="dark"] {
   --cb-dock-bg: var(--cb-chrome);
   --cb-body-gradient-tint: color-mix(in srgb, var(--cb-chrome) 90%, #0d2a28);
   --cb-card: var(--cb-panel);
+}
+
+/*
+ * 系统取色：宿主 colors.css 提供 md-sys 与 camelCase 两条通道，都取不到时回落到用户强调色。
+ * 必须排在 data-theme 之后（同特异性靠顺序取胜），且只接管主色系——
+ * 背景/表面留给三套主题自己的性格，宿主注错浅色 token 也不会把深色页洗白。
+ */
+html[data-monet="1"] {
+  --cb-primary: var(--md-sys-color-primary, var(--primary, var(--cb-accent-pick)));
+  --cb-accent: var(
+    --md-sys-color-tertiary,
+    var(--tertiary, var(--md-sys-color-secondary, var(--secondary, var(--cb-accent-pair))))
+  );
 }
 
 html[data-compact="1"] {

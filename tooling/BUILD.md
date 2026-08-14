@@ -94,7 +94,7 @@ Lite 依赖设备上的 `app_process`/`dalvikvm`（Magisk 应用内刷入通常�
 
 ## 工作流
 
-共用 composite：`.github/actions/setup-node-npm`（Node 22 + `npm ci`）。
+共用 composite：`.github/actions/setup-node-npm`（Node 24 + `npm ci`）。
 
 | 工作流           | 触发                | 职责                                                                 |
 | ---------------- | ------------------- | -------------------------------------------------------------------- |

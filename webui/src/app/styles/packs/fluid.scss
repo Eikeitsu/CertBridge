@@ -1,22 +1,22 @@
 @use "../mixins" as m;
 
-/* 虹桥 — 桥接通道：大圆角、玻璃质感、高光边、指标嵌进 Hero */
+/* 虹桥 — 小红书 / Apple Music：大圆角、玻璃、指标嵌进 Hero */
 html[data-pack="fluid"] {
   --cb-radius: 24px;
   --cb-radius-sm: 16px;
   --cb-radius-lg: 30px;
   --cb-dock-h: 60px;
   --cb-topbar-h: 60px;
-  --cb-chrome: #d5e6e3;
-  --cb-paper: #d5e6e3;
+  --cb-chrome: #e8f0ee;
+  --cb-paper: #e8f0ee;
   --cb-stage: color-mix(in srgb, #fff 72%, transparent);
   --cb-surface: color-mix(in srgb, #fff 78%, transparent);
   --cb-surface-2: color-mix(in srgb, #fff 55%, transparent);
   --cb-panel: var(--cb-surface);
   --cb-stroke: color-mix(in srgb, #fff 55%, rgba(15, 92, 92, 0.12));
   --cb-stroke-strong: color-mix(in srgb, var(--cb-primary) 22%, transparent);
-  --cb-shadow: 0 14px 36px color-mix(in srgb, var(--cb-primary) 14%, transparent);
-  --cb-shadow-lg: 0 20px 48px color-mix(in srgb, var(--cb-primary) 18%, transparent);
+  --cb-shadow: 0 8px 24px color-mix(in srgb, var(--cb-primary) 8%, transparent);
+  --cb-shadow-lg: 0 12px 32px color-mix(in srgb, var(--cb-primary) 10%, transparent);
   --cb-panel-blur: 20px;
   --cb-panel-border: 1px;
   --cb-body-gradient-a: color-mix(in srgb, var(--cb-primary) 22%, transparent);
@@ -55,9 +55,7 @@ html[data-pack="fluid"] {
     }
 
     .app-topbar__kicker {
-      letter-spacing: 0.14em;
-      color: var(--cb-primary);
-      font-size: 0.58rem;
+      display: none;
     }
 
     .app-topbar__mark {
@@ -100,12 +98,11 @@ html[data-pack="fluid"] {
     backdrop-filter: blur(26px) saturate(1.4);
   }
 
-  .app-main {
+  .app-pane {
     padding-left: 14px;
     padding-right: 14px;
   }
 
-  /* 分组标题：一段通路线 */
   .cb-section-label {
     margin: 20px 10px 10px;
     font-size: 0.84rem;
@@ -113,15 +110,6 @@ html[data-pack="fluid"] {
     letter-spacing: 0;
     text-transform: none;
     color: var(--cb-ink-2);
-
-    &::before {
-      content: "";
-      width: 16px;
-      height: 2px;
-      flex: 0 0 auto;
-      border-radius: 2px;
-      background: linear-gradient(90deg, var(--cb-primary), var(--cb-accent));
-    }
   }
 
   /* 卡片：玻璃 + 顶部高光 + 右上角光斑 */
@@ -134,25 +122,16 @@ html[data-pack="fluid"] {
     &::before {
       content: "";
       position: absolute;
-      inset: 0;
+      inset: 0 0 auto;
+      height: 1px;
       pointer-events: none;
-      background-image:
-        linear-gradient(
-          90deg,
-          transparent,
-          var(--cb-glass-hi) 22%,
-          var(--cb-glass-hi) 78%,
-          transparent
-        ),
-        radial-gradient(
-          120px 90px at 100% 0%,
-          color-mix(in srgb, var(--cb-primary) 14%, transparent),
-          transparent 70%
-        );
-      background-repeat: no-repeat;
-      background-size:
-        100% 1px,
-        100% 100%;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        var(--cb-glass-hi) 22%,
+        var(--cb-glass-hi) 78%,
+        transparent
+      );
     }
   }
 
@@ -223,11 +202,11 @@ html[data-pack="fluid"] {
   }
 
   .cb-stage__kicker {
-    letter-spacing: 0.04em;
+    letter-spacing: 0;
     text-transform: none;
     font-size: 0.76rem;
     color: var(--cb-primary);
-    font-weight: 700;
+    font-weight: 650;
   }
 
   .cb-stage__title {
@@ -272,18 +251,6 @@ html[data-pack="fluid"] {
     box-shadow: none;
     padding: 12px 4px 10px;
 
-    &::before {
-      content: "";
-      position: absolute;
-      left: 50%;
-      bottom: 6px;
-      width: 14px;
-      height: 2px;
-      border-radius: 2px;
-      background: color-mix(in srgb, var(--cb-primary) 30%, transparent);
-      transform: translateX(-50%);
-    }
-
     .value {
       font-size: 1.34rem;
       font-weight: 750;
@@ -292,7 +259,6 @@ html[data-pack="fluid"] {
 
     .label {
       margin-top: 4px;
-      margin-bottom: 6px;
       font-size: 0.68rem;
       font-weight: 600;
     }
@@ -379,15 +345,7 @@ html[data-pack="fluid"] {
   }
 
   .cb-stage::after {
-    content: "";
-    position: absolute;
-    right: -56px;
-    top: -80px;
-    width: 168px;
-    height: 168px;
-    border: 16px solid color-mix(in srgb, var(--cb-primary) 16%, transparent);
-    border-radius: 50%;
-    pointer-events: none;
+    display: none;
   }
 
   /* 证书详情：虹桥玻璃抽屉 */
@@ -437,47 +395,41 @@ html[data-pack="fluid"] {
   }
 
   .adm-tab-bar-item-active::after {
-    width: 22px;
-    height: 3px;
-    top: auto;
-    bottom: 7px;
-    border-radius: 999px;
-    box-shadow: 0 0 10px color-mix(in srgb, var(--cb-primary) 45%, transparent);
+    display: none;
   }
 
   .cb-runtime {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+    padding: 12px;
   }
 
   .cb-runtime__item {
     flex: 1 1 calc(50% - 8px);
     min-width: 132px;
+    flex-direction: column;
+    align-items: flex-start;
     padding: 12px 14px;
+    border-bottom: 0;
     border-radius: 999px;
     background: var(--cb-glass-c);
     border: 1px solid color-mix(in srgb, #fff 45%, var(--cb-stroke));
 
     span {
       color: var(--cb-primary);
-      letter-spacing: 0.06em;
+      letter-spacing: 0;
+      font-size: 0.7rem;
     }
 
     strong {
+      margin-top: 2px;
       font-size: 0.9rem;
+      font-weight: 650;
+      text-align: left;
+      color: var(--cb-ink);
     }
   }
-}
-
-html[data-pack="fluid"] body::after {
-  opacity: 0.16;
-  background-image: radial-gradient(
-    circle at 50% 122%,
-    transparent 36%,
-    color-mix(in srgb, var(--cb-primary) 55%, transparent) 38%,
-    transparent 45%
-  );
 }
 
 html[data-theme="dark"][data-pack="fluid"] {

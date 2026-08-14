@@ -4,14 +4,11 @@
   position: relative;
   overflow: hidden;
   margin: 0 0 var(--cb-space-md);
-  padding: 20px 18px 18px;
-  border-radius: var(--cb-radius);
+  padding: 18px 16px 16px;
+  border-radius: var(--cb-card-radius);
   background: var(--cb-stage);
-  border: var(--cb-panel-border) solid var(--cb-stroke);
-  box-shadow: var(--cb-elev-2);
-  transition:
-    box-shadow var(--cb-ease),
-    border-color var(--cb-ease);
+  border: var(--cb-panel-border) solid var(--cb-card-border-color);
+  box-shadow: var(--cb-card-shadow);
 }
 
 .cb-stage__glow {
@@ -52,12 +49,12 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  margin: 0 0 10px;
+  gap: 6px;
+  margin: 0 0 8px;
   color: var(--cb-ink-3);
-  font-size: 0.72rem;
-  font-weight: 650;
-  letter-spacing: 0.04em;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0;
   overflow-wrap: anywhere;
 }
 
@@ -94,10 +91,10 @@
   position: relative;
   margin: 0;
   font-family: var(--cb-font-display);
-  font-size: 1.62rem;
-  font-weight: 720;
-  letter-spacing: -0.035em;
-  line-height: 1.18;
+  font-size: 1.38rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.22;
   color: var(--cb-ink);
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
@@ -121,10 +118,10 @@
 
 .cb-stage__desc {
   position: relative;
-  margin: 12px 0 0;
+  margin: 8px 0 0;
   color: var(--cb-ink-2);
-  font-size: 0.84rem;
-  line-height: 1.62;
+  font-size: 0.94rem;
+  line-height: 1.47;
   overflow-wrap: anywhere;
 }
 
@@ -134,9 +131,9 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  margin-top: 16px;
-  padding-top: 14px;
-  border-top: 1px solid color-mix(in srgb, var(--cb-ink) 7%, transparent);
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 0.5px solid var(--cb-card-rule);
 }
 
 .cb-stage__flags {

@@ -101,12 +101,11 @@
 
 .app-topbar__mark {
   flex: 0 0 auto;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   overflow: hidden;
   border-radius: 8px;
   background: color-mix(in srgb, var(--cb-ink) 5%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cb-ink) 8%, transparent);
 
   img {
     display: block;
@@ -126,12 +125,7 @@
 }
 
 .app-topbar__kicker {
-  color: var(--cb-ink-3);
-  font-size: 0.62rem;
-  font-weight: 650;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  line-height: 1.2;
+  display: none;
 }
 
 .nav-title {
@@ -142,25 +136,25 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-family: var(--cb-font-display);
-  font-size: 1.08rem;
-  font-weight: 750;
-  letter-spacing: -0.03em;
-  line-height: 1.15;
+  font-size: 1.06rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
   color: var(--cb-ink);
 }
 
 .device-chip {
   flex: 0 0 auto;
   display: inline-block;
-  max-width: 36vw;
-  padding: 5px 11px;
+  max-width: 34vw;
+  padding: 4px 10px;
   border-radius: var(--cb-radius-pill);
-  background: color-mix(in srgb, var(--cb-ink) 5%, transparent);
-  border: 1px solid color-mix(in srgb, var(--cb-ink) 6%, transparent);
-  color: var(--cb-ink-3);
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
+  background: color-mix(in srgb, var(--cb-ink) 6%, transparent);
+  border: 0;
+  color: var(--cb-ink-2);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -185,7 +179,7 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: none;
-  padding: calc(var(--cb-topbar-h) + var(--cb-inset-top) + 14px) 18px 32px;
+  padding: calc(var(--cb-topbar-h) + var(--cb-inset-top) + 8px) 16px 28px;
   visibility: hidden;
   pointer-events: none;
 
@@ -280,7 +274,7 @@
   }
 
   .adm-tab-bar-item {
-    --adm-font-size-5: 0.68rem;
+    --adm-font-size-5: 0.625rem;
 
     position: relative;
     color: var(--cb-ink-3);
@@ -293,24 +287,11 @@
   .adm-tab-bar-item-active {
     color: var(--cb-primary);
     font-weight: 650;
-
-    &::after {
-      content: "";
-      position: absolute;
-      top: 5px;
-      left: 50%;
-      width: 16px;
-      height: 2.5px;
-      border-radius: 999px;
-      background: var(--cb-primary);
-      transform: translateX(-50%);
-      opacity: 0.9;
-    }
   }
 
   .adm-tab-bar-item-icon svg {
-    width: 1.2rem;
-    height: 1.2rem;
+    width: 1.4rem;
+    height: 1.4rem;
   }
 }
 

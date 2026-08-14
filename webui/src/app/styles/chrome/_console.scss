@@ -1,16 +1,26 @@
-/* ── Log viewer：固定高度内部滚动，不撑长页面 ── */
+/* ── Log viewer：APP 控制台，固定高度内部滚动 ── */
+
+.cb-log-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
 
 .cb-console__actions {
   display: flex;
   gap: 8px;
   flex-shrink: 0;
+  margin: 18px 0 6px;
 }
 
 .cb-log-filter {
   display: flex;
-  gap: 6px;
-  margin: 2px 0 12px;
+  gap: 0;
+  margin: 0 0 12px;
+  padding: 3px;
   overflow-x: auto;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--cb-ink) 6%, transparent);
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
 
@@ -21,12 +31,14 @@
 
 .cb-log-filter__seg {
   display: inline-flex;
+  flex: 1 1 0;
   align-items: center;
   justify-content: center;
   gap: 5px;
   min-width: 0;
   border: 0;
-  padding: 6px 10px;
+  border-radius: 8px;
+  padding: 8px 6px;
   font-size: 0.75rem;
   line-height: 1.2;
   font-weight: 600;
@@ -43,7 +55,12 @@
   &:active {
     transform: scale(0.97);
     transition-duration: 0.08s;
-    transition-timing-function: cubic-bezier(0.4, 0, 1, 1);
+  }
+
+  &.active {
+    background: var(--cb-surface);
+    color: var(--cb-ink);
+    box-shadow: 0 1px 3px color-mix(in srgb, var(--cb-ink) 12%, transparent);
   }
 }
 
@@ -82,10 +99,10 @@
 
 .cb-log-view {
   position: relative;
-  border-radius: var(--cb-radius-sm);
-  background: color-mix(in srgb, var(--cb-ink) 88%, #0a1620);
-  border: 1px solid color-mix(in srgb, #fff 8%, transparent);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 4%, transparent);
+  border-radius: var(--cb-card-radius);
+  background: #111418;
+  border: 0;
+  box-shadow: var(--cb-card-shadow);
   height: clamp(
     48dvh,
     calc(
@@ -101,57 +118,31 @@
 }
 
 .cb-log-view__chrome {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 12px 6px;
-  background: color-mix(in srgb, #071018 94%, transparent);
-
-  i {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #64748b;
-
-    &:nth-child(1) {
-      background: #f87171;
-    }
-
-    &:nth-child(2) {
-      background: #fbbf24;
-    }
-
-    &:nth-child(3) {
-      background: #34d399;
-    }
-  }
+  display: none;
 }
 
 .cb-log-lines {
-  padding: 10px 12px;
+  padding: 14px 14px 18px;
   font-family: var(--cb-font-mono);
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   line-height: 1.55;
 }
 
 .cb-log-line {
   display: block;
-  padding: 3px 0;
+  padding: 4px 0;
   white-space: pre-wrap;
   word-break: break-word;
 }
 
 .cb-log-line__tag {
   display: inline-block;
-  min-width: 3.6em;
-  margin-right: 6px;
-  font-size: 0.62rem;
+  min-width: 3.4em;
+  margin-right: 8px;
+  font-size: 0.66rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  opacity: 0.82;
+  letter-spacing: 0;
+  opacity: 0.9;
   vertical-align: top;
 }
 
@@ -160,11 +151,11 @@
 }
 
 .cb-log-line.lv-info {
-  color: #cbd5e1;
+  color: #d7dee8;
 }
 
 .cb-log-line.lv-debug {
-  color: #94a3b8;
+  color: #8b95a5;
 }
 
 .cb-log-line.lv-warn {
@@ -177,10 +168,8 @@
 
 .cb-log-empty {
   margin: 0;
-  padding: 28px 14px;
-  min-height: 120px;
+  padding: 36px 14px;
+  color: #8b95a5;
+  font-size: 0.84rem;
   text-align: center;
-  color: #94a3b8;
-  font-size: 0.78rem;
-  line-height: 1.55;
 }

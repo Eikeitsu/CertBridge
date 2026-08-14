@@ -54,13 +54,7 @@ export function AppShell() {
   return (
     <div className={`app-shell pack-${themePack}`} data-shell-pack={themePack}>
       <div className={`cb-progress${isRefreshing ? " is-on" : ""}`} aria-hidden />
-      <AppTopbar
-        pack={themePack}
-        brandTitle={voice.topbarBrand}
-        pageTitle={pageTitle}
-        kicker={voice.topbarKicker}
-        deviceLabel={deviceLabel}
-      />
+      <AppTopbar pack={themePack} pageTitle={pageTitle} deviceLabel={deviceLabel} />
       <main className="app-main">
         <section
           className={`app-pane${activeTab === TabName.Home ? " is-on" : ""}`}

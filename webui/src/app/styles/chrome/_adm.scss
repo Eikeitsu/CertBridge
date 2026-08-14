@@ -118,7 +118,7 @@
   flex: 1 1 auto;
   min-width: 0;
   color: var(--cb-ink);
-  font-size: 0.96rem;
+  font-size: 1rem;
   font-weight: 650;
   line-height: 1.35;
   overflow-wrap: anywhere;
@@ -150,7 +150,6 @@
   font-size: 0.93rem;
 }
 
-/* card 模式下 header 在卡片之外，卡片表面只落在 body 上 */
 .adm-list-card {
   margin-left: 0;
   margin-right: 0;
@@ -159,15 +158,16 @@
   box-shadow: none;
 }
 
+/* card 模式下不再使用内嵌 header 标题（改由 cb-list-group 外部分区） */
 .adm-list-card > .adm-list-header {
-  padding: 0 6px 8px;
+  display: none;
 }
 
 .adm-list-header {
-  padding: 0 6px 8px;
-  color: var(--cb-ink-2);
+  padding: 0 16px 8px;
+  color: var(--cb-ink-3);
   font-size: 0.8125rem;
-  font-weight: 650;
+  font-weight: 500;
 }
 
 .cb-adm-list-head {
@@ -194,6 +194,16 @@
   letter-spacing: 0;
 }
 
+.cb-list-extra-action {
+  color: var(--cb-primary);
+  font-size: 0.94rem;
+  font-weight: 600;
+
+  &.is-danger {
+    color: var(--cb-bad);
+  }
+}
+
 .adm-list-item {
   --active-background-color: var(--cb-row-hover);
 
@@ -211,11 +221,18 @@
   overflow-wrap: anywhere;
 }
 
-.adm-list-item-title,
+.adm-list-item-title {
+  color: var(--cb-ink);
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
 .adm-list-item-description {
   color: var(--cb-ink-3);
-  font-size: 0.75rem;
-  line-height: 1.45;
+  font-size: 0.78rem;
+  line-height: 1.4;
   overflow-wrap: anywhere;
 }
 

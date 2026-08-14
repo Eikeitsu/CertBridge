@@ -28,17 +28,17 @@ export const PACK_OPTIONS = [
   {
     value: ThemePack.Classic,
     label: "印记",
-    hint: "凭证文书",
+    hint: "微信式列表",
   },
   {
     value: ThemePack.Material,
     label: "层积",
-    hint: "信任分层",
+    hint: "支付宝色块",
   },
   {
     value: ThemePack.Fluid,
     label: "虹桥",
-    hint: "桥接通道",
+    hint: "毛玻璃",
   },
 ] as const;
 

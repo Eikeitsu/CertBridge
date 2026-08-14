@@ -8,6 +8,7 @@ import {
   createWriteStream,
   existsSync,
   mkdirSync,
+  readdirSync,
   rmSync,
   statSync,
   writeFileSync,
@@ -213,6 +214,20 @@ async function main() {
   const dexOut = join(outDir, "classes.dex");
   if (existsSync(dexOut)) rmSync(dexOut);
 
+  // Must pass nested classes (Main$DerCursor / Main$Base64). Only Main.class
+  // → NoClassDefFoundError on device when computing subject_hash_old.
+  const classFiles = [];
+  const collectClasses = (dir) => {
+    for (const name of readdirSync(dir)) {
+      const p = join(dir, name);
+      if (statSync(p).isDirectory()) collectClasses(p);
+      else if (name.endsWith(".class")) classFiles.push(p);
+    }
+  };
+  collectClasses(classesDir);
+  if (!classFiles.includes(classFile)) classFiles.push(classFile);
+  log(`d8 ← ${classFiles.length} class files`);
+
   log("d8 → classes.dex");
   execFileSync(
     java,
@@ -224,7 +239,7 @@ async function main() {
       "24",
       "--output",
       outDir,
-      classFile,
+      ...classFiles,
     ],
     { stdio: "inherit" },
   );

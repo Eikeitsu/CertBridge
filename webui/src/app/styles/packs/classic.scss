@@ -1,60 +1,57 @@
 @use "../mixins" as m;
 
-/* 印记 — 凭证文书：冷静权威、账本式分割、克制圆角、骑缝印 */
+/* 印记 — 微信 / iOS 设置：分组灰底、白卡片、细分割、紧凑顶栏 */
 html[data-pack="classic"] {
-  --cb-radius: 12px;
+  --cb-radius: 10px;
   --cb-radius-sm: 8px;
-  --cb-radius-lg: 16px;
-  --cb-dock-h: 56px;
-  --cb-topbar-h: 58px;
-  --cb-chrome: #e6e9e4;
-  --cb-paper: #e6e9e4;
-  --cb-stage: #fbfcfa;
-  --cb-surface: #fbfcfa;
-  --cb-surface-2: #f0f2ed;
+  --cb-radius-lg: 14px;
+  --cb-dock-h: 50px;
+  --cb-topbar-h: 44px;
+  --cb-chrome: #f2f1f6;
+  --cb-paper: #f2f1f6;
+  --cb-stage: #fff;
+  --cb-surface: #fff;
+  --cb-surface-2: #f2f1f6;
   --cb-panel: var(--cb-surface);
-  --cb-stroke: rgba(26, 35, 50, 0.12);
+  --cb-stroke: rgba(60, 60, 67, 0.12);
   --cb-shadow: none;
-  --cb-panel-border: 1px;
-  --cb-body-gradient-a: color-mix(in srgb, var(--cb-primary) 7%, transparent);
-  --cb-body-gradient-b: color-mix(in srgb, var(--cb-accent) 4%, transparent);
+  --cb-panel-border: 0;
+  --cb-body-gradient-a: transparent;
+  --cb-body-gradient-b: transparent;
   --cb-metrics-columns: 4;
   --cb-card-pad-x: 16px;
-  --cb-card-pad-t: 15px;
-  --cb-card-pad-b: 16px;
-  --cb-card-gap: 12px;
-  --cb-card-radius: 12px;
-  --cb-card-rule: color-mix(in srgb, var(--cb-ink) 11%, transparent);
-  --cb-card-inset-bg: color-mix(in srgb, var(--cb-accent) 6%, transparent);
+  --cb-card-pad-t: 14px;
+  --cb-card-pad-b: 14px;
+  --cb-card-gap: 10px;
+  --cb-card-radius: 10px;
+  --cb-card-border-color: transparent;
+  --cb-card-shadow: none;
+  --cb-card-rule: color-mix(in srgb, var(--cb-ink) 10%, transparent);
+  --cb-card-inset-bg: #f2f1f6;
   --cb-row-pad-y: 12px;
 
   .app-topbar {
-    border-bottom: 1px solid var(--cb-stroke);
+    border-bottom: 0.5px solid var(--cb-stroke);
 
     .nav-title {
-      font-size: 1.02rem;
-      font-weight: 750;
-      letter-spacing: 0.06em;
+      font-size: 1.06rem;
+      font-weight: 650;
+      letter-spacing: 0;
     }
 
     .app-topbar__mark {
-      width: 30px;
-      height: 30px;
-      border-radius: 7px;
-      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cb-primary) 28%, transparent);
-    }
-
-    .app-topbar__kicker {
-      letter-spacing: 0.16em;
-      font-size: 0.58rem;
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      box-shadow: none;
     }
 
     .device-chip {
-      border-radius: 4px;
-      background: transparent;
-      border: 1px solid var(--cb-stroke);
-      font-size: 0.65rem;
-      letter-spacing: 0.02em;
+      border-radius: var(--cb-radius-pill);
+      background: color-mix(in srgb, var(--cb-ink) 6%, transparent);
+      border: 0;
+      font-size: 0.72rem;
+      letter-spacing: 0;
     }
   }
 
@@ -62,113 +59,55 @@ html[data-pack="classic"] {
     border-radius: 8px;
   }
 
-  /* 分组标题：账本条目编号感 */
   .cb-section-label {
-    margin: 22px 2px 9px;
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
+    margin: 20px 16px 8px;
+    font-size: 0.81rem;
+    font-weight: 500;
+    letter-spacing: 0;
     color: var(--cb-ink-3);
-
-    &::before {
-      content: "";
-      width: 12px;
-      height: 2px;
-      flex: 0 0 auto;
-      background: var(--cb-primary);
-    }
   }
 
-  /* 卡片：方正边框 + 表头分隔线 + 右上骑缝印 */
   @include m.card-surfaces {
-    border: 1px solid var(--cb-stroke);
+    border: 0;
     box-shadow: none;
   }
 
-  /* 骑缝印：用 ::before 落在内容之下 */
-  .adm-card::before,
-  .adm-list-card > .adm-list-body::before {
-    content: "";
-    position: absolute;
-    top: -16px;
-    right: -16px;
-    width: 52px;
-    height: 52px;
-    border: 7px solid color-mix(in srgb, var(--cb-primary) 10%, transparent);
-    border-radius: 50%;
-    pointer-events: none;
-  }
-
   .adm-card-header {
-    padding-bottom: 11px;
-    border-bottom: 1px dashed var(--cb-card-rule);
+    padding-bottom: 10px;
+    border-bottom: 0.5px solid var(--cb-card-rule);
   }
 
   .adm-card-header-title {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    font-size: 0.93rem;
-    font-weight: 700;
-    letter-spacing: 0.01em;
-
-    &::before {
-      content: "";
-      width: 3px;
-      height: 13px;
-      flex: 0 0 auto;
-      background: var(--cb-primary);
-      transform: translateY(1px);
-    }
+    font-size: 1rem;
+    font-weight: 650;
+    letter-spacing: 0;
   }
 
   .adm-card-header + .adm-card-body {
-    padding-top: 13px;
-  }
-
-  /* 列表：账本隔行底纹 */
-  .adm-list-card > .adm-list-body .adm-list-item:nth-child(even) {
-    background: color-mix(in srgb, var(--cb-ink) 2.5%, transparent);
+    padding-top: 12px;
   }
 
   .cb-adm-list-head {
     font-size: 0.93rem;
     font-weight: 700;
-    letter-spacing: 0.01em;
+    letter-spacing: 0;
   }
 
-  /* 状态台：左侧凭证条 + 淡印章 */
+  /* 状态台：微信式白卡片，无装饰条 */
   .cb-stage {
-    border: 1px solid var(--cb-stroke);
+    border: 0;
     border-radius: var(--cb-radius);
     box-shadow: none;
-    padding: 18px 16px 16px 20px;
-
-    &::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 12px;
-      bottom: 12px;
-      width: 3px;
-      background: var(--cb-primary);
-      border-radius: 2px;
-    }
+    padding: 16px;
   }
 
-  /* 光晕位改画成大号骑缝印 */
   .cb-stage__glow {
-    inset: -30px -30px auto auto;
-    width: 108px;
-    height: 108px;
-    border: 11px solid color-mix(in srgb, var(--cb-primary) 9%, transparent);
-    border-radius: 50%;
-    background: none;
+    display: none;
   }
 
   .cb-stage__kicker {
-    letter-spacing: 0.12em;
-    font-size: 0.68rem;
+    letter-spacing: 0;
+    font-size: 0.75rem;
   }
 
   .cb-stage__title {
@@ -186,7 +125,7 @@ html[data-pack="classic"] {
     gap: 0;
     padding: 0;
     background: var(--cb-surface);
-    border: 1px solid var(--cb-stroke);
+    border: 0;
     border-radius: var(--cb-radius);
     box-shadow: none;
     overflow: hidden;
@@ -205,19 +144,12 @@ html[data-pack="classic"] {
       top: 13px;
       bottom: 13px;
       right: 0;
-      width: 1px;
+      width: 0.5px;
       background: var(--cb-stroke);
     }
 
     &::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 50%;
-      width: 18px;
-      height: 2px;
-      background: color-mix(in srgb, var(--cb-primary) 45%, transparent);
-      transform: translateX(-50%);
+      display: none;
     }
 
     .value {
@@ -228,27 +160,18 @@ html[data-pack="classic"] {
     .label {
       margin-top: 4px;
       font-size: 0.66rem;
-      letter-spacing: 0.04em;
+      letter-spacing: 0;
     }
   }
 
   .adm-tab-bar-item-active {
     color: var(--cb-primary);
-    font-weight: 700;
-
-    &::after {
-      width: 20px;
-      height: 2px;
-      top: auto;
-      bottom: 6px;
-      border-radius: 0;
-      background: var(--cb-primary);
-    }
+    font-weight: 650;
   }
 
   .cb-snack {
-    border-radius: 4px;
-    letter-spacing: 0.04em;
+    border-radius: 8px;
+    letter-spacing: 0;
     box-shadow: none;
   }
 
@@ -263,53 +186,48 @@ html[data-pack="classic"] {
   }
 
   .adm-dialog-title {
-    font-size: 1.02rem;
-    letter-spacing: 0.06em;
+    font-size: 1.06rem;
+    letter-spacing: 0;
   }
 
   .cb-flag {
-    border-radius: 3px;
-    font-size: 0.62rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-
-    &::before {
-      display: none;
-    }
+    border-radius: 4px;
+    font-size: 0.68rem;
+    letter-spacing: 0;
+    text-transform: none;
   }
 
   .cb-stage__foot {
-    border-top-style: dashed;
+    border-top-style: solid;
   }
 
-  /* 日志：账本式分段 */
   .cb-log-filter {
-    gap: 2px;
+    gap: 0;
     padding: 2px;
-    border: 1px solid var(--cb-stroke);
-    border-radius: 6px;
-    background: color-mix(in srgb, var(--cb-ink) 3%, transparent);
+    border: 0;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--cb-ink) 6%, transparent);
   }
 
   .cb-log-filter__seg {
     flex: 1 1 0;
-    border-radius: 4px;
+    border-radius: 6px;
     padding: 7px 4px;
-    font-size: 0.68rem;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    font-size: 0.72rem;
+    letter-spacing: 0;
+    text-transform: none;
   }
 
   .cb-log-filter__seg.active {
     background: var(--cb-surface);
     color: var(--cb-ink);
-    font-weight: 700;
-    box-shadow: inset 0 0 0 1px var(--cb-stroke);
+    font-weight: 650;
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--cb-ink) 10%, transparent);
   }
 
   .cb-log-view {
-    border-radius: 6px;
-    border-style: dashed;
+    border-radius: 10px;
+    border-style: solid;
   }
 
   .cb-log-view__chrome i {
@@ -321,14 +239,13 @@ html[data-pack="classic"] {
   }
 
   .cb-sheet__bar-title {
-    letter-spacing: 0.14em;
+    letter-spacing: 0;
   }
 
-  /* 证书详情：骑缝印 hero + 编号 section */
   .cb-sheet__hero {
-    border-radius: 8px;
+    border-radius: 10px;
     box-shadow: none;
-    border-style: dashed;
+    border-style: solid;
   }
 
   .cb-sheet__hero-mark {
@@ -345,15 +262,16 @@ html[data-pack="classic"] {
   }
 
   .cb-sheet__cell {
-    border-radius: 4px;
-    border: 1px dashed color-mix(in srgb, var(--cb-ink) 12%, transparent);
-    background: transparent;
+    border-radius: 8px;
+    border: 0;
+    background: var(--cb-card-inset-bg);
   }
 
   .cb-runtime {
     gap: 0;
-    border: 1px solid var(--cb-stroke);
-    border-radius: 8px;
+    padding: 4px 0;
+    border: 0;
+    border-radius: var(--cb-radius);
     overflow: hidden;
   }
 
@@ -363,44 +281,37 @@ html[data-pack="classic"] {
     align-items: baseline;
     justify-content: space-between;
     gap: 12px;
-    padding: 10px 12px;
-    border-bottom: 1px dashed var(--cb-stroke);
+    padding: 12px 16px;
+    border-bottom: 0.5px solid var(--cb-stroke);
 
     &:last-child {
       border-bottom: 0;
     }
 
     span {
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      font-size: 0.62rem;
+      letter-spacing: 0;
+      text-transform: none;
+      font-size: 0.94rem;
+      color: var(--cb-ink);
     }
 
     strong {
-      font-size: 0.86rem;
+      font-size: 0.9rem;
+      font-weight: 400;
       text-align: right;
+      color: var(--cb-ink-2);
     }
   }
 }
 
-html[data-pack="classic"] body::after {
-  opacity: 0.04;
-  background-image: repeating-linear-gradient(
-    to bottom,
-    transparent 0 31px,
-    color-mix(in srgb, var(--cb-ink) 70%, transparent) 31px 32px
-  );
-  background-size: auto;
-}
-
 html[data-theme="dark"][data-pack="classic"] {
-  --cb-chrome: #101410;
-  --cb-paper: #101410;
-  --cb-stage: #181c18;
-  --cb-surface: #181c18;
-  --cb-surface-2: #1e241e;
+  --cb-chrome: #000;
+  --cb-paper: #000;
+  --cb-stage: #1c1c1e;
+  --cb-surface: #1c1c1e;
+  --cb-surface-2: #2c2c2e;
   --cb-panel: var(--cb-surface);
   --cb-topbar-bg: var(--cb-chrome);
   --cb-dock-bg: var(--cb-chrome);
-  --cb-card-inset-bg: color-mix(in srgb, var(--cb-accent) 12%, transparent);
+  --cb-card-inset-bg: #2c2c2e;
 }

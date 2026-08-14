@@ -27,7 +27,7 @@ export function AppearancePanel() {
   } = useAppearanceSettings();
 
   return (
-    <Panel title="外观">
+    <Panel>
       <ThemePackPicker
         value={theme.pack}
         options={[...packOptions]}

@@ -38,10 +38,7 @@
 
   &.active {
     border-color: var(--cb-primary);
-    box-shadow:
-      0 0 0 3px color-mix(in srgb, var(--cb-primary) 18%, transparent),
-      0 6px 16px color-mix(in srgb, var(--cb-primary) 12%, transparent);
-    transform: translateY(-2px);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--cb-primary) 16%, transparent);
   }
 }
 
@@ -58,26 +55,27 @@
   }
 }
 
-/* 印记：方正、账本横线 */
+/* 印记：iOS 设置分组灰 + 白条 */
 .cb-theme-preview[data-pack="classic"] {
-  border: 1px solid color-mix(in srgb, var(--cb-ink) 14%, transparent);
-  border-radius: 5px;
-  background: linear-gradient(180deg, #fbfcfa 0 62%, #e6e9e4 62% 100%);
-  box-shadow: inset 3px 0 0 var(--cb-primary);
+  border: 0;
+  border-radius: 8px;
+  background: #f2f1f6;
+  box-shadow: none;
 
   &::before {
-    inset: 9px 8px auto 10px;
-    height: 3px;
-    background: color-mix(in srgb, var(--cb-primary) 70%, transparent);
+    inset: 8px 8px auto;
+    height: 14px;
+    border-radius: 6px;
+    background: #fff;
   }
 
   &::after {
-    inset: 18px 8px auto 10px;
-    height: 1px;
-    border-top: 1px dashed color-mix(in srgb, var(--cb-ink) 22%, transparent);
-    box-shadow:
-      0 6px 0 -5px color-mix(in srgb, var(--cb-ink) 16%, transparent),
-      0 12px 0 -5px color-mix(in srgb, var(--cb-ink) 16%, transparent);
+    inset: auto 8px 8px;
+    height: 18px;
+    border-radius: 6px;
+    background: #fff;
+    border: 0;
+    box-shadow: none;
   }
 }
 
@@ -133,7 +131,12 @@
 
 html[data-theme="dark"] {
   .cb-theme-preview[data-pack="classic"] {
-    background: linear-gradient(180deg, #1c221c 0 62%, #101410 62% 100%);
+    background: #000;
+
+    &::before,
+    &::after {
+      background: #1c1c1e;
+    }
   }
 
   .cb-theme-preview[data-pack="material"] {

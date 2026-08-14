@@ -4,7 +4,7 @@ import { assetUrl } from "@/shared/config/assets";
 import { useAppSelector } from "@/app/store/hooks";
 import { selectModuleStatus } from "@/features/status/model/selectors";
 import { selectResolvedTheme } from "@/features/theme/model/selectors";
-import { HelpCollapse, Panel } from "@/shared/ui";
+import { HelpCollapse, SectionLabel } from "@/shared/ui";
 import { BrandHeader } from "./BrandHeader";
 import { AboutLinks } from "./AboutLinks";
 
@@ -16,17 +16,18 @@ export function AboutSection() {
     : EMPTY_PLACEHOLDER;
 
   return (
-    <Panel>
+    <section className="cb-about-block">
       <BrandHeader
         markSrc={brandMarkSrc(resolvedTheme)}
         version={status.version || EMPTY_PLACEHOLDER}
         androidLabel={androidLabel}
       />
       <AboutLinks />
+      <SectionLabel>帮助</SectionLabel>
       <HelpCollapse title={ABOUT_TIP.title} inset>
         <p>{ABOUT_TIP.body}</p>
         <img className="tip-qr" src={assetUrl(ABOUT_TIP.src)} alt={ABOUT_TIP.alt} />
       </HelpCollapse>
-    </Panel>
+    </section>
   );
 }

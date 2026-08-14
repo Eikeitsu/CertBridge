@@ -1,5 +1,5 @@
 import { ThemePack } from "@/entities/module/enums";
-import { Panel } from "@/shared/ui";
+import { SectionLabel } from "@/shared/ui";
 
 type RuntimeItem = { label: string; value: string };
 
@@ -36,7 +36,9 @@ export function OverviewRuntime({
   ];
 
   return (
-    <Panel title={title} meta={`最近刷新 · ${lastRefreshedAt}`}>
+    <section className="cb-runtime-block">
+      <SectionLabel>{title}</SectionLabel>
+      <p className="cb-list-group__meta">最近刷新 · {lastRefreshedAt}</p>
       <div className={`cb-runtime is-${pack}`}>
         {items.map((item) => (
           <div key={item.label} className="cb-runtime__item">
@@ -45,6 +47,6 @@ export function OverviewRuntime({
           </div>
         ))}
       </div>
-    </Panel>
+    </section>
   );
 }

@@ -2,7 +2,7 @@ import { TabName } from "@/entities/module/enums";
 import { isEnumValue } from "@/shared/lib/enum";
 
 export const TABS: { key: TabName; label: string }[] = [
-  { key: TabName.Home, label: "概览" },
+  { key: TabName.Home, label: "首页" },
   { key: TabName.Certs, label: "证书" },
   { key: TabName.Log, label: "日志" },
   { key: TabName.More, label: "更多" },

@@ -21,7 +21,7 @@ const LINK_ICONS: Record<string, ReactNode> = {
 
 export function AboutLinks() {
   return (
-    <List>
+    <List mode="card">
       {ABOUT_LINKS.map((link) => (
         <LinkRow
           key={link.id}

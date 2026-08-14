@@ -12,23 +12,23 @@
   --cb-log-reserve: 208px;
   --cb-font-scale: 1;
   --cb-font-display:
-    "Segoe UI Variable Display", "Avenir Next", "PingFang SC", "Noto Sans SC",
+    "PingFang SC", "SF Pro Display", "HarmonyOS Sans SC", "Noto Sans SC",
     "Microsoft YaHei", system-ui, sans-serif;
   --cb-font-body:
-    "Segoe UI Variable Text", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", system-ui,
-    sans-serif;
+    "PingFang SC", "SF Pro Text", "HarmonyOS Sans SC", "Noto Sans SC", "Microsoft YaHei",
+    system-ui, sans-serif;
   --cb-font-mono:
     "Cascadia Code", "SF Mono", "JetBrains Mono", ui-monospace, consolas, monospace;
   --cb-space-2xs: 4px;
   --cb-space-xs: 8px;
   --cb-space-sm: 12px;
   --cb-space-md: 16px;
-  --cb-space-lg: 22px;
-  --cb-space-xl: 28px;
-  --cb-space-2xl: 36px;
-  --cb-radius: 14px;
+  --cb-space-lg: 20px;
+  --cb-space-xl: 24px;
+  --cb-space-2xl: 32px;
+  --cb-radius: 12px;
   --cb-radius-sm: 10px;
-  --cb-radius-lg: 18px;
+  --cb-radius-lg: 16px;
   --cb-radius-pill: 999px;
 
   /* 证书桥基调：印章青绿 + 铜印（非电弧青照搬）。
@@ -49,8 +49,8 @@
   --cb-ink: #1a2332;
   --cb-ink-2: #4a5568;
   --cb-ink-3: #7a8699;
-  --cb-paper: #e6e9e4;
-  --cb-chrome: #e6e9e4;
+  --cb-paper: #f2f1f6;
+  --cb-chrome: #f2f1f6;
   --cb-surface: #fbfcfa;
   --cb-surface-2: #f1f3ef;
   --cb-stage: #fbfcfa;
@@ -88,13 +88,13 @@
   --cb-card-border-color: var(--cb-stroke);
   --cb-card-shadow: var(--cb-shadow);
   --cb-card-pad-x: 16px;
-  --cb-card-pad-t: 14px;
+  --cb-card-pad-t: 16px;
   --cb-card-pad-b: 16px;
-  --cb-card-gap: 10px;
-  --cb-card-radius: var(--cb-radius);
+  --cb-card-gap: 12px;
+  --cb-card-radius: 12px;
   --cb-card-rule: color-mix(in srgb, var(--cb-ink) 8%, transparent);
   --cb-card-inset-bg: color-mix(in srgb, var(--cb-ink) 3.5%, transparent);
-  --cb-row-pad-y: 11px;
+  --cb-row-pad-y: 14px;
 }
 
 html[data-theme="dark"] {
@@ -129,10 +129,6 @@ html[data-theme="dark"] {
   --cb-dock-bg: var(--cb-chrome);
   --cb-body-gradient-tint: color-mix(in srgb, var(--cb-chrome) 90%, #0d2a28);
   --cb-card: var(--cb-panel);
-}
-
-html[data-theme="dark"] body::after {
-  opacity: 0.016;
 }
 
 /*
@@ -197,7 +193,7 @@ body {
   overscroll-behavior: none;
 }
 
-/* 背景氛围层：独立固定层比 background-attachment: fixed 便宜得多 */
+/* 纯色底：微信 / iOS 设置式分组灰，不要网站光斑 */
 body::before {
   content: "";
   position: fixed;
@@ -205,31 +201,10 @@ body::before {
   z-index: -2;
   pointer-events: none;
   background-color: var(--cb-chrome);
-  background-image:
-    radial-gradient(900px 420px at 6% -14%, var(--cb-body-gradient-a), transparent 60%),
-    radial-gradient(640px 320px at 102% -6%, var(--cb-body-gradient-b), transparent 54%),
-    radial-gradient(
-      480px 240px at 50% 100%,
-      color-mix(in srgb, var(--cb-primary) 4%, transparent),
-      transparent 70%
-    ),
-    linear-gradient(180deg, transparent 40%, var(--cb-body-gradient-tint));
 }
 
-/* 极淡纹理：打破大色块「塑料感」，几乎不影响性能 */
 body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  opacity: 0.028;
-  background-image: radial-gradient(
-    circle at 20% 30%,
-    var(--cb-ink) 0.6px,
-    transparent 0.7px
-  );
-  background-size: 14px 14px;
+  display: none;
 }
 
 button,

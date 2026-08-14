@@ -32,7 +32,7 @@ public final class Main {
       System.exit(1);
     }
     if ("version".equals(args[0])) {
-      System.out.println("cbx509 1.1.2 (CertBridge Lite)");
+      System.out.println("cbx509 1.1.3 (CertBridge Lite)");
       return;
     }
     if (!"x509".equals(args[0])) {
@@ -427,7 +427,12 @@ public final class Main {
    * 常会直接失败，而解析 / CA:TRUE / 有效期都不走 MD5，于是表现为「无法计算系统库文件名」。
    */
   private static String subjectHashOld(X509Certificate cert) throws Exception {
-    byte[] nameDer = extractSubjectNameDer(cert.getEncoded());
+    byte[] nameDer = null;
+    try {
+      nameDer = extractSubjectNameDer(cert.getEncoded());
+    } catch (Throwable ignored) {
+      nameDer = null;
+    }
     if (nameDer == null || nameDer.length == 0) {
       nameDer = cert.getSubjectX500Principal().getEncoded();
     }
@@ -551,7 +556,8 @@ public final class Main {
       tbs.skipElement(); // issuer
       tbs.skipElement(); // validity
       return tbs.readElementRaw(); // subject Name
-    } catch (Exception e) {
+    } catch (Throwable e) {
+      // NoClassDefFoundError (missing nested class) is Error, not Exception
       return null;
     }
   }

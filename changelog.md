@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- 修复 Lite：`cbx509` 打包漏掉内部类导致安装导入 CA 时「无法计算系统库文件名」；D8 现打入全部 class，hash 失败时回退 `-certbridge_info`
 - WebUI：使用 React 全面重构 WebUI 页面
 - 开机与 WebUI 刷新时，自动从已启用的 Reqable / ProxyPin 同步最新 CA；证书未变则跳过，读失败保留原文件
 - WebUI 下拉刷新会尝试同步 App 证书，有更新时提示重启后生效

@@ -169,24 +169,40 @@ cert_fingerprint_sha256() {
   echo "$fp"
 }
 
+# 从任意输出里抠出 8 位 hex hash（忽略 ART/linker 噪声）
+_openssl_pick_hash8() {
+  printf '%s\n' "$1" | tr -d '\r' | tr 'A-F' 'a-f' | awk '
+    {
+      gsub(/[^0-9a-f]/, " ")
+      n = split($0, a, " ")
+      for (i = 1; i <= n; i++) if (length(a[i]) == 8) h = a[i]
+    }
+    END { if (h != "") print h }
+  '
+}
+
 # 取出 subject_hash_old（8 位 hex）。Lite 的 app_process 可能在 stdout 夹杂日志或 \\r。
 openssl_subject_hash() {
   openssl_cmd="$1"
   inform="$2"
   file="$3"
   raw=$($openssl_cmd x509 $inform -in "$file" -subject_hash_old -noout 2>/dev/null) || true
-  hash=$(printf '%s\n' "$raw" | tr -d '\r' | tr 'A-F' 'a-f')
+  hash=$(_openssl_pick_hash8 "$raw")
   case "$hash" in
     [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f])
       printf '%s\n' "$hash"
       return 0
       ;;
   esac
-  hash=$(printf '%s\n' "$hash" | awk '{
-    gsub(/[^0-9a-f]/, " ")
-    n = split($0, a, " ")
-    for (i = 1; i <= n; i++) if (length(a[i]) == 8) h = a[i]
-  } END { if (h != "") print h }')
+  # Lite 兜底：-certbridge_info 里的 hash=（避免只打了 -subject_hash_old 时崩掉）
+  raw=$($openssl_cmd x509 $inform -in "$file" -noout -certbridge_info 2>/dev/null) || true
+  hash=$(printf '%s\n' "$raw" | tr -d '\r' | awk -F= '
+    tolower($1) == "hash" {
+      gsub(/[^0-9A-Fa-f]/, "", $2)
+      print tolower($2)
+      exit
+    }
+  ')
   case "$hash" in
     [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f])
       printf '%s\n' "$hash"

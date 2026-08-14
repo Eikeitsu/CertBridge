@@ -181,11 +181,7 @@ html[data-pack="material"] {
   }
 
   .cb-theme-preview[data-pack="material"] {
-    background: linear-gradient(
-      180deg,
-      var(--cb-primary-container) 0 42%,
-      #fff 42% 100%
-    );
+    background: linear-gradient(180deg, var(--cb-primary-container) 0 42%, #fff 42% 100%);
   }
 }
 

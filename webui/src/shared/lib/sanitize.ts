@@ -67,7 +67,9 @@ export function resolveTrustLabel(status: {
 }
 
 function stripStatusEmoji(text: string): string {
-  return text.replace(/^[✅⚠❌⏳🔥💤\uFE0F\s]+/u, "").trim();
+  return text
+    .replace(/^(?:✅|⚠️|⚠|❌|⏳|🔥|💤|\uFE0F|\s)+/u, "")
+    .trim();
 }
 
 function cleanStatusBody(body?: string): string {

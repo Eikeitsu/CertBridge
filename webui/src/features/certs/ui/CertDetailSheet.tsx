@@ -1,4 +1,4 @@
-import { BottomSheet } from "@/shared/ui";
+import { NxButton, NxSheet } from "@/shared/ui";
 import { formatCertDetail } from "../lib/formatCertDetail";
 import { resolveCertBrandKind } from "../lib/resolveCertBrand";
 import { CertDetailBody } from "./CertDetailBody";
@@ -28,15 +28,20 @@ export function CertDetailSheet({
   );
 
   return (
-    <BottomSheet open={open} onClose={onClose} loading={loading} title="证书详情">
+    <NxSheet open={open} onClose={onClose} loading={loading} title="证书详情">
       {detail ? (
         <CertDetailBody detail={detail} brandKind={brandKind} />
       ) : (
-        <p className="cb-empty">
+        <p className="nx-empty">
           {fields?.error ||
             "未能解析该证书。请确认文件为 PEM/DER，且设备上的解析器可用。"}
         </p>
       )}
-    </BottomSheet>
+      {!detail && fields?.error ? (
+        <NxButton variant="soft" onClick={onClose}>
+          关闭
+        </NxButton>
+      ) : null}
+    </NxSheet>
   );
 }

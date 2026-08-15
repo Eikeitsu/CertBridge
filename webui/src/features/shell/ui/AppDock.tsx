@@ -1,19 +1,11 @@
-import type { ReactNode } from "react";
-import { TabBar } from "antd-mobile";
-import {
-  AppOutline,
-  CheckShieldOutline,
-  SetOutline,
-  UnorderedListOutline,
-} from "antd-mobile-icons";
 import { TABS } from "@/shared/config/navigation";
 import { TabName } from "@/entities/module/enums";
 
-const TAB_ICONS: Record<TabName, ReactNode> = {
-  [TabName.Home]: <CheckShieldOutline />,
-  [TabName.Certs]: <AppOutline />,
-  [TabName.Log]: <UnorderedListOutline />,
-  [TabName.More]: <SetOutline />,
+const TAB_GLYPH: Record<TabName, string> = {
+  [TabName.Home]: "◈",
+  [TabName.Certs]: "▣",
+  [TabName.Log]: "☰",
+  [TabName.More]: "◉",
 };
 
 type AppDockProps = {
@@ -23,12 +15,26 @@ type AppDockProps = {
 
 export function AppDock({ activeTab, onSwitch }: AppDockProps) {
   return (
-    <nav className="app-dock" aria-label="主导航">
-      <TabBar activeKey={activeTab} onChange={onSwitch} safeArea={false}>
-        {TABS.map((item) => (
-          <TabBar.Item key={item.key} icon={TAB_ICONS[item.key]} title={item.label} />
-        ))}
-      </TabBar>
+    <nav className="nx-dock" aria-label="主导航">
+      <div className="nx-dock__rail">
+        {TABS.map((item) => {
+          const on = activeTab === item.key;
+          return (
+            <button
+              key={item.key}
+              type="button"
+              className={`nx-dock__item${on ? " is-on" : ""}`}
+              aria-current={on ? "page" : undefined}
+              onClick={() => onSwitch(item.key)}
+            >
+              <span className="nx-dock__glyph" aria-hidden>
+                {TAB_GLYPH[item.key]}
+              </span>
+              <span className="nx-dock__label">{item.label}</span>
+            </button>
+          );
+        })}
+      </div>
     </nav>
   );
 }

@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { selectModuleStatus } from "@/features/status/model/selectors";
-import { mergeStatus, patchStatus, refreshStatus } from "@/features/status/model/statusSlice";
+import {
+  mergeStatus,
+  patchStatus,
+  refreshStatus,
+} from "@/features/status/model/statusSlice";
 import { setTmpfsStyle } from "@/shared/api/cli";
 import { errorFromResult } from "@/shared/api/errors";
 import { toast } from "@/shared/api/ksu";
@@ -44,7 +48,6 @@ export function useTmpfsStyle() {
           "临时路径风格已更新，重启后生效",
           "临时路径风格已恢复为当前生效配置",
         );
-        void dispatch(refreshStatus({ syncApps: false }));
       });
     },
     [dispatch, isPending, runExclusive, tmpfsStyle],

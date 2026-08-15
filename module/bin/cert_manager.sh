@@ -109,8 +109,8 @@ cmd_toggle() {
   value="$2"
   case "$name" in reqable|proxypin) ;; *) echo "error=invalid_toggle"; return 1 ;; esac
   [ "$value" = "1" ] || [ "$value" = "0" ] || { echo "error=invalid_value"; return 1; }
+  # 开启才做来源检查；关闭只写配置，保证 WebUI 即时响应
   if [ "$value" = "1" ]; then
-    # 开启：尽量从 App 刷新；关断后 sources 空时从 generation 回填；仍无来源才拒绝
     sync_source_from_app "$name" >/dev/null 2>&1 || true
     ensure_source_from_applied "$name" >/dev/null 2>&1 || true
     if ! addon_can_enable "$name"; then
@@ -118,31 +118,14 @@ cmd_toggle() {
       echo "hint=请先在对应 App 中生成根证书，或使用自定义导入"
       return 1
     fi
-  else
-    # 关闭：保留 sources；若本就没有 sources，趁 generation 还在先回填一份，方便立刻重开
-    ensure_source_from_applied "$name" >/dev/null 2>&1 || true
   fi
-  acquire_write_lock || { echo "error=busy"; return 1; }
-  write_conf "$name" "$value" || { release_write_lock; echo "error=write_failed"; return 1; }
-  if is_magic_mount_mode; then
-    sync_magic_overlay "$MODDIR" >/dev/null 2>&1 || true
-  fi
-  pending_line=$(update_reboot_required_flag)
-  release_write_lock
-  if echo "$pending_line" | grep -q 'reboot_required=1'; then
-    log_msg "config: $name=$value (reboot required)"
-  else
-    log_msg "config: $name=$value (matches applied, pending cleared)"
-  fi
-  refresh_module_description_light >/dev/null 2>&1
+  write_conf "$name" "$value" || { echo "error=write_failed"; return 1; }
+  pending_line=$(note_conf_dirty)
+  log_info "config: $name=$value (reboot required)"
+  log_debug "config: toggle path conf=$CONF pending=1"
   echo "ok=1"
   echo "${name}_enabled=$value"
-  if addon_can_enable "$name"; then
-    echo "${name}_available=1"
-  else
-    echo "${name}_available=0"
-  fi
-  echo "pending_reboot=$([ -f "$PENDING_FILE" ] && echo 1 || echo 0)"
+  echo "pending_reboot=1"
   echo "$pending_line"
 }
 
@@ -234,22 +217,17 @@ cmd_install_custom() {
   display=$(cert_display_name_from_file "$CUSTOM_DIR/$name" "$name")
   printf 'display_name=%s\n' "$display" >"$CUSTOM_DIR/$name.meta"
   chmod 0600 "$CUSTOM_DIR/$name.meta" 2>/dev/null
-  pending_line=$(update_reboot_required_flag)
+  pending_line=$(note_conf_dirty)
   if is_magic_mount_mode; then
     sync_magic_overlay "$MODDIR" >/dev/null 2>&1 || true
   fi
   release_write_lock
   rm -f "$raw" "$normalized"
-  if echo "$pending_line" | grep -q 'reboot_required=1'; then
-    log_msg "custom: installed $name ($display, reboot required)"
-  else
-    log_msg "custom: installed $name ($display, matches applied)"
-  fi
-  refresh_module_description_light >/dev/null 2>&1
+  log_info "custom: installed $name ($display, reboot required)"
   echo "ok=1"
   echo "filename=$name"
   echo "display_name=$display"
-  echo "pending_reboot=$([ -f "$PENDING_FILE" ] && echo 1 || echo 0)"
+  echo "pending_reboot=1"
   echo "$pending_line"
 }
 
@@ -267,19 +245,14 @@ cmd_remove_custom() {
     echo "error=remove_failed"
     return 1
   }
-  pending_line=$(update_reboot_required_flag)
+  pending_line=$(note_conf_dirty)
   if is_magic_mount_mode; then
     sync_magic_overlay "$MODDIR" >/dev/null 2>&1 || true
   fi
   release_write_lock
-  if echo "$pending_line" | grep -q 'reboot_required=1'; then
-    log_msg "custom: removed $filename (reboot required)"
-  else
-    log_msg "custom: removed $filename (matches applied, pending cleared)"
-  fi
-  refresh_module_description_light >/dev/null 2>&1
+  log_info "custom: removed $filename (reboot required)"
   echo "ok=1"
-  echo "pending_reboot=$([ -f "$PENDING_FILE" ] && echo 1 || echo 0)"
+  echo "pending_reboot=1"
   echo "$pending_line"
 }
 
@@ -314,24 +287,12 @@ cmd_set_mount_mode() {
     compatible|magic) ;;
     *) echo "error=invalid_mount_mode"; return 1 ;;
   esac
-  acquire_write_lock || { echo "error=busy"; return 1; }
-  write_conf mount_mode "$mode" || { release_write_lock; echo "error=write_failed"; return 1; }
-  if [ "$mode" = "magic" ]; then
-    sync_magic_overlay "$MODDIR" >/dev/null 2>&1 || true
-  else
-    clear_magic_overlay "$MODDIR" >/dev/null 2>&1 || true
-  fi
-  pending_line=$(update_reboot_required_flag)
-  release_write_lock
-  if echo "$pending_line" | grep -q 'reboot_required=1'; then
-    log_msg "config: mount_mode=$mode (reboot required)"
-  else
-    log_msg "config: mount_mode=$mode (matches applied, pending cleared)"
-  fi
-  refresh_module_description_light >/dev/null 2>&1
+  write_conf mount_mode "$mode" || { echo "error=write_failed"; return 1; }
+  pending_line=$(note_conf_dirty)
+  log_info "config: mount_mode=$mode (reboot required)"
   echo "ok=1"
   echo "mount_mode=$mode"
-  echo "pending_reboot=$([ -f "$PENDING_FILE" ] && echo 1 || echo 0)"
+  echo "pending_reboot=1"
   echo "$pending_line"
 }
 
@@ -341,20 +302,13 @@ cmd_set_tmpfs_style() {
     short|legacy) ;;
     *) echo "error=invalid_tmpfs_style"; return 1 ;;
   esac
-  acquire_write_lock || { echo "error=busy"; return 1; }
-  write_conf tmpfs_style "$style" || { release_write_lock; echo "error=write_failed"; return 1; }
+  write_conf tmpfs_style "$style" || { echo "error=write_failed"; return 1; }
   apply_tmpfs_style
-  pending_line=$(update_reboot_required_flag)
-  release_write_lock
-  if echo "$pending_line" | grep -q 'reboot_required=1'; then
-    log_msg "config: tmpfs_style=$style (reboot required)"
-  else
-    log_msg "config: tmpfs_style=$style (matches applied, pending cleared)"
-  fi
-  refresh_module_description_light >/dev/null 2>&1
+  pending_line=$(note_conf_dirty)
+  log_info "config: tmpfs_style=$style (reboot required)"
   echo "ok=1"
   echo "tmpfs_style=$style"
-  echo "pending_reboot=$([ -f "$PENDING_FILE" ] && echo 1 || echo 0)"
+  echo "pending_reboot=1"
   echo "$pending_line"
 }
 
@@ -365,9 +319,7 @@ cmd_set_hot_allow() {
     *) echo "error=invalid_hot_allow"; return 1 ;;
   esac
   [ -x "$BINDIR/hot_mount.sh" ] || { echo "error=hot_feature_not_installed"; return 1; }
-  acquire_write_lock || { echo "error=busy"; return 1; }
-  write_conf hot_allow "$val" || { release_write_lock; echo "error=write_failed"; return 1; }
-  release_write_lock
+  write_conf hot_allow "$val" || { echo "error=write_failed"; return 1; }
   if [ "$val" = "0" ]; then
     hot_status=$(sh "$BINDIR/hot_mount.sh" status light 2>/dev/null)
     hot_active=$(echo "$hot_status" | awk -F= '$1 == "hot_active" { print $2; exit }')
@@ -376,11 +328,9 @@ cmd_set_hot_allow() {
       return $?
     fi
   fi
-  log_msg "config: hot_allow=$val"
-  refresh_module_description_light >/dev/null 2>&1
+  log_info "config: hot_allow=$val"
   echo "ok=1"
   echo "hot_allow=$val"
-  echo "pending_reboot=$([ -f "$PENDING_FILE" ] && echo 1 || echo 0)"
 }
 
 cmd_hot_mount() {

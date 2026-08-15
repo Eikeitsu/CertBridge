@@ -88,7 +88,7 @@ detach_runtime_cacert_binds() {
     done
   fi
   [ "$detached" -gt 0 ] && \
-    log_msg "store: detached $detached leftover runtime cacert bind(s)"
+    log_info "store: detached $detached leftover runtime cacert bind(s)"
   return 0
 }
 
@@ -158,11 +158,11 @@ sync_magic_overlay() {
   if [ "${n:-0}" -eq 0 ]; then
     # 空目录叠层在部分 KSU 上会整目录遮蔽系统 CA，必须删掉
     clear_magic_overlay "$root"
-    log_msg "magic-overlay: no addons, removed empty system overlay"
+    log_debug "magic-overlay: no addons, removed empty system overlay"
     echo 0
     return 0
   fi
-  log_msg "magic-overlay: synced $n addon cert(s) -> system/etc/security/cacerts"
+  log_info "magic-overlay: synced $n addon cert(s) -> system/etc/security/cacerts"
   echo "$n"
 }
 
@@ -171,7 +171,7 @@ clear_magic_overlay() {
   dest="$root/system/etc/security/cacerts"
   if [ -d "$dest" ]; then
     rm -rf "$dest" 2>/dev/null
-    log_msg "magic-overlay: cleared $dest"
+    log_debug "magic-overlay: cleared $dest"
   fi
   # 若 system 树已空，顺带去掉空目录，避免无意义 Magic Mount 节点
   rmdir "$root/system/etc/security" 2>/dev/null

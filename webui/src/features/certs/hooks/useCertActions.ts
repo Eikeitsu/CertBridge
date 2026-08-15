@@ -32,10 +32,6 @@ export function useCertActions() {
   const { isPending, runExclusive } = useAsyncLock();
   const [pendingKind, setPendingKind] = useState<string | null>(null);
 
-  const refreshInBackground = useCallback(() => {
-    void dispatch(refreshStatus(SILENT_REFRESH));
-  }, [dispatch]);
-
   const handleToggleBuiltin = useCallback(
     async (kind: BuiltinCertKind, checked: boolean) => {
       await runExclusive(async () => {
@@ -45,7 +41,7 @@ export function useCertActions() {
           const result = await toggleBuiltin(kind, checked ? FLAG_ON : FLAG_OFF);
           if (isCliFailure(result)) {
             toast(errorFromResult(result.stdout, result.stderr), "bad");
-            refreshInBackground();
+            void dispatch(refreshStatus(SILENT_REFRESH));
             return;
           }
           const kv = parseKv(result.stdout || "");
@@ -55,13 +51,12 @@ export function useCertActions() {
             checked ? "已开启，重启后生效" : "已关闭，重启后移除",
             checked ? "已开启（与当前生效一致）" : "已关闭（与当前生效一致）",
           );
-          refreshInBackground();
         } finally {
           setPendingKind(null);
         }
       });
     },
-    [dispatch, refreshInBackground, runExclusive],
+    [dispatch, runExclusive],
   );
 
   const handleImportFile = useCallback(
@@ -77,14 +72,14 @@ export function useCertActions() {
           const kv = parseKv(result.stdout || "");
           dispatch(mergeStatus(kv));
           toastByRebootFlag(kv, "已导入，重启后生效", "已导入（无需重启）");
-          refreshInBackground();
+          void dispatch(refreshStatus(SILENT_REFRESH));
         } catch {
           toast("读取文件失败", "bad");
         }
       });
       return false;
     },
-    [dispatch, refreshInBackground, runExclusive],
+    [dispatch, runExclusive],
   );
 
   const handleRemoveCustom = useCallback(
@@ -103,11 +98,11 @@ export function useCertActions() {
           const kv = parseKv(result.stdout || "");
           dispatch(mergeStatus(kv));
           toastByRebootFlag(kv, "已移除，重启后生效", "已移除（与当前生效一致）");
-          refreshInBackground();
+          void dispatch(refreshStatus(SILENT_REFRESH));
         },
       });
     },
-    [dispatch, refreshInBackground],
+    [dispatch],
   );
 
   const handleSetHotAllow = useCallback(
@@ -118,13 +113,12 @@ export function useCertActions() {
           const result = await setHotAllow(checked ? FLAG_ON : FLAG_OFF);
           if (isCliFailure(result)) {
             toast(errorFromResult(result.stdout, result.stderr), "bad");
-            refreshInBackground();
+            void dispatch(refreshStatus(SILENT_REFRESH));
             return;
           }
           const kv = parseKv(result.stdout || "");
           dispatch(mergeStatus(kv));
           toast(checked ? "已允许手动临时挂载" : "已关闭临时挂载", "ok");
-          refreshInBackground();
         });
 
       if (!checked) {
@@ -140,7 +134,7 @@ export function useCertActions() {
 
       void apply();
     },
-    [dispatch, refreshInBackground, runExclusive],
+    [dispatch, runExclusive],
   );
 
   const handleHotMount = useCallback(
@@ -164,7 +158,7 @@ export function useCertActions() {
             const fields = parseKv(result.stdout);
             if (isCliFailure(result) || fields.ok !== FLAG_ON) {
               toast(errorFromResult(result.stdout, result.stderr), "bad");
-              refreshInBackground();
+              void dispatch(refreshStatus(SILENT_REFRESH));
               return;
             }
             dispatch(mergeStatus(fields));
@@ -176,11 +170,11 @@ export function useCertActions() {
                 : `已免重启挂载 ${addedCount} 张证书`,
               failedCount > 0 ? "warn" : "ok",
             );
-            refreshInBackground();
+            void dispatch(refreshStatus(SILENT_REFRESH));
           }),
       });
     },
-    [dispatch, refreshInBackground, runExclusive],
+    [dispatch, runExclusive],
   );
 
   const handleHotUnmount = useCallback(() => {
@@ -201,15 +195,15 @@ export function useCertActions() {
                 : errorFromResult(result.stdout, result.stderr),
               "bad",
             );
-            refreshInBackground();
+            void dispatch(refreshStatus(SILENT_REFRESH));
             return;
           }
           dispatch(mergeStatus(fields));
           toast("临时证书已无痕卸载", "ok");
-          refreshInBackground();
+          void dispatch(refreshStatus(SILENT_REFRESH));
         }),
     });
-  }, [dispatch, refreshInBackground, runExclusive]);
+  }, [dispatch, runExclusive]);
 
   return {
     isPending,

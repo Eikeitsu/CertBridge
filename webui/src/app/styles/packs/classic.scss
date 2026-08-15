@@ -1,394 +1,60 @@
-@use "../mixins" as m;
-
-/* 印记 — 微信 / iOS Settings：分组灰底、白 inset 列表、0.5px 发丝线 */
+/* 印记 — 微信会话列表气质，作用在 NX 组件上 */
 html[data-pack="classic"] {
   --cb-radius: 10px;
   --cb-radius-sm: 8px;
-  --cb-radius-lg: 14px;
-  --cb-dock-h: 50px;
-  --cb-topbar-h: 44px;
-  --cb-chrome: #f2f1f6;
-  --cb-paper: #f2f1f6;
+  --cb-radius-lg: 16px;
+  --cb-dock-h: 56px;
+  --cb-topbar-h: 52px;
+  --cb-chrome: #ededed;
+  --cb-paper: #ededed;
   --cb-stage: #fff;
   --cb-surface: #fff;
-  --cb-surface-2: #f2f1f6;
-  --cb-panel: var(--cb-surface);
-  --cb-stroke: rgba(60, 60, 67, 0.12);
+  --cb-surface-2: #f7f7f7;
+  --cb-panel: #fff;
+  --cb-stroke: rgba(0, 0, 0, 0.08);
   --cb-shadow: none;
   --cb-panel-border: 0;
   --cb-body-gradient-a: transparent;
   --cb-body-gradient-b: transparent;
-  --cb-body-gradient-tint: #f2f1f6;
-  --cb-metrics-columns: 4;
-  --cb-card-pad-x: 16px;
-  --cb-card-pad-t: 14px;
-  --cb-card-pad-b: 14px;
-  --cb-card-gap: 10px;
+  --cb-body-gradient-tint: #ededed;
   --cb-card-radius: 10px;
   --cb-card-border-color: transparent;
   --cb-card-shadow: none;
-  --cb-card-rule: color-mix(in srgb, var(--cb-ink) 10%, transparent);
-  --cb-card-inset-bg: #f2f1f6;
-  --cb-row-pad-y: 12px;
+  --cb-card-rule: rgba(0, 0, 0, 0.06);
+  --cb-card-inset-bg: #f7f7f7;
+  --cb-primary: #07c160;
 
-  .app-topbar {
-    border-bottom: 0.5px solid var(--cb-stroke);
-
-    .nav-title {
-      font-size: 1.06rem;
-      font-weight: 650;
-      letter-spacing: 0;
-      text-transform: none;
-    }
-
-    .app-topbar__mark {
-      width: 26px;
-      height: 26px;
-      border-radius: 6px;
-      box-shadow: none;
-    }
-
-    .app-topbar__kicker {
-      text-transform: none;
-      letter-spacing: 0;
-    }
-
-    .device-chip {
-      border-radius: var(--cb-radius-pill);
-      background: color-mix(in srgb, var(--cb-ink) 6%, transparent);
-      border: 0;
-      font-size: 0.72rem;
-      letter-spacing: 0;
-      text-transform: none;
-    }
-  }
-
-  .cb-brand-mark {
-    border-radius: 8px;
-  }
-
-  .cb-section-label {
-    margin: 20px 16px 8px;
-    font-size: 0.81rem;
-    font-weight: 500;
-    letter-spacing: 0;
-    text-transform: none;
-    color: var(--cb-ink-3);
-  }
-
-  @include m.card-surfaces {
-    border: 0;
-    box-shadow: none;
-    background: var(--cb-surface);
-  }
-
-  .adm-card-header {
-    padding-bottom: 10px;
-    border-bottom: 0.5px solid var(--cb-card-rule);
-  }
-
-  .adm-card-header-title {
-    font-size: 1rem;
-    font-weight: 650;
-    letter-spacing: 0;
-    text-transform: none;
-  }
-
-  .adm-card-header + .adm-card-body {
-    padding-top: 12px;
-  }
-
-  .cb-adm-list-head {
-    font-size: 0.93rem;
-    font-weight: 700;
-    letter-spacing: 0;
-    text-transform: none;
-  }
-
-  .adm-list-item-content {
-    border-top: 0.5px solid var(--cb-stroke);
-  }
-
-  /* 状态台：干净白卡，无装饰条 / 虚线账本 */
-  .cb-stage {
-    border: 0;
-    border-radius: var(--cb-radius);
-    background: #fff;
-    box-shadow: none;
-    padding: 16px;
-  }
-
-  .cb-stage__glow {
+  .nx-topbar .nx-topbar__brand {
     display: none;
   }
 
-  .cb-stage__kicker {
-    letter-spacing: 0;
-    text-transform: none;
-    font-size: 0.75rem;
+  .nx-topbar__title {
+    font-size: 1.05rem;
+    font-weight: 650;
   }
 
-  .cb-stage__title {
-    font-size: 1.52rem;
-    font-weight: 720;
-    letter-spacing: -0.02em;
-    text-transform: none;
+  .nx-dock {
+    background: #f7f7f7;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
-  .cb-stage__hero-num {
-    display: none;
-  }
-
-  .cb-stage__foot {
-    border-top: 0.5px solid var(--cb-card-rule);
-    border-top-style: solid;
-  }
-
-  /* 指标：整条白底，内部竖线分栏 */
-  .cb-metrics {
-    gap: 0;
-    padding: 0;
-    background: var(--cb-surface);
-    border: 0;
-    border-radius: var(--cb-radius);
-    box-shadow: none;
-    overflow: hidden;
-  }
-
-  .cb-metric {
-    position: relative;
-    padding: 15px 6px 13px;
-    border: 0;
-    border-radius: 0;
+  .nx-dock__item.is-on {
     background: transparent;
-    box-shadow: none;
-
-    &:not(:last-child)::after {
-      content: "";
-      position: absolute;
-      top: 13px;
-      bottom: 13px;
-      right: 0;
-      width: 0.5px;
-      background: var(--cb-stroke);
-    }
-
-    &::before {
-      display: none;
-    }
-
-    .value {
-      font-size: 1.28rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-    }
-
-    .label {
-      margin-top: 4px;
-      font-size: 0.66rem;
-      letter-spacing: 0;
-      text-transform: none;
-    }
+    color: #07c160;
   }
 
-  .app-dock {
-    border-top: 0.5px solid var(--cb-stroke);
-  }
-
-  .adm-tab-bar-item-active {
-    color: var(--cb-primary);
-    font-weight: 650;
-
-    &::after {
-      display: none;
-    }
-  }
-
-  .cb-snack {
-    border-radius: 8px;
-    letter-spacing: 0;
-    text-transform: none;
-    box-shadow: none;
-  }
-
-  /* iOS 风格对话框 */
-  .adm-dialog {
-    --adm-center-popup-border-radius: 14px;
-  }
-
-  .adm-dialog .adm-center-popup-body {
-    border: 0;
-    border-radius: 14px;
-    background: color-mix(in srgb, var(--cb-surface) 92%, transparent);
-    -webkit-backdrop-filter: blur(40px) saturate(1.8);
-    backdrop-filter: blur(40px) saturate(1.8);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.18);
-    overflow: hidden;
-  }
-
-  .adm-dialog-title {
-    font-size: 1.06rem;
-    font-weight: 650;
-    letter-spacing: 0;
-    text-transform: none;
-  }
-
-  .adm-dialog-content {
-    font-size: 0.88rem;
-    color: var(--cb-ink-2);
-  }
-
-  .adm-dialog-footer .adm-dialog-action-row {
-    border-top: 0.5px solid var(--cb-stroke);
-  }
-
-  .adm-dialog-footer .adm-dialog-action-row > .adm-dialog-button {
-    border-right: 0.5px solid var(--cb-stroke);
-  }
-
-  .cb-flag {
-    border-radius: 4px;
-    font-size: 0.68rem;
-    letter-spacing: 0;
-    text-transform: none;
-  }
-
-  /* iOS segmented control */
-  .cb-log-filter {
-    gap: 0;
-    padding: 2px;
-    border: 0;
-    border-radius: 9px;
-    background: color-mix(in srgb, var(--cb-ink) 6%, transparent);
-  }
-
-  .cb-log-filter__seg {
-    flex: 1 1 0;
-    border-radius: 7px;
-    padding: 7px 4px;
-    font-size: 0.72rem;
-    letter-spacing: 0;
-    text-transform: none;
-  }
-
-  .cb-log-filter__seg.active {
-    background: var(--cb-surface);
-    color: var(--cb-ink);
-    font-weight: 650;
-    box-shadow: 0 1px 2px color-mix(in srgb, var(--cb-ink) 10%, transparent);
-  }
-
-  .cb-log-view {
-    border-radius: 10px;
-    border: 0;
-  }
-
-  .cb-log-view__chrome {
-    display: flex;
-  }
-
-  .cb-log-view__chrome i {
-    border-radius: 50%;
-  }
-
-  .cb-sheet__close {
-    border-radius: 6px;
-  }
-
-  .cb-sheet__bar-title {
-    letter-spacing: 0;
-    text-transform: none;
-  }
-
-  .cb-sheet__hero {
+  .nx-hero,
+  .nx-card,
+  .nx-metric,
+  .nx-cert-card,
+  .nx-action-tile {
     border-radius: 10px;
     box-shadow: none;
-    border: 0.5px solid var(--cb-stroke);
-    background: var(--cb-surface);
   }
 
-  .cb-sheet__hero-mark {
-    border-radius: 4px;
-    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--cb-primary) 18%, transparent);
-  }
-
-  .cb-sheet__section {
-    border: 0;
-    border-radius: 10px;
-    background: var(--cb-surface);
-    box-shadow: none;
-  }
-
-  .cb-sheet__section h4::before {
-    border-radius: 1px;
-    width: 10px;
-    height: 10px;
-    background: transparent;
-    border: 2px solid var(--cb-primary);
-  }
-
-  .cb-sheet__cell {
-    border-radius: 8px;
-    border: 0;
-    background: var(--cb-card-inset-bg);
-  }
-
-  .cb-runtime {
-    gap: 0;
-    padding: 0;
-    border: 0;
-    border-radius: var(--cb-radius);
-    background: var(--cb-surface);
-    overflow: hidden;
-  }
-
-  .cb-runtime__item {
-    display: flex;
-    flex-direction: row;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 12px 16px;
-    border-bottom: 0.5px solid var(--cb-stroke);
-
-    &:last-child {
-      border-bottom: 0;
-    }
-
-    span {
-      letter-spacing: 0;
-      text-transform: none;
-      font-size: 0.94rem;
-      color: var(--cb-ink);
-    }
-
-    strong {
-      font-size: 0.9rem;
-      font-weight: 400;
-      text-align: right;
-      color: var(--cb-ink-2);
-    }
-  }
-}
-
-html[data-theme="dark"][data-pack="classic"] {
-  --cb-chrome: #000;
-  --cb-paper: #000;
-  --cb-stage: #1c1c1e;
-  --cb-surface: #1c1c1e;
-  --cb-surface-2: #2c2c2e;
-  --cb-panel: var(--cb-surface);
-  --cb-topbar-bg: var(--cb-chrome);
-  --cb-dock-bg: var(--cb-chrome);
-  --cb-card-inset-bg: #2c2c2e;
-  --cb-stroke: rgba(84, 84, 88, 0.65);
-  --cb-body-gradient-tint: #000;
-
-  .cb-stage {
-    background: #1c1c1e;
-  }
-
-  .adm-dialog .adm-center-popup-body {
-    background: color-mix(in srgb, #2c2c2e 92%, transparent);
+  .nx-btn.variant-solid.tone-primary,
+  .nx-confirm__btn.is-solid {
+    background: #07c160;
   }
 }

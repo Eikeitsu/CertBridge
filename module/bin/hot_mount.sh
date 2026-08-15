@@ -304,7 +304,7 @@ hot_prepare_bind_stage() {
   HOT_SOURCE_ID=$(stat -c '%d:%i' "$HOT_BIND_ROOT" 2>/dev/null | tr -d '\r\n')
   [ -n "$HOT_SOURCE_ID" ] || return 1
   hot_state_set source_identity "$HOT_SOURCE_ID" || return 1
-  log_msg "hot: bind stage ready at $HOT_BIND_ROOT"
+  log_debug "hot: bind stage ready at $HOT_BIND_ROOT"
 }
 
 hot_teardown_bind_stage() {
@@ -568,7 +568,7 @@ hot_unmount_internal() {
       return 0
     fi
     # 软重启已递增 epoch，会话标记过期但仍有残留挂载：继续卸载，勿直接失败
-    log_msg "hot: stale boot token with $HOT_REMAINING mounts, force unmount"
+    log_warn "hot: stale boot token with $HOT_REMAINING mounts, force unmount"
   fi
 
   HOT_PASS=0
@@ -581,7 +581,7 @@ hot_unmount_internal() {
   hot_teardown_bind_stage
   rm -rf "$HOT_CURRENT" 2>/dev/null
   rm -f "$HOT_STATE"
-  log_msg "hot: session $HOT_SESSION removed without reboot"
+  log_info "hot: session $HOT_SESSION removed without reboot"
 }
 
 hot_build_generation() {
@@ -610,7 +610,7 @@ hot_build_generation() {
   # 热挂载必须保留已启用的永久 addon，避免用「原版+用户证」盖掉 Reqable/ProxyPin
   HOT_ADDON_MAP="$HOT_STAGE/addon-certs.list"
   if ! install_addon_certs_into "$HOT_STAGE_CERTS" "$HOT_ADDON_MAP"; then
-    log_msg "hot: failed to merge enabled permanent certificates"
+    log_error "hot: failed to merge enabled permanent certificates"
     rm -rf "$HOT_STAGE"
     return 1
   fi
@@ -689,7 +689,7 @@ hot_mount_namespaces() {
   HOT_SESSION=$(hot_read_state session_id)
   HOT_EXPECTED=$(hot_read_state store_count)
   hot_prepare_bind_stage || {
-    log_msg "hot: failed to prepare bind stage at $HOT_BIND_ROOT"
+    log_error "hot: failed to prepare bind stage at $HOT_BIND_ROOT"
     return 1
   }
   HOT_OK=0
@@ -724,9 +724,9 @@ hot_mount_namespaces() {
     hot_unmount_internal >/dev/null 2>&1
     return 1
   fi
-  hot_state_set namespace_count "$HOT_OK" || log_msg "hot: failed to persist namespace count"
-  hot_state_set namespace_failed "$HOT_FAIL" || log_msg "hot: failed to persist namespace failures"
-  log_msg "hot: mounted session=$HOT_SESSION mode=$(hot_read_state mode) added=$(hot_read_state added_count) namespaces=$HOT_OK failed=$HOT_FAIL"
+  hot_state_set namespace_count "$HOT_OK" || log_warn "hot: failed to persist namespace count"
+  hot_state_set namespace_failed "$HOT_FAIL" || log_warn "hot: failed to persist namespace failures"
+  log_info "hot: mounted session=$HOT_SESSION mode=$(hot_read_state mode) added=$(hot_read_state added_count) namespaces=$HOT_OK failed=$HOT_FAIL"
 }
 
 hot_start() {

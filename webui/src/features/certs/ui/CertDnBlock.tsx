@@ -20,12 +20,12 @@ export function CertDnContent({ dn }: { dn: CertDn }) {
   return (
     <>
       {rows.length ? (
-        <div className="cb-sheet__grid">
+        <div className="nx-detail-grid">
           {rows.map((row) => (
             <button
               key={`${row.label}-${row.value}`}
               type="button"
-              className="cb-sheet__cell"
+              className="nx-detail-cell"
               onClick={() => void copyText(row.value, `已复制${row.label}`)}
             >
               <span>{row.label}</span>
@@ -37,13 +37,13 @@ export function CertDnContent({ dn }: { dn: CertDn }) {
       {dn.raw ? (
         <button
           type="button"
-          className="cb-sheet__mono"
+          className="nx-detail-mono"
           onClick={() => void copyText(dn.raw, "已复制完整 DN")}
         >
           {dn.raw}
         </button>
       ) : (
-        <p className="cb-muted">未解析到此项</p>
+        <p className="nx-section-note">未解析到此项</p>
       )}
     </>
   );
@@ -52,8 +52,12 @@ export function CertDnContent({ dn }: { dn: CertDn }) {
 export function CertDnBlock({ title, dn, embedded }: CertDnBlockProps) {
   if (embedded) return <CertDnContent dn={dn} />;
   return (
-    <section className="cb-sheet__section">
-      {title ? <h4>{title}</h4> : null}
+    <section className="nx-detail-section">
+      {title ? (
+        <header className="nx-detail-section__head">
+          <h4>{title}</h4>
+        </header>
+      ) : null}
       <CertDnContent dn={dn} />
     </section>
   );

@@ -1,10 +1,10 @@
-/* ── Status Stage / Hero — APP 首页状态卡 ── */
+/* ── Status Stage / Hero — 首页状态主视觉 ── */
 
 .cb-stage {
   position: relative;
   overflow: hidden;
   margin: 0 0 var(--cb-space-md);
-  padding: 20px 18px 18px;
+  padding: 22px 20px 20px;
   border-radius: var(--cb-card-radius);
   background: var(--cb-stage);
   border: var(--cb-panel-border) solid var(--cb-card-border-color);
@@ -13,48 +13,60 @@
 
 .cb-stage__glow {
   position: absolute;
-  inset: -40% -20% auto;
-  height: 140%;
+  inset: -45% -25% auto;
+  height: 150%;
   background: radial-gradient(closest-side, var(--cb-hero-glow), transparent 72%);
   pointer-events: none;
-  opacity: 0.7;
+  opacity: 0.85;
 }
 
 .cb-stage.tone-ok {
-  --cb-hero-glow: color-mix(in srgb, var(--cb-ok) 14%, transparent);
+  --cb-hero-glow: color-mix(in srgb, var(--cb-ok) 18%, transparent);
 }
 
 .cb-stage.tone-warn {
-  --cb-hero-glow: color-mix(in srgb, var(--cb-warn) 14%, transparent);
+  --cb-hero-glow: color-mix(in srgb, var(--cb-warn) 18%, transparent);
 }
 
 .cb-stage.tone-bad {
-  --cb-hero-glow: color-mix(in srgb, var(--cb-bad) 12%, transparent);
+  --cb-hero-glow: color-mix(in srgb, var(--cb-bad) 16%, transparent);
 }
 
 .cb-stage.tone-idle {
-  --cb-hero-glow: color-mix(in srgb, var(--cb-ink-3) 10%, transparent);
+  --cb-hero-glow: color-mix(in srgb, var(--cb-ink-3) 12%, transparent);
 }
 
 .cb-stage__hero {
   position: relative;
-  display: none;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 14px;
+  align-items: center;
 }
 
 .cb-stage__hero-num {
-  display: none;
+  min-width: 64px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--cb-ink) 5%, transparent);
+  font-family: var(--cb-font-display);
+  font-size: 1.8rem;
+  font-weight: 780;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  text-align: center;
 }
 
 .cb-stage__kicker {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   margin: 0 0 8px;
   color: var(--cb-ink-3);
   font-size: 0.78rem;
-  font-weight: 500;
-  letter-spacing: 0;
+  font-weight: 650;
+  letter-spacing: 0.02em;
 }
 
 .cb-stage__tone-dot {
@@ -79,6 +91,10 @@
     background: var(--cb-bad);
     box-shadow: 0 0 0 3px var(--cb-bad-soft);
   }
+
+  &.tone-idle {
+    background: var(--cb-ink-3);
+  }
 }
 
 .cb-stage__title {
@@ -86,9 +102,9 @@
   margin: 0;
   font-family: var(--cb-font-display);
   font-size: 1.42rem;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1.25;
+  font-weight: 760;
+  letter-spacing: -0.035em;
+  line-height: 1.2;
   color: var(--cb-ink);
   overflow-wrap: anywhere;
 }
@@ -113,9 +129,17 @@
   position: relative;
   margin: 10px 0 0;
   color: var(--cb-ink-2);
-  font-size: 0.94rem;
-  line-height: 1.5;
+  font-size: 0.9rem;
+  line-height: 1.55;
   overflow-wrap: anywhere;
+}
+
+.cb-stage__flags {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
 }
 
 .cb-stage__foot {
@@ -126,15 +150,7 @@
   gap: 8px;
   margin-top: 16px;
   padding-top: 14px;
-  border-top: 0.5px solid var(--cb-card-rule);
-}
-
-.cb-stage__flags {
-  position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 12px;
+  border-top: 1px solid var(--cb-card-rule);
 }
 
 .cb-diag {

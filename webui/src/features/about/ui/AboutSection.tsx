@@ -1,12 +1,11 @@
 import { EMPTY_PLACEHOLDER } from "@/shared/config/constants";
-import { ABOUT_TIP, brandMarkSrc } from "@/shared/config/brand";
+import { ABOUT_LINKS, ABOUT_TIP, brandMarkSrc } from "@/shared/config/brand";
 import { assetUrl } from "@/shared/config/assets";
 import { useAppSelector } from "@/app/store/hooks";
 import { selectModuleStatus } from "@/features/status/model/selectors";
 import { selectResolvedTheme } from "@/features/theme/model/selectors";
-import { HelpCollapse, SectionLabel } from "@/shared/ui";
-import { BrandHeader } from "./BrandHeader";
-import { AboutLinks } from "./AboutLinks";
+import { openUrl } from "@/shared/api/ksu";
+import { NxCard, NxCollapse, NxSection } from "@/shared/ui";
 
 export function AboutSection() {
   const status = useAppSelector(selectModuleStatus);
@@ -16,18 +15,35 @@ export function AboutSection() {
     : EMPTY_PLACEHOLDER;
 
   return (
-    <section className="cb-about-block">
-      <BrandHeader
-        markSrc={brandMarkSrc(resolvedTheme)}
-        version={status.version || EMPTY_PLACEHOLDER}
-        androidLabel={androidLabel}
-      />
-      <AboutLinks />
-      <SectionLabel>帮助</SectionLabel>
-      <HelpCollapse title={ABOUT_TIP.title} inset>
-        <p>{ABOUT_TIP.body}</p>
-        <img className="tip-qr" src={assetUrl(ABOUT_TIP.src)} alt={ABOUT_TIP.alt} />
-      </HelpCollapse>
-    </section>
+    <NxSection eyebrow="About" title="关于 CertBridge">
+      <div className="nx-about-hero">
+        <img src={assetUrl(brandMarkSrc(resolvedTheme))} alt="" />
+        <strong>CertBridge</strong>
+        <span>
+          {status.version || EMPTY_PLACEHOLDER} · {androidLabel}
+        </span>
+      </div>
+
+      <div className="nx-link-list">
+        {ABOUT_LINKS.map((link) => (
+          <button
+            key={link.id}
+            type="button"
+            className="nx-link"
+            onClick={() => void openUrl(link.url)}
+          >
+            {link.label}
+            <span>打开</span>
+          </button>
+        ))}
+      </div>
+
+      <NxCard>
+        <NxCollapse title={ABOUT_TIP.title}>
+          <p>{ABOUT_TIP.body}</p>
+          <img className="nx-tip-qr" src={assetUrl(ABOUT_TIP.src)} alt={ABOUT_TIP.alt} />
+        </NxCollapse>
+      </NxCard>
+    </NxSection>
   );
 }

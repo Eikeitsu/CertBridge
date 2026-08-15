@@ -5,7 +5,7 @@ import {
   MOUNT_MODES,
   MOUNT_ROOT_NOTES,
 } from "@/shared/config/mount";
-import { HelpCollapse, Panel, Segmented } from "@/shared/ui";
+import { NxCard, NxChoiceCard, NxCollapse, NxSection } from "@/shared/ui";
 
 type MountModePanelProps = {
   mountMode: MountMode;
@@ -15,33 +15,37 @@ type MountModePanelProps = {
 
 export function MountModePanel({ mountMode, pending, onChange }: MountModePanelProps) {
   return (
-    <Panel title="挂载模式" meta={MOUNT_MODES[mountMode].meta}>
-      <Segmented
-        value={mountMode}
-        disabled={pending}
-        onChange={onChange}
-        options={MOUNT_MODE_OPTIONS.map((option) => ({
-          label: option.label,
-          value: option.value,
-        }))}
-      />
-      <HelpCollapse title="挂载说明" inset>
-        {MOUNT_MODE_OPTIONS.map((option) => (
-          <p key={option.value}>
-            <strong>{option.helpTitle}</strong>
-            <br />
-            {option.helpBody}
-          </p>
-        ))}
-        <ul>
-          {MOUNT_ROOT_NOTES.map((item) => (
-            <li key={item.name}>
-              <strong>{item.name}</strong>：{item.note}
-            </li>
+    <NxSection eyebrow="Mount" title="挂载模式">
+      <p className="nx-section-note">{MOUNT_MODES[mountMode].meta}</p>
+      <NxCard>
+        <NxChoiceCard
+          value={mountMode}
+          disabled={pending}
+          onChange={onChange}
+          options={MOUNT_MODE_OPTIONS.map((option) => ({
+            value: option.value,
+            title: option.label,
+            body: option.helpBody,
+          }))}
+        />
+        <NxCollapse title="挂载说明">
+          {MOUNT_MODE_OPTIONS.map((option) => (
+            <p key={option.value}>
+              <strong>{option.helpTitle}</strong>
+              <br />
+              {option.helpBody}
+            </p>
           ))}
-        </ul>
-        <p>{MOUNT_HELP_FOOTNOTE}</p>
-      </HelpCollapse>
-    </Panel>
+          <ul>
+            {MOUNT_ROOT_NOTES.map((item) => (
+              <li key={item.name}>
+                <strong>{item.name}</strong>：{item.note}
+              </li>
+            ))}
+          </ul>
+          <p>{MOUNT_HELP_FOOTNOTE}</p>
+        </NxCollapse>
+      </NxCard>
+    </NxSection>
   );
 }

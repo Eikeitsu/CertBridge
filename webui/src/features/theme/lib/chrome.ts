@@ -5,8 +5,8 @@ import { parseEnum } from "@/shared/lib/enum";
 
 const CHROME_BG_VARS = ["--cb-chrome", "--cb-body-gradient-base", "--cb-paper"];
 const FALLBACK_BG: Record<ResolvedTheme, string> = {
-  [ResolvedTheme.Light]: "#F4F7F6",
-  [ResolvedTheme.Dark]: "#0B1220",
+  [ResolvedTheme.Light]: "#EDEDED",
+  [ResolvedTheme.Dark]: "#000000",
 };
 const LUMINANCE_LIGHT = 0.45;
 const RESTORE_DELAYS = [50, 200, 450, 700];

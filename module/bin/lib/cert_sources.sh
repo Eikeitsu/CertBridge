@@ -68,6 +68,7 @@ sync_source_from_app() {
     if cert_same_fingerprint "$old" "$new_cert"; then
       # 刷新显示名（App 侧可能改了 subject 展示，但指纹相同极少见；仍以旧文件为准）
       rm -rf "$stage"
+      log_debug "sources: $kind unchanged fingerprint, keep $(basename "$old")"
       echo "$old"
       return 0
     fi
@@ -77,15 +78,17 @@ sync_source_from_app() {
   rm -rf "$new_dest"
   if ! mv "$stage" "$new_dest"; then
     rm -rf "$stage" "$new_dest"
+    log_warn "sources: $kind stage promote failed"
     return 1
   fi
   rm -rf "$dest"
   if ! mv "$new_dest" "$dest"; then
     # 极端情况：尽量把新目录挪回，避免空源
     mv "$new_dest" "$dest" 2>/dev/null || true
+    log_error "sources: $kind dest swap failed"
     return 1
   fi
-  log_msg "sources: $kind updated from app ($name)"
+  log_info "sources: $kind updated from app ($name)"
   echo "$dest/$name"
 }
 

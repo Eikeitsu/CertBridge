@@ -1,480 +1,95 @@
-@use "../mixins" as m;
-
-/* 虹桥 — 小红书 / Apple Music：青绿纸感、玻璃卡、圆标、桥面拼接 */
+/* 虹桥 — 沉浸软质 */
 html[data-pack="fluid"] {
-  --cb-radius: 24px;
-  --cb-radius-sm: 16px;
-  --cb-radius-lg: 30px;
-  --cb-dock-h: 60px;
-  --cb-topbar-h: 60px;
-  --cb-chrome: #e8f0ee;
-  --cb-paper: #e8f0ee;
+  --cb-radius: 18px;
+  --cb-radius-sm: 14px;
+  --cb-radius-lg: 28px;
+  --cb-dock-h: 68px;
+  --cb-topbar-h: 62px;
+  --cb-chrome: #f3f0f4;
+  --cb-paper: #f3f0f4;
   --cb-stage: color-mix(in srgb, #fff 72%, transparent);
   --cb-surface: color-mix(in srgb, #fff 78%, transparent);
-  --cb-surface-2: color-mix(in srgb, #fff 55%, transparent);
-  --cb-panel: var(--cb-surface);
-  --cb-stroke: color-mix(in srgb, #fff 55%, rgba(15, 92, 92, 0.12));
-  --cb-stroke-strong: color-mix(in srgb, var(--cb-primary) 22%, transparent);
-  --cb-shadow: 0 6px 20px color-mix(in srgb, var(--cb-primary) 6%, rgba(15, 40, 40, 0.04));
-  --cb-shadow-lg: 0 10px 28px color-mix(in srgb, var(--cb-primary) 8%, rgba(15, 40, 40, 0.06));
-  --cb-panel-blur: 18px;
+  --cb-surface-2: color-mix(in srgb, #fff 55%, #efe8f2);
+  --cb-panel: color-mix(in srgb, #fff 82%, transparent);
+  --cb-stroke: color-mix(in srgb, #fff 55%, rgba(40, 20, 50, 0.08));
   --cb-panel-border: 1px;
-  --cb-body-gradient-a: transparent;
-  --cb-body-gradient-b: transparent;
-  --cb-body-gradient-tint: #e8f0ee;
-  --cb-topbar-bg: color-mix(in srgb, var(--cb-chrome) 70%, transparent);
-  --cb-metrics-columns: 4;
-  --cb-glass-hi: color-mix(in srgb, #fff 85%, transparent);
-  --cb-glass-a: color-mix(in srgb, #fff 82%, transparent);
-  --cb-glass-b: color-mix(in srgb, #fff 68%, transparent);
-  --cb-glass-c: color-mix(in srgb, #fff 46%, transparent);
-  --cb-card-bg: color-mix(in srgb, #fff 74%, transparent);
-  --cb-card-radius: 24px;
-  --cb-card-pad-x: 18px;
-  --cb-card-pad-t: 16px;
-  --cb-card-pad-b: 18px;
-  --cb-card-gap: 12px;
-  --cb-card-rule: color-mix(in srgb, var(--cb-primary) 12%, transparent);
-  --cb-card-inset-bg: var(--cb-glass-c);
-  --cb-row-pad-y: 12px;
+  --cb-body-gradient-a: color-mix(in srgb, #ff5a7a 18%, transparent);
+  --cb-body-gradient-b: color-mix(in srgb, #5b8cff 16%, transparent);
+  --cb-body-gradient-tint: #f3f0f4;
+  --cb-card-radius: 22px;
+  --cb-card-border-color: color-mix(in srgb, #fff 70%, transparent);
+  --cb-card-shadow: 0 14px 36px rgba(70, 30, 90, 0.1);
+  --cb-card-rule: rgba(40, 20, 50, 0.08);
+  --cb-card-inset-bg: color-mix(in srgb, #fff 55%, transparent);
+  --cb-primary: #e11d48;
 
-  .app-topbar {
-    border-bottom-color: transparent;
-    background: var(--cb-topbar-bg);
-
-    .app-topbar__inner {
-      padding: 0 14px;
-    }
-
-    .nav-title {
-      font-size: 1.12rem;
-      font-weight: 750;
-      letter-spacing: -0.03em;
-      text-transform: none;
-    }
-
-    .app-topbar__kicker {
-      display: none;
-    }
-
-    .app-topbar__mark {
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      background: color-mix(in srgb, var(--cb-primary) 16%, transparent);
-      box-shadow:
-        0 4px 12px color-mix(in srgb, var(--cb-primary) 14%, transparent),
-        inset 0 0 0 1px color-mix(in srgb, #fff 40%, transparent);
-
-      img {
-        transform: scale(1.32);
-        transform-origin: center;
-      }
-    }
-
-    .device-chip {
-      border-radius: var(--cb-radius-pill);
-      background: color-mix(in srgb, #fff 55%, transparent);
-      border: 1px solid color-mix(in srgb, #fff 70%, transparent);
-      backdrop-filter: blur(8px);
-      text-transform: none;
-    }
-  }
-
-  .cb-brand-mark {
-    border-radius: 50%;
-    overflow: hidden;
-    box-shadow: 0 6px 16px color-mix(in srgb, var(--cb-primary) 14%, transparent);
-
-    img {
-      transform: scale(1.32);
-      transform-origin: center;
-    }
-  }
-
-  /* 这些开关状态挂在同一个 html 上，必须用 &[attr] 组合；
-     写成 html[...] & 会展开成 html ... html ...，永远匹配不到 */
-  &[data-bar-blur="1"] .app-topbar {
-    -webkit-backdrop-filter: blur(26px) saturate(1.4);
-    backdrop-filter: blur(26px) saturate(1.4);
-  }
-
-  .app-pane {
-    padding-left: 14px;
-    padding-right: 14px;
-  }
-
-  .cb-section-label {
-    margin: 20px 10px 10px;
-    font-size: 0.84rem;
-    font-weight: 650;
-    letter-spacing: 0;
-    text-transform: none;
-    color: var(--cb-ink-2);
-  }
-
-  /* 玻璃卡：轻模糊 + 顶部高光，无网站渐变底纹 */
-  @include m.card-surfaces {
-    border: 1px solid var(--cb-stroke);
-    background: var(--cb-card-bg);
-    -webkit-backdrop-filter: blur(var(--cb-panel-blur)) saturate(1.15);
-    backdrop-filter: blur(var(--cb-panel-blur)) saturate(1.15);
-    box-shadow: var(--cb-shadow);
-
-    &::before {
-      content: "";
-      position: absolute;
-      inset: 0 0 auto;
-      height: 1px;
-      pointer-events: none;
-      background: linear-gradient(
-        90deg,
-        transparent,
-        var(--cb-glass-hi) 22%,
-        var(--cb-glass-hi) 78%,
-        transparent
-      );
-    }
-  }
-
-  .adm-card-header {
-    padding-bottom: 11px;
-    border-bottom: 1px solid color-mix(in srgb, #fff 45%, var(--cb-card-rule));
-  }
-
-  .adm-card-header + .adm-card-body {
-    padding-top: 12px;
-  }
-
-  .adm-card-header-title {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    font-size: 0.98rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    text-transform: none;
-
-    &::before {
-      content: "";
-      width: 8px;
-      height: 8px;
-      flex: 0 0 auto;
-      border-radius: 50%;
-      background: var(--cb-primary);
-      box-shadow: 0 0 0 4px color-mix(in srgb, var(--cb-primary) 16%, transparent);
-    }
-  }
-
-  .cb-adm-list-head {
-    font-size: 0.96rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    text-transform: none;
-  }
-
-  .adm-list-item-content {
-    border-top-color: color-mix(in srgb, #fff 60%, var(--cb-card-rule));
-  }
-
-  /* 状态台：与指标条拼成桥面 */
-  .cb-stage {
-    border: 1px solid var(--cb-stroke);
-    border-radius: var(--cb-radius-lg);
-    background: linear-gradient(
-      145deg,
-      var(--cb-glass-a),
-      color-mix(in srgb, var(--cb-primary) 10%, transparent) 55%,
-      color-mix(in srgb, var(--cb-accent) 6%, transparent)
-    );
-    -webkit-backdrop-filter: blur(var(--cb-panel-blur)) saturate(1.2);
-    backdrop-filter: blur(var(--cb-panel-blur)) saturate(1.2);
-    box-shadow: var(--cb-shadow);
-    padding: 22px 18px 14px;
-    margin-bottom: 0;
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-  }
-
-  .cb-stage__glow {
-    opacity: 0.55;
-  }
-
-  .cb-stage__hero-num {
-    display: none;
-  }
-
-  .cb-stage__kicker {
-    letter-spacing: 0;
-    text-transform: none;
-    font-size: 0.76rem;
-    color: var(--cb-primary);
-    font-weight: 650;
-  }
-
-  .cb-stage__title {
-    font-size: 1.68rem;
-    font-weight: 750;
-    letter-spacing: -0.04em;
-    text-transform: none;
-  }
-
-  .cb-stage::after {
-    display: none;
-  }
-
-  .cb-bridge-stack .cb-metrics {
-    position: relative;
-    margin-top: 0;
-    margin-bottom: var(--cb-space-md);
-    border: 1px solid var(--cb-stroke);
-    border-top: 0;
-    border-radius: 0 0 var(--cb-radius-lg) var(--cb-radius-lg);
-    background: var(--cb-glass-b);
-    -webkit-backdrop-filter: blur(14px);
-    backdrop-filter: blur(14px);
-    box-shadow: var(--cb-shadow);
-    padding: 8px 8px 12px;
-    gap: 4px;
-
-    &::before {
-      content: "";
-      position: absolute;
-      inset: 0 18px auto;
-      height: 1px;
-      background: linear-gradient(
-        90deg,
-        transparent,
-        color-mix(in srgb, var(--cb-primary) 20%, transparent),
-        transparent
-      );
-    }
-  }
-
-  .cb-metric {
-    border: 0;
-    border-radius: 14px;
-    background: transparent;
-    box-shadow: none;
-    padding: 12px 4px 10px;
-
-    .value {
-      font-size: 1.34rem;
-      font-weight: 750;
-      color: var(--cb-primary);
-    }
-
-    .label {
-      margin-top: 4px;
-      font-size: 0.68rem;
-      font-weight: 600;
-      text-transform: none;
-    }
-  }
-
-  .app-dock {
-    border-top: 0;
-
-    .adm-tab-bar-item:active {
-      transform: scale(0.96);
-      transition-duration: 80ms;
-    }
-
-    .adm-tab-bar-item-active {
-      color: var(--cb-primary);
-      font-weight: 750;
-      background: transparent;
-
-      /* 无发光指示条 */
-      &::after {
-        display: none;
-      }
-
-      .adm-tab-bar-item-icon {
-        transform: scale(1.06);
-      }
-    }
-  }
-
-  .cb-snack {
-    border-radius: 999px;
-    padding-inline: 22px;
-    box-shadow: var(--cb-shadow);
-  }
-
-  .adm-dialog {
-    --adm-center-popup-border-radius: 28px;
-  }
-
-  .adm-dialog .adm-center-popup-body {
-    border: 1px solid color-mix(in srgb, #fff 55%, var(--cb-stroke));
-    border-radius: 28px;
-    background: var(--cb-glass-a);
-    -webkit-backdrop-filter: blur(24px) saturate(1.3);
-    backdrop-filter: blur(24px) saturate(1.3);
-    box-shadow: var(--cb-shadow-lg);
-  }
-
-  &[data-float-dock="1"] .app-dock {
-    border-radius: 28px;
-    border: 1px solid color-mix(in srgb, #fff 70%, var(--cb-stroke-strong));
-    background: var(--cb-glass-b);
-    -webkit-backdrop-filter: blur(28px) saturate(1.4);
-    backdrop-filter: blur(28px) saturate(1.4);
-  }
-
-  /* 日志：玻璃胶囊分段 */
-  .cb-log-filter {
-    gap: 6px;
-    padding: 3px;
-    border-radius: 999px;
-    background: var(--cb-glass-c);
-    border: 1px solid color-mix(in srgb, #fff 45%, var(--cb-stroke));
-  }
-
-  .cb-log-filter__seg {
-    flex: 1 1 0;
-    border-radius: 999px;
-    padding: 7px 6px;
-    font-size: 0.72rem;
-    text-transform: none;
-  }
-
-  .cb-log-filter__seg.active {
-    background: color-mix(in srgb, #fff 72%, transparent);
-    color: var(--cb-primary);
-    font-weight: 700;
-    box-shadow: 0 3px 10px color-mix(in srgb, var(--cb-primary) 10%, transparent);
-  }
-
-  .cb-log-view {
-    border-radius: var(--cb-radius-lg);
-    background: color-mix(in srgb, #061010 78%, transparent);
-    border: 1px solid color-mix(in srgb, var(--cb-primary) 14%, transparent);
-    -webkit-backdrop-filter: blur(12px);
-    backdrop-filter: blur(12px);
-  }
-
-  .cb-log-view__chrome {
-    display: flex;
-  }
-
-  .cb-sheet__close {
-    background: color-mix(in srgb, #fff 55%, transparent);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, #fff 40%, transparent);
-  }
-
-  .cb-sheet__hero {
-    border-radius: var(--cb-radius-lg);
-    background: linear-gradient(
-      145deg,
-      var(--cb-glass-a),
-      color-mix(in srgb, var(--cb-primary) 10%, transparent)
-    );
-    -webkit-backdrop-filter: blur(var(--cb-panel-blur));
-    backdrop-filter: blur(var(--cb-panel-blur));
-    box-shadow: var(--cb-shadow);
-  }
-
-  .cb-sheet__hero-mark {
-    border-radius: 50%;
-    overflow: hidden;
-    border-color: color-mix(in srgb, var(--cb-primary) 35%, transparent);
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--cb-primary) 10%, transparent);
-  }
-
-  .cb-sheet__section {
-    border-radius: var(--cb-radius-lg);
-    background: var(--cb-glass-b);
-    -webkit-backdrop-filter: blur(14px);
-    backdrop-filter: blur(14px);
-    box-shadow: var(--cb-shadow);
-  }
-
-  .cb-sheet__section h4::before {
-    border-radius: 50%;
-    width: 8px;
-    height: 8px;
-    background: var(--cb-primary);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--cb-primary) 14%, transparent);
-  }
-
-  .cb-sheet__fp {
-    background: var(--cb-glass-c);
-    border-color: color-mix(in srgb, #fff 35%, var(--cb-stroke));
-  }
-
-  .cb-flag {
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
-    border-color: color-mix(in srgb, #fff 40%, transparent);
-    text-transform: none;
-  }
-
-  .cb-runtime {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 12px;
+  .nx-topbar {
     background: transparent;
   }
 
-  .cb-runtime__item {
-    flex: 1 1 calc(50% - 8px);
-    min-width: 132px;
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 12px 14px;
-    border-bottom: 0;
-    border-radius: 999px;
-    background: var(--cb-glass-c);
-    border: 1px solid color-mix(in srgb, #fff 45%, var(--cb-stroke));
+  .nx-topbar__brand {
+    background: linear-gradient(90deg, #e11d48, #4f46e5);
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
 
-    span {
-      color: var(--cb-primary);
-      letter-spacing: 0;
-      text-transform: none;
-      font-size: 0.7rem;
-    }
+  .nx-dock {
+    left: 12px;
+    right: 12px;
+    bottom: calc(8px + var(--cb-inset-bottom));
+    min-height: 62px;
+    padding: 6px;
+    border-radius: 28px;
+    border: 1px solid color-mix(in srgb, #fff 75%, transparent);
+    background: color-mix(in srgb, #fff 62%, transparent);
+    box-shadow: 0 16px 40px rgba(70, 30, 90, 0.12);
+  }
 
-    strong {
-      margin-top: 2px;
-      font-size: 0.9rem;
-      font-weight: 650;
-      text-align: left;
-      color: var(--cb-ink);
-    }
+  .app-shell {
+    padding-bottom: calc(var(--cb-dock-h) + 18px + var(--cb-inset-bottom));
+  }
+
+  .nx-hero {
+    border: 1px solid color-mix(in srgb, #fff 70%, transparent);
+    background: linear-gradient(
+      145deg,
+      color-mix(in srgb, #e11d48 18%, #fff),
+      color-mix(in srgb, #4f46e5 12%, #fff)
+    );
+  }
+
+  .nx-card,
+  .nx-metric,
+  .nx-cert-card,
+  .nx-action-tile {
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+  }
+
+  .nx-btn.variant-solid.tone-primary,
+  .nx-confirm__btn.is-solid {
+    background: linear-gradient(120deg, #e11d48, #f43f5e 55%, #4f46e5);
   }
 }
 
-html[data-theme="dark"][data-pack="fluid"] {
-  --cb-chrome: #0a1212;
-  --cb-paper: #0a1212;
-  --cb-stage: color-mix(in srgb, #15201f 75%, transparent);
-  --cb-surface: color-mix(in srgb, #15201f 78%, transparent);
-  --cb-surface-2: color-mix(in srgb, #1a2826 65%, transparent);
-  --cb-panel: var(--cb-surface);
-  --cb-topbar-bg: color-mix(in srgb, var(--cb-chrome) 72%, transparent);
-  --cb-dock-bg: var(--cb-chrome);
-  --cb-stroke: rgba(180, 220, 210, 0.12);
-  --cb-body-gradient-a: transparent;
-  --cb-body-gradient-b: transparent;
-  --cb-body-gradient-tint: #0c1817;
-  --cb-glass-hi: color-mix(in srgb, #fff 16%, transparent);
-  --cb-glass-a: color-mix(in srgb, #1b2a29 82%, transparent);
-  --cb-glass-b: color-mix(in srgb, #15201f 72%, transparent);
-  --cb-glass-c: color-mix(in srgb, #fff 6%, transparent);
-  --cb-card-bg: color-mix(in srgb, #15201f 74%, transparent);
-  --cb-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
-  --cb-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.36);
+html[data-pack="fluid"][data-theme="dark"] {
+  --cb-chrome: #0c0a10;
+  --cb-paper: #0c0a10;
+  --cb-surface: color-mix(in srgb, #22182a 88%, transparent);
+  --cb-surface-2: #2a2034;
+  --cb-body-gradient-a: color-mix(in srgb, #e11d48 22%, transparent);
+  --cb-body-gradient-b: color-mix(in srgb, #6366f1 20%, transparent);
+  --cb-body-gradient-tint: #0c0a10;
+  --cb-card-border-color: rgba(255, 255, 255, 0.08);
+  --cb-card-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
 
-  .cb-sheet__close {
-    background: color-mix(in srgb, #fff 10%, transparent);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, #fff 12%, transparent);
+  .nx-dock {
+    background: color-mix(in srgb, #1a1222 78%, transparent);
+    border-color: rgba(255, 255, 255, 0.08);
   }
 
-  .app-topbar .device-chip {
-    background: color-mix(in srgb, #fff 8%, transparent);
-    border-color: color-mix(in srgb, #fff 14%, transparent);
+  .nx-hero {
+    background: linear-gradient(145deg, #3f1220, #1e1b4b);
   }
 }

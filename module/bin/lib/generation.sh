@@ -75,39 +75,39 @@ build_boot_generation() {
     conf_changed=1
   fi
   [ "$conf_changed" = "1" ] && \
-    log_msg "generation: conf differs from applied, force rebuild"
+    log_info "generation: conf differs from applied, force rebuild"
 
   # KernelSU 软重启不换 boot_id，但会重跑 post-fs-data；有待生效配置时必须重建
   if [ "$pending" != "1" ] && [ "$conf_changed" != "1" ] && \
       [ -n "$boot_id" ] && [ "$boot_id" = "$previous_boot_id" ] && \
       generation_valid && verify_direct_store "$target"; then
-    log_msg "generation: already active for this boot, skip rebuild"
+    log_debug "generation: already active for this boot, skip rebuild"
     return 0
   fi
   if [ -d "$GEN_CURRENT" ]; then
     if generation_source_busy; then
-      log_msg "generation: current source is still mounted, refuse replacement"
+      log_error "generation: current source is still mounted, refuse replacement"
       return 1
     fi
     if [ -z "$previous_boot_id" ]; then
       install_boot_id=$(cat "$INSTALL_BOOT_FILE" 2>/dev/null | tr -d '\r\n')
       if [ -z "$install_boot_id" ] || [ "$install_boot_id" = "$boot_id" ]; then
         # 软重启后可安全重建；仅在源仍被占用时才保留到冷重启
-        log_msg "generation: source lifecycle unknown, rebuild (soft-reboot safe)"
+        log_debug "generation: source lifecycle unknown, rebuild (soft-reboot safe)"
       fi
     elif [ "$previous_boot_id" = "$boot_id" ]; then
       # 同 boot_id：冷启动不应走到这里；软重启 / 待生效配置允许重建
-      log_msg "generation: same-boot rebuild (pending=$pending, soft-reboot friendly)"
+      log_info "generation: same-boot rebuild (pending=$pending, soft-reboot friendly)"
     fi
   fi
   source_n=$(count_certs "$target")
   [ "$source_n" -ge "$MIN_SAFE_CERTS" ] || {
-    log_msg "generation: live source too small ($source_n), refuse build"
+    log_error "generation: live source too small ($source_n), refuse build"
     return 1
   }
   # 双保险：若目标仍是本模块 runtime bind，禁止当作系统基线
   if is_certbridge_runtime_bind "$target"; then
-    log_msg "generation: live target still runtime-bound, refuse contaminated source"
+    log_error "generation: live target still runtime-bound, refuse contaminated source"
     return 1
   fi
 
@@ -119,26 +119,26 @@ build_boot_generation() {
   mkdir -p "$certs" "$STATEDIR" || return 1
 
   copy_cert_store "$target" "$certs" || {
-    log_msg "generation: failed to copy live source"
+    log_error "generation: failed to copy live source"
     rm -rf "$stage"
     return 1
   }
   install_addon_certs_into "$certs" "$map_tmp" || {
-    log_msg "generation: failed to add module certificates"
+    log_error "generation: failed to add module certificates"
     rm -rf "$stage"
     return 1
   }
 
   total=$(count_certs "$certs")
   [ "$total" -ge "$source_n" ] || {
-    log_msg "generation: total $total < source $source_n"
+    log_error "generation: total $total < source $source_n"
     rm -rf "$stage"
     return 1
   }
   while IFS='|' read -r label name checksum display; do
     [ -n "$name" ] || continue
     [ -f "$certs/$name" ] || {
-      log_msg "generation: missing applied cert $label/$name"
+      log_error "generation: missing applied cert $label/$name"
       rm -rf "$stage"
       return 1
     }
@@ -152,7 +152,7 @@ build_boot_generation() {
   chmod 0644 "$certs"/*.* 2>/dev/null
   chmod 0600 "$map_tmp" "$meta_tmp" "$stage/boot-id" 2>/dev/null
   set_selinux_context "$target" "$certs" || {
-    log_msg "generation: SELinux context verification failed"
+    log_error "generation: SELinux context verification failed"
     rm -rf "$stage"
     return 1
   }
@@ -161,7 +161,7 @@ build_boot_generation() {
 
   rm -rf "$GEN_CURRENT" 2>/dev/null
   mv "$stage" "$GEN_CURRENT" || {
-    log_msg "generation: atomic publish failed"
+    log_error "generation: atomic publish failed"
     rm -rf "$stage"
     return 1
   }
@@ -172,7 +172,8 @@ build_boot_generation() {
   cp -f "$CONF" "$APPLIED_CONF" 2>/dev/null || : >"$APPLIED_CONF"
   chmod 0600 "$APPLIED_MAP" "$SOURCE_META" "$APPLIED_CONF" 2>/dev/null
   rm -f "$PENDING_FILE"
-  log_msg "generation: source=$source_n total=$total addons=$(count_addon_certs)"
+  log_info "generation: source=$source_n total=$total addons=$(count_addon_certs)"
+  log_debug "generation: published at $GEN_CURRENT boot_id=$boot_id"
   return 0
 }
 

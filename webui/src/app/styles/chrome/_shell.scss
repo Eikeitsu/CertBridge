@@ -1,4 +1,4 @@
-/* ── Immersive shell ── */
+/* ── NX shell：顶栏 / 底栏 / 主舞台（从零） ── */
 
 .app-shell {
   --dock-pad: calc(var(--cb-dock-h) + var(--cb-inset-bottom));
@@ -34,10 +34,10 @@
     content: "";
     display: block;
     height: 100%;
-    width: 36%;
+    width: 34%;
     border-radius: 999px;
     background: var(--cb-primary);
-    animation: cb-progress-slide 1.05s ease-in-out infinite;
+    animation: cb-progress-slide 1s ease-in-out infinite;
   }
 }
 
@@ -51,61 +51,41 @@
   }
 }
 
-.app-topbar {
+.nx-topbar {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 40;
-  display: block;
   min-height: calc(var(--cb-topbar-h) + var(--cb-inset-top));
   padding: var(--cb-inset-top) 0 0;
   box-sizing: border-box;
-  border-bottom: 1px solid transparent;
   background: var(--cb-chrome);
   color: var(--cb-ink);
-
-  &::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    height: max(var(--cb-inset-top), 0px);
-    background: var(--cb-chrome);
-    pointer-events: none;
-    z-index: 0;
-  }
+  border-bottom: 0;
 
   html[data-bar-blur="1"] & {
-    background: color-mix(in srgb, var(--cb-chrome) 88%, transparent);
-    -webkit-backdrop-filter: blur(18px) saturate(1.2);
-    backdrop-filter: blur(18px) saturate(1.2);
-    border-bottom-color: var(--cb-stroke);
-
-    &::before {
-      background: var(--cb-chrome);
-    }
+    background: color-mix(in srgb, var(--cb-chrome) 78%, transparent);
+    -webkit-backdrop-filter: blur(22px) saturate(1.35);
+    backdrop-filter: blur(22px) saturate(1.35);
   }
 }
 
-.app-topbar__inner {
-  position: relative;
-  z-index: 1;
+.nx-topbar__inner {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   min-height: var(--cb-topbar-h);
-  padding: 0 16px;
+  padding: 0 18px;
 }
 
-.app-topbar__mark {
+.nx-topbar__mark {
   flex: 0 0 auto;
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   overflow: hidden;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--cb-ink) 5%, transparent);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--cb-primary) 22%, transparent);
 
   img {
     display: block;
@@ -115,46 +95,48 @@
   }
 }
 
-.app-topbar__titles {
+.nx-topbar__titles {
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   gap: 1px;
 }
 
-.app-topbar__kicker {
-  display: none;
+.nx-topbar__brand {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cb-ink-3);
+  line-height: 1.1;
 }
 
-.nav-title {
+.nx-topbar__title {
   margin: 0;
   min-width: 0;
-  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-family: var(--cb-font-display);
-  font-size: 1.06rem;
-  font-weight: 650;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
+  font-size: 1.18rem;
+  font-weight: 720;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
   color: var(--cb-ink);
 }
 
-.device-chip {
+.nx-topbar__chip {
   flex: 0 0 auto;
-  display: inline-block;
-  max-width: 34vw;
-  padding: 4px 10px;
+  max-width: 32vw;
+  padding: 6px 11px;
   border-radius: var(--cb-radius-pill);
-  background: color-mix(in srgb, var(--cb-ink) 6%, transparent);
-  border: 0;
+  background: var(--cb-surface);
+  border: 1px solid var(--cb-stroke);
   color: var(--cb-ink-2);
-  font-size: 0.72rem;
-  font-weight: 500;
-  letter-spacing: 0;
+  font-size: 0.7rem;
+  font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -179,7 +161,7 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: none;
-  padding: calc(var(--cb-topbar-h) + var(--cb-inset-top) + 8px) 16px 28px;
+  padding: calc(var(--cb-topbar-h) + var(--cb-inset-top) + 10px) 14px 32px;
   visibility: hidden;
   pointer-events: none;
 
@@ -194,105 +176,78 @@
   }
 }
 
-.app-dock {
+.nx-dock {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
   z-index: 40;
-  display: block;
-  box-sizing: border-box;
   min-height: calc(var(--cb-dock-h) + var(--cb-inset-bottom));
-  padding: 0 0 var(--cb-inset-bottom);
-  border: 0;
+  padding: 0 10px var(--cb-inset-bottom);
+  box-sizing: border-box;
+  background: color-mix(in srgb, var(--cb-chrome) 92%, transparent);
   border-top: 1px solid var(--cb-stroke);
-  background: var(--cb-chrome);
-  isolation: isolate;
+  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+  backdrop-filter: blur(20px) saturate(1.3);
+}
 
-  &::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: max(var(--cb-inset-bottom), 0px);
-    background: var(--cb-chrome);
-    pointer-events: none;
-    z-index: 0;
+.nx-dock__rail {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: stretch;
+  min-height: var(--cb-dock-h);
+  gap: 2px;
+}
+
+.nx-dock__item {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--cb-ink-3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 4px;
+  border-radius: 14px;
+  transition:
+    color var(--cb-ease),
+    background var(--cb-ease),
+    transform var(--cb-press-out);
+
+  &:active {
+    transform: scale(0.96);
   }
 
-  html[data-bar-blur="1"] & {
-    background: color-mix(in srgb, var(--cb-chrome) 90%, transparent);
-    -webkit-backdrop-filter: blur(18px) saturate(1.2);
-    backdrop-filter: blur(18px) saturate(1.2);
-
-    &::after {
-      background: var(--cb-chrome);
-    }
-  }
-
-  html[data-float-dock="1"] & {
-    left: 16px;
-    right: 16px;
-    bottom: calc(10px + var(--cb-inset-bottom));
-    width: auto;
-    min-height: 58px;
-    padding: 4px;
-    border: 1px solid color-mix(in srgb, #fff 50%, var(--cb-stroke));
-    border-radius: 28px;
-    background: color-mix(in srgb, var(--cb-surface) 88%, transparent);
-    box-shadow: var(--cb-shadow-lg);
-
-    &::after {
-      display: none;
-    }
-
-    .adm-tab-bar {
-      border-radius: 18px;
-      overflow: hidden;
-    }
-  }
-
-  html[data-float-dock="1"][data-dock-glass="1"] & {
-    background: color-mix(in srgb, var(--cb-surface) 55%, transparent);
-    -webkit-backdrop-filter: blur(28px) saturate(1.5);
-    backdrop-filter: blur(28px) saturate(1.5);
-  }
-
-  html[data-float-dock="1"][data-theme="dark"] & {
-    border-color: color-mix(in srgb, #fff 10%, transparent);
-    background: color-mix(in srgb, var(--cb-surface) 70%, transparent);
-  }
-
-  .adm-tab-bar {
-    --adm-color-background: transparent;
-
-    position: relative;
-    z-index: 1;
-    background: transparent;
-    border: 0;
-  }
-
-  .adm-tab-bar-item {
-    --adm-font-size-5: 0.625rem;
-
-    position: relative;
-    color: var(--cb-ink-3);
-    transition:
-      color var(--cb-ease),
-      background var(--cb-ease),
-      transform var(--cb-press-out);
-  }
-
-  .adm-tab-bar-item-active {
+  &.is-on {
     color: var(--cb-primary);
-    font-weight: 650;
+    background: var(--cb-primary-soft);
   }
+}
 
-  .adm-tab-bar-item-icon svg {
-    width: 1.4rem;
-    height: 1.4rem;
-  }
+.nx-dock__glyph {
+  font-size: 1.05rem;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.nx-dock__label {
+  font-size: 0.62rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+html[data-float-dock="1"] .nx-dock {
+  left: 14px;
+  right: 14px;
+  bottom: calc(10px + var(--cb-inset-bottom));
+  min-height: 60px;
+  padding: 6px;
+  border: 1px solid color-mix(in srgb, #fff 55%, var(--cb-stroke));
+  border-radius: 28px;
+  background: color-mix(in srgb, var(--cb-surface) 82%, transparent);
+  box-shadow: var(--cb-shadow-lg);
 }
 
 html[data-float-dock="1"] .app-shell {
@@ -312,7 +267,7 @@ html[data-float-dock="1"] .app-shell {
 }
 
 html[data-float-dock="1"] .app-pane {
-  padding-bottom: calc(var(--cb-dock-h) + 24px + var(--cb-inset-bottom));
+  padding-bottom: calc(var(--cb-dock-h) + 28px + var(--cb-inset-bottom));
 }
 
 .app-pane:has(.cb-log-page) {
@@ -326,22 +281,21 @@ html[data-float-dock="1"] .app-pane:has(.cb-log-page) {
 .cb-snack {
   position: fixed;
   left: 50%;
-  bottom: calc(var(--cb-dock-h) + var(--cb-inset-bottom) + 14px);
+  bottom: calc(var(--cb-dock-h) + var(--cb-inset-bottom) + 16px);
   z-index: 50;
   max-width: min(92vw, 420px);
   margin: 0;
-  padding: 11px 18px;
+  padding: 12px 18px;
   border: 0;
-  border-radius: var(--cb-radius-sm);
-  background: var(--cb-ink);
-  color: var(--cb-surface);
-  font-size: 0.86rem;
+  border-radius: 14px;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 0.88rem;
   font-weight: 650;
   line-height: 1.4;
-  letter-spacing: 0.01em;
   box-shadow: var(--cb-shadow-lg);
   opacity: 0;
-  transform: translate(-50%, 10px);
+  transform: translate(-50%, 12px);
   pointer-events: none;
   cursor: pointer;
   transition:
@@ -356,25 +310,156 @@ html[data-float-dock="1"] .app-pane:has(.cb-log-page) {
 
   &.tone-ok {
     background: var(--cb-ok);
-    color: #fff;
   }
 
   &.tone-warn {
     background: var(--cb-warn);
-    color: #fff;
   }
 
   &.tone-bad {
+    background: var(--cb-bad);
+  }
+}
+
+html[data-float-dock="1"] .cb-snack {
+  bottom: calc(var(--cb-dock-h) + var(--cb-inset-bottom) + 34px);
+}
+
+html[data-theme="dark"] .cb-snack.tone-info {
+  background: #f2f2f7;
+  color: #111;
+}
+
+/* 二次确认：底部动作板，非 antd Dialog */
+.nx-confirm {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.nx-confirm__mask {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.42);
+  animation: nx-fade-in 0.18s ease;
+}
+
+.nx-confirm__sheet {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 520px);
+  margin: 0 10px calc(10px + var(--cb-inset-bottom));
+  padding: 10px 18px 18px;
+  border-radius: 22px;
+  background: var(--cb-surface);
+  color: var(--cb-ink);
+  box-shadow: var(--cb-shadow-lg);
+  animation: nx-sheet-up 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nx-confirm__handle {
+  width: 36px;
+  height: 4px;
+  margin: 2px auto 14px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--cb-ink) 16%, transparent);
+}
+
+.nx-confirm__title {
+  margin: 0 0 8px;
+  font-family: var(--cb-font-display);
+  font-size: 1.12rem;
+  font-weight: 720;
+  letter-spacing: -0.02em;
+  text-align: center;
+}
+
+.nx-confirm__body {
+  margin: 0 0 18px;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--cb-ink-2);
+  text-align: center;
+}
+
+.nx-confirm__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.nx-confirm__btn {
+  appearance: none;
+  border: 0;
+  min-height: 46px;
+  border-radius: 14px;
+  font-size: 0.95rem;
+  font-weight: 680;
+  transition:
+    transform var(--cb-press-out),
+    opacity var(--cb-ease);
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  &.is-ghost {
+    background: var(--cb-surface-2);
+    color: var(--cb-ink);
+  }
+
+  &.is-solid {
+    background: var(--cb-primary);
+    color: #fff;
+  }
+
+  &.is-danger {
     background: var(--cb-bad);
     color: #fff;
   }
 }
 
-html[data-float-dock="1"] .cb-snack {
-  bottom: calc(var(--cb-dock-h) + var(--cb-inset-bottom) + 32px);
+@keyframes nx-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
-html[data-theme="dark"] .cb-snack.tone-info {
-  background: #ececec;
-  color: #141414;
+@keyframes nx-sheet-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 兼容旧 class 选择器（主题包仍可能引用） */
+.app-topbar {
+  display: none;
+}
+
+.app-dock {
+  display: none;
+}
+
+.nav-title {
+  margin: 0;
+}
+
+.device-chip {
+  display: none;
 }

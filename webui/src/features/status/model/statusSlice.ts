@@ -44,10 +44,13 @@ function resolveRefreshArg(arg: RefreshStatusArg) {
 }
 
 /** CLI 回包里的 reboot_required → pending_reboot，并过滤非状态键 */
-export function normalizeCliStatusPatch(kv: Record<string, string>): Record<string, string> {
+export function normalizeCliStatusPatch(
+  kv: Record<string, string>,
+): Record<string, string> {
   const patch: Record<string, string> = {};
   for (const [key, value] of Object.entries(kv)) {
-    if (!key || key === "ok" || key === "error" || key === "hint" || key === "filename") continue;
+    if (!key || key === "ok" || key === "error" || key === "hint" || key === "filename")
+      continue;
     if (key === "reboot_required") {
       patch.pending_reboot = value === FLAG_ON || value === "1" ? "1" : "0";
       continue;

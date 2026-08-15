@@ -59,7 +59,7 @@ ensure_stage_tmpfs() {
     return 1
   }
   mount -t tmpfs -o mode=755 tmpfs "$stage" 2>/dev/null || {
-    log_msg "inject: tmpfs mount failed ($stage)"
+    log_error "inject: tmpfs mount failed ($stage)"
     record_inject_fail tmpfs_failed "tmpfs 挂载失败"
     return 1
   }
@@ -76,13 +76,13 @@ fill_stage_from_generation() {
     is_cert_filename "$name" || continue
     if ! cp -f "$cert" "$stage/$name" 2>/dev/null; then
       fail_name="$name"
-      log_msg "inject: copy to tmpfs failed ($name)"
+      log_error "inject: copy to tmpfs failed ($name)"
       record_inject_fail stage_copy_failed "$name"
       return 1
     fi
   done
   [ "$(count_certs "$stage")" -eq "$(count_certs "$GEN_CERTS")" ] || {
-    log_msg "inject: tmpfs cert count mismatch for stage=$stage${fail_name:+ (last=$fail_name)}"
+    log_error "inject: tmpfs cert count mismatch for stage=$stage${fail_name:+ (last=$fail_name)}"
     record_inject_fail stage_copy_failed "数量不一致${fail_name:+:$fail_name}"
     return 1
   }
@@ -98,7 +98,7 @@ prepare_target_stage() {
 
   # Refresh contents from immutable generation；失败则拆掉旧 tmpfs 重建一次
   if ! fill_stage_from_generation "$stage"; then
-    log_msg "inject: refreshing stage failed, recreating tmpfs ($stage)"
+    log_warn "inject: refreshing stage failed, recreating tmpfs ($stage)"
     umount "$stage" 2>/dev/null || umount -l "$stage" 2>/dev/null || true
     rm -rf "$stage" 2>/dev/null
     ensure_stage_tmpfs "$stage" || return 1
@@ -110,7 +110,7 @@ prepare_target_stage() {
   chmod 0644 "$stage"/*.* 2>/dev/null
   # Critical for Flutter/Reqable reading /system/etc/security/cacerts
   set_selinux_context "$target" "$stage" || {
-    log_msg "inject: SELinux context for $target failed"
+    log_error "inject: SELinux context for $target failed"
     record_inject_fail selinux_failed "$(basename "$target")"
     return 1
   }
@@ -141,24 +141,24 @@ bind_current_once() {
 
   if verify_direct_store "$target"; then
     if [ "$(path_identity "$target")" = "$source_id" ]; then
-      log_msg "inject: current ns already valid ($target)"
+      log_debug "inject: current ns already valid ($target)"
       return 0
     fi
-    log_msg "inject: current ns has compatible content; rebinding to owned tmpfs ($target)"
+    log_debug "inject: current ns has compatible content; rebinding to owned tmpfs ($target)"
   fi
 
   mount --bind "$stage" "$target" 2>/dev/null || {
-    log_msg "inject: current ns bind failed ($target)"
+    log_error "inject: current ns bind failed ($target)"
     record_inject_fail bind_failed "init"
     return 1
   }
   if [ "$(path_identity "$target")" != "$source_id" ]; then
-    log_msg "inject: current ns ownership mismatch after bind ($target) (keep mount)"
+    log_warn "inject: current ns ownership mismatch after bind ($target) (keep mount)"
   fi
   if ! verify_direct_store "$target"; then
-    log_msg "inject: current ns content verify soft-fail ($target) (keep mount)"
+    log_warn "inject: current ns content verify soft-fail ($target) (keep mount)"
   fi
-  log_msg "inject: current ns injected ($target)"
+  log_info "inject: current ns injected ($target)"
   return 0
 }
 
@@ -173,29 +173,29 @@ bind_pid_once() {
 
   if verify_namespace_store "$pid" "$target"; then
     if [ "$(namespace_path_identity "$pid" "$target")" = "$source_id" ]; then
-      log_msg "inject: $label pid=$pid already valid"
+      log_debug "inject: $label pid=$pid already valid"
       return 0
     fi
-    log_msg "inject: $label pid=$pid rebinding to owned tmpfs"
+    log_debug "inject: $label pid=$pid rebinding to owned tmpfs"
   fi
 
   src=$(stage_visible_for_pid "$pid" "$stage") || {
-    log_msg "inject: $label pid=$pid cannot see stage $stage"
+    log_error "inject: $label pid=$pid cannot see stage $stage"
     record_inject_fail bind_failed "$label 看不到临时层"
     return 1
   }
   nsenter --mount=/proc/"$pid"/ns/mnt -- mount --bind "$src" "$target" 2>/dev/null || {
-    log_msg "inject: $label pid=$pid bind failed"
+    log_error "inject: $label pid=$pid bind failed"
     record_inject_fail bind_failed "$label"
     return 1
   }
   if [ "$(namespace_path_identity "$pid" "$target")" != "$source_id" ]; then
-    log_msg "inject: $label pid=$pid ownership mismatch after bind (keep mount)"
+    log_warn "inject: $label pid=$pid ownership mismatch after bind (keep mount)"
   fi
   if ! verify_namespace_store "$pid" "$target"; then
-    log_msg "inject: $label pid=$pid content verify soft-fail (keep mount)"
+    log_warn "inject: $label pid=$pid content verify soft-fail (keep mount)"
   fi
-  log_msg "inject: $label pid=$pid injected"
+  log_info "inject: $label pid=$pid injected"
   return 0
 }
 
@@ -205,7 +205,7 @@ bind_package_soft() {
   stage="$3"
   for pid in $(pidof "$pkg" 2>/dev/null); do
     bind_pid_once "$pid" "$pkg" "$target" "$stage" || \
-      log_msg "inject: optional package $pkg pid=$pid skipped/failed"
+      log_warn "inject: optional package $pkg pid=$pid skipped/failed"
   done
 }
 
@@ -240,7 +240,7 @@ inject_one_target() {
   target="$1"
   mode="$2"
   [ -d "$target" ] || {
-    log_msg "inject: skip missing target $target"
+    log_warn "inject: skip missing target $target"
     return 0
   }
 
@@ -289,10 +289,10 @@ inject_one_target() {
         fi
       done <"$ns_file"
       rm -f "$ns_file"
-      log_msg "inject: target=$target namespaces ok=$injected fail=$failed"
+      log_info "inject: target=$target namespaces ok=$injected fail=$failed"
     fi
   else
-    log_msg "inject: nsenter unavailable"
+    log_error "inject: nsenter unavailable"
     record_inject_fail nsenter_unavailable
     rc=1
   fi
@@ -301,17 +301,17 @@ inject_one_target() {
 
 inject_boot_namespaces() {
   generation_valid || {
-    log_msg "inject: generation invalid"
+    log_error "inject: generation invalid"
     record_inject_fail generation_invalid
     return 1
   }
   [ -s "$APPLIED_MAP" ] || {
-    log_msg "inject: no enabled addon, keep original store"
+    log_info "inject: no enabled addon, keep original store"
     return 0
   }
 
   if is_magic_mount_mode && [ "$(get_api)" -lt 34 ]; then
-    log_msg "inject: magic mode on API $(get_api), skip bind (Magic Mount)"
+    log_debug "inject: magic mode on API $(get_api), skip bind (Magic Mount)"
     return 0
   fi
 
@@ -323,10 +323,10 @@ inject_boot_namespaces() {
   done
   [ "$has_target" = "1" ] || {
     if is_magic_mount_mode; then
-      log_msg "inject: magic mode with no bind targets"
+      log_warn "inject: magic mode with no bind targets"
       return 0
     fi
-    log_msg "inject: no CA target directory found"
+    log_error "inject: no CA target directory found"
     record_inject_fail no_target
     return 1
   }
@@ -341,7 +341,7 @@ inject_app_namespaces() {
   [ -s "$APPLIED_MAP" ] || return 0
 
   if is_magic_mount_mode && [ "$(get_api)" -lt 34 ]; then
-    log_msg "inject: magic mode on API $(get_api), skip namespace bind"
+    log_debug "inject: magic mode on API $(get_api), skip namespace bind"
     return 0
   fi
 

@@ -17,7 +17,7 @@ export function CertBrandIcon({ kind, className }: CertBrandIconProps) {
 
   return (
     <span
-      className={className ? `cb-brand-icon ${className}` : "cb-brand-icon"}
+      className={["nx-brand-icon", className].filter(Boolean).join(" ")}
       data-kind={kind}
       data-theme={theme}
       title={brand.label}

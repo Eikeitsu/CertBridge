@@ -8,18 +8,18 @@ type LogLinesProps = {
 export function LogLines({ entries, filtered }: LogLinesProps) {
   if (!entries.length) {
     return (
-      <p className="cb-log-empty">
+      <p className="nx-log-empty">
         {filtered ? "没有该等级的日志" : "暂无日志（安装 / 注入 / 配置变更后才会写入）"}
       </p>
     );
   }
 
   return (
-    <div className="cb-log-lines">
+    <div className="nx-log__lines">
       {entries.map((entry, index) => (
-        <span key={`${index}-${entry.raw}`} className={`cb-log-line lv-${entry.level}`}>
-          <span className="cb-log-line__tag">[{entry.level.toUpperCase()}]</span>
-          <span className="cb-log-line__body">{entry.body}</span>
+        <span key={`${index}-${entry.raw}`} className={`nx-log-line lv-${entry.level}`}>
+          <span className="nx-log-line__tag">[{entry.level.toUpperCase()}]</span>
+          <span className="nx-log-line__body">{entry.body}</span>
         </span>
       ))}
     </div>

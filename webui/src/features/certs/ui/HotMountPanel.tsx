@@ -1,4 +1,3 @@
-import { Button, Input, List, Switch } from "antd-mobile";
 import { useAppSelector } from "@/app/store/hooks";
 import { selectModuleStatus } from "@/features/status/model/selectors";
 import { isFlagOn } from "@/shared/lib/flag";
@@ -9,7 +8,17 @@ import {
   HOT_MOUNT_META,
   HOT_MOUNT_MODE_OPTIONS,
 } from "@/shared/config/certs";
-import { Flag, KvList, PrefRow, SectionLabel, Segmented } from "@/shared/ui";
+import {
+  NxButton,
+  NxCard,
+  NxChip,
+  NxField,
+  NxInput,
+  NxSection,
+  NxSegment,
+  NxSwitch,
+  NxToggleRow,
+} from "@/shared/ui";
 import { useHotMountPanel } from "../hooks/useHotMountPanel";
 import { resolveHotSessionLabel } from "../lib/hotSession";
 
@@ -44,75 +53,77 @@ export function HotMountPanel({
   const panelMeta = isHotActive ? sessionLabel : HOT_MOUNT_META;
 
   return (
-    <section className="cb-hot-block">
-      <SectionLabel>{sectionLabel}</SectionLabel>
-      <p className="cb-list-group__meta">
+    <NxSection eyebrow="Session" title={sectionLabel}>
+      <p className="nx-section-note">
         {panelTitle} · {panelMeta}
       </p>
-      <List mode="card">
-        <PrefRow label="允许临时挂载" description="关闭后无法新建临时会话">
-          <Switch checked={isHotAllow} loading={busy} onChange={onSetHotAllow} />
-        </PrefRow>
-      </List>
+      <NxCard>
+        <NxToggleRow label="允许临时挂载" description="关闭后无法新建临时会话">
+          <NxSwitch checked={isHotAllow} loading={busy} onChange={onSetHotAllow} />
+        </NxToggleRow>
+      </NxCard>
 
-      {isHotActive ? (
-        <div className="cb-hot-block__body">
-          <p className="cb-muted">{HOT_MOUNT_ACTIVE_META}</p>
-          <KvList
-            items={[
-              { label: "已加入", value: status.hot_added || "0" },
-              { label: "命名空间", value: status.hot_namespaces || "0" },
-            ]}
-          />
-          {isHotPartial ? (
-            <p className="cb-muted" style={{ margin: "10px 0" }}>
-              {status.hot_failed || "0"} 个命名空间未覆盖，可卸载后重试
-            </p>
-          ) : null}
-          <div className="cb-actions__row" style={{ marginTop: 12 }}>
-            {isHotPartial ? <Flag>部分未覆盖</Flag> : null}
-            <Button color="danger" loading={busy} onClick={onUnmount}>
-              无痕卸载
-            </Button>
-          </div>
-        </div>
-      ) : isHotAllow ? (
-        <div className="cb-hot-block__body">
-          <Segmented
-            value={mode}
-            onChange={(next) => setMode(next as HotMountMode)}
-            options={HOT_MOUNT_MODE_OPTIONS.map((option) => ({
-              label: option.label,
-              value: option.value,
-            }))}
-          />
-          {needsSdPath ? (
-            <label className="cb-path-field">
-              <span className="cb-field-label">存储卡证书目录</span>
-              <Input
-                value={sdPath}
-                onChange={setSdPath}
-                placeholder={DEFAULT_SD_CERT_DIR}
-                clearable
-              />
-            </label>
-          ) : null}
-          <div className="cb-hot-actions">
-            <Button
-              color="primary"
+      <div className="nx-hot-deck">
+        {isHotActive ? (
+          <NxCard tone="accent">
+            <p className="nx-section-note">{HOT_MOUNT_ACTIVE_META}</p>
+            <div className="nx-kv">
+              <div className="nx-kv__item">
+                <span>已加入</span>
+                <strong>{status.hot_added || "0"}</strong>
+              </div>
+              <div className="nx-kv__item">
+                <span>命名空间</span>
+                <strong>{status.hot_namespaces || "0"}</strong>
+              </div>
+            </div>
+            {isHotPartial ? (
+              <p className="nx-section-note">
+                {status.hot_failed || "0"} 个命名空间未覆盖，可卸载后重试
+              </p>
+            ) : null}
+            <div style={{ display: "flex", gap: 8, marginTop: 12, alignItems: "center" }}>
+              {isHotPartial ? <NxChip tone="warn">部分未覆盖</NxChip> : null}
+              <NxButton tone="danger" loading={busy} onClick={onUnmount}>
+                无痕卸载
+              </NxButton>
+            </div>
+          </NxCard>
+        ) : isHotAllow ? (
+          <NxCard>
+            <NxSegment
+              value={mode}
+              onChange={(next) => setMode(next as HotMountMode)}
+              options={HOT_MOUNT_MODE_OPTIONS.map((option) => ({
+                label: option.label,
+                value: option.value,
+              }))}
+            />
+            {needsSdPath ? (
+              <NxField label="存储卡证书目录">
+                <NxInput
+                  value={sdPath}
+                  onChange={(event) => setSdPath(event.target.value)}
+                  placeholder={DEFAULT_SD_CERT_DIR}
+                />
+              </NxField>
+            ) : null}
+            <NxButton
               block
               loading={busy}
               onClick={() => onMount(mode, needsSdPath ? sdPath : undefined)}
             >
               开始临时挂载
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <p className="cb-muted cb-hot-block__hint">
-          临时挂载已关闭。放入存储卡或用户区的证书不会自动生效；开启上方开关后可手动发起会话。
-        </p>
-      )}
-    </section>
+            </NxButton>
+          </NxCard>
+        ) : (
+          <NxCard>
+            <p className="nx-section-note" style={{ margin: 0 }}>
+              临时挂载已关闭。放入存储卡或用户区的证书不会自动生效；开启上方开关后可手动发起会话。
+            </p>
+          </NxCard>
+        )}
+      </div>
+    </NxSection>
   );
 }

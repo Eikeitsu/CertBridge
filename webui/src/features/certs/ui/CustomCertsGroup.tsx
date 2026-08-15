@@ -1,13 +1,7 @@
-import { Button, List } from "antd-mobile";
-import {
-  DeleteOutline,
-  InformationCircleOutline,
-  UploadOutline,
-} from "antd-mobile-icons";
 import { useAppSelector } from "@/app/store/hooks";
 import { selectCustomCertificates } from "@/features/status/model/selectors";
 import { CERT_IMPORT_ACCEPT } from "@/shared/config/certs";
-import { EmptyHint, FilePickButton, ListGroup, ListRow } from "@/shared/ui";
+import { NxButton, NxCard, NxEmpty, NxFilePick, NxSection } from "@/shared/ui";
 
 type CustomCertsGroupProps = {
   onImport: (file: File) => void;
@@ -23,48 +17,44 @@ export function CustomCertsGroup({
   const customCertificates = useAppSelector(selectCustomCertificates);
 
   return (
-    <ListGroup
+    <NxSection
+      eyebrow="Custom"
       title="自定义证书"
-      meta="PEM / DER / hash.0 · 校验 X.509、有效期与 CA:TRUE"
       action={
-        <FilePickButton accept={CERT_IMPORT_ACCEPT.join(",")} onPick={onImport}>
-          <UploadOutline />
+        <NxFilePick accept={CERT_IMPORT_ACCEPT.join(",")} onPick={onImport}>
           导入
-        </FilePickButton>
+        </NxFilePick>
       }
     >
+      <p className="nx-section-note">PEM / DER / hash.0 · 校验 X.509、有效期与 CA:TRUE</p>
       {customCertificates.length === 0 ? (
-        <List.Item>
-          <EmptyHint>可导入 HttpCanary、ADGuard、Charles 等 CA</EmptyHint>
-        </List.Item>
+        <NxCard>
+          <NxEmpty>可导入 HttpCanary、ADGuard、Charles 等 CA</NxEmpty>
+        </NxCard>
       ) : (
         customCertificates.map((cert) => (
-          <ListRow
-            key={cert.name}
-            title={cert.display}
-            subtitle="自定义"
-            actions={
-              <>
-                <Button
-                  size="mini"
-                  fill="none"
-                  onClick={() => onOpenDetail(`custom:${cert.name}`, cert.display)}
-                >
-                  <InformationCircleOutline />
-                </Button>
-                <Button
-                  size="mini"
-                  fill="none"
-                  color="danger"
-                  onClick={() => onRemove(cert.name)}
-                >
-                  <DeleteOutline />
-                </Button>
-              </>
-            }
-          />
+          <article key={cert.name} className="nx-cert-card">
+            <div className="nx-brand-icon" aria-hidden>
+              <span className="nx-brand-fallback">CA</span>
+            </div>
+            <div className="nx-cert-card__body">
+              <h3 className="nx-cert-card__title">{cert.display}</h3>
+              <p className="nx-cert-card__sub">自定义 · {cert.name}</p>
+            </div>
+            <div className="nx-cert-card__actions">
+              <NxButton
+                variant="ghost"
+                onClick={() => onOpenDetail(`custom:${cert.name}`, cert.display)}
+              >
+                详情
+              </NxButton>
+              <NxButton variant="ghost" tone="danger" onClick={() => onRemove(cert.name)}>
+                移除
+              </NxButton>
+            </div>
+          </article>
         ))
       )}
-    </ListGroup>
+    </NxSection>
   );
 }

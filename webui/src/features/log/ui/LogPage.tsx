@@ -1,6 +1,4 @@
 import { useMemo } from "react";
-import { Button } from "antd-mobile";
-import { DeleteOutline, LoopOutline } from "antd-mobile-icons";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { clearActivityLog, fetchActivityLog } from "@/features/log/model/logSlice";
 import { selectActivityLog } from "@/features/log/model/selectors";
@@ -9,8 +7,8 @@ import { formatByteSize } from "@/features/log/lib/formatByteSize";
 import { toast } from "@/shared/api/ksu";
 import { confirmAction } from "@/shared/lib/confirmAction";
 import { filterLogEntries, parseLogText } from "@/shared/lib/log";
-import { PageRefresh, PageSpin, SectionLabel } from "@/shared/ui";
-import { LogFilter } from "./LogFilter";
+import { NxButton, NxChip, NxPull, NxSpin } from "@/shared/ui";
+import { LOG_LEVEL_PRESETS } from "@/shared/config/log";
 import { LogLines } from "./LogLines";
 
 export function LogPage() {
@@ -46,34 +44,54 @@ export function LogPage() {
   }`;
 
   return (
-    <PageRefresh onRefresh={handleRefresh}>
-      <div className="cb-log-page">
-        <div className="cb-list-group__head">
-          <SectionLabel>安装 / 注入日志</SectionLabel>
-          <div className="cb-console__actions">
-            <Button size="mini" fill="outline" onClick={() => void handleRefresh()}>
-              <LoopOutline />
+    <NxPull onRefresh={handleRefresh}>
+      <div className="nx-log">
+        <div className="nx-log__toolbar">
+          <div>
+            <h2 className="nx-section__title" style={{ margin: 0 }}>
+              运行日志
+            </h2>
+            <p className="nx-log__meta">{meta}</p>
+          </div>
+          <div className="nx-log__actions">
+            <NxButton variant="soft" onClick={() => void handleRefresh()}>
               刷新
-            </Button>
-            <Button size="mini" fill="outline" color="danger" onClick={handleClear}>
-              <DeleteOutline />
+            </NxButton>
+            <NxButton variant="outline" tone="danger" onClick={handleClear}>
               清空
-            </Button>
+            </NxButton>
           </div>
         </div>
-        <p className="cb-list-group__meta">{meta}</p>
-        <LogFilter value={levelFilter} onChange={setLevelFilter} />
-        <PageSpin spinning={loading}>
-          <div className="cb-log-view">
-            <div className="cb-log-view__chrome" aria-hidden>
+
+        <div className="nx-log__filters" role="radiogroup" aria-label="日志等级">
+          {LOG_LEVEL_PRESETS.map((option) => {
+            const on = levelFilter === option.id;
+            return (
+              <button
+                key={option.id || "__all"}
+                type="button"
+                className="nx-chip-btn"
+                aria-checked={on}
+                role="radio"
+                onClick={() => setLevelFilter(option.id)}
+              >
+                <NxChip tone={on ? "accent" : "neutral"}>{option.label}</NxChip>
+              </button>
+            );
+          })}
+        </div>
+
+        <NxSpin spinning={loading}>
+          <div className="nx-log__console">
+            <div className="nx-log__chrome" aria-hidden>
               <i />
               <i />
               <i />
             </div>
             <LogLines entries={filteredEntries} filtered={Boolean(levelFilter)} />
           </div>
-        </PageSpin>
+        </NxSpin>
       </div>
-    </PageRefresh>
+    </NxPull>
   );
 }

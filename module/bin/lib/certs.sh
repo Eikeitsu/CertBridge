@@ -101,7 +101,7 @@ install_addon_certs_into() {
       display=$(read_cert_meta_display "$addon_cert" "Reqable")
       install_one_addon "$addon_cert" "$dest" reqable "$display" || return 1
     else
-      log_msg "certs: reqable enabled but no app/source certificate found (skipped)"
+      log_warn "certs: reqable enabled but no app/source certificate found (skipped)"
     fi
   fi
   if is_enabled proxypin; then
@@ -109,7 +109,7 @@ install_addon_certs_into() {
       display=$(read_cert_meta_display "$addon_cert" "ProxyPin")
       install_one_addon "$addon_cert" "$dest" proxypin "$display" || return 1
     else
-      log_msg "certs: proxypin enabled but no certificate found (skipped)"
+      log_warn "certs: proxypin enabled but no certificate found (skipped)"
     fi
   fi
   for cert in "$CUSTOM_DIR"/*.*; do

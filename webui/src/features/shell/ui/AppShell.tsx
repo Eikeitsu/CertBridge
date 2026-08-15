@@ -19,6 +19,7 @@ import { CertsPage } from "@/features/certs";
 import { LogPage } from "@/features/log";
 import { SettingsPage } from "@/features/settings";
 import { AppSnackbar } from "@/shared/ui/AppSnackbar";
+import { ConfirmHost } from "@/shared/ui/ConfirmHost";
 import { AppTopbar } from "./AppTopbar";
 import { AppDock } from "./AppDock";
 
@@ -52,7 +53,7 @@ export function AppShell() {
   }, [activeTab]);
 
   return (
-    <div className={`app-shell pack-${themePack}`} data-shell-pack={themePack}>
+    <div className={`app-shell nx-shell pack-${themePack}`} data-shell-pack={themePack}>
       <div className={`cb-progress${isRefreshing ? " is-on" : ""}`} aria-hidden />
       <AppTopbar pack={themePack} pageTitle={pageTitle} deviceLabel={deviceLabel} />
       <main className="app-main">
@@ -82,6 +83,7 @@ export function AppShell() {
         </section>
       </main>
       <AppSnackbar />
+      <ConfirmHost />
       <AppDock activeTab={activeTab} onSwitch={switchTab} />
     </div>
   );

@@ -1,11 +1,14 @@
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
-import { selectStatusBootstrapped, selectStatusLoading } from "@/features/status/model/selectors";
+import {
+  selectStatusBootstrapped,
+  selectStatusLoading,
+} from "@/features/status/model/selectors";
 import { refreshStatus } from "@/features/status/model/statusSlice";
 import { selectThemePack } from "@/features/theme/model/selectors";
 import { useCertActions } from "@/features/certs/hooks/useCertActions";
 import { useCertDetail } from "@/features/certs/hooks/useCertDetail";
 import { getPackVoice } from "@/shared/config/packVoice";
-import { PageRefresh, PageSpin, SectionLabel } from "@/shared/ui";
+import { NxPull, NxSection, NxSpin } from "@/shared/ui";
 import { BuiltinCertsGroup } from "./BuiltinCertsGroup";
 import { CustomCertsGroup } from "./CustomCertsGroup";
 import { HotMountPanel } from "./HotMountPanel";
@@ -40,14 +43,15 @@ export function CertsPage() {
   } = useCertDetail();
 
   return (
-    <PageSpin spinning={showBootSpin} label={voice.loadingHint}>
-      <PageRefresh onRefresh={() => dispatch(refreshStatus(true)).unwrap()}>
-        <SectionLabel>{voice.certPermanent}</SectionLabel>
-        <BuiltinCertsGroup
-          pendingKind={pendingKind}
-          onOpenDetail={(id, name) => void openDetail(id, name)}
-          onToggle={(kind, checked) => void handleToggleBuiltin(kind, checked)}
-        />
+    <NxSpin spinning={showBootSpin} label={voice.loadingHint}>
+      <NxPull onRefresh={() => dispatch(refreshStatus(true)).unwrap()}>
+        <NxSection eyebrow="Permanent" title={voice.certPermanent}>
+          <BuiltinCertsGroup
+            pendingKind={pendingKind}
+            onOpenDetail={(id, name) => void openDetail(id, name)}
+            onToggle={(kind, checked) => void handleToggleBuiltin(kind, checked)}
+          />
+        </NxSection>
         <CustomCertsGroup
           onImport={(file) => void handleImportFile(file)}
           onOpenDetail={(id, name) => void openDetail(id, name)}
@@ -62,7 +66,7 @@ export function CertsPage() {
           onUnmount={handleHotUnmount}
         />
         <CertsTips />
-      </PageRefresh>
+      </NxPull>
       <CertDetailSheet
         open={isOpen}
         title={title}
@@ -71,6 +75,6 @@ export function CertsPage() {
         loading={isDetailLoading}
         onClose={closeDetail}
       />
-    </PageSpin>
+    </NxSpin>
   );
 }

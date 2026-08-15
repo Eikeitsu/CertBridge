@@ -1,6 +1,10 @@
 #!/system/bin/sh
 # 运行日志：YYYY-MM-DD HH:MM:SS [LEVEL] 内容
 # LEVEL: INFO | WARN | ERROR | DEBUG
+#
+# 推荐调用：
+#   log_info  / log_warn / log_error / log_debug  —— 显式等级（首选）
+#   log_msg [level] message…                   —— level 可省略，省略时按关键词推断（兼容旧调用）
 
 _cb_log_level() {
   case "$1" in
@@ -12,7 +16,7 @@ _cb_log_level() {
   esac
 }
 
-# 旧调用未显式传 level 时，按关键词推断，避免逐处改 80+ 调用点
+# 旧调用未显式传 level 时，按关键词推断，避免漏改调用点时等级全变 INFO
 _cb_log_infer() {
   case "$1" in
     *failed*|*Failed*|*refuse*|*invalid*|*timeout*|*missing*|*error*|*Error*|*cannot*|*unavailable*)
@@ -28,6 +32,17 @@ _cb_log_infer() {
   esac
 }
 
+_cb_log_write() {
+  lvl="$1"
+  shift
+  mkdir -p "$DATADIR" 2>/dev/null
+  if [ -f "$LOG_FILE" ]; then
+    size=$(wc -c <"$LOG_FILE" 2>/dev/null)
+    [ "${size:-0}" -gt 524288 ] && mv -f "$LOG_FILE" "$LOG_FILE.1" 2>/dev/null
+  fi
+  printf '%s\n' "[$(date '+%Y-%m-%d %H:%M:%S')] [$lvl] $*" >>"$LOG_FILE"
+}
+
 log_msg() {
   local lvl=""
   lvl=$(_cb_log_level "${1:-}") || true
@@ -36,11 +51,10 @@ log_msg() {
   else
     lvl=$(_cb_log_infer "${1:-}")
   fi
-
-  mkdir -p "$DATADIR" 2>/dev/null
-  if [ -f "$LOG_FILE" ]; then
-    size=$(wc -c <"$LOG_FILE" 2>/dev/null)
-    [ "${size:-0}" -gt 524288 ] && mv -f "$LOG_FILE" "$LOG_FILE.1" 2>/dev/null
-  fi
-  printf '%s\n' "[$(date '+%Y-%m-%d %H:%M:%S')] [$lvl] $*" >>"$LOG_FILE"
+  _cb_log_write "$lvl" "$@"
 }
+
+log_info() { _cb_log_write INFO "$@"; }
+log_warn() { _cb_log_write WARN "$@"; }
+log_error() { _cb_log_write ERROR "$@"; }
+log_debug() { _cb_log_write DEBUG "$@"; }

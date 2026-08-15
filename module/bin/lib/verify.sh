@@ -35,7 +35,7 @@ check_store_injected() {
   # 轻量 Magic：系统路径应能看到叠上去的 addon（Magic Mount / 管理器叠层）
   if is_magic_mount_mode; then
     if ! verify_magic_overlay_live; then
-      log_msg "verify: magic overlay missing under $SYSTEM_CACERTS"
+      log_error "verify: magic overlay missing under $SYSTEM_CACERTS"
       echo 0
       return 0
     fi

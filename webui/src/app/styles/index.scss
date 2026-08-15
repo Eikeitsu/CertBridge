@@ -1,5 +1,6 @@
 @use "./tokens";
-@use "./chrome";
+@use "./chrome/shell";
+@use "./nx/kit";
 @use "./transitions";
 @use "./packs/classic";
 @use "./packs/material";

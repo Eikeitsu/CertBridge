@@ -7,18 +7,15 @@
   --cb-inset-bottom: var(--window-inset-bottom, env(safe-area-inset-bottom, 0px));
   --cb-safe-top: var(--cb-inset-top);
   --cb-safe-bottom: var(--cb-inset-bottom);
-  --cb-dock-h: 58px;
-  --cb-topbar-h: 56px;
+  --cb-dock-h: 64px;
+  --cb-topbar-h: 58px;
   --cb-log-reserve: 208px;
   --cb-font-scale: 1;
   --cb-font-display:
-    "PingFang SC", "SF Pro Display", "HarmonyOS Sans SC", "Noto Sans SC",
-    "Microsoft YaHei", system-ui, sans-serif;
+    "SF Pro Display", "PingFang SC", "HarmonyOS Sans SC", "Segoe UI Variable", sans-serif;
   --cb-font-body:
-    "PingFang SC", "SF Pro Text", "HarmonyOS Sans SC", "Noto Sans SC", "Microsoft YaHei",
-    system-ui, sans-serif;
-  --cb-font-mono:
-    "Cascadia Code", "SF Mono", "JetBrains Mono", ui-monospace, consolas, monospace;
+    "SF Pro Text", "PingFang SC", "HarmonyOS Sans SC", "Segoe UI", sans-serif;
+  --cb-font-mono: "SF Mono", "Cascadia Code", "JetBrains Mono", ui-monospace, monospace;
   --cb-space-2xs: 4px;
   --cb-space-xs: 8px;
   --cb-space-sm: 12px;
@@ -26,117 +23,107 @@
   --cb-space-lg: 20px;
   --cb-space-xl: 24px;
   --cb-space-2xl: 32px;
-  --cb-radius: 12px;
+  --cb-radius: 14px;
   --cb-radius-sm: 10px;
-  --cb-radius-lg: 16px;
+  --cb-radius-lg: 20px;
   --cb-radius-pill: 999px;
-
-  /* 证书桥基调：印章青绿 + 铜印（非电弧青照搬）。
-     --cb-accent-pick / --cb-accent-pair 由 JS 写成 inline，是莫奈失效时的兜底 */
-  --cb-accent-pick: #0f5c5c;
-  --cb-accent-pair: #8b6914;
+  --cb-accent-pick: #07c160;
+  --cb-accent-pair: #576b95;
   --cb-primary: var(--cb-accent-pick);
   --cb-accent: var(--cb-accent-pair);
-  --cb-primary-soft: color-mix(in srgb, var(--cb-primary) 12%, transparent);
-  --cb-primary-container: color-mix(in srgb, var(--cb-primary) 11%, #fff);
-  --cb-hero-glow: color-mix(in srgb, var(--cb-primary) 10%, transparent);
-  --cb-ok: #1b7a4a;
-  --cb-warn: #a16207;
-  --cb-bad: #b42318;
+  --cb-primary-soft: color-mix(in srgb, var(--cb-primary) 14%, transparent);
+  --cb-primary-container: color-mix(in srgb, var(--cb-primary) 12%, #fff);
+  --cb-hero-glow: color-mix(in srgb, var(--cb-primary) 12%, transparent);
+  --cb-ok: #07c160;
+  --cb-warn: #fa9d3b;
+  --cb-bad: #fa5151;
   --cb-ok-soft: color-mix(in srgb, var(--cb-ok) 12%, transparent);
   --cb-warn-soft: color-mix(in srgb, var(--cb-warn) 12%, transparent);
   --cb-bad-soft: color-mix(in srgb, var(--cb-bad) 10%, transparent);
-  --cb-ink: #1a2332;
-  --cb-ink-2: #4a5568;
-  --cb-ink-3: #7a8699;
-  --cb-paper: #f2f1f6;
-  --cb-chrome: #f2f1f6;
-  --cb-surface: #fbfcfa;
-  --cb-surface-2: #f1f3ef;
-  --cb-stage: #fbfcfa;
+  --cb-ink: #1a1a1a;
+  --cb-ink-2: #666;
+  --cb-ink-3: #999;
+  --cb-paper: #ededed;
+  --cb-chrome: #ededed;
+  --cb-surface: #fff;
+  --cb-surface-2: #f7f7f7;
+  --cb-stage: #fff;
   --cb-panel: var(--cb-surface);
   --cb-row: transparent;
-  --cb-row-hover: color-mix(in srgb, var(--cb-ink) 4.5%, transparent);
-  --cb-stroke: rgba(26, 35, 50, 0.1);
-  --cb-stroke-strong: rgba(26, 35, 50, 0.16);
-  --cb-shadow: 0 1px 0 rgba(26, 35, 50, 0.04);
-  --cb-shadow-lg: 0 10px 28px rgba(26, 35, 50, 0.08);
+  --cb-row-hover: color-mix(in srgb, var(--cb-ink) 4%, transparent);
+  --cb-stroke: rgba(0, 0, 0, 0.08);
+  --cb-stroke-strong: rgba(0, 0, 0, 0.14);
+  --cb-shadow: none;
+  --cb-shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.14);
   --cb-topbar-bg: var(--cb-chrome);
   --cb-dock-bg: var(--cb-chrome);
-  --cb-body-gradient-a: color-mix(in srgb, var(--cb-primary) 8%, transparent);
-  --cb-body-gradient-b: color-mix(in srgb, var(--cb-accent) 5%, transparent);
+  --cb-body-gradient-a: transparent;
+  --cb-body-gradient-b: transparent;
   --cb-body-gradient-base: var(--cb-chrome);
-  --cb-body-gradient-tint: color-mix(in srgb, var(--cb-chrome) 92%, #d5ddd6);
+  --cb-body-gradient-tint: var(--cb-chrome);
   --cb-panel-blur: 0px;
-  --cb-panel-border: 1px;
-  --cb-ease: 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  --cb-panel-border: 0;
+  --cb-ease: 0.2s cubic-bezier(0.22, 1, 0.36, 1);
   --cb-ease-out: 0.16s cubic-bezier(0.33, 1, 0.68, 1);
   --cb-press-in: 0.08s cubic-bezier(0.4, 0, 1, 1);
-  --cb-press-out: 0.32s cubic-bezier(0.16, 1, 0.3, 1);
-  --cb-shadow-sm: 0 1px 2px rgba(26, 35, 50, 0.05);
-  --cb-shadow-md: 0 4px 16px rgba(26, 35, 50, 0.07);
+  --cb-press-out: 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  --cb-shadow-sm: none;
+  --cb-shadow-md: 0 4px 18px rgba(0, 0, 0, 0.06);
   --cb-elev-1: var(--cb-shadow-sm);
   --cb-elev-2: var(--cb-shadow-md);
   --cb-elev-3: var(--cb-shadow-lg);
   --cb-card: var(--cb-panel);
   --cb-card-blur: var(--cb-panel-blur);
   --cb-card-border-width: var(--cb-panel-border);
-  --cb-metrics-columns: 4;
-
-  /* 卡片表面与留白：三套主题只改这几个变量即可拉开差异 */
+  --cb-metrics-columns: 2;
   --cb-card-bg: var(--cb-panel);
-  --cb-card-border-color: var(--cb-stroke);
-  --cb-card-shadow: var(--cb-shadow);
+  --cb-card-border-color: transparent;
+  --cb-card-shadow: none;
   --cb-card-pad-x: 16px;
-  --cb-card-pad-t: 16px;
-  --cb-card-pad-b: 16px;
-  --cb-card-gap: 12px;
+  --cb-card-pad-t: 14px;
+  --cb-card-pad-b: 14px;
+  --cb-card-gap: 10px;
   --cb-card-radius: 12px;
-  --cb-card-rule: color-mix(in srgb, var(--cb-ink) 8%, transparent);
-  --cb-card-inset-bg: color-mix(in srgb, var(--cb-ink) 3.5%, transparent);
-  --cb-row-pad-y: 14px;
+  --cb-card-rule: rgba(0, 0, 0, 0.06);
+  --cb-card-inset-bg: #f7f7f7;
+  --cb-row-pad-y: 13px;
 }
 
 html[data-theme="dark"] {
-  --cb-ok: #3dd68c;
-  --cb-warn: #f0b429;
-  --cb-bad: #f97066;
-  --cb-ok-soft: color-mix(in srgb, var(--cb-ok) 14%, transparent);
-  --cb-warn-soft: color-mix(in srgb, var(--cb-warn) 14%, transparent);
-  --cb-bad-soft: color-mix(in srgb, var(--cb-bad) 14%, transparent);
-  --cb-ink: #f2f2f7;
-  --cb-ink-2: #aeaeb2;
-  --cb-ink-3: #8e8e93;
+  --cb-ok: #2ad87a;
+  --cb-warn: #ffb454;
+  --cb-bad: #ff6b6b;
+  --cb-ok-soft: color-mix(in srgb, var(--cb-ok) 16%, transparent);
+  --cb-warn-soft: color-mix(in srgb, var(--cb-warn) 16%, transparent);
+  --cb-bad-soft: color-mix(in srgb, var(--cb-bad) 16%, transparent);
+  --cb-ink: #f5f5f7;
+  --cb-ink-2: #a1a1a6;
+  --cb-ink-3: #6e6e73;
   --cb-paper: #000;
   --cb-chrome: #000;
   --cb-surface: #1c1c1e;
   --cb-surface-2: #2c2c2e;
   --cb-stage: #1c1c1e;
   --cb-panel: var(--cb-surface);
-  --cb-row-hover: color-mix(in srgb, #fff 8%, transparent);
-  --cb-stroke: rgba(84, 84, 88, 0.65);
-  --cb-stroke-strong: rgba(84, 84, 88, 0.8);
+  --cb-row-hover: color-mix(in srgb, #fff 7%, transparent);
+  --cb-stroke: rgba(255, 255, 255, 0.1);
+  --cb-stroke-strong: rgba(255, 255, 255, 0.16);
   --cb-shadow: none;
-  --cb-shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.45);
-  --cb-primary: color-mix(in srgb, var(--cb-accent-pick) 72%, #eafffb);
-  --cb-accent: color-mix(in srgb, var(--cb-accent-pair) 72%, #fff4d8);
-  --cb-primary-soft: color-mix(in srgb, var(--cb-primary) 16%, transparent);
+  --cb-shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5);
+  --cb-primary: color-mix(in srgb, var(--cb-accent-pick) 80%, #fff);
+  --cb-accent: color-mix(in srgb, var(--cb-accent-pair) 75%, #fff);
+  --cb-primary-soft: color-mix(in srgb, var(--cb-primary) 18%, transparent);
   --cb-primary-container: color-mix(in srgb, var(--cb-primary) 18%, #1c1c1e);
-  --cb-hero-glow: color-mix(in srgb, var(--cb-primary) 14%, transparent);
+  --cb-hero-glow: color-mix(in srgb, var(--cb-primary) 16%, transparent);
   --cb-topbar-bg: var(--cb-chrome);
   --cb-dock-bg: var(--cb-chrome);
   --cb-body-gradient-tint: #000;
   --cb-card: var(--cb-panel);
   --cb-card-bg: var(--cb-panel);
-  --cb-card-rule: rgba(84, 84, 88, 0.55);
+  --cb-card-rule: rgba(255, 255, 255, 0.08);
   --cb-card-inset-bg: #2c2c2e;
 }
 
-/*
- * 系统取色：宿主 colors.css 提供 md-sys 与 camelCase 两条通道，都取不到时回落到用户强调色。
- * 必须排在 data-theme 之后（同特异性靠顺序取胜），且只接管主色系——
- * 背景/表面留给三套主题自己的性格，宿主注错浅色 token 也不会把深色页洗白。
- */
 html[data-monet="1"] {
   --cb-primary: var(--md-sys-color-primary, var(--primary, var(--cb-accent-pick)));
   --cb-accent: var(
@@ -149,8 +136,8 @@ html[data-monet="1"] {
 }
 
 html[data-compact="1"] {
-  --cb-dock-h: 52px;
-  --cb-radius: 11px;
+  --cb-dock-h: 56px;
+  --cb-radius: 12px;
   --cb-radius-sm: 8px;
   --cb-space-md: 12px;
   --cb-space-lg: 16px;
@@ -194,14 +181,16 @@ body {
   overscroll-behavior: none;
 }
 
-/* 纯色底：微信 / iOS 设置式分组灰，不要网站光斑 */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: -2;
   pointer-events: none;
-  background-color: var(--cb-chrome);
+  background:
+    radial-gradient(120% 80% at 0% -10%, var(--cb-body-gradient-a), transparent 55%),
+    radial-gradient(90% 70% at 100% 0%, var(--cb-body-gradient-b), transparent 50%),
+    linear-gradient(180deg, var(--cb-body-gradient-tint), var(--cb-chrome));
 }
 
 body::after {

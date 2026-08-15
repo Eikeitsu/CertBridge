@@ -1,4 +1,5 @@
-import { Flag, FlagList, SheetSection } from "@/shared/ui";
+import type { ReactNode } from "react";
+import { NxChip } from "@/shared/ui";
 import { FlagTone, type BuiltinCertKind } from "@/entities/module/enums";
 import type { FormattedCertDetail } from "../lib/types";
 import { CertBrandIcon } from "./CertBrandIcon";
@@ -14,26 +15,50 @@ type CertDetailBodyProps = {
   brandKind?: BuiltinCertKind;
 };
 
+function DetailSection({
+  title,
+  extra,
+  children,
+}: {
+  title: string;
+  extra?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <section className="nx-detail-section">
+      <header className="nx-detail-section__head">
+        <h4>{title}</h4>
+        {extra}
+      </header>
+      {children}
+    </section>
+  );
+}
+
 export function CertDetailBody({ detail, brandKind }: CertDetailBodyProps) {
   return (
     <>
-      <header className="cb-sheet__hero">
+      <header className="nx-detail-hero">
         <div
-          className={`cb-sheet__hero-mark${brandKind ? " has-brand" : ""}`}
+          className={`nx-detail-hero__mark${brandKind ? " has-brand" : ""}`}
           aria-hidden
         >
-          {brandKind ? <CertBrandIcon kind={brandKind} className="is-hero" /> : null}
+          {brandKind ? (
+            <CertBrandIcon kind={brandKind} className="nx-brand-icon" />
+          ) : null}
         </div>
-        <div className="cb-sheet__hero-body">
-          <p className="cb-sheet__kicker">
+        <div className="nx-detail-hero__body">
+          <p className="nx-detail-hero__kicker">
             {detail.isCa ? "证书颁发机构" : "终端 / 其他证书"}
           </p>
           <h2>{detail.displayName}</h2>
-          {detail.filename ? <p className="cb-sheet__file">{detail.filename}</p> : null}
+          {detail.filename ? (
+            <p className="nx-detail-hero__file">{detail.filename}</p>
+          ) : null}
           {detail.flags.length ? (
-            <FlagList className="cb-sheet__flags">
+            <div className="nx-detail-hero__flags">
               {detail.flags.map((flag) => (
-                <Flag
+                <NxChip
                   key={flag}
                   tone={
                     flag === "已过期" || flag === "即将到期"
@@ -42,14 +67,14 @@ export function CertDetailBody({ detail, brandKind }: CertDetailBodyProps) {
                   }
                 >
                   {flag}
-                </Flag>
+                </NxChip>
               ))}
-            </FlagList>
+            </div>
           ) : null}
         </div>
       </header>
 
-      <SheetSection title="有效期">
+      <DetailSection title="有效期">
         <CertValidityStrip
           notBefore={detail.notBeforeLabel}
           notAfter={detail.notAfterLabel}
@@ -57,47 +82,49 @@ export function CertDetailBody({ detail, brandKind }: CertDetailBodyProps) {
           daysLeft={detail.daysLeft}
           progress={detail.validityProgress}
         />
-      </SheetSection>
+      </DetailSection>
 
       <CertDnBlock title="主体" dn={detail.subject} />
-      <SheetSection
+      <DetailSection
         title="颁发者"
-        extra={detail.isSelfSigned ? <p className="cb-sheet__self">自签发</p> : null}
+        extra={
+          detail.isSelfSigned ? <span className="nx-detail-self">自签发</span> : null
+        }
       >
         <CertDnBlock embedded dn={detail.issuer} />
-      </SheetSection>
+      </DetailSection>
 
       {detail.identity.length ? (
-        <SheetSection title="标识">
+        <DetailSection title="标识">
           <CertFieldGrid fields={detail.identity} />
-        </SheetSection>
+        </DetailSection>
       ) : null}
 
       {detail.crypto.length ? (
-        <SheetSection title="密码学">
+        <DetailSection title="密码学">
           <CertFieldGrid fields={detail.crypto} />
-        </SheetSection>
+        </DetailSection>
       ) : null}
 
       {detail.extensions.length ? (
-        <SheetSection title="扩展">
+        <DetailSection title="扩展">
           <CertFieldGrid fields={detail.extensions} />
-        </SheetSection>
+        </DetailSection>
       ) : null}
 
       {detail.fingerprints.length ? (
-        <SheetSection title="指纹">
+        <DetailSection title="指纹">
           <CertFingerprintList fields={detail.fingerprints} />
-        </SheetSection>
+        </DetailSection>
       ) : null}
 
       {detail.extras.length ? (
-        <SheetSection title="其他字段">
+        <DetailSection title="其他字段">
           <CertFieldGrid fields={detail.extras} />
-        </SheetSection>
+        </DetailSection>
       ) : null}
 
-      <p className="cb-sheet__copy-hint">点击任意字段即可复制到剪贴板</p>
+      <p className="nx-detail-hint">点击任意字段即可复制到剪贴板</p>
     </>
   );
 }

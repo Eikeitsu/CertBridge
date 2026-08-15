@@ -121,6 +121,42 @@ find_addon_cert() {
   return 1
 }
 
+# 生效快照里该 label 的证书文件是否仍在 generation
+find_applied_gen_cert() {
+  kind="$1"
+  [ -s "$APPLIED_MAP" ] || return 1
+  name=$(get_applied_name "$kind" 2>/dev/null)
+  [ -n "$name" ] || return 1
+  [ -f "$GEN_CERTS/$name" ] || return 1
+  echo "$GEN_CERTS/$name"
+}
+
+# 关断后 sources 被清空时，把仍在生效的证书拷回 sources，保证可立即重开
+ensure_source_from_applied() {
+  kind="$1"
+  case "$kind" in reqable|proxypin) ;; *) return 1 ;; esac
+  find_source_cert "$kind" >/dev/null 2>&1 && return 0
+  src=$(find_applied_gen_cert "$kind") || return 1
+  dest_dir="$SOURCES_DIR/$kind"
+  mkdir -p "$dest_dir" 2>/dev/null || return 1
+  name=$(basename "$src")
+  cp -f "$src" "$dest_dir/$name" 2>/dev/null || return 1
+  chmod 0644 "$dest_dir/$name" 2>/dev/null
+  display=$(get_applied_display "$kind" "$kind")
+  printf 'display_name=%s\n' "$display" >"$dest_dir/$name.meta"
+  chmod 0644 "$dest_dir/$name.meta" 2>/dev/null
+  echo "$dest_dir/$name"
+}
+
+# 是否允许开启：sources / builtin / 仍在生效 / generation 残留
+addon_can_enable() {
+  kind="$1"
+  find_addon_cert "$kind" 0 >/dev/null 2>&1 && return 0
+  is_addon_applied "$kind" && return 0
+  find_applied_gen_cert "$kind" >/dev/null 2>&1 && return 0
+  return 1
+}
+
 resolve_addon_file_for_label() {
   label="$1"
   case "$label" in

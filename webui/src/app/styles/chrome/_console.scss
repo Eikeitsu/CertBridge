@@ -1,4 +1,4 @@
-/* ── Log viewer：APP 控制台，固定高度内部滚动 ── */
+/* ── Log viewer：原生 APP 控制台，固定高度内部滚动 ── */
 
 .cb-log-page {
   display: flex;
@@ -13,6 +13,7 @@
   margin: 18px 0 6px;
 }
 
+/* 分段筛选：默认 iOS segmented；各 pack 可覆写 */
 .cb-log-filter {
   display: flex;
   gap: 0;
@@ -42,6 +43,8 @@
   font-size: 0.75rem;
   line-height: 1.2;
   font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
   white-space: nowrap;
   color: var(--cb-ink-2);
   background: transparent;
@@ -97,6 +100,7 @@
   background: var(--cb-ink-3);
 }
 
+/* 深色代码块日志视口 */
 .cb-log-view {
   position: relative;
   border-radius: var(--cb-card-radius);
@@ -117,20 +121,54 @@
   overscroll-behavior: contain;
 }
 
+/* sticky 三圆点装饰条（classic / fluid）；material pack 可隐藏 */
 .cb-log-view__chrome {
-  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px;
+  background: linear-gradient(180deg, #1a1f26 0%, #151a20 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+
+  i {
+    display: block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #3d4450;
+
+    &:nth-child(1) {
+      background: #ff5f57;
+    }
+
+    &:nth-child(2) {
+      background: #febc2e;
+    }
+
+    &:nth-child(3) {
+      background: #28c840;
+    }
+  }
 }
 
 .cb-log-lines {
-  padding: 14px 14px 18px;
+  padding: 12px 14px 20px;
   font-family: var(--cb-font-mono);
-  font-size: 0.72rem;
-  line-height: 1.55;
+  font-size: 0.74rem;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+  font-variant-ligatures: none;
+  tab-size: 2;
 }
 
 .cb-log-line {
   display: block;
-  padding: 4px 0;
+  padding: 3px 0;
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -141,7 +179,8 @@
   margin-right: 8px;
   font-size: 0.66rem;
   font-weight: 700;
-  letter-spacing: 0;
+  letter-spacing: 0.02em;
+  text-transform: none;
   opacity: 0.9;
   vertical-align: top;
 }
@@ -172,4 +211,5 @@
   color: #8b95a5;
   font-size: 0.84rem;
   text-align: center;
+  font-family: var(--cb-font-sans, inherit);
 }

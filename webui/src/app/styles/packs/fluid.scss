@@ -1,6 +1,6 @@
 @use "../mixins" as m;
 
-/* 虹桥 — 小红书 / Apple Music：大圆角、玻璃、指标嵌进 Hero */
+/* 虹桥 — 小红书 / Apple Music：青绿纸感、玻璃卡、圆标、桥面拼接 */
 html[data-pack="fluid"] {
   --cb-radius: 24px;
   --cb-radius-sm: 16px;
@@ -15,17 +15,15 @@ html[data-pack="fluid"] {
   --cb-panel: var(--cb-surface);
   --cb-stroke: color-mix(in srgb, #fff 55%, rgba(15, 92, 92, 0.12));
   --cb-stroke-strong: color-mix(in srgb, var(--cb-primary) 22%, transparent);
-  --cb-shadow: 0 8px 24px color-mix(in srgb, var(--cb-primary) 8%, transparent);
-  --cb-shadow-lg: 0 12px 32px color-mix(in srgb, var(--cb-primary) 10%, transparent);
-  --cb-panel-blur: 20px;
+  --cb-shadow: 0 6px 20px color-mix(in srgb, var(--cb-primary) 6%, rgba(15, 40, 40, 0.04));
+  --cb-shadow-lg: 0 10px 28px color-mix(in srgb, var(--cb-primary) 8%, rgba(15, 40, 40, 0.06));
+  --cb-panel-blur: 18px;
   --cb-panel-border: 1px;
-  --cb-body-gradient-a: color-mix(in srgb, var(--cb-primary) 22%, transparent);
-  --cb-body-gradient-b: color-mix(in srgb, var(--cb-accent) 12%, transparent);
-  --cb-body-gradient-tint: color-mix(in srgb, var(--cb-chrome) 85%, #b8d8d4);
+  --cb-body-gradient-a: transparent;
+  --cb-body-gradient-b: transparent;
+  --cb-body-gradient-tint: #e8f0ee;
   --cb-topbar-bg: color-mix(in srgb, var(--cb-chrome) 70%, transparent);
   --cb-metrics-columns: 4;
-
-  /* 玻璃层：深色下整套换掉，避免白到发光 */
   --cb-glass-hi: color-mix(in srgb, #fff 85%, transparent);
   --cb-glass-a: color-mix(in srgb, #fff 82%, transparent);
   --cb-glass-b: color-mix(in srgb, #fff 68%, transparent);
@@ -52,6 +50,7 @@ html[data-pack="fluid"] {
       font-size: 1.12rem;
       font-weight: 750;
       letter-spacing: -0.03em;
+      text-transform: none;
     }
 
     .app-topbar__kicker {
@@ -64,7 +63,7 @@ html[data-pack="fluid"] {
       border-radius: 50%;
       background: color-mix(in srgb, var(--cb-primary) 16%, transparent);
       box-shadow:
-        0 6px 16px color-mix(in srgb, var(--cb-primary) 20%, transparent),
+        0 4px 12px color-mix(in srgb, var(--cb-primary) 14%, transparent),
         inset 0 0 0 1px color-mix(in srgb, #fff 40%, transparent);
 
       img {
@@ -78,12 +77,14 @@ html[data-pack="fluid"] {
       background: color-mix(in srgb, #fff 55%, transparent);
       border: 1px solid color-mix(in srgb, #fff 70%, transparent);
       backdrop-filter: blur(8px);
+      text-transform: none;
     }
   }
 
   .cb-brand-mark {
     border-radius: 50%;
-    box-shadow: 0 8px 20px color-mix(in srgb, var(--cb-primary) 18%, transparent);
+    overflow: hidden;
+    box-shadow: 0 6px 16px color-mix(in srgb, var(--cb-primary) 14%, transparent);
 
     img {
       transform: scale(1.32);
@@ -112,11 +113,12 @@ html[data-pack="fluid"] {
     color: var(--cb-ink-2);
   }
 
-  /* 卡片：玻璃 + 顶部高光 + 右上角光斑 */
+  /* 玻璃卡：轻模糊 + 顶部高光，无网站渐变底纹 */
   @include m.card-surfaces {
     border: 1px solid var(--cb-stroke);
-    -webkit-backdrop-filter: blur(var(--cb-panel-blur)) saturate(1.2);
-    backdrop-filter: blur(var(--cb-panel-blur)) saturate(1.2);
+    background: var(--cb-card-bg);
+    -webkit-backdrop-filter: blur(var(--cb-panel-blur)) saturate(1.15);
+    backdrop-filter: blur(var(--cb-panel-blur)) saturate(1.15);
     box-shadow: var(--cb-shadow);
 
     &::before {
@@ -144,7 +146,6 @@ html[data-pack="fluid"] {
     padding-top: 12px;
   }
 
-  /* 标题前的通路点 */
   .adm-card-header-title {
     display: flex;
     align-items: center;
@@ -152,6 +153,7 @@ html[data-pack="fluid"] {
     font-size: 0.98rem;
     font-weight: 700;
     letter-spacing: -0.02em;
+    text-transform: none;
 
     &::before {
       content: "";
@@ -168,24 +170,25 @@ html[data-pack="fluid"] {
     font-size: 0.96rem;
     font-weight: 700;
     letter-spacing: -0.02em;
+    text-transform: none;
   }
 
   .adm-list-item-content {
     border-top-color: color-mix(in srgb, #fff 60%, var(--cb-card-rule));
   }
 
-  /* 状态台：与指标条拼成一段桥面 */
+  /* 状态台：与指标条拼成桥面 */
   .cb-stage {
     border: 1px solid var(--cb-stroke);
     border-radius: var(--cb-radius-lg);
     background: linear-gradient(
       145deg,
       var(--cb-glass-a),
-      color-mix(in srgb, var(--cb-primary) 12%, transparent) 55%,
-      color-mix(in srgb, var(--cb-accent) 8%, transparent)
+      color-mix(in srgb, var(--cb-primary) 10%, transparent) 55%,
+      color-mix(in srgb, var(--cb-accent) 6%, transparent)
     );
-    -webkit-backdrop-filter: blur(var(--cb-panel-blur)) saturate(1.25);
-    backdrop-filter: blur(var(--cb-panel-blur)) saturate(1.25);
+    -webkit-backdrop-filter: blur(var(--cb-panel-blur)) saturate(1.2);
+    backdrop-filter: blur(var(--cb-panel-blur)) saturate(1.2);
     box-shadow: var(--cb-shadow);
     padding: 22px 18px 14px;
     margin-bottom: 0;
@@ -194,7 +197,7 @@ html[data-pack="fluid"] {
   }
 
   .cb-stage__glow {
-    opacity: 1;
+    opacity: 0.55;
   }
 
   .cb-stage__hero-num {
@@ -213,6 +216,11 @@ html[data-pack="fluid"] {
     font-size: 1.68rem;
     font-weight: 750;
     letter-spacing: -0.04em;
+    text-transform: none;
+  }
+
+  .cb-stage::after {
+    display: none;
   }
 
   .cb-bridge-stack .cb-metrics {
@@ -223,13 +231,12 @@ html[data-pack="fluid"] {
     border-top: 0;
     border-radius: 0 0 var(--cb-radius-lg) var(--cb-radius-lg);
     background: var(--cb-glass-b);
-    -webkit-backdrop-filter: blur(16px);
-    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
     box-shadow: var(--cb-shadow);
     padding: 8px 8px 12px;
     gap: 4px;
 
-    /* 桥面接缝 */
     &::before {
       content: "";
       position: absolute;
@@ -238,7 +245,7 @@ html[data-pack="fluid"] {
       background: linear-gradient(
         90deg,
         transparent,
-        color-mix(in srgb, var(--cb-primary) 24%, transparent),
+        color-mix(in srgb, var(--cb-primary) 20%, transparent),
         transparent
       );
     }
@@ -261,6 +268,7 @@ html[data-pack="fluid"] {
       margin-top: 4px;
       font-size: 0.68rem;
       font-weight: 600;
+      text-transform: none;
     }
   }
 
@@ -275,6 +283,12 @@ html[data-pack="fluid"] {
     .adm-tab-bar-item-active {
       color: var(--cb-primary);
       font-weight: 750;
+      background: transparent;
+
+      /* 无发光指示条 */
+      &::after {
+        display: none;
+      }
 
       .adm-tab-bar-item-icon {
         transform: scale(1.06);
@@ -285,6 +299,7 @@ html[data-pack="fluid"] {
   .cb-snack {
     border-radius: 999px;
     padding-inline: 22px;
+    box-shadow: var(--cb-shadow);
   }
 
   .adm-dialog {
@@ -295,8 +310,8 @@ html[data-pack="fluid"] {
     border: 1px solid color-mix(in srgb, #fff 55%, var(--cb-stroke));
     border-radius: 28px;
     background: var(--cb-glass-a);
-    -webkit-backdrop-filter: blur(24px) saturate(1.4);
-    backdrop-filter: blur(24px) saturate(1.4);
+    -webkit-backdrop-filter: blur(24px) saturate(1.3);
+    backdrop-filter: blur(24px) saturate(1.3);
     box-shadow: var(--cb-shadow-lg);
   }
 
@@ -304,11 +319,11 @@ html[data-pack="fluid"] {
     border-radius: 28px;
     border: 1px solid color-mix(in srgb, #fff 70%, var(--cb-stroke-strong));
     background: var(--cb-glass-b);
-    -webkit-backdrop-filter: blur(32px) saturate(1.5);
-    backdrop-filter: blur(32px) saturate(1.5);
+    -webkit-backdrop-filter: blur(28px) saturate(1.4);
+    backdrop-filter: blur(28px) saturate(1.4);
   }
 
-  /* 日志：玻璃胶囊 */
+  /* 日志：玻璃胶囊分段 */
   .cb-log-filter {
     gap: 6px;
     padding: 3px;
@@ -322,21 +337,26 @@ html[data-pack="fluid"] {
     border-radius: 999px;
     padding: 7px 6px;
     font-size: 0.72rem;
+    text-transform: none;
   }
 
   .cb-log-filter__seg.active {
     background: color-mix(in srgb, #fff 72%, transparent);
     color: var(--cb-primary);
     font-weight: 700;
-    box-shadow: 0 4px 14px color-mix(in srgb, var(--cb-primary) 12%, transparent);
+    box-shadow: 0 3px 10px color-mix(in srgb, var(--cb-primary) 10%, transparent);
   }
 
   .cb-log-view {
     border-radius: var(--cb-radius-lg);
     background: color-mix(in srgb, #061010 78%, transparent);
-    border-color: color-mix(in srgb, var(--cb-primary) 18%, transparent);
+    border: 1px solid color-mix(in srgb, var(--cb-primary) 14%, transparent);
     -webkit-backdrop-filter: blur(12px);
     backdrop-filter: blur(12px);
+  }
+
+  .cb-log-view__chrome {
+    display: flex;
   }
 
   .cb-sheet__close {
@@ -344,11 +364,6 @@ html[data-pack="fluid"] {
     box-shadow: inset 0 0 0 1px color-mix(in srgb, #fff 40%, transparent);
   }
 
-  .cb-stage::after {
-    display: none;
-  }
-
-  /* 证书详情：虹桥玻璃抽屉 */
   .cb-sheet__hero {
     border-radius: var(--cb-radius-lg);
     background: linear-gradient(
@@ -363,6 +378,7 @@ html[data-pack="fluid"] {
 
   .cb-sheet__hero-mark {
     border-radius: 50%;
+    overflow: hidden;
     border-color: color-mix(in srgb, var(--cb-primary) 35%, transparent);
     box-shadow: 0 0 0 4px color-mix(in srgb, var(--cb-primary) 10%, transparent);
   }
@@ -370,8 +386,8 @@ html[data-pack="fluid"] {
   .cb-sheet__section {
     border-radius: var(--cb-radius-lg);
     background: var(--cb-glass-b);
-    -webkit-backdrop-filter: blur(16px);
-    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
     box-shadow: var(--cb-shadow);
   }
 
@@ -392,10 +408,7 @@ html[data-pack="fluid"] {
     -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
     border-color: color-mix(in srgb, #fff 40%, transparent);
-  }
-
-  .adm-tab-bar-item-active::after {
-    display: none;
+    text-transform: none;
   }
 
   .cb-runtime {
@@ -403,6 +416,7 @@ html[data-pack="fluid"] {
     flex-wrap: wrap;
     gap: 8px;
     padding: 12px;
+    background: transparent;
   }
 
   .cb-runtime__item {
@@ -419,6 +433,7 @@ html[data-pack="fluid"] {
     span {
       color: var(--cb-primary);
       letter-spacing: 0;
+      text-transform: none;
       font-size: 0.7rem;
     }
 
@@ -442,12 +457,16 @@ html[data-theme="dark"][data-pack="fluid"] {
   --cb-topbar-bg: color-mix(in srgb, var(--cb-chrome) 72%, transparent);
   --cb-dock-bg: var(--cb-chrome);
   --cb-stroke: rgba(180, 220, 210, 0.12);
+  --cb-body-gradient-a: transparent;
+  --cb-body-gradient-b: transparent;
   --cb-body-gradient-tint: #0c1817;
   --cb-glass-hi: color-mix(in srgb, #fff 16%, transparent);
   --cb-glass-a: color-mix(in srgb, #1b2a29 82%, transparent);
   --cb-glass-b: color-mix(in srgb, #15201f 72%, transparent);
   --cb-glass-c: color-mix(in srgb, #fff 6%, transparent);
   --cb-card-bg: color-mix(in srgb, #15201f 74%, transparent);
+  --cb-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  --cb-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.36);
 
   .cb-sheet__close {
     background: color-mix(in srgb, #fff 10%, transparent);

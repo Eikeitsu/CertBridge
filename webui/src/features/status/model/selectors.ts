@@ -7,6 +7,8 @@ export const selectCustomCertificates = (state: RootState) =>
 
 export const selectStatusLoading = (state: RootState) => state.status.loading;
 
+export const selectStatusBootstrapped = (state: RootState) => state.status.bootstrapped;
+
 export const selectStatusRefreshing = (state: RootState) => state.status.refreshing;
 
 export const selectHasModuleStatus = (state: RootState) =>

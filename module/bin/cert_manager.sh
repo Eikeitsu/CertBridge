@@ -110,14 +110,17 @@ cmd_toggle() {
   case "$name" in reqable|proxypin) ;; *) echo "error=invalid_toggle"; return 1 ;; esac
   [ "$value" = "1" ] || [ "$value" = "0" ] || { echo "error=invalid_value"; return 1; }
   if [ "$value" = "1" ]; then
-    # 开启时尽量从 App 刷新；无来源则拒绝开启（ProxyPin 可用 builtin）
-    # 刚关闭、证书仍在生效时允许重新打开，不必再从 App 抓一份
+    # 开启：尽量从 App 刷新；关断后 sources 空时从 generation 回填；仍无来源才拒绝
     sync_source_from_app "$name" >/dev/null 2>&1 || true
-    if ! find_addon_cert "$name" 0 >/dev/null 2>&1 && ! is_addon_applied "$name"; then
+    ensure_source_from_applied "$name" >/dev/null 2>&1 || true
+    if ! addon_can_enable "$name"; then
       echo "error=certificate_unavailable"
       echo "hint=请先在对应 App 中生成根证书，或使用自定义导入"
       return 1
     fi
+  else
+    # 关闭：保留 sources；若本就没有 sources，趁 generation 还在先回填一份，方便立刻重开
+    ensure_source_from_applied "$name" >/dev/null 2>&1 || true
   fi
   acquire_write_lock || { echo "error=busy"; return 1; }
   write_conf "$name" "$value" || { release_write_lock; echo "error=write_failed"; return 1; }
@@ -131,8 +134,15 @@ cmd_toggle() {
   else
     log_msg "config: $name=$value (matches applied, pending cleared)"
   fi
-  refresh_module_description >/dev/null 2>&1
+  refresh_module_description_light >/dev/null 2>&1
   echo "ok=1"
+  echo "${name}_enabled=$value"
+  if addon_can_enable "$name"; then
+    echo "${name}_available=1"
+  else
+    echo "${name}_available=0"
+  fi
+  echo "pending_reboot=$([ -f "$PENDING_FILE" ] && echo 1 || echo 0)"
   echo "$pending_line"
 }
 
@@ -143,9 +153,9 @@ cmd_sync_apps() {
   if [ "${updated:-0}" -gt 0 ] 2>/dev/null; then
     pending_line=$(update_reboot_required_flag)
     echo "$pending_line"
-    refresh_module_description >/dev/null 2>&1
+    refresh_module_description_light >/dev/null 2>&1
   else
-    refresh_module_description >/dev/null 2>&1
+    refresh_module_description_light >/dev/null 2>&1
   fi
 }
 
@@ -235,10 +245,11 @@ cmd_install_custom() {
   else
     log_msg "custom: installed $name ($display, matches applied)"
   fi
-  refresh_module_description >/dev/null 2>&1
+  refresh_module_description_light >/dev/null 2>&1
   echo "ok=1"
   echo "filename=$name"
   echo "display_name=$display"
+  echo "pending_reboot=$([ -f "$PENDING_FILE" ] && echo 1 || echo 0)"
   echo "$pending_line"
 }
 
@@ -266,8 +277,9 @@ cmd_remove_custom() {
   else
     log_msg "custom: removed $filename (matches applied, pending cleared)"
   fi
-  refresh_module_description >/dev/null 2>&1
+  refresh_module_description_light >/dev/null 2>&1
   echo "ok=1"
+  echo "pending_reboot=$([ -f "$PENDING_FILE" ] && echo 1 || echo 0)"
   echo "$pending_line"
 }
 
@@ -316,9 +328,10 @@ cmd_set_mount_mode() {
   else
     log_msg "config: mount_mode=$mode (matches applied, pending cleared)"
   fi
-  refresh_module_description >/dev/null 2>&1
+  refresh_module_description_light >/dev/null 2>&1
   echo "ok=1"
   echo "mount_mode=$mode"
+  echo "pending_reboot=$([ -f "$PENDING_FILE" ] && echo 1 || echo 0)"
   echo "$pending_line"
 }
 
@@ -338,9 +351,10 @@ cmd_set_tmpfs_style() {
   else
     log_msg "config: tmpfs_style=$style (matches applied, pending cleared)"
   fi
-  refresh_module_description >/dev/null 2>&1
+  refresh_module_description_light >/dev/null 2>&1
   echo "ok=1"
   echo "tmpfs_style=$style"
+  echo "pending_reboot=$([ -f "$PENDING_FILE" ] && echo 1 || echo 0)"
   echo "$pending_line"
 }
 
@@ -363,9 +377,10 @@ cmd_set_hot_allow() {
     fi
   fi
   log_msg "config: hot_allow=$val"
-  refresh_module_description >/dev/null 2>&1
+  refresh_module_description_light >/dev/null 2>&1
   echo "ok=1"
   echo "hot_allow=$val"
+  echo "pending_reboot=$([ -f "$PENDING_FILE" ] && echo 1 || echo 0)"
 }
 
 cmd_hot_mount() {

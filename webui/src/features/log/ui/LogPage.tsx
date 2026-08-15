@@ -65,6 +65,11 @@ export function LogPage() {
         <LogFilter value={levelFilter} onChange={setLevelFilter} />
         <PageSpin spinning={loading}>
           <div className="cb-log-view">
+            <div className="cb-log-view__chrome" aria-hidden>
+              <i />
+              <i />
+              <i />
+            </div>
             <LogLines entries={filteredEntries} filtered={Boolean(levelFilter)} />
           </div>
         </PageSpin>

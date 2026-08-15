@@ -462,6 +462,40 @@ refresh_module_description() {
   echo "$tag"
 }
 
+# WebUI 写配置热路径：只写短标签，不做注入核验 / generation 全量扫描
+refresh_module_description_light() {
+  if [ -f "$MODDIR/disable" ]; then
+    tag="⛔已禁用"
+  elif hot_session_recorded 2>/dev/null; then
+    tag="🔥热挂载"
+  elif [ -f "$PENDING_FILE" ]; then
+    tag="⏳待重启"
+  else
+    tag="✨已更新"
+  fi
+  # 复用 update_module_description 需要 compute 结果；直接写 pending 友好短签
+  prop="$MODDIR/module.prop"
+  [ -f "$prop" ] || {
+    echo "$tag"
+    return 0
+  }
+  desc=$(compose_module_prop_description_light "$tag" 2>/dev/null || echo "$tag")
+  tmp="$prop.tmp.$$"
+  awk -F= -v desc="$desc" '
+    BEGIN { done=0 }
+    $1 == "description" { print "description=" desc; done=1; next }
+    { print }
+    END { if (!done) print "description=" desc }
+  ' "$prop" >"$tmp" && mv -f "$tmp" "$prop"
+  chmod 0644 "$prop" 2>/dev/null
+  echo "$tag"
+}
+
+compose_module_prop_description_light() {
+  tag="$1"
+  echo "[${tag}] 配置已保存；完整状态以下次刷新 / 重启为准"
+}
+
 # 开机脚本在注入完成后调用：实测一次并落盘
 finalize_runtime_status() {
   phase="$1"

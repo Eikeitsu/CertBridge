@@ -1,6 +1,6 @@
 @use "../mixins" as m;
 
-/* 印记 — 微信 / iOS 设置：分组灰底、白卡片、细分割、紧凑顶栏 */
+/* 印记 — 微信 / iOS Settings：分组灰底、白 inset 列表、0.5px 发丝线 */
 html[data-pack="classic"] {
   --cb-radius: 10px;
   --cb-radius-sm: 8px;
@@ -18,6 +18,7 @@ html[data-pack="classic"] {
   --cb-panel-border: 0;
   --cb-body-gradient-a: transparent;
   --cb-body-gradient-b: transparent;
+  --cb-body-gradient-tint: #f2f1f6;
   --cb-metrics-columns: 4;
   --cb-card-pad-x: 16px;
   --cb-card-pad-t: 14px;
@@ -37,6 +38,7 @@ html[data-pack="classic"] {
       font-size: 1.06rem;
       font-weight: 650;
       letter-spacing: 0;
+      text-transform: none;
     }
 
     .app-topbar__mark {
@@ -46,12 +48,18 @@ html[data-pack="classic"] {
       box-shadow: none;
     }
 
+    .app-topbar__kicker {
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
     .device-chip {
       border-radius: var(--cb-radius-pill);
       background: color-mix(in srgb, var(--cb-ink) 6%, transparent);
       border: 0;
       font-size: 0.72rem;
       letter-spacing: 0;
+      text-transform: none;
     }
   }
 
@@ -64,12 +72,14 @@ html[data-pack="classic"] {
     font-size: 0.81rem;
     font-weight: 500;
     letter-spacing: 0;
+    text-transform: none;
     color: var(--cb-ink-3);
   }
 
   @include m.card-surfaces {
     border: 0;
     box-shadow: none;
+    background: var(--cb-surface);
   }
 
   .adm-card-header {
@@ -81,6 +91,7 @@ html[data-pack="classic"] {
     font-size: 1rem;
     font-weight: 650;
     letter-spacing: 0;
+    text-transform: none;
   }
 
   .adm-card-header + .adm-card-body {
@@ -91,12 +102,18 @@ html[data-pack="classic"] {
     font-size: 0.93rem;
     font-weight: 700;
     letter-spacing: 0;
+    text-transform: none;
   }
 
-  /* 状态台：微信式白卡片，无装饰条 */
+  .adm-list-item-content {
+    border-top: 0.5px solid var(--cb-stroke);
+  }
+
+  /* 状态台：干净白卡，无装饰条 / 虚线账本 */
   .cb-stage {
     border: 0;
     border-radius: var(--cb-radius);
+    background: #fff;
     box-shadow: none;
     padding: 16px;
   }
@@ -107,6 +124,7 @@ html[data-pack="classic"] {
 
   .cb-stage__kicker {
     letter-spacing: 0;
+    text-transform: none;
     font-size: 0.75rem;
   }
 
@@ -114,13 +132,19 @@ html[data-pack="classic"] {
     font-size: 1.52rem;
     font-weight: 720;
     letter-spacing: -0.02em;
+    text-transform: none;
   }
 
   .cb-stage__hero-num {
     display: none;
   }
 
-  /* 指标：一整条账目表，内部竖线分栏 */
+  .cb-stage__foot {
+    border-top: 0.5px solid var(--cb-card-rule);
+    border-top-style: solid;
+  }
+
+  /* 指标：整条白底，内部竖线分栏 */
   .cb-metrics {
     gap: 0;
     padding: 0;
@@ -132,6 +156,7 @@ html[data-pack="classic"] {
   }
 
   .cb-metric {
+    position: relative;
     padding: 15px 6px 13px;
     border: 0;
     border-radius: 0;
@@ -155,39 +180,70 @@ html[data-pack="classic"] {
     .value {
       font-size: 1.28rem;
       font-weight: 700;
+      letter-spacing: -0.02em;
     }
 
     .label {
       margin-top: 4px;
       font-size: 0.66rem;
       letter-spacing: 0;
+      text-transform: none;
     }
+  }
+
+  .app-dock {
+    border-top: 0.5px solid var(--cb-stroke);
   }
 
   .adm-tab-bar-item-active {
     color: var(--cb-primary);
     font-weight: 650;
+
+    &::after {
+      display: none;
+    }
   }
 
   .cb-snack {
     border-radius: 8px;
     letter-spacing: 0;
+    text-transform: none;
     box-shadow: none;
   }
 
+  /* iOS 风格对话框 */
   .adm-dialog {
-    --adm-center-popup-border-radius: 8px;
+    --adm-center-popup-border-radius: 14px;
   }
 
   .adm-dialog .adm-center-popup-body {
-    border: 1px solid var(--cb-stroke);
-    border-radius: 8px;
-    box-shadow: none;
+    border: 0;
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--cb-surface) 92%, transparent);
+    -webkit-backdrop-filter: blur(40px) saturate(1.8);
+    backdrop-filter: blur(40px) saturate(1.8);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.18);
+    overflow: hidden;
   }
 
   .adm-dialog-title {
     font-size: 1.06rem;
+    font-weight: 650;
     letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .adm-dialog-content {
+    font-size: 0.88rem;
+    color: var(--cb-ink-2);
+  }
+
+  .adm-dialog-footer .adm-dialog-action-row {
+    border-top: 0.5px solid var(--cb-stroke);
+  }
+
+  .adm-dialog-footer .adm-dialog-action-row > .adm-dialog-button {
+    border-right: 0.5px solid var(--cb-stroke);
   }
 
   .cb-flag {
@@ -197,21 +253,18 @@ html[data-pack="classic"] {
     text-transform: none;
   }
 
-  .cb-stage__foot {
-    border-top-style: solid;
-  }
-
+  /* iOS segmented control */
   .cb-log-filter {
     gap: 0;
     padding: 2px;
     border: 0;
-    border-radius: 8px;
+    border-radius: 9px;
     background: color-mix(in srgb, var(--cb-ink) 6%, transparent);
   }
 
   .cb-log-filter__seg {
     flex: 1 1 0;
-    border-radius: 6px;
+    border-radius: 7px;
     padding: 7px 4px;
     font-size: 0.72rem;
     letter-spacing: 0;
@@ -227,11 +280,15 @@ html[data-pack="classic"] {
 
   .cb-log-view {
     border-radius: 10px;
-    border-style: solid;
+    border: 0;
+  }
+
+  .cb-log-view__chrome {
+    display: flex;
   }
 
   .cb-log-view__chrome i {
-    border-radius: 1px;
+    border-radius: 50%;
   }
 
   .cb-sheet__close {
@@ -240,17 +297,26 @@ html[data-pack="classic"] {
 
   .cb-sheet__bar-title {
     letter-spacing: 0;
+    text-transform: none;
   }
 
   .cb-sheet__hero {
     border-radius: 10px;
     box-shadow: none;
-    border-style: solid;
+    border: 0.5px solid var(--cb-stroke);
+    background: var(--cb-surface);
   }
 
   .cb-sheet__hero-mark {
     border-radius: 4px;
     box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--cb-primary) 18%, transparent);
+  }
+
+  .cb-sheet__section {
+    border: 0;
+    border-radius: 10px;
+    background: var(--cb-surface);
+    box-shadow: none;
   }
 
   .cb-sheet__section h4::before {
@@ -269,9 +335,10 @@ html[data-pack="classic"] {
 
   .cb-runtime {
     gap: 0;
-    padding: 4px 0;
+    padding: 0;
     border: 0;
     border-radius: var(--cb-radius);
+    background: var(--cb-surface);
     overflow: hidden;
   }
 
@@ -314,4 +381,14 @@ html[data-theme="dark"][data-pack="classic"] {
   --cb-topbar-bg: var(--cb-chrome);
   --cb-dock-bg: var(--cb-chrome);
   --cb-card-inset-bg: #2c2c2e;
+  --cb-stroke: rgba(84, 84, 88, 0.65);
+  --cb-body-gradient-tint: #000;
+
+  .cb-stage {
+    background: #1c1c1e;
+  }
+
+  .adm-dialog .adm-center-popup-body {
+    background: color-mix(in srgb, #2c2c2e 92%, transparent);
+  }
 }

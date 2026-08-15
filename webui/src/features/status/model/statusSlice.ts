@@ -11,10 +11,12 @@ import { toast } from "@/shared/api/ksu";
 import type { CustomCertificate, ModuleStatus } from "@/entities/module/types";
 import { restoreChromeInsets } from "@/features/theme/lib/chrome";
 import { formatClockTime } from "@/shared/lib/clock";
+import { FLAG_ON } from "@/shared/config/constants";
 
 type StatusState = {
   loading: boolean;
   refreshing: boolean;
+  bootstrapped: boolean;
   status: ModuleStatus;
   customCertificates: CustomCertificate[];
   deviceLabel: string;
@@ -41,9 +43,24 @@ function resolveRefreshArg(arg: RefreshStatusArg) {
   return { toast: false, syncApps: true };
 }
 
+/** CLI 回包里的 reboot_required → pending_reboot，并过滤非状态键 */
+export function normalizeCliStatusPatch(kv: Record<string, string>): Record<string, string> {
+  const patch: Record<string, string> = {};
+  for (const [key, value] of Object.entries(kv)) {
+    if (!key || key === "ok" || key === "error" || key === "hint" || key === "filename") continue;
+    if (key === "reboot_required") {
+      patch.pending_reboot = value === FLAG_ON || value === "1" ? "1" : "0";
+      continue;
+    }
+    patch[key] = value;
+  }
+  return patch;
+}
+
 const initialState: StatusState = {
   loading: true,
   refreshing: false,
+  bootstrapped: false,
   status: {},
   customCertificates: [],
   deviceLabel: "本机",
@@ -112,6 +129,11 @@ const statusSlice = createSlice({
     patchStatus(state, action: PayloadAction<Record<string, string>>) {
       state.status = { ...state.status, ...action.payload };
     },
+    mergeStatus(state, action: PayloadAction<Record<string, string>>) {
+      const patch = normalizeCliStatusPatch(action.payload);
+      if (Object.keys(patch).length === 0) return;
+      state.status = { ...state.status, ...patch };
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -121,6 +143,7 @@ const statusSlice = createSlice({
       })
       .addCase(bootstrapStatus.fulfilled, (state, action) => {
         state.loading = false;
+        state.bootstrapped = true;
         state.deviceLabel = action.payload.deviceLabel;
         state.status = action.payload.status;
         state.customCertificates = action.payload.customCertificates;
@@ -128,30 +151,27 @@ const statusSlice = createSlice({
       })
       .addCase(bootstrapStatus.rejected, (state, action) => {
         state.loading = false;
+        state.bootstrapped = true;
         state.error = friendlyError(action.error.message);
         toast(state.error, "bad");
       })
       .addCase(refreshStatus.pending, (state) => {
         state.refreshing = true;
-        if (!state.status.version && !state.status.module_ok) {
-          state.loading = true;
-        }
+        // 已有数据时绝不整页 loading，避免开关/配置变更卡顿感
       })
       .addCase(refreshStatus.fulfilled, (state, action) => {
-        state.loading = false;
         state.refreshing = false;
         state.status = action.payload.status;
         state.customCertificates = action.payload.customCertificates;
         state.lastRefreshedAt = formatClockTime();
       })
       .addCase(refreshStatus.rejected, (state, action) => {
-        state.loading = false;
         state.refreshing = false;
         toast(friendlyError(action.error.message), "bad");
       });
   },
 });
 
-export const { patchStatus } = statusSlice.actions;
+export const { patchStatus, mergeStatus } = statusSlice.actions;
 
 export default statusSlice.reducer;

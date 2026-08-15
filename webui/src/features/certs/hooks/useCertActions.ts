@@ -1,6 +1,10 @@
 import { useCallback, useState } from "react";
 import { useAppDispatch } from "@/app/store/hooks";
-import { patchStatus, refreshStatus } from "@/features/status/model/statusSlice";
+import {
+  mergeStatus,
+  patchStatus,
+  refreshStatus,
+} from "@/features/status/model/statusSlice";
 import {
   hotMount,
   hotUnmount,
@@ -21,15 +25,15 @@ import { useAsyncLock } from "@/shared/hooks/useAsyncLock";
 import { HotMountMode, type BuiltinCertKind } from "@/entities/module/enums";
 import { HOT_MOUNT_CONFIRM_LABEL } from "@/shared/config/certs";
 
-const REFRESH_AFTER_MUTATE = { syncApps: false } as const;
+const SILENT_REFRESH = { syncApps: false } as const;
 
 export function useCertActions() {
   const dispatch = useAppDispatch();
   const { isPending, runExclusive } = useAsyncLock();
   const [pendingKind, setPendingKind] = useState<string | null>(null);
 
-  const refresh = useCallback(async () => {
-    await dispatch(refreshStatus(REFRESH_AFTER_MUTATE));
+  const refreshInBackground = useCallback(() => {
+    void dispatch(refreshStatus(SILENT_REFRESH));
   }, [dispatch]);
 
   const handleToggleBuiltin = useCallback(
@@ -41,22 +45,23 @@ export function useCertActions() {
           const result = await toggleBuiltin(kind, checked ? FLAG_ON : FLAG_OFF);
           if (isCliFailure(result)) {
             toast(errorFromResult(result.stdout, result.stderr), "bad");
-            await refresh();
+            refreshInBackground();
             return;
           }
           const kv = parseKv(result.stdout || "");
+          dispatch(mergeStatus(kv));
           toastByRebootFlag(
             kv,
             checked ? "已开启，重启后生效" : "已关闭，重启后移除",
             checked ? "已开启（与当前生效一致）" : "已关闭（与当前生效一致）",
           );
-          await refresh();
+          refreshInBackground();
         } finally {
           setPendingKind(null);
         }
       });
     },
-    [dispatch, refresh, runExclusive],
+    [dispatch, refreshInBackground, runExclusive],
   );
 
   const handleImportFile = useCallback(
@@ -70,15 +75,16 @@ export function useCertActions() {
             return;
           }
           const kv = parseKv(result.stdout || "");
+          dispatch(mergeStatus(kv));
           toastByRebootFlag(kv, "已导入，重启后生效", "已导入（无需重启）");
-          await refresh();
+          refreshInBackground();
         } catch {
           toast("读取文件失败", "bad");
         }
       });
       return false;
     },
-    [refresh, runExclusive],
+    [dispatch, refreshInBackground, runExclusive],
   );
 
   const handleRemoveCustom = useCallback(
@@ -95,12 +101,13 @@ export function useCertActions() {
             return;
           }
           const kv = parseKv(result.stdout || "");
+          dispatch(mergeStatus(kv));
           toastByRebootFlag(kv, "已移除，重启后生效", "已移除（与当前生效一致）");
-          await refresh();
+          refreshInBackground();
         },
       });
     },
-    [refresh],
+    [dispatch, refreshInBackground],
   );
 
   const handleSetHotAllow = useCallback(
@@ -111,11 +118,13 @@ export function useCertActions() {
           const result = await setHotAllow(checked ? FLAG_ON : FLAG_OFF);
           if (isCliFailure(result)) {
             toast(errorFromResult(result.stdout, result.stderr), "bad");
-            await refresh();
+            refreshInBackground();
             return;
           }
+          const kv = parseKv(result.stdout || "");
+          dispatch(mergeStatus(kv));
           toast(checked ? "已允许手动临时挂载" : "已关闭临时挂载", "ok");
-          await refresh();
+          refreshInBackground();
         });
 
       if (!checked) {
@@ -131,7 +140,7 @@ export function useCertActions() {
 
       void apply();
     },
-    [dispatch, refresh, runExclusive],
+    [dispatch, refreshInBackground, runExclusive],
   );
 
   const handleHotMount = useCallback(
@@ -155,9 +164,10 @@ export function useCertActions() {
             const fields = parseKv(result.stdout);
             if (isCliFailure(result) || fields.ok !== FLAG_ON) {
               toast(errorFromResult(result.stdout, result.stderr), "bad");
-              await refresh();
+              refreshInBackground();
               return;
             }
+            dispatch(mergeStatus(fields));
             const addedCount = fields.hot_added || "0";
             const failedCount = Number(fields.hot_failed || 0);
             toast(
@@ -166,11 +176,11 @@ export function useCertActions() {
                 : `已免重启挂载 ${addedCount} 张证书`,
               failedCount > 0 ? "warn" : "ok",
             );
-            await refresh();
+            refreshInBackground();
           }),
       });
     },
-    [refresh, runExclusive],
+    [dispatch, refreshInBackground, runExclusive],
   );
 
   const handleHotUnmount = useCallback(() => {
@@ -191,14 +201,15 @@ export function useCertActions() {
                 : errorFromResult(result.stdout, result.stderr),
               "bad",
             );
-            await refresh();
+            refreshInBackground();
             return;
           }
+          dispatch(mergeStatus(fields));
           toast("临时证书已无痕卸载", "ok");
-          await refresh();
+          refreshInBackground();
         }),
     });
-  }, [refresh, runExclusive]);
+  }, [dispatch, refreshInBackground, runExclusive]);
 
   return {
     isPending,

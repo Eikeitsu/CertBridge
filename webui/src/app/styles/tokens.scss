@@ -104,31 +104,32 @@ html[data-theme="dark"] {
   --cb-ok-soft: color-mix(in srgb, var(--cb-ok) 14%, transparent);
   --cb-warn-soft: color-mix(in srgb, var(--cb-warn) 14%, transparent);
   --cb-bad-soft: color-mix(in srgb, var(--cb-bad) 14%, transparent);
-  --cb-ink: #e8eee8;
-  --cb-ink-2: #a8b4a8;
-  --cb-ink-3: #7a8878;
-  --cb-paper: #101410;
-  --cb-chrome: #101410;
-  --cb-surface: #181c18;
-  --cb-surface-2: #1e241e;
-  --cb-stage: #181c18;
+  --cb-ink: #f2f2f7;
+  --cb-ink-2: #aeaeb2;
+  --cb-ink-3: #8e8e93;
+  --cb-paper: #000;
+  --cb-chrome: #000;
+  --cb-surface: #1c1c1e;
+  --cb-surface-2: #2c2c2e;
+  --cb-stage: #1c1c1e;
   --cb-panel: var(--cb-surface);
-  --cb-row-hover: color-mix(in srgb, #fff 6%, transparent);
-  --cb-stroke: rgba(232, 238, 232, 0.1);
-  --cb-stroke-strong: rgba(232, 238, 232, 0.16);
-  --cb-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
-  --cb-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.45);
-
-  /* 深色下自动提亮所选强调色，省掉再维护一套深色色板 */
+  --cb-row-hover: color-mix(in srgb, #fff 8%, transparent);
+  --cb-stroke: rgba(84, 84, 88, 0.65);
+  --cb-stroke-strong: rgba(84, 84, 88, 0.8);
+  --cb-shadow: none;
+  --cb-shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.45);
   --cb-primary: color-mix(in srgb, var(--cb-accent-pick) 72%, #eafffb);
   --cb-accent: color-mix(in srgb, var(--cb-accent-pair) 72%, #fff4d8);
   --cb-primary-soft: color-mix(in srgb, var(--cb-primary) 16%, transparent);
-  --cb-primary-container: color-mix(in srgb, var(--cb-primary) 18%, #181c18);
+  --cb-primary-container: color-mix(in srgb, var(--cb-primary) 18%, #1c1c1e);
   --cb-hero-glow: color-mix(in srgb, var(--cb-primary) 14%, transparent);
   --cb-topbar-bg: var(--cb-chrome);
   --cb-dock-bg: var(--cb-chrome);
-  --cb-body-gradient-tint: color-mix(in srgb, var(--cb-chrome) 90%, #0d2a28);
+  --cb-body-gradient-tint: #000;
   --cb-card: var(--cb-panel);
+  --cb-card-bg: var(--cb-panel);
+  --cb-card-rule: rgba(84, 84, 88, 0.55);
+  --cb-card-inset-bg: #2c2c2e;
 }
 
 /*

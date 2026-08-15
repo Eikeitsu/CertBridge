@@ -1,5 +1,5 @@
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
-import { selectStatusLoading } from "@/features/status/model/selectors";
+import { selectStatusBootstrapped, selectStatusLoading } from "@/features/status/model/selectors";
 import { refreshStatus } from "@/features/status/model/statusSlice";
 import { selectThemePack } from "@/features/theme/model/selectors";
 import { useCertActions } from "@/features/certs/hooks/useCertActions";
@@ -17,6 +17,8 @@ export function CertsPage() {
   const pack = useAppSelector(selectThemePack);
   const voice = getPackVoice(pack);
   const isStatusLoading = useAppSelector(selectStatusLoading);
+  const bootstrapped = useAppSelector(selectStatusBootstrapped);
+  const showBootSpin = isStatusLoading && !bootstrapped;
   const {
     isPending,
     pendingKind,
@@ -38,7 +40,7 @@ export function CertsPage() {
   } = useCertDetail();
 
   return (
-    <PageSpin spinning={isStatusLoading} label={voice.loadingHint}>
+    <PageSpin spinning={showBootSpin} label={voice.loadingHint}>
       <PageRefresh onRefresh={() => dispatch(refreshStatus(true)).unwrap()}>
         <SectionLabel>{voice.certPermanent}</SectionLabel>
         <BuiltinCertsGroup

@@ -1,7 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { refreshStatus, requestReboot } from "@/features/status/model/statusSlice";
-import { selectStatusRefreshing } from "@/features/status/model/selectors";
+import {
+  selectStatusBootstrapped,
+  selectStatusRefreshing,
+} from "@/features/status/model/selectors";
 import { useTrustOverview } from "@/features/overview/hooks/useTrustOverview";
 import { selectThemePack } from "@/features/theme/model/selectors";
 import { MetricGrid, PageRefresh, PageSpin } from "@/shared/ui";
@@ -21,6 +24,8 @@ export function OverviewPage() {
   const voice = getPackVoice(pack);
   const overview = useTrustOverview();
   const isRefreshing = useAppSelector(selectStatusRefreshing);
+  const bootstrapped = useAppSelector(selectStatusBootstrapped);
+  const showBootSpin = overview.isLoading && !bootstrapped;
   const statusText =
     overview.injectDiagnosis?.hint ||
     (overview.trust.tone === TrustTone.Idle && overview.isLoading
@@ -70,7 +75,7 @@ export function OverviewPage() {
   );
 
   return (
-    <PageSpin spinning={overview.isLoading} label={voice.loadingHint}>
+    <PageSpin spinning={showBootSpin} label={voice.loadingHint}>
       <PageRefresh onRefresh={() => dispatch(refreshStatus(true)).unwrap()}>
         {pack === ThemePack.Fluid ? (
           <div className="cb-bridge-stack">

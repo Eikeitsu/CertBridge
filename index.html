@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1"
+    />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#F3F6F5" />
+    <title>证书桥</title>
+    <script>
+      /* 首帧主题引导：必须在样式生效前落地 data-*，否则会闪一下默认主题 */
+      (function () {
+        try {
+          var root = document.documentElement;
+          var read = function (key, fallback) {
+            var value = localStorage.getItem(key);
+            return value === null || value === "" ? fallback : value;
+          };
+          var flag = function (key, fallback) {
+            return read(key, fallback) === "1" ? "1" : "0";
+          };
+          var pack = read("cb_theme_pack", "classic");
+          if (pack !== "classic" && pack !== "material" && pack !== "fluid") {
+            pack = "classic";
+          }
+          var mode = read("cb_theme_mode", "system");
+          var prefersDark =
+            !!window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches;
+          root.dataset.theme =
+            mode === "dark" || (mode !== "light" && prefersDark) ? "dark" : "light";
+          root.dataset.pack = pack;
+          root.dataset.compact = flag("cb_compact", "0");
+          root.dataset.floatDock = flag("cb_float_dock", "0");
+          root.dataset.dockGlass = flag("cb_dock_glass", "1");
+          root.dataset.barBlur = flag("cb_bar_blur", "1");
+          var scale = parseFloat(read("cb_font_scale", "1"));
+          root.style.setProperty("--cb-font-scale", String(scale > 0 ? scale : 1));
+          /* 莫奈只在层积 / 虹桥可用，与 MONET_PACKS 保持一致 */
+          root.dataset.monet =
+            pack !== "classic" && flag("cb_monet", "1") === "1" ? "1" : "0";
+          var hex = /^#[0-9a-fA-F]{3,8}$/;
+          var pick = read("cb_accent_color", "");
+          var pair = read("cb_accent_pair", "");
+          if (hex.test(pick)) root.style.setProperty("--cb-accent-pick", pick);
+          if (hex.test(pair)) root.style.setProperty("--cb-accent-pair", pair);
+        } catch (error) {
+          /* localStorage 不可用时退回默认主题 */
+        }
+      })();
+    </script>
+    <script type="module" crossorigin src="./js/app.js"></script>
+    <link rel="stylesheet" crossorigin href="./css/style.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

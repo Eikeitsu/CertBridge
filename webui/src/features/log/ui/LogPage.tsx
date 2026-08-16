@@ -61,7 +61,7 @@ export function LogPage() {
 
   return (
     <PageRefresh onRefresh={handleRefresh}>
-      <div className={`cb-log-page pack-${pack}`}>
+      <div className={`cb-log-page pack-${pack} ov-stack`}>
         <NoticeBar
           color={levelStats.error > 0 ? "error" : levelStats.warn > 0 ? "alert" : "info"}
           content={

@@ -142,7 +142,7 @@ ensure_source_from_applied() {
   src=$(find_applied_gen_cert "$kind") || return 1
   dest_dir="$SOURCES_DIR/$kind"
   mkdir -p "$dest_dir" 2>/dev/null || return 1
-  name=$(basename "$src")
+  name=$(basename "$src" | tr -d '\r')
   cp -f "$src" "$dest_dir/$name" 2>/dev/null || return 1
   chmod 0644 "$dest_dir/$name" 2>/dev/null
   display=$(get_applied_display "$kind" "$kind")
@@ -151,12 +151,65 @@ ensure_source_from_applied() {
   echo "$dest_dir/$name"
 }
 
-# 是否允许开启：sources / builtin / 仍在生效 / generation 残留
+# 将当前可用 addon 证书快照到 data/state，供关后再开时恢复（App 临时不可读也不丢）
+STASH_DIR="${STASH_DIR:-$STATEDIR/source-stash}"
+
+stash_addon_source() {
+  kind="$1"
+  case "$kind" in reqable|proxypin) ;; *) return 1 ;; esac
+  src=$(find_addon_cert "$kind" 0 2>/dev/null) || src=$(find_applied_gen_cert "$kind" 2>/dev/null) || return 1
+  [ -f "$src" ] || return 1
+  dest_dir="$STASH_DIR/$kind"
+  mkdir -p "$dest_dir" 2>/dev/null || return 1
+  # 清空旧快照，只留一份
+  rm -f "$dest_dir"/* 2>/dev/null
+  name=$(basename "$src" | tr -d '\r')
+  cp -f "$src" "$dest_dir/$name" 2>/dev/null || return 1
+  chmod 0644 "$dest_dir/$name" 2>/dev/null
+  if [ -f "$src.meta" ]; then
+    cp -f "$src.meta" "$dest_dir/$name.meta" 2>/dev/null || true
+  fi
+  return 0
+}
+
+restore_addon_source_from_stash() {
+  kind="$1"
+  case "$kind" in reqable|proxypin) ;; *) return 1 ;; esac
+  find_source_cert "$kind" >/dev/null 2>&1 && return 0
+  stash="$STASH_DIR/$kind"
+  [ -d "$stash" ] || return 1
+  src=""
+  for cert in "$stash"/*.*; do
+    [ -f "$cert" ] || continue
+    case "$cert" in *.meta) continue ;; esac
+    is_cert_filename "$(basename "$cert")" || continue
+    src="$cert"
+    break
+  done
+  [ -n "$src" ] || return 1
+  dest_dir="$SOURCES_DIR/$kind"
+  mkdir -p "$dest_dir" 2>/dev/null || return 1
+  name=$(basename "$src")
+  cp -f "$src" "$dest_dir/$name" 2>/dev/null || return 1
+  chmod 0644 "$dest_dir/$name" 2>/dev/null
+  if [ -f "$src.meta" ]; then
+    cp -f "$src.meta" "$dest_dir/$name.meta" 2>/dev/null || true
+  fi
+  echo "$dest_dir/$name"
+}
+
+# 是否允许开启：sources / builtin / 仍在生效 / generation 残留 / 关断前快照
 addon_can_enable() {
   kind="$1"
   find_addon_cert "$kind" 0 >/dev/null 2>&1 && return 0
   is_addon_applied "$kind" && return 0
   find_applied_gen_cert "$kind" >/dev/null 2>&1 && return 0
+  [ -d "$STASH_DIR/$kind" ] || return 1
+  for cert in "$STASH_DIR/$kind"/*.*; do
+    [ -f "$cert" ] || continue
+    case "$cert" in *.meta) continue ;; esac
+    is_cert_filename "$(basename "$cert")" && return 0
+  done
   return 1
 }
 

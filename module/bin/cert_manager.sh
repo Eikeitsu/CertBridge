@@ -109,15 +109,22 @@ cmd_toggle() {
   value="$2"
   case "$name" in reqable|proxypin) ;; *) echo "error=invalid_toggle"; return 1 ;; esac
   [ "$value" = "1" ] || [ "$value" = "0" ] || { echo "error=invalid_value"; return 1; }
-  # 开启才做来源检查；关闭只写配置，保证 WebUI 即时响应
+  # 关闭前快照当前证书，保证立刻再开不依赖 App 瞬时可读
+  if [ "$value" = "0" ]; then
+    stash_addon_source "$name" >/dev/null 2>&1 || true
+  fi
+  # 开启：App 同步 → 生效集恢复 → 快照恢复；任一成功即可写配置
   if [ "$value" = "1" ]; then
     sync_source_from_app "$name" >/dev/null 2>&1 || true
     ensure_source_from_applied "$name" >/dev/null 2>&1 || true
+    restore_addon_source_from_stash "$name" >/dev/null 2>&1 || true
     if ! addon_can_enable "$name"; then
       echo "error=certificate_unavailable"
       echo "hint=请先在对应 App 中生成根证书，或使用自定义导入"
       return 1
     fi
+    # 开启成功后再刷新一份快照，方便下次关开
+    stash_addon_source "$name" >/dev/null 2>&1 || true
   fi
   write_conf "$name" "$value" || { echo "error=write_failed"; return 1; }
   pending_line=$(note_conf_dirty)

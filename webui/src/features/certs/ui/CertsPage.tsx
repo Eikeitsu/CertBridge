@@ -59,6 +59,7 @@ export function CertsPage() {
         </div>
       ) : null}
       <PageRefresh onRefresh={() => dispatch(refreshStatus(true)).unwrap()}>
+        <div className="ov-stack">
         <NoticeBar
           color="info"
           wrap
@@ -110,6 +111,7 @@ export function CertsPage() {
             />
           </Tabs.Tab>
         </Tabs>
+        </div>
       </PageRefresh>
       <CertDetailSheet
         open={isOpen}

@@ -18,7 +18,7 @@ export function SettingsPage() {
   } = useTmpfsStyle();
 
   return (
-    <>
+    <div className="ov-stack settings-page">
       <AppearancePanel />
       <MountModePanel
         mountMode={mountMode}
@@ -31,6 +31,6 @@ export function SettingsPage() {
         onChange={(style) => void handleTmpfsChange(style)}
       />
       <AboutSection />
-    </>
+    </div>
   );
 }

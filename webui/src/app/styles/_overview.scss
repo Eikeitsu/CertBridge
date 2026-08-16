@@ -1,12 +1,32 @@
 /* 统一概览 / 证书 / 日志间距与信息块 */
 
-.ov {
-  position: relative;
+.ov-stack {
   display: flex;
   flex-direction: column;
-  gap: var(--cb-section-gap, 14px);
-  min-height: 40vh;
+  gap: var(--cb-section-gap, 16px);
   padding-bottom: 8px;
+}
+
+.ov-stack > .adm-notice-bar,
+.ov-stack > .adm-card,
+.ov-stack > .adm-collapse,
+.ov-stack > .cb-list-group,
+.ov-stack > .cb-about-hero,
+.ov-stack > .certs-tabs,
+.ov-stack > .certs-summary,
+.ov-stack > .cb-log-console,
+.ov-stack > .cb-log-filters,
+.ov-stack > .ov-metric-grid,
+.ov-stack .adm-list-card,
+.ov-stack .adm-card,
+.ov-stack .adm-collapse {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.ov {
+  position: relative;
+  min-height: 40vh;
 }
 
 .ov-boot {
@@ -440,4 +460,187 @@ html[data-pack="fluid"] .ov-block.adm-card {
   background: color-mix(in srgb, #fff 76%, transparent);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
+}
+
+/* ── 主题结构差异：同一信息架构，不同排版语言 ── */
+
+html[data-pack="classic"] {
+  --cb-section-gap: 12px;
+
+  .ov-status-card {
+    border-radius: 10px;
+    box-shadow: none;
+    background: #fff;
+  }
+
+  .ov-metric-grid.adm-grid {
+    --gap: 0;
+  }
+
+  .ov-metric-grid {
+    overflow: hidden;
+    border-radius: 10px;
+    background: #fff;
+  }
+
+  .ov-metric-cell {
+    border-radius: 0;
+    box-shadow: none;
+    border: 0;
+    border-right: 0.5px solid rgba(0, 0, 0, 0.08);
+    background: transparent;
+
+    &:last-child {
+      border-right: 0;
+    }
+
+    strong {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    span {
+      font-weight: 400;
+    }
+  }
+
+  .ov-kicker {
+    letter-spacing: 0;
+    text-transform: none;
+    font-weight: 500;
+  }
+
+  .ov-status-title {
+    font-size: 1.15rem;
+    font-weight: 650;
+  }
+
+  .ov-block.adm-card,
+  .cb-list-group .adm-list-body {
+    box-shadow: none;
+  }
+}
+
+html[data-pack="classic"][data-theme="dark"] {
+  .ov-status-card,
+  .ov-metric-grid {
+    background: #1c1c1e;
+  }
+
+  .ov-metric-cell {
+    border-right-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+html[data-pack="material"] {
+  --cb-section-gap: 18px;
+
+  .ov-metric-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  /* antd Grid 仍占位时，用子项铺满两列视觉 */
+  .ov-metric-grid.adm-grid {
+    --columns: 2;
+    --gap: 12px;
+  }
+
+  .ov-metric-cell {
+    min-height: 88px;
+    padding: 18px 14px;
+    border-radius: 18px;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+    text-align: left;
+
+    strong {
+      color: #1677ff;
+      font-size: 1.55rem;
+      font-weight: 820;
+    }
+
+    span {
+      margin-top: 8px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+  }
+
+  .ov-block.adm-card {
+    border-radius: 18px;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+  }
+
+  .cb-section-label,
+  .cb-list-group__label {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--cb-ink);
+  }
+
+  .ov-status-title {
+    font-size: 1.55rem;
+    font-weight: 820;
+  }
+}
+
+html[data-pack="fluid"] {
+  --cb-section-gap: 20px;
+
+  .ov-metric-grid.adm-grid {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .ov-metric-grid .adm-grid-item {
+    flex: 0 0 auto;
+    width: 104px;
+  }
+
+  .ov-metric-cell {
+    min-height: 84px;
+    border-radius: 22px;
+    text-align: left;
+
+    strong {
+      font-size: 1.35rem;
+      background: linear-gradient(120deg, var(--cb-primary), #4f46e5);
+      background-clip: text;
+      color: transparent;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  }
+
+  .cb-section-label,
+  .cb-list-group__label {
+    background: linear-gradient(90deg, #e11d48, #4f46e5);
+    background-clip: text;
+    color: transparent;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 760;
+  }
+
+  .ov-status-title {
+    font-size: 1.4rem;
+  }
+
+  .nx-dock {
+    /* 虹桥默认浮岛，切换主题立刻有壳层差异 */
+    left: 14px !important;
+    right: 14px !important;
+    bottom: calc(10px + var(--cb-inset-bottom)) !important;
+    border-radius: 30px !important;
+  }
 }

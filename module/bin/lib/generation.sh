@@ -280,14 +280,13 @@ update_reboot_required_flag() {
 }
 
 get_applied_name() {
-  grep -m1 "^$1|" "$APPLIED_MAP" 2>/dev/null | cut -d'|' -f2
+  grep -m1 "^$1|" "$APPLIED_MAP" 2>/dev/null | cut -d'|' -f2 | tr -d '\r'
 }
 
 get_applied_display() {
   label="$1"
   fallback="$2"
-  name=$(grep -m1 "^${label}|" "$APPLIED_MAP" 2>/dev/null | cut -d'|' -f4)
-  name=$(echo "$name" | tr -d '\r\n')
+  name=$(grep -m1 "^${label}|" "$APPLIED_MAP" 2>/dev/null | cut -d'|' -f4 | tr -d '\r')
   if [ -n "$name" ]; then
     echo "$name"
     return 0

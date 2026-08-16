@@ -98,6 +98,7 @@ export function OverviewPage() {
       ) : null}
 
       <PageRefresh onRefresh={() => dispatch(refreshStatus(true)).unwrap()}>
+        <div className="ov-stack">
         {overview.isDisabled ? (
           <NoticeBar content="模块当前处于停用状态，证书注入不会执行。" color="alert" />
         ) : null}
@@ -340,6 +341,7 @@ export function OverviewPage() {
             ) : null}
           </Collapse.Panel>
         </Collapse>
+        </div>
       </PageRefresh>
     </div>
   );

@@ -1,46 +1,111 @@
-/* 层积 — 支付宝 / Pixel 大色块 */
+/* 层积 — 支付宝 / Pixel：大色块 Hero、抬升卡片、粗标题、色块底栏 */
+
 html[data-pack="material"] {
   --cb-radius: 16px;
   --cb-radius-sm: 12px;
   --cb-radius-lg: 24px;
-  --cb-dock-h: 66px;
-  --cb-topbar-h: 60px;
-  --cb-chrome: #f5f6f8;
-  --cb-paper: #f5f6f8;
+  --cb-dock-h: 64px;
+  --cb-topbar-h: 58px;
+  --cb-chrome: #f0f2f5;
+  --cb-paper: #f0f2f5;
   --cb-stage: #fff;
   --cb-surface: #fff;
-  --cb-surface-2: #eef0f4;
+  --cb-surface-2: #e8ecf2;
   --cb-panel: #fff;
   --cb-stroke: transparent;
+  --cb-stroke-strong: rgba(15, 23, 42, 0.12);
+  --cb-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  --cb-shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
   --cb-panel-border: 0;
-  --cb-body-gradient-a: color-mix(in srgb, #1677ff 14%, transparent);
-  --cb-body-gradient-b: color-mix(in srgb, #36cfc9 10%, transparent);
-  --cb-body-gradient-tint: #f5f6f8;
+  --cb-body-gradient-a: color-mix(in srgb, #1677ff 12%, transparent);
+  --cb-body-gradient-b: color-mix(in srgb, #36cfc9 8%, transparent);
+  --cb-body-gradient-tint: #f0f2f5;
   --cb-card-radius: 18px;
   --cb-card-border-color: transparent;
-  --cb-card-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+  --cb-card-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
   --cb-card-rule: rgba(15, 23, 42, 0.06);
-  --cb-card-inset-bg: #f0f3f8;
+  --cb-card-inset-bg: #f3f5f9;
+  --cb-card-bg: #fff;
   --cb-primary: #1677ff;
+  --cb-primary-soft: color-mix(in srgb, #1677ff 12%, #fff);
+  --cb-ok: #12b76a;
+  --cb-ok-soft: color-mix(in srgb, #12b76a 12%, #fff);
+
+  .app-pane {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
 
   .nx-topbar {
     background: transparent;
+    border-bottom: 0;
   }
 
   .nx-topbar__brand {
     color: #1677ff;
+    letter-spacing: 0.12em;
+  }
+
+  .nx-topbar__title {
+    font-size: 1.28rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+  }
+
+  .nx-topbar__mark {
+    border-radius: 12px;
+    box-shadow: 0 6px 16px rgba(22, 119, 255, 0.28);
   }
 
   .nx-topbar__chip {
     background: #1677ff;
     border: 0;
     color: #fff;
+    font-weight: 700;
+  }
+
+  .nx-dock {
+    background: color-mix(in srgb, #fff 92%, transparent);
+    border-top: 0;
+    box-shadow: 0 -8px 28px rgba(15, 23, 42, 0.06);
+  }
+
+  .nx-dock__item {
+    border-radius: 16px;
+
+    &.is-on {
+      color: #fff;
+      background: #1677ff;
+      box-shadow: 0 8px 18px rgba(22, 119, 255, 0.32);
+    }
+  }
+
+  .nx-section__head {
+    margin-bottom: 14px;
+  }
+
+  .nx-section__eyebrow {
+    color: #1677ff;
+    letter-spacing: 0.14em;
+  }
+
+  .nx-section__title {
+    font-size: 1.22rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
   }
 
   .nx-hero {
+    padding: 24px 20px 20px;
+    border-radius: 24px;
+    border: 0;
     background: linear-gradient(145deg, #1677ff 0%, #36cfc9 100%);
     color: #fff;
-    box-shadow: 0 16px 36px rgba(22, 119, 255, 0.28);
+    box-shadow: 0 18px 40px rgba(22, 119, 255, 0.3);
+
+    .nx-hero__glow {
+      display: none;
+    }
 
     .nx-hero__kicker,
     .nx-hero__title,
@@ -48,27 +113,118 @@ html[data-pack="material"] {
       color: #fff;
     }
 
+    .nx-hero__dot {
+      color: #fff;
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.28);
+    }
+
+    .nx-hero__title {
+      font-size: 1.72rem;
+      font-weight: 820;
+    }
+
     .nx-hero__aside {
-      background: rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: 18px;
+      color: #fff;
 
       span {
-        color: rgba(255, 255, 255, 0.8);
+        color: rgba(255, 255, 255, 0.78);
       }
     }
 
     .nx-hero__foot {
       border-top-color: rgba(255, 255, 255, 0.22);
     }
+
+    .nx-chip {
+      background: rgba(255, 255, 255, 0.18);
+      color: #fff;
+    }
   }
 
-  .nx-section__title {
-    font-size: 1.15rem;
-    font-weight: 780;
+  .nx-metrics {
+    gap: 12px;
   }
 
-  .nx-btn.variant-solid.tone-primary,
+  .nx-metric {
+    padding: 18px 16px;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: var(--cb-card-shadow);
+
+    strong {
+      font-size: 1.65rem;
+      font-weight: 820;
+      color: #1677ff;
+    }
+
+    span {
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-size: 0.68rem;
+    }
+  }
+
+  .nx-card,
+  .nx-cert-card,
+  .nx-action-tile {
+    border-radius: 18px;
+    box-shadow: var(--cb-card-shadow);
+  }
+
+  .nx-card {
+    padding: 18px;
+  }
+
+  .nx-action-tile {
+    min-height: 108px;
+    padding: 18px;
+
+    strong {
+      font-size: 1.05rem;
+      font-weight: 780;
+    }
+  }
+
+  .nx-choice {
+    border: 0;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: var(--cb-card-shadow);
+    padding: 16px 16px 16px 46px;
+
+    &.is-on {
+      background: linear-gradient(
+        135deg,
+        color-mix(in srgb, #1677ff 10%, #fff),
+        #fff
+      );
+      box-shadow:
+        0 0 0 2px #1677ff,
+        0 10px 24px rgba(22, 119, 255, 0.12);
+    }
+  }
+
+  .nx-toggle-row__label {
+    font-weight: 720;
+  }
+
+  .nx-btn.variant-solid.tone-primary.adm-button,
   .nx-confirm__btn.is-solid {
     background: #1677ff;
+    border-color: #1677ff;
+    box-shadow: 0 8px 18px rgba(22, 119, 255, 0.28);
+  }
+
+  .adm-segmented {
+    --adm-color-primary: #1677ff;
+    --border-radius: 14px;
+  }
+
+  .adm-switch {
+    --checked-color: #1677ff;
   }
 }
 
@@ -77,10 +233,27 @@ html[data-pack="material"][data-theme="dark"] {
   --cb-paper: #0b1220;
   --cb-surface: #151c2c;
   --cb-surface-2: #1d2638;
+  --cb-card-bg: #151c2c;
+  --cb-card-inset-bg: #1d2638;
   --cb-body-gradient-tint: #0b1220;
   --cb-card-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  --cb-primary-soft: color-mix(in srgb, #1677ff 22%, #151c2c);
+
+  .nx-dock {
+    background: color-mix(in srgb, #151c2c 92%, transparent);
+    box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.35);
+  }
+
+  .nx-dock__item.is-on {
+    background: #3b82f6;
+    box-shadow: 0 8px 18px rgba(59, 130, 246, 0.35);
+  }
 
   .nx-hero {
     background: linear-gradient(145deg, #1d4ed8 0%, #0f766e 100%);
+  }
+
+  .nx-metric strong {
+    color: #60a5fa;
   }
 }

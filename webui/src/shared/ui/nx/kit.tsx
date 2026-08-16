@@ -1,16 +1,16 @@
-import {
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  type CSSProperties,
-  type InputHTMLAttributes,
-  type ReactNode,
-} from "react";
+import { useEffect, useId, useRef, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { PullToRefresh } from "antd-mobile";
+import {
+  Button,
+  Collapse,
+  Input,
+  PullToRefresh,
+  Segmented,
+  Slider,
+  Switch,
+} from "antd-mobile";
 
-/* ── atoms ─────────────────────────────────────────── */
+/* 布局 / 产品结构自研；开关、按钮、分段、滑条、折叠、输入用 antd-mobile */
 
 export function NxSection({
   eyebrow,
@@ -74,17 +74,23 @@ export function NxButton({
   loading?: boolean;
   type?: "button" | "submit";
 }) {
+  const color =
+    tone === "danger" ? "danger" : tone === "neutral" ? "default" : "primary";
+  const fill =
+    variant === "solid" ? "solid" : variant === "ghost" ? "none" : "outline";
   return (
-    <button
+    <Button
+      className={`nx-btn variant-${variant} tone-${tone}${block ? " is-block" : ""}`}
       type={type}
-      className={`nx-btn variant-${variant} tone-${tone}${block ? " is-block" : ""}${
-        loading ? " is-loading" : ""
-      }`}
-      disabled={disabled || loading}
+      color={color}
+      fill={fill}
+      block={block}
+      loading={loading}
+      disabled={disabled}
       onClick={onClick}
     >
       {children}
-    </button>
+    </Button>
   );
 }
 
@@ -100,16 +106,7 @@ export function NxSwitch({
   loading?: boolean;
 }) {
   return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      className={`nx-switch${checked ? " is-on" : ""}${loading ? " is-loading" : ""}`}
-      disabled={disabled || loading}
-      onClick={() => onChange(!checked)}
-    >
-      <span className="nx-switch__knob" />
-    </button>
+    <Switch checked={checked} loading={loading} disabled={disabled} onChange={onChange} />
   );
 }
 
@@ -125,23 +122,19 @@ export function NxSegment<T extends string>({
   disabled?: boolean;
 }) {
   return (
-    <div className={`nx-segment${disabled ? " is-disabled" : ""}`} role="tablist">
-      {options.map((option) => {
-        const on = option.value === value;
-        return (
-          <button
-            key={option.value}
-            type="button"
-            role="tab"
-            aria-selected={on}
-            className={`nx-segment__item${on ? " is-on" : ""}`}
-            disabled={disabled}
-            onClick={() => onChange(option.value)}
-          >
-            {option.label}
-          </button>
-        );
-      })}
+    <div className={`nx-segment${disabled ? " is-disabled" : ""}`}>
+      <Segmented
+        block
+        value={value}
+        onChange={(next) => {
+          if (disabled) return;
+          onChange(String(next) as T);
+        }}
+        options={options.map((option) => ({
+          label: option.label,
+          value: option.value,
+        }))}
+      />
     </div>
   );
 }
@@ -229,17 +222,16 @@ export function NxSlider({
   label?: string;
 }) {
   return (
-    <label className="nx-slider">
+    <div className="nx-slider">
       {label ? <span className="nx-slider__label">{label}</span> : null}
-      <input
-        type="range"
+      <Slider
         min={min}
         max={max}
         step={step}
         value={value}
-        onChange={(event) => onChange(Number(event.target.value))}
+        onChange={(next) => onChange(Number(next))}
       />
-    </label>
+    </div>
   );
 }
 
@@ -252,21 +244,12 @@ export function NxCollapse({
   children: ReactNode;
   defaultOpen?: boolean;
 }) {
-  const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className={`nx-collapse${open ? " is-open" : ""}`}>
-      <button
-        type="button"
-        className="nx-collapse__trigger"
-        onClick={() => setOpen((v) => !v)}
-      >
-        <span>{title}</span>
-        <span className="nx-collapse__chev" aria-hidden>
-          {open ? "−" : "+"}
-        </span>
-      </button>
-      {open ? <div className="nx-collapse__body">{children}</div> : null}
-    </div>
+    <Collapse className="nx-collapse" defaultActiveKey={defaultOpen ? ["help"] : undefined}>
+      <Collapse.Panel key="help" title={title}>
+        {children}
+      </Collapse.Panel>
+    </Collapse>
   );
 }
 
@@ -319,8 +302,24 @@ export function NxField({ label, children }: { label: string; children: ReactNod
   );
 }
 
-export function NxInput(props: InputHTMLAttributes<HTMLInputElement>) {
-  return <input className="nx-input" {...props} />;
+export function NxInput({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value?: string;
+  onChange?: (value: string) => void;
+  placeholder?: string;
+}) {
+  return (
+    <Input
+      className="nx-input"
+      value={value}
+      clearable
+      placeholder={placeholder}
+      onChange={(next) => onChange?.(next)}
+    />
+  );
 }
 
 export function NxSheet({
@@ -349,22 +348,12 @@ export function NxSheet({
 
   return createPortal(
     <div className="nx-sheet" role="presentation">
-      <button
-        type="button"
-        className="nx-sheet__mask"
-        aria-label="关闭"
-        onClick={onClose}
-      />
+      <button type="button" className="nx-sheet__mask" aria-label="关闭" onClick={onClose} />
       <div className="nx-sheet__panel" role="dialog" aria-modal="true" aria-label={title}>
         <div className="nx-sheet__handle" aria-hidden />
         <header className="nx-sheet__bar">
           <h2>{title}</h2>
-          <button
-            type="button"
-            className="nx-sheet__close"
-            onClick={onClose}
-            aria-label="关闭"
-          >
+          <button type="button" className="nx-sheet__close" onClick={onClose} aria-label="关闭">
             ×
           </button>
         </header>

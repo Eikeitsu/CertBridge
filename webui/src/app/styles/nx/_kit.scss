@@ -1,4 +1,4 @@
-/* NX design system — primitives (antd-free chrome) */
+/* NX design system — 布局自研；按钮/开关/分段/滑条/折叠/输入走 antd-mobile */
 
 .nx-section {
   margin: 0 0 22px;
@@ -38,71 +38,38 @@
   box-shadow: var(--cb-card-shadow);
 }
 
-.nx-btn {
-  appearance: none;
-  border: 0;
+.nx-btn.adm-button {
+  --border-radius: 12px;
+
   min-height: 42px;
-  padding: 0 16px;
-  border-radius: 12px;
-  font-size: 0.9rem;
   font-weight: 680;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  transition:
-    transform 0.18s ease,
-    opacity 0.18s ease;
-
-  &:active:not(:disabled) {
-    transform: scale(0.97);
-  }
-
-  &:disabled {
-    opacity: 0.45;
-  }
 
   &.is-block {
     width: 100%;
   }
 
-  &.variant-solid.tone-primary {
-    background: var(--cb-primary);
-    color: #fff;
-  }
-
-  &.variant-solid.tone-danger {
-    background: var(--cb-bad);
-    color: #fff;
-  }
-
-  &.variant-solid.tone-neutral {
-    background: var(--cb-ink);
-    color: var(--cb-surface);
-  }
-
   &.variant-soft.tone-primary {
-    background: var(--cb-primary-soft);
     color: var(--cb-primary);
+    background: var(--cb-primary-soft);
+    border-color: transparent;
   }
 
   &.variant-soft.tone-neutral,
   &.variant-soft.tone-danger {
-    background: var(--cb-surface-2);
     color: var(--cb-ink);
+    background: var(--cb-surface-2);
+    border-color: transparent;
   }
 
-  &.variant-outline {
-    background: transparent;
-    border: 1px solid var(--cb-stroke-strong);
-    color: var(--cb-primary);
+  &.variant-soft.tone-danger {
+    color: var(--cb-bad);
+    background: var(--cb-bad-soft);
   }
 
   &.variant-ghost {
-    background: transparent;
-    color: var(--cb-ink-2);
     min-height: 36px;
-    padding: 0 10px;
+    padding-inline: 10px;
+    color: var(--cb-ink-2);
 
     &.tone-danger {
       color: var(--cb-bad);
@@ -112,77 +79,23 @@
       color: var(--cb-primary);
     }
   }
-}
 
-.nx-switch {
-  position: relative;
-  width: 50px;
-  height: 30px;
-  border: 0;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--cb-ink) 18%, transparent);
-  transition: background 0.2s ease;
-  flex-shrink: 0;
-
-  &.is-on {
-    background: var(--cb-primary);
+  &.variant-outline {
+    color: var(--cb-primary);
+    border-color: color-mix(in srgb, var(--cb-primary) 35%, var(--cb-stroke));
+    background: color-mix(in srgb, var(--cb-primary) 5%, transparent);
   }
-
-  &.is-loading {
-    opacity: 0.55;
-  }
-
-  &:disabled {
-    opacity: 0.4;
-  }
-}
-
-.nx-switch__knob {
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.nx-switch.is-on .nx-switch__knob {
-  transform: translateX(20px);
 }
 
 .nx-segment {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 1fr;
-  gap: 4px;
-  padding: 4px;
-  border-radius: 14px;
-  background: var(--cb-surface-2);
-}
-
-.nx-segment__item {
-  appearance: none;
-  border: 0;
-  min-height: 38px;
-  border-radius: 11px;
-  background: transparent;
-  color: var(--cb-ink-2);
-  font-size: 0.86rem;
-  font-weight: 650;
-
-  &.is-on {
-    background: var(--cb-surface);
-    color: var(--cb-primary);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  &.is-disabled {
+    opacity: 0.5;
+    pointer-events: none;
   }
-}
 
-.nx-segment.is-disabled {
-  opacity: 0.5;
-  pointer-events: none;
+  .adm-segmented {
+    width: 100%;
+  }
 }
 
 .nx-chip {
@@ -322,50 +235,9 @@
   color: var(--cb-ink-2);
 }
 
-.nx-slider input[type="range"] {
-  width: 100%;
-  accent-color: var(--cb-primary);
-}
-
-.nx-collapse {
+.nx-collapse.adm-collapse {
   margin-top: 10px;
-  border-radius: 14px;
-  background: var(--cb-card-inset-bg);
-  overflow: hidden;
-}
-
-.nx-collapse__trigger {
-  width: 100%;
-  appearance: none;
-  border: 0;
-  background: transparent;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 14px;
-  font-weight: 650;
-  color: var(--cb-ink);
-}
-
-.nx-collapse__body {
-  padding: 0 14px 14px;
-  color: var(--cb-ink-2);
-  font-size: 0.84rem;
-  line-height: 1.55;
-
-  p {
-    margin: 0 0 10px;
-  }
-
-  ul {
-    margin: 0 0 10px;
-    padding-left: 18px;
-  }
-
-  code {
-    font-family: var(--cb-font-mono);
-    font-size: 0.78rem;
-  }
+  margin-bottom: 0;
 }
 
 .nx-spin {
@@ -421,7 +293,9 @@
   color: var(--cb-ink-3);
 }
 
-.nx-input {
+.nx-input.adm-input {
+  --font-size: 0.95rem;
+
   width: 100%;
   min-height: 44px;
   padding: 0 12px;
@@ -429,11 +303,6 @@
   border: 1px solid var(--cb-stroke);
   background: var(--cb-surface);
   color: var(--cb-ink);
-  outline: none;
-
-  &:focus {
-    border-color: var(--cb-primary);
-  }
 }
 
 .nx-file-input {
@@ -519,7 +388,12 @@
   margin: 0 0 14px;
   padding: 22px 18px 18px;
   border-radius: calc(var(--cb-card-radius) + 4px);
-  background: var(--cb-stage);
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--cb-primary) 8%, var(--cb-stage)),
+      var(--cb-stage) 55%
+    );
   border: var(--cb-panel-border) solid var(--cb-card-border-color);
   box-shadow: var(--cb-card-shadow);
 }

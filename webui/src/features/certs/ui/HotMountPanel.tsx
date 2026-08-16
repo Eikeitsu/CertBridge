@@ -103,7 +103,7 @@ export function HotMountPanel({
               <NxField label="存储卡证书目录">
                 <NxInput
                   value={sdPath}
-                  onChange={(event) => setSdPath(event.target.value)}
+                  onChange={setSdPath}
                   placeholder={DEFAULT_SD_CERT_DIR}
                 />
               </NxField>

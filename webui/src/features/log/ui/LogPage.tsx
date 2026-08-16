@@ -1,18 +1,24 @@
 import { useMemo } from "react";
+import { Button, Space, Tag } from "antd-mobile";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { clearActivityLog, fetchActivityLog } from "@/features/log/model/logSlice";
 import { selectActivityLog } from "@/features/log/model/selectors";
+import { selectThemePack } from "@/features/theme/model/selectors";
 import { useLogLevelFilter } from "@/features/log/hooks/useLogLevelFilter";
 import { formatByteSize } from "@/features/log/lib/formatByteSize";
 import { toast } from "@/shared/api/ksu";
 import { confirmAction } from "@/shared/lib/confirmAction";
 import { filterLogEntries, parseLogText } from "@/shared/lib/log";
-import { NxButton, NxChip, NxPull, NxSpin } from "@/shared/ui";
 import { LOG_LEVEL_PRESETS } from "@/shared/config/log";
+import { getPackVoice } from "@/shared/config/packVoice";
+import { PageRefresh } from "@/shared/ui/PageRefresh";
+import { Loader } from "@/shared/ui/Loader";
 import { LogLines } from "./LogLines";
 
 export function LogPage() {
   const dispatch = useAppDispatch();
+  const pack = useAppSelector(selectThemePack);
+  const voice = getPackVoice(pack);
   const { text, loading, bytes, lines } = useAppSelector(selectActivityLog);
   const [levelFilter, setLevelFilter] = useLogLevelFilter();
 
@@ -39,59 +45,57 @@ export function LogPage() {
     });
   };
 
-  const meta = `${lines ? `最近 ${lines} 行` : "暂无记录"}${
+  const meta = `${lines ? `最近 ${lines} 行` : voice.logEmpty}${
     bytes > 0 ? ` · ${formatByteSize(bytes)}` : ""
   }`;
 
   return (
-    <NxPull onRefresh={handleRefresh}>
-      <div className="nx-log">
-        <div className="nx-log__toolbar">
+    <PageRefresh onRefresh={handleRefresh}>
+      <div className={`cb-log-page pack-${pack}`}>
+        <div className="cb-log-toolbar">
           <div>
-            <h2 className="nx-section__title" style={{ margin: 0 }}>
-              运行日志
-            </h2>
-            <p className="nx-log__meta">{meta}</p>
+            <h2 className="cb-log-title">{voice.logTitle}</h2>
+            <p className="cb-log-meta">{meta}</p>
           </div>
-          <div className="nx-log__actions">
-            <NxButton variant="soft" onClick={() => void handleRefresh()}>
+          <Space>
+            <Button size="small" fill="outline" onClick={() => void handleRefresh()}>
               刷新
-            </NxButton>
-            <NxButton variant="outline" tone="danger" onClick={handleClear}>
+            </Button>
+            <Button size="small" color="danger" fill="outline" onClick={handleClear}>
               清空
-            </NxButton>
-          </div>
+            </Button>
+          </Space>
         </div>
 
-        <div className="nx-log__filters" role="radiogroup" aria-label="日志等级">
+        <div className="cb-log-filters" role="radiogroup" aria-label="日志等级">
           {LOG_LEVEL_PRESETS.map((option) => {
             const on = levelFilter === option.id;
             return (
               <button
                 key={option.id || "__all"}
                 type="button"
-                className="nx-chip-btn"
+                className="cb-log-filter"
                 aria-checked={on}
                 role="radio"
                 onClick={() => setLevelFilter(option.id)}
               >
-                <NxChip tone={on ? "accent" : "neutral"}>{option.label}</NxChip>
+                <Tag color={on ? "primary" : "default"} fill={on ? "solid" : "outline"} round>
+                  {option.label}
+                </Tag>
               </button>
             );
           })}
         </div>
 
-        <NxSpin spinning={loading}>
-          <div className="nx-log__console">
-            <div className="nx-log__chrome" aria-hidden>
-              <i />
-              <i />
-              <i />
+        <div className={`cb-log-console${loading ? " is-loading" : ""}`}>
+          {loading ? (
+            <div className="cb-log-loading">
+              <Loader label="读取中" />
             </div>
-            <LogLines entries={filteredEntries} filtered={Boolean(levelFilter)} />
-          </div>
-        </NxSpin>
+          ) : null}
+          <LogLines entries={filteredEntries} filtered={Boolean(levelFilter)} />
+        </div>
       </div>
-    </NxPull>
+    </PageRefresh>
   );
 }

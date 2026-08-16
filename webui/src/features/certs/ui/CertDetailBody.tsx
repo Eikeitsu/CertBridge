@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { NxChip } from "@/shared/ui";
-import { FlagTone, type BuiltinCertKind } from "@/entities/module/enums";
+import { Tag } from "antd-mobile";
+import type { BuiltinCertKind } from "@/entities/module/enums";
 import type { FormattedCertDetail } from "../lib/types";
 import { CertBrandIcon } from "./CertBrandIcon";
 import { CertDnBlock } from "./CertDnBlock";
@@ -58,16 +58,16 @@ export function CertDetailBody({ detail, brandKind }: CertDetailBodyProps) {
           {detail.flags.length ? (
             <div className="nx-detail-hero__flags">
               {detail.flags.map((flag) => (
-                <NxChip
+                <Tag
                   key={flag}
-                  tone={
-                    flag === "已过期" || flag === "即将到期"
-                      ? FlagTone.Warn
-                      : FlagTone.Info
+                  color={
+                    flag === "已过期" || flag === "即将到期" ? "warning" : "primary"
                   }
+                  fill="outline"
+                  round
                 >
                   {flag}
-                </NxChip>
+                </Tag>
               ))}
             </div>
           ) : null}

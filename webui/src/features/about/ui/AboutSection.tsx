@@ -1,3 +1,4 @@
+import { List } from "antd-mobile";
 import { EMPTY_PLACEHOLDER } from "@/shared/config/constants";
 import { ABOUT_LINKS, ABOUT_TIP, brandMarkSrc } from "@/shared/config/brand";
 import { assetUrl } from "@/shared/config/assets";
@@ -5,7 +6,9 @@ import { useAppSelector } from "@/app/store/hooks";
 import { selectModuleStatus } from "@/features/status/model/selectors";
 import { selectResolvedTheme } from "@/features/theme/model/selectors";
 import { openUrl } from "@/shared/api/ksu";
-import { NxCard, NxCollapse, NxSection } from "@/shared/ui";
+import { HelpCollapse } from "@/shared/ui/HelpCollapse";
+import { LinkRow } from "@/shared/ui/LinkRow";
+import { ListGroup } from "@/shared/ui/ListGroup";
 
 export function AboutSection() {
   const status = useAppSelector(selectModuleStatus);
@@ -15,8 +18,8 @@ export function AboutSection() {
     : EMPTY_PLACEHOLDER;
 
   return (
-    <NxSection eyebrow="About" title="关于 CertBridge">
-      <div className="nx-about-hero">
+    <>
+      <div className="cb-about-hero">
         <img src={assetUrl(brandMarkSrc(resolvedTheme))} alt="" />
         <strong>CertBridge</strong>
         <span>
@@ -24,26 +27,20 @@ export function AboutSection() {
         </span>
       </div>
 
-      <div className="nx-link-list">
+      <ListGroup title="链接">
         {ABOUT_LINKS.map((link) => (
-          <button
-            key={link.id}
-            type="button"
-            className="nx-link"
-            onClick={() => void openUrl(link.url)}
-          >
-            {link.label}
-            <span>打开</span>
-          </button>
+          <LinkRow key={link.id} label={link.label} onClick={() => void openUrl(link.url)} />
         ))}
-      </div>
+      </ListGroup>
 
-      <NxCard>
-        <NxCollapse title={ABOUT_TIP.title}>
-          <p>{ABOUT_TIP.body}</p>
-          <img className="nx-tip-qr" src={assetUrl(ABOUT_TIP.src)} alt={ABOUT_TIP.alt} />
-        </NxCollapse>
-      </NxCard>
-    </NxSection>
+      <ListGroup title="支持">
+        <List.Item>
+          <HelpCollapse title={ABOUT_TIP.title} inset>
+            <p>{ABOUT_TIP.body}</p>
+            <img className="cb-tip-qr" src={assetUrl(ABOUT_TIP.src)} alt={ABOUT_TIP.alt} />
+          </HelpCollapse>
+        </List.Item>
+      </ListGroup>
+    </>
   );
 }

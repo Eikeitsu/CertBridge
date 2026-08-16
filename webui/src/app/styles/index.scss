@@ -1,6 +1,6 @@
 @use "./tokens";
-@use "./chrome/shell";
-@use "./chrome/adm";
+@use "./chrome";
+@use "./overview";
 @use "./nx/kit";
 @use "./transitions";
 @use "./packs/classic";

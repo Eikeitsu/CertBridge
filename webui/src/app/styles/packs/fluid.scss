@@ -1,11 +1,11 @@
-/* 虹桥 — 沉浸玻璃：浮岛底栏、柔渐变、大圆角、半透明表面 */
+/* 虹桥 — 沉浸玻璃：浮岛底栏、柔渐变、口语化、水平指标轨 */
 
 html[data-pack="fluid"] {
   --cb-radius: 20px;
   --cb-radius-sm: 14px;
   --cb-radius-lg: 28px;
   --cb-dock-h: 70px;
-  --cb-topbar-h: 60px;
+  --cb-topbar-h: 58px;
   --cb-chrome: #f4f0f6;
   --cb-paper: #f4f0f6;
   --cb-stage: color-mix(in srgb, #fff 70%, transparent);
@@ -17,8 +17,8 @@ html[data-pack="fluid"] {
   --cb-shadow: 0 12px 32px rgba(70, 30, 90, 0.08);
   --cb-shadow-lg: 0 20px 48px rgba(70, 30, 90, 0.14);
   --cb-panel-border: 1px;
-  --cb-body-gradient-a: color-mix(in srgb, #ff5a7a 20%, transparent);
-  --cb-body-gradient-b: color-mix(in srgb, #5b8cff 18%, transparent);
+  --cb-body-gradient-a: color-mix(in srgb, #ff5a7a 22%, transparent);
+  --cb-body-gradient-b: color-mix(in srgb, #5b8cff 20%, transparent);
   --cb-body-gradient-tint: #f4f0f6;
   --cb-card-radius: 24px;
   --cb-card-border-color: color-mix(in srgb, #fff 72%, transparent);
@@ -34,7 +34,7 @@ html[data-pack="fluid"] {
   .app-pane {
     padding-left: 16px;
     padding-right: 16px;
-    padding-bottom: 40px;
+    padding-bottom: 44px;
   }
 
   .app-shell {
@@ -43,7 +43,6 @@ html[data-pack="fluid"] {
 
   .nx-topbar {
     background: transparent;
-    border-bottom: 0;
   }
 
   .nx-topbar__brand {
@@ -52,17 +51,11 @@ html[data-pack="fluid"] {
     color: transparent;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.16em;
   }
 
   .nx-topbar__title {
     font-weight: 760;
-    letter-spacing: -0.035em;
-  }
-
-  .nx-topbar__mark {
-    border-radius: 14px;
-    box-shadow: 0 8px 20px rgba(225, 29, 72, 0.22);
   }
 
   .nx-topbar__chip {
@@ -73,6 +66,7 @@ html[data-pack="fluid"] {
     backdrop-filter: blur(12px);
   }
 
+  /* 浮岛底栏：主题强制形态，不依赖 float-dock 开关也能认出 */
   .nx-dock {
     left: 14px;
     right: 14px;
@@ -97,11 +91,11 @@ html[data-pack="fluid"] {
     }
   }
 
-  .nx-section {
-    margin-bottom: 26px;
-  }
-
-  .nx-section__eyebrow {
+  .cb-section-label,
+  .cb-list-group__label {
+    margin-left: 2px;
+    font-size: 1rem;
+    font-weight: 760;
     background: linear-gradient(90deg, #e11d48, #4f46e5);
     background-clip: text;
     color: transparent;
@@ -109,44 +103,9 @@ html[data-pack="fluid"] {
     -webkit-text-fill-color: transparent;
   }
 
-  .nx-section__title {
-    font-size: 1.14rem;
-    font-weight: 760;
-  }
-
-  .nx-hero {
-    border-radius: 28px;
-    border: 1px solid color-mix(in srgb, #fff 75%, transparent);
-    background: linear-gradient(
-      145deg,
-      color-mix(in srgb, #e11d48 16%, #fff),
-      color-mix(in srgb, #4f46e5 12%, #fff) 55%,
-      color-mix(in srgb, #fff 90%, #fce7f3)
-    );
-    box-shadow: 0 18px 44px rgba(70, 30, 90, 0.12);
-    -webkit-backdrop-filter: blur(16px);
-    backdrop-filter: blur(16px);
-
-    .nx-hero__glow {
-      background: radial-gradient(
-        closest-side,
-        color-mix(in srgb, #e11d48 28%, transparent),
-        transparent 72%
-      );
-    }
-
-    .nx-hero__aside {
-      border-radius: 22px;
-      background: color-mix(in srgb, #fff 55%, transparent);
-      border: 1px solid color-mix(in srgb, #fff 70%, transparent);
-    }
-  }
-
-  .nx-card,
-  .nx-metric,
-  .nx-cert-card,
-  .nx-action-tile,
-  .nx-choice {
+  .adm-list-card,
+  .adm-card,
+  .adm-collapse {
     border-radius: 24px;
     border: 1px solid color-mix(in srgb, #fff 70%, transparent);
     background: color-mix(in srgb, #fff 76%, transparent);
@@ -155,58 +114,31 @@ html[data-pack="fluid"] {
     backdrop-filter: blur(16px);
   }
 
-  .nx-metrics {
-    gap: 12px;
-  }
-
-  .nx-metric strong {
-    background: linear-gradient(120deg, #e11d48, #4f46e5);
-    background-clip: text;
-    color: transparent;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-
-  .nx-action-tile {
-    min-height: 104px;
-  }
-
-  .nx-choice.is-on {
+  .cb-about-hero {
+    border-radius: 28px;
+    border: 1px solid color-mix(in srgb, #fff 70%, transparent);
     background: linear-gradient(
-      135deg,
-      color-mix(in srgb, #e11d48 10%, #fff),
-      color-mix(in srgb, #4f46e5 8%, #fff)
+      145deg,
+      color-mix(in srgb, #e11d48 14%, #fff),
+      color-mix(in srgb, #4f46e5 10%, #fff)
     );
-    border-color: color-mix(in srgb, #e11d48 35%, #fff);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
   }
 
-  .nx-chip {
-    border-radius: 999px;
-    border: 1px solid color-mix(in srgb, #fff 60%, transparent);
+  .cb-log-console {
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(160deg, #1a1222, #0f172a 60%);
   }
 
-  .nx-btn.variant-solid.tone-primary.adm-button,
-  .nx-confirm__btn.is-solid {
+  .adm-button-primary {
     border: 0;
     background: linear-gradient(120deg, #e11d48, #f43f5e 50%, #4f46e5);
-    box-shadow: 0 10px 24px rgba(225, 29, 72, 0.28);
-  }
-
-  .adm-segmented {
-    --adm-color-primary: #e11d48;
-    --border-radius: 16px;
   }
 
   .adm-switch {
     --checked-color: #e11d48;
-  }
-
-  .adm-collapse,
-  .nx-collapse.adm-collapse {
-    background: color-mix(in srgb, #fff 62%, transparent);
-    border: 1px solid color-mix(in srgb, #fff 70%, transparent);
-    -webkit-backdrop-filter: blur(12px);
-    backdrop-filter: blur(12px);
   }
 }
 
@@ -234,24 +166,15 @@ html[data-pack="fluid"][data-theme="dark"] {
     background: color-mix(in srgb, #2a2034 88%, transparent);
   }
 
-  .nx-hero {
+  .ov-hero-fl {
     background: linear-gradient(145deg, #3f1220, #1e1b4b 60%, #22182a);
     border-color: rgba(255, 255, 255, 0.08);
   }
 
-  .nx-card,
-  .nx-metric,
-  .nx-cert-card,
-  .nx-action-tile,
-  .nx-choice {
+  .ov-metric-pill,
+  .ov-glass-card,
+  .ov-chip-action {
     background: color-mix(in srgb, #22182a 84%, transparent);
     border-color: rgba(255, 255, 255, 0.08);
-  }
-
-  .nx-metric strong {
-    background: linear-gradient(120deg, #fb7185, #818cf8);
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
   }
 }

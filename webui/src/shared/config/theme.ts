@@ -25,19 +25,49 @@ export const PACK_OPTIONS = [
   {
     value: ThemePack.Classic,
     label: "印记",
-    hint: "微信会话列表",
+    hint: "微信灰底 · 分组列表 · 细线单元格",
   },
   {
     value: ThemePack.Material,
     label: "层积",
-    hint: "支付宝色块",
+    hint: "支付宝色块 · 渐变看板 · 抬升卡片",
   },
   {
     value: ThemePack.Fluid,
     label: "虹桥",
-    hint: "沉浸软质",
+    hint: "玻璃浮岛 · 柔渐变 · 口语化",
   },
 ] as const;
+
+/** 切换主题包时（未开高级自定义）自动套用的壳层预设 */
+export const PACK_CHROME_PRESETS: Record<
+  ThemePack,
+  {
+    floatDock: boolean;
+    dockGlass: boolean;
+    barBlur: boolean;
+    accentId: string;
+  }
+> = {
+  [ThemePack.Classic]: {
+    floatDock: false,
+    dockGlass: false,
+    barBlur: false,
+    accentId: "wechat",
+  },
+  [ThemePack.Material]: {
+    floatDock: false,
+    dockGlass: true,
+    barBlur: true,
+    accentId: "alipay",
+  },
+  [ThemePack.Fluid]: {
+    floatDock: true,
+    dockGlass: true,
+    barBlur: true,
+    accentId: "rose",
+  },
+};
 
 export const THEME_MODE_OPTIONS = [
   { value: ThemeMode.System, label: "跟随系统" },

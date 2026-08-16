@@ -17,18 +17,18 @@ type ThemePackPickerProps = {
 export function ThemePackPicker({ value, options, onChange }: ThemePackPickerProps) {
   return (
     <div>
-      <p className="nx-field__label">主题包</p>
-      <div className="nx-pack-grid" role="radiogroup" aria-label="主题包">
+      <p className="cb-field-label">主题包</p>
+      <div className="cb-theme-grid" role="radiogroup" aria-label="主题包">
         {options.map((option) => (
           <button
             key={option.value}
             type="button"
             role="radio"
             aria-checked={value === option.value}
-            className={`nx-pack-card${value === option.value ? " is-on" : ""}`}
+            className={`cb-theme-card${value === option.value ? " active" : ""}`}
             onClick={() => onChange(option.value)}
           >
-            <div className="nx-pack-preview" data-pack={option.value} aria-hidden />
+            <div className="cb-theme-preview" data-pack={option.value} aria-hidden />
             <strong>{option.label}</strong>
             <span>{option.hint}</span>
           </button>
@@ -45,16 +45,21 @@ type AccentPickerProps = {
 
 export function AccentPicker({ value, onChange }: AccentPickerProps) {
   return (
-    <div style={{ margin: "12px 0" }}>
-      <p className="nx-field__label">强调色</p>
-      <div className="nx-accent-row">
+    <div>
+      <p className="cb-field-label">强调色</p>
+      <div className="accent-row">
         {ACCENTS.map((accent) => (
           <button
             key={accent.id}
             type="button"
             title={accent.label}
-            className={`nx-accent-dot${value === accent.id ? " is-on" : ""}`}
-            style={{ background: accent.color } as CSSProperties}
+            className={`accent-dot${value === accent.id ? " active" : ""}`}
+            style={
+              {
+                background: accent.color,
+                "--accent-swatch": accent.color,
+              } as CSSProperties
+            }
             onClick={() => onChange(accent.id)}
           />
         ))}

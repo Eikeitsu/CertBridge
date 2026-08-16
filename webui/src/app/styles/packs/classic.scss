@@ -1,11 +1,11 @@
-/* 印记 — 微信 / iOS 设置：灰底、分组列表、细线、扁平底栏 */
+/* 印记 — 微信 / iOS 设置：灰底、分组 List、细线、扁平底栏、居中标题 */
 
 html[data-pack="classic"] {
   --cb-radius: 8px;
   --cb-radius-sm: 6px;
   --cb-radius-lg: 12px;
   --cb-dock-h: 52px;
-  --cb-topbar-h: 48px;
+  --cb-topbar-h: 46px;
   --cb-chrome: #ededed;
   --cb-paper: #ededed;
   --cb-stage: #fff;
@@ -30,42 +30,32 @@ html[data-pack="classic"] {
   --cb-primary-soft: color-mix(in srgb, #07c160 14%, #fff);
   --cb-ok: #07c160;
   --cb-ok-soft: color-mix(in srgb, #07c160 12%, #fff);
+  --cb-metrics-columns: 4;
+
+  body::before {
+    display: none;
+  }
 
   .app-pane {
-    padding-left: 12px;
-    padding-right: 12px;
+    padding-left: 0;
+    padding-right: 0;
   }
 
   .nx-topbar {
     background: #ededed;
-    border-bottom: 0;
-  }
-
-  .nx-topbar__mark {
-    display: none;
-  }
-
-  .nx-topbar__brand {
-    display: none;
   }
 
   .nx-topbar__title {
-    font-size: 1.08rem;
+    font-size: 1.05rem;
     font-weight: 650;
     letter-spacing: 0;
-    text-align: center;
-  }
-
-  .nx-topbar__titles {
-    align-items: center;
   }
 
   .nx-topbar__chip {
     background: transparent;
     border: 0;
-    color: var(--cb-ink-3);
+    color: #888;
     font-weight: 500;
-    padding: 4px 0;
   }
 
   .nx-dock {
@@ -90,182 +80,67 @@ html[data-pack="classic"] {
     font-weight: 500;
   }
 
-  .nx-section {
-    margin-bottom: 18px;
-  }
-
-  .nx-section__head {
-    margin: 0 4px 8px;
-    align-items: center;
-  }
-
-  .nx-section__eyebrow {
-    display: none;
-  }
-
-  .nx-section__title {
-    font-family: var(--cb-font-body);
+  .cb-section-label,
+  .cb-list-group__label {
+    margin-left: 16px;
+    margin-right: 16px;
+    color: #888;
     font-size: 0.78rem;
     font-weight: 500;
-    letter-spacing: 0.02em;
-    color: #888;
+    letter-spacing: 0;
     text-transform: none;
   }
 
-  .nx-hero {
-    padding: 16px 16px 14px;
+  .adm-list-card {
+    margin-left: 12px;
+    margin-right: 12px;
+  }
+
+  .adm-list-item-title {
+    font-weight: 400;
+  }
+
+  .cb-metrics--strip {
+    margin: 0 12px 12px;
     border-radius: 10px;
-    background: #fff;
-    box-shadow: none;
-    border: 0;
-
-    .nx-hero__glow {
-      display: none;
-    }
-
-    .nx-hero__title {
-      font-size: 1.28rem;
-      font-weight: 650;
-      letter-spacing: -0.02em;
-    }
-
-    .nx-hero__aside {
-      border-radius: 8px;
-      background: #f7f7f7;
-    }
-
-    .nx-hero__foot {
-      border-top: 0.5px solid rgba(0, 0, 0, 0.08);
-    }
   }
 
-  .nx-card,
-  .nx-metric,
-  .nx-cert-card,
-  .nx-action-tile {
+  .cb-metric .value {
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+
+  .cb-metric .label {
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  .cb-about-hero {
+    margin-left: 12px;
+    margin-right: 12px;
+    box-shadow: none;
+  }
+
+  .cb-log-page {
+    padding: 0 12px;
+  }
+
+  .cb-log-console {
     border-radius: 10px;
-    box-shadow: none;
-    border: 0;
+    background: #1c1c1e;
   }
 
-  .nx-card {
-    padding: 2px 16px;
-  }
-
-  .nx-toggle-row {
-    padding: 13px 0;
-    border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
-
-    .nx-toggle-row__label {
-      font-weight: 400;
-      font-size: 1rem;
-    }
-  }
-
-  .nx-metrics {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    background: #fff;
-    border-radius: 10px;
-    overflow: hidden;
-    margin-bottom: 18px;
-  }
-
-  .nx-metric {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 14px 16px;
-    border-radius: 0;
-    border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
-    box-shadow: none;
-
-    &:last-child {
-      border-bottom: 0;
-    }
-
-    strong {
-      order: 2;
-      font-size: 1rem;
-      font-weight: 500;
-      color: var(--cb-ink-2);
-    }
-
-    span {
-      order: 1;
-      margin: 0;
-      font-size: 1rem;
-      font-weight: 400;
-      color: var(--cb-ink);
-    }
-  }
-
-  .nx-action-grid {
-    gap: 0;
-    background: #fff;
-    border-radius: 10px;
-    overflow: hidden;
-    grid-template-columns: 1fr;
-  }
-
-  .nx-action-tile {
-    min-height: 0;
-    padding: 14px 16px;
-    border-radius: 0;
-    border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
-    box-shadow: none;
-
-    &:last-child {
-      border-bottom: 0;
-    }
-
-    strong {
-      font-weight: 400;
-      font-size: 1rem;
-      margin-bottom: 2px;
-    }
-
-    span {
-      font-size: 0.72rem;
-    }
-  }
-
-  .nx-cert-card {
-    margin: 0;
-    border-radius: 0;
-    border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
-    box-shadow: none;
-    padding: 12px 4px;
-
-    &:last-child {
-      border-bottom: 0;
-    }
-  }
-
-  .nx-choice {
-    border-radius: 10px;
-    border-width: 1px;
-  }
-
-  .nx-chip {
-    border-radius: 4px;
-    font-weight: 500;
-  }
-
-  .nx-btn.variant-solid.tone-primary.adm-button,
-  .nx-confirm__btn.is-solid {
-    background: #07c160;
-    border-color: #07c160;
-  }
-
-  .adm-segmented {
+  .adm-button-primary {
     --adm-color-primary: #07c160;
   }
 
   .adm-switch {
     --checked-color: #07c160;
+  }
+
+  .adm-tag-primary {
+    --adm-color-primary: #07c160;
   }
 }
 
@@ -290,22 +165,5 @@ html[data-pack="classic"][data-theme="dark"] {
 
   .nx-dock {
     border-top-color: rgba(255, 255, 255, 0.1);
-  }
-
-  .nx-hero,
-  .nx-metrics,
-  .nx-action-grid {
-    background: #1c1c1e;
-  }
-
-  .nx-hero__aside {
-    background: #2c2c2e;
-  }
-
-  .nx-metric,
-  .nx-action-tile,
-  .nx-toggle-row,
-  .nx-cert-card {
-    border-bottom-color: rgba(255, 255, 255, 0.1);
   }
 }

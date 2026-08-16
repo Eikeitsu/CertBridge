@@ -1,18 +1,18 @@
-import { NxCard, NxCollapse, NxSection } from "@/shared/ui";
+import { HelpCollapse } from "@/shared/ui/HelpCollapse";
+import { ListGroup } from "@/shared/ui/ListGroup";
+import { List } from "antd-mobile";
 
 export function CertsTips() {
   return (
-    <NxSection eyebrow="Tips" title="使用提示">
-      <NxCard>
-        <NxCollapse title="永久 vs 临时">
-          <p>永久证书写入模块配置，重启后注入系统信任库。</p>
-          <p>临时挂载只建立当前会话，重启后自动失效，适合快速验证。</p>
-        </NxCollapse>
-        <NxCollapse title="找不到证书？">
-          <p>先在 Reqable / ProxyPin 生成根证书，再回到本页开启对应开关。</p>
-          <p>也可直接导入其它抓包工具导出的 CA 文件。</p>
-        </NxCollapse>
-      </NxCard>
-    </NxSection>
+    <ListGroup title="使用提示">
+      <List.Item>
+        <HelpCollapse title="永久 vs 临时" inset>
+          <p>永久证书写入系统信任后需重启；临时挂载可立即生效，卸载即恢复。</p>
+        </HelpCollapse>
+        <HelpCollapse title="找不到证书？" inset>
+          <p>确认 App 已安装且导出了 CA；也可手动导入 PEM / DER / hash.0。</p>
+        </HelpCollapse>
+      </List.Item>
+    </ListGroup>
   );
 }

@@ -35,15 +35,35 @@ export function useAppearanceSettings() {
     isMonetPaletteReady,
     fontScalePercent,
     packOptions: PACK_OPTIONS,
-    handleThemePackChange: (pack: ThemePack) => dispatch(setThemePack(pack)),
-    handleThemeModeChange: (mode: ThemeMode) => dispatch(setThemeMode(mode)),
-    handleUiCustomChange: (enabled: boolean) => dispatch(setUiCustom(enabled)),
-    handleAccentChange: (accentId: string) => dispatch(setAccentId(accentId)),
-    handleMonetChange: (enabled: boolean) => dispatch(setMonet(enabled)),
-    handleFloatDockChange: (enabled: boolean) => dispatch(setFloatDock(enabled)),
-    handleDockGlassChange: (enabled: boolean) => dispatch(setDockGlass(enabled)),
-    handleBarBlurChange: (enabled: boolean) => dispatch(setBarBlur(enabled)),
-    handleCompactChange: (enabled: boolean) => dispatch(setCompact(enabled)),
-    handleFontScaleChange: (scale: number) => dispatch(setFontScale(scale)),
+    handleThemePackChange: (pack: ThemePack) => {
+      void dispatch(setThemePack(pack));
+    },
+    handleThemeModeChange: (mode: ThemeMode) => {
+      void dispatch(setThemeMode(mode));
+    },
+    handleUiCustomChange: (enabled: boolean) => {
+      void dispatch(setUiCustom(enabled));
+    },
+    handleAccentChange: (accentId: string) => {
+      void dispatch(setAccentId(accentId));
+    },
+    handleMonetChange: (enabled: boolean) => {
+      void dispatch(setMonet(enabled));
+    },
+    handleFloatDockChange: (enabled: boolean) => {
+      void dispatch(setFloatDock(enabled));
+    },
+    handleDockGlassChange: (enabled: boolean) => {
+      void dispatch(setDockGlass(enabled));
+    },
+    handleBarBlurChange: (enabled: boolean) => {
+      void dispatch(setBarBlur(enabled));
+    },
+    handleCompactChange: (enabled: boolean) => {
+      void dispatch(setCompact(enabled));
+    },
+    handleFontScaleChange: (scale: number) => {
+      void dispatch(setFontScale(scale));
+    },
   };
 }

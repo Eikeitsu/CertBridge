@@ -8,7 +8,8 @@ import { selectThemePack } from "@/features/theme/model/selectors";
 import { useCertActions } from "@/features/certs/hooks/useCertActions";
 import { useCertDetail } from "@/features/certs/hooks/useCertDetail";
 import { getPackVoice } from "@/shared/config/packVoice";
-import { NxPull, NxSection, NxSpin } from "@/shared/ui";
+import { Loader } from "@/shared/ui/Loader";
+import { PageRefresh } from "@/shared/ui/PageRefresh";
 import { BuiltinCertsGroup } from "./BuiltinCertsGroup";
 import { CustomCertsGroup } from "./CustomCertsGroup";
 import { HotMountPanel } from "./HotMountPanel";
@@ -43,16 +44,21 @@ export function CertsPage() {
   } = useCertDetail();
 
   return (
-    <NxSpin spinning={showBootSpin} label={voice.loadingHint}>
-      <NxPull onRefresh={() => dispatch(refreshStatus(true)).unwrap()}>
-        <NxSection eyebrow="Permanent" title={voice.certPermanent}>
-          <BuiltinCertsGroup
-            pendingKind={pendingKind}
-            onOpenDetail={(id, name) => void openDetail(id, name)}
-            onToggle={(kind, checked) => void handleToggleBuiltin(kind, checked)}
-          />
-        </NxSection>
+    <div className={`certs-page pack-${pack}${showBootSpin ? " is-loading" : ""}`}>
+      {showBootSpin ? (
+        <div className="ov-boot">
+          <Loader label={voice.loadingHint} />
+        </div>
+      ) : null}
+      <PageRefresh onRefresh={() => dispatch(refreshStatus(true)).unwrap()}>
+        <BuiltinCertsGroup
+          title={voice.certPermanent}
+          pendingKind={pendingKind}
+          onOpenDetail={(id, name) => void openDetail(id, name)}
+          onToggle={(kind, checked) => void handleToggleBuiltin(kind, checked)}
+        />
         <CustomCertsGroup
+          title={voice.certCustom}
           onImport={(file) => void handleImportFile(file)}
           onOpenDetail={(id, name) => void openDetail(id, name)}
           onRemove={handleRemoveCustom}
@@ -60,13 +66,14 @@ export function CertsPage() {
         <HotMountPanel
           sectionLabel={voice.certSession}
           panelTitle={voice.hotMountTitle}
+          panelMeta={voice.hotMountMeta}
           busy={isPending}
           onSetHotAllow={(checked) => void handleSetHotAllow(checked)}
           onMount={handleHotMount}
           onUnmount={handleHotUnmount}
         />
         <CertsTips />
-      </NxPull>
+      </PageRefresh>
       <CertDetailSheet
         open={isOpen}
         title={title}
@@ -75,6 +82,6 @@ export function CertsPage() {
         loading={isDetailLoading}
         onClose={closeDetail}
       />
-    </NxSpin>
+    </div>
   );
 }

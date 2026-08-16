@@ -12,7 +12,6 @@ import {
   selectStatusRefreshing,
 } from "@/features/status/model/selectors";
 import { getPackVoice } from "@/shared/config/packVoice";
-import { TABS } from "@/shared/config/navigation";
 import { TabName } from "@/entities/module/enums";
 import { OverviewPage } from "@/features/overview";
 import { CertsPage } from "@/features/certs";
@@ -31,7 +30,16 @@ export function AppShell() {
   const isBarBlurEnabled = useAppSelector(selectBarBlurEnabled);
   const { activeTab, pathname, switchTab } = useActiveTab();
   const voice = getPackVoice(themePack);
-  const pageTitle = TABS.find((tab) => tab.key === activeTab)?.label ?? voice.topbarBrand;
+  const pageTitle =
+    (() => {
+      const map = {
+        [TabName.Home]: voice.tabs.home,
+        [TabName.Certs]: voice.tabs.certs,
+        [TabName.Log]: voice.tabs.log,
+        [TabName.More]: voice.tabs.more,
+      };
+      return map[activeTab];
+    })() ?? voice.topbarBrand;
   const [seen, setSeen] = useState<Partial<Record<TabName, boolean>>>(() => ({
     [activeTab]: true,
   }));
@@ -84,7 +92,7 @@ export function AppShell() {
       </main>
       <AppSnackbar />
       <ConfirmHost />
-      <AppDock activeTab={activeTab} onSwitch={switchTab} />
+      <AppDock pack={themePack} activeTab={activeTab} onSwitch={switchTab} />
     </div>
   );
 }

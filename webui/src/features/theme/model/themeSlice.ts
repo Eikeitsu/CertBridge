@@ -1,6 +1,6 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { STORAGE_KEYS } from "@/shared/config/paths";
-import { ACCENTS, THEME_DEFAULTS } from "@/shared/config/theme";
+import { ACCENTS, PACK_CHROME_PRESETS, THEME_DEFAULTS } from "@/shared/config/theme";
 import { FLAG_OFF, FLAG_ON, FONT_SCALE } from "@/shared/config/constants";
 import { ThemeMode, ThemePack, type ResolvedTheme } from "@/entities/module/enums";
 import { parseEnum } from "@/shared/lib/enum";
@@ -87,6 +87,17 @@ const themeSlice = createSlice({
     setThemePack(state, action: PayloadAction<ThemePack>) {
       state.pack = action.payload;
       localStorage.setItem(STORAGE_KEYS.themePack, action.payload);
+      if (!state.uiCustom) {
+        const preset = PACK_CHROME_PRESETS[action.payload];
+        state.floatDock = preset.floatDock;
+        state.dockGlass = preset.dockGlass;
+        state.barBlur = preset.barBlur;
+        state.accentId = preset.accentId;
+        persistFlag(STORAGE_KEYS.floatDock, preset.floatDock);
+        persistFlag(STORAGE_KEYS.dockGlass, preset.dockGlass);
+        persistFlag(STORAGE_KEYS.barBlur, preset.barBlur);
+        localStorage.setItem(STORAGE_KEYS.accent, preset.accentId);
+      }
       applyThemeToDom(state);
       syncChromeBars(state.resolved, state.barBlur);
     },

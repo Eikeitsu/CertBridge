@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useAppSelector } from "@/app/store/hooks";
 import {
   selectCustomCertificates,
+  selectDeviceLabel,
   selectLastRefreshedAt,
   selectModuleStatus,
   selectStatusError,
@@ -11,18 +12,34 @@ import { resolveTrustLabel } from "@/shared/lib/sanitize";
 import { isFlagOn } from "@/shared/lib/flag";
 import { EMPTY_PLACEHOLDER } from "@/shared/config/constants";
 import { BUILTIN_CERTS, builtinStatusKeys } from "@/shared/config/certs";
-import { MOUNT_MODES } from "@/shared/config/mount";
+import { MOUNT_MODES, TMPFS_STYLES } from "@/shared/config/mount";
 import { DEFAULT_STATUS_DESC } from "../lib/labels";
 import { parseEnum } from "@/shared/lib/enum";
-import { MountMode, TrustTone } from "@/entities/module/enums";
+import {
+  BuiltinCertKind,
+  MountMode,
+  TmpfsStyle,
+  TrustTone,
+} from "@/entities/module/enums";
 import { resolveApexLabel, resolveHotLabel } from "../lib/labels";
+
+export type BuiltinPipelineRow = {
+  kind: BuiltinCertKind;
+  title: string;
+  enabled: boolean;
+  active: boolean;
+  available: boolean;
+  stateLabel: string;
+};
 
 export function useTrustOverview() {
   const status = useAppSelector(selectModuleStatus);
   const customCertificates = useAppSelector(selectCustomCertificates);
+  const deviceLabel = useAppSelector(selectDeviceLabel);
   const isLoading = useAppSelector(selectStatusLoading);
   const lastRefreshedAt = useAppSelector(selectLastRefreshedAt);
   const statusError = useAppSelector(selectStatusError);
+
   const trust = useMemo(() => {
     if (statusError) {
       return {
@@ -54,6 +71,10 @@ export function useTrustOverview() {
   const isPendingReboot = isFlagOn(status.pending_reboot);
   const isHotMountActive = isFlagOn(status.hot_active);
   const isHotMountSupported = isFlagOn(status.hot_supported);
+  const isDisabled = isFlagOn(status.disabled);
+  const isHotPartial = isFlagOn(status.hot_partial);
+  const isHotStale = isFlagOn(status.hot_stale);
+  const isHotAllow = isFlagOn(status.hot_allow);
 
   const activeNames = useMemo(() => {
     const names: string[] = [];
@@ -68,6 +89,41 @@ export function useTrustOverview() {
     return names;
   }, [status, customCertificates]);
 
+  const builtinPipeline = useMemo((): BuiltinPipelineRow[] => {
+    return BUILTIN_CERTS.map((cert) => {
+      const keys = builtinStatusKeys(cert.kind);
+      const enabled = isFlagOn(status[keys.enabled]);
+      const active = isFlagOn(status[keys.active]);
+      const available = isFlagOn(status[keys.available]);
+      let stateLabel = "未检测到";
+      if (enabled && active) stateLabel = "已应用";
+      else if (enabled && !active) stateLabel = "待重启写入";
+      else if (!enabled && active) stateLabel = "仍在生效";
+      else if (available) stateLabel = "可用未启用";
+      return {
+        kind: cert.kind,
+        title: status[keys.title] || status[keys.display] || cert.fallbackTitle,
+        enabled,
+        active,
+        available,
+        stateLabel,
+      };
+    });
+  }, [status]);
+
+  const trustScore = useMemo(() => {
+    if (statusError || isDisabled) return 12;
+    if (isFlagOn(status.inject_error)) return 28;
+    if (trust.tone === TrustTone.Idle) return 40;
+    if (isPendingReboot) return 62;
+    if (activeCount > 0 && trust.tone === TrustTone.Ok) return 96;
+    if (activeCount > 0) return 78;
+    return 52;
+  }, [statusError, isDisabled, status.inject_error, trust.tone, isPendingReboot, activeCount]);
+
+  const mountMode = parseEnum(MountMode, status.mount_mode, MountMode.Compatible);
+  const tmpfsStyle = parseEnum(TmpfsStyle, status.tmpfs_style, TmpfsStyle.Short);
+
   return {
     status,
     trust,
@@ -77,25 +133,43 @@ export function useTrustOverview() {
     isPendingReboot,
     isHotMountActive,
     isHotMountSupported,
-    rootLabel: status.root || "--",
+    isDisabled,
+    isHotPartial,
+    isHotStale,
+    isHotAllow,
+    trustScore,
+    deviceLabel: deviceLabel || "本机",
+    rootLabel: status.root || EMPTY_PLACEHOLDER,
     apexLabel: resolveApexLabel(status.apex_ok),
-    mountModeLabel:
-      MOUNT_MODES[parseEnum(MountMode, status.mount_mode, MountMode.Compatible)]
-        .shortLabel,
-    androidLabel: status.release || "--",
-    versionLabel: status.version || "--",
+    mountModeLabel: MOUNT_MODES[mountMode].shortLabel,
+    mountModeMeta: MOUNT_MODES[mountMode].meta,
+    tmpfsLabel: TMPFS_STYLES[tmpfsStyle].label,
+    tmpfsMeta: TMPFS_STYLES[tmpfsStyle].meta,
+    androidLabel: status.release
+      ? `Android ${status.release}${status.api ? ` · API ${status.api}` : ""}`
+      : EMPTY_PLACEHOLDER,
+    apiLabel: status.api || EMPTY_PLACEHOLDER,
+    versionLabel: status.version || EMPTY_PLACEHOLDER,
     hotStatusLabel: resolveHotLabel(status),
-    lastRefreshedAt: lastRefreshedAt || "--",
+    hotAdded: status.hot_added || "0",
+    hotNamespaces: status.hot_namespaces || "0",
+    hotFailed: status.hot_failed || "0",
+    hotMode: status.hot_mode || EMPTY_PLACEHOLDER,
+    lastRefreshedAt: lastRefreshedAt || EMPTY_PLACEHOLDER,
     activeNames,
+    builtinPipeline,
     baselineCount: status.base_count || EMPTY_PLACEHOLDER,
     storeCount: status.store_count || EMPTY_PLACEHOLDER,
     description: status.desc_body || DEFAULT_STATUS_DESC,
+    shortDesc: status.desc_short || trust.title,
     injectDiagnosis: isFlagOn(status.inject_error)
       ? {
           message: status.inject_message || "",
           hint: status.inject_hint || "",
+          reason: status.inject_reason || "",
         }
       : null,
     version: status.version,
+    customCertificates,
   };
 }

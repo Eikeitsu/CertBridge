@@ -1,9 +1,9 @@
-import { List } from "antd-mobile";
+import { Footer, List, NoticeBar } from "antd-mobile";
 import { EMPTY_PLACEHOLDER } from "@/shared/config/constants";
 import { ABOUT_LINKS, ABOUT_TIP, brandMarkSrc } from "@/shared/config/brand";
 import { assetUrl } from "@/shared/config/assets";
 import { useAppSelector } from "@/app/store/hooks";
-import { selectModuleStatus } from "@/features/status/model/selectors";
+import { selectDeviceLabel, selectModuleStatus } from "@/features/status/model/selectors";
 import { selectResolvedTheme } from "@/features/theme/model/selectors";
 import { openUrl } from "@/shared/api/ksu";
 import { HelpCollapse } from "@/shared/ui/HelpCollapse";
@@ -12,6 +12,7 @@ import { ListGroup } from "@/shared/ui/ListGroup";
 
 export function AboutSection() {
   const status = useAppSelector(selectModuleStatus);
+  const deviceLabel = useAppSelector(selectDeviceLabel);
   const resolvedTheme = useAppSelector(selectResolvedTheme);
   const androidLabel = status.release
     ? `Android ${status.release}${status.api ? ` (API ${status.api})` : ""}`
@@ -19,6 +20,11 @@ export function AboutSection() {
 
   return (
     <>
+      <NoticeBar
+        color="info"
+        content={`${status.version || "版本未知"} · ${deviceLabel || "本机"} · ${androidLabel}`}
+      />
+
       <div className="cb-about-hero">
         <img src={assetUrl(brandMarkSrc(resolvedTheme))} alt="" />
         <strong>CertBridge</strong>
@@ -26,6 +32,15 @@ export function AboutSection() {
           {status.version || EMPTY_PLACEHOLDER} · {androidLabel}
         </span>
       </div>
+
+      <ListGroup title="模块信息">
+        <List.Item extra={status.version || EMPTY_PLACEHOLDER}>版本</List.Item>
+        <List.Item extra={deviceLabel || EMPTY_PLACEHOLDER}>设备</List.Item>
+        <List.Item extra={androidLabel}>系统</List.Item>
+        <List.Item extra={status.root || EMPTY_PLACEHOLDER}>Root</List.Item>
+        <List.Item extra={status.mount_mode || EMPTY_PLACEHOLDER}>挂载模式</List.Item>
+        <List.Item extra={status.tmpfs_style || EMPTY_PLACEHOLDER}>临时路径风格</List.Item>
+      </ListGroup>
 
       <ListGroup title="链接">
         {ABOUT_LINKS.map((link) => (
@@ -41,6 +56,8 @@ export function AboutSection() {
           </HelpCollapse>
         </List.Item>
       </ListGroup>
+
+      <Footer content="CertBridge · 系统证书桥" />
     </>
   );
 }

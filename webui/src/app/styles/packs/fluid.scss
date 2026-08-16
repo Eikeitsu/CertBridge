@@ -30,10 +30,12 @@ html[data-pack="fluid"] {
   --cb-primary-soft: color-mix(in srgb, #e11d48 12%, #fff);
   --cb-ok: #10b981;
   --cb-ok-soft: color-mix(in srgb, #10b981 12%, #fff);
+  --cb-page-pad-x: 16px;
+  --cb-section-gap: 16px;
 
   .app-pane {
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-left: var(--cb-page-pad-x);
+    padding-right: var(--cb-page-pad-x);
     padding-bottom: 44px;
   }
 

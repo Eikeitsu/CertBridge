@@ -31,14 +31,16 @@ html[data-pack="classic"] {
   --cb-ok: #07c160;
   --cb-ok-soft: color-mix(in srgb, #07c160 12%, #fff);
   --cb-metrics-columns: 4;
+  --cb-page-pad-x: 12px;
+  --cb-section-gap: 12px;
 
   body::before {
     display: none;
   }
 
   .app-pane {
-    padding-left: 0;
-    padding-right: 0;
+    padding-left: var(--cb-page-pad-x);
+    padding-right: var(--cb-page-pad-x);
   }
 
   .nx-topbar {
@@ -80,10 +82,15 @@ html[data-pack="classic"] {
     font-weight: 500;
   }
 
+  .adm-list-card {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
   .cb-section-label,
   .cb-list-group__label {
-    margin-left: 16px;
-    margin-right: 16px;
+    margin-left: 4px;
+    margin-right: 4px;
     color: #888;
     font-size: 0.78rem;
     font-weight: 500;
@@ -91,39 +98,23 @@ html[data-pack="classic"] {
     text-transform: none;
   }
 
-  .adm-list-card {
-    margin-left: 12px;
-    margin-right: 12px;
-  }
-
   .adm-list-item-title {
     font-weight: 400;
   }
 
   .cb-metrics--strip {
-    margin: 0 12px 12px;
+    margin: 0 0 4px;
     border-radius: 10px;
   }
 
-  .cb-metric .value {
-    font-size: 1.05rem;
-    font-weight: 600;
-  }
-
-  .cb-metric .label {
-    font-weight: 400;
-    text-transform: none;
-    letter-spacing: 0;
-  }
-
   .cb-about-hero {
-    margin-left: 12px;
-    margin-right: 12px;
+    margin-left: 0;
+    margin-right: 0;
     box-shadow: none;
   }
 
   .cb-log-page {
-    padding: 0 12px;
+    padding: 0;
   }
 
   .cb-log-console {

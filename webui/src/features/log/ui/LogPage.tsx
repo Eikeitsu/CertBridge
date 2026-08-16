@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Button, Space, Tag } from "antd-mobile";
+import { Button, Card, Grid, NoticeBar, Space, Tag } from "antd-mobile";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { clearActivityLog, fetchActivityLog } from "@/features/log/model/logSlice";
 import { selectActivityLog } from "@/features/log/model/selectors";
@@ -28,6 +28,16 @@ export function LogPage() {
     [entries, levelFilter],
   );
 
+  const levelStats = useMemo(() => {
+    const stats = { info: 0, warn: 0, error: 0, debug: 0 };
+    for (const entry of entries) {
+      if (entry.level in stats) {
+        stats[entry.level as keyof typeof stats] += 1;
+      }
+    }
+    return stats;
+  }, [entries]);
+
   const handleRefresh = async () => {
     const action = await dispatch(fetchActivityLog());
     if (fetchActivityLog.fulfilled.match(action)) {
@@ -52,12 +62,34 @@ export function LogPage() {
   return (
     <PageRefresh onRefresh={handleRefresh}>
       <div className={`cb-log-page pack-${pack}`}>
-        <div className="cb-log-toolbar">
-          <div>
-            <h2 className="cb-log-title">{voice.logTitle}</h2>
-            <p className="cb-log-meta">{meta}</p>
-          </div>
-          <Space>
+        <NoticeBar
+          color={levelStats.error > 0 ? "error" : levelStats.warn > 0 ? "alert" : "info"}
+          content={
+            levelStats.error > 0
+              ? `检测到 ${levelStats.error} 条错误日志，建议优先排查。`
+              : `共 ${entries.length} 条解析记录 · ${meta}`
+          }
+        />
+
+        <Card className="cb-log-head" title={voice.logTitle} extra={meta}>
+          <Grid columns={4} gap={8}>
+            {(
+              [
+                ["信息", levelStats.info],
+                ["警告", levelStats.warn],
+                ["错误", levelStats.error],
+                ["调试", levelStats.debug],
+              ] as const
+            ).map(([label, value]) => (
+              <Grid.Item key={label}>
+                <div className="cb-log-stat">
+                  <strong>{value}</strong>
+                  <span>{label}</span>
+                </div>
+              </Grid.Item>
+            ))}
+          </Grid>
+          <Space style={{ marginTop: 12 }}>
             <Button size="small" fill="outline" onClick={() => void handleRefresh()}>
               刷新
             </Button>
@@ -65,7 +97,7 @@ export function LogPage() {
               清空
             </Button>
           </Space>
-        </div>
+        </Card>
 
         <div className="cb-log-filters" role="radiogroup" aria-label="日志等级">
           {LOG_LEVEL_PRESETS.map((option) => {

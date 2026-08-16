@@ -161,7 +161,7 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: none;
-  padding: calc(var(--cb-topbar-h) + var(--cb-inset-top) + 10px) 14px 32px;
+  padding: calc(var(--cb-topbar-h) + var(--cb-inset-top) + 12px) var(--cb-page-pad-x, 16px) 36px;
   visibility: hidden;
   pointer-events: none;
 

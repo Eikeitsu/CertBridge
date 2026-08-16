@@ -30,10 +30,12 @@ html[data-pack="material"] {
   --cb-primary-soft: color-mix(in srgb, #1677ff 12%, #fff);
   --cb-ok: #12b76a;
   --cb-ok-soft: color-mix(in srgb, #12b76a 12%, #fff);
+  --cb-page-pad-x: 16px;
+  --cb-section-gap: 14px;
 
   .app-pane {
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-left: var(--cb-page-pad-x);
+    padding-right: var(--cb-page-pad-x);
   }
 
   .nx-topbar {

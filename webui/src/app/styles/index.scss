@@ -1,4 +1,9 @@
 @import "https://mui.kernelsu.org/internal/insets.css";
+@import "./layout";
+@import "./components";
+@import "./packs/settings";
+@import "./packs/console";
+@import "./packs/studio";
 
 :root {
   --cb-inset-top: var(--window-inset-top, env(safe-area-inset-top, 0px));
@@ -80,9 +85,3 @@ textarea {
 a {
   color: var(--cb-primary);
 }
-
-@import "./layout";
-@import "./components";
-@import "./packs/settings";
-@import "./packs/console";
-@import "./packs/studio";

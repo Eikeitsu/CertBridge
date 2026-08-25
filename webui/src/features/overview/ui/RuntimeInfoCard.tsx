@@ -3,11 +3,12 @@ import { Card, ListGroup, Row } from "@/shared/ui/primitives";
 
 type RuntimeInfoCardProps = {
   overview: TrustOverview;
+  title?: string;
 };
 
-export function RuntimeInfoCard({ overview }: RuntimeInfoCardProps) {
+export function RuntimeInfoCard({ overview, title = "运行信息" }: RuntimeInfoCardProps) {
   return (
-    <Card title="运行信息" meta={`上次刷新 ${overview.lastRefreshedAt}`}>
+    <Card title={title} meta={`上次刷新 ${overview.lastRefreshedAt}`}>
       <ListGroup>
         <Row title="设备" extra={overview.deviceLabel} />
         <Row title="系统" extra={overview.androidLabel} />

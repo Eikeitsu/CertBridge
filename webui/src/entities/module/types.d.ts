@@ -48,6 +48,8 @@ export type ModuleStatus = {
   proxypin_display?: string;
   proxypin_title?: string;
   hot_allow?: string;
+  hide_supported?: string;
+  hide_allow?: string;
   mount_mode?: string;
   tmpfs_style?: string;
   stage_root?: string;

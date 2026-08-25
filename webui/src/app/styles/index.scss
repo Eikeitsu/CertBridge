@@ -8,46 +8,49 @@
 :root {
   --cb-inset-top: var(--window-inset-top, env(safe-area-inset-top, 0px));
   --cb-inset-bottom: var(--window-inset-bottom, env(safe-area-inset-bottom, 0px));
-  --cb-topbar-h: 52px;
-  --cb-dock-h: 56px;
+  --cb-topbar-h: 56px;
+  --cb-dock-h: 60px;
   --cb-font-scale: 1;
-  --cb-font-display: "DM Sans", "PingFang SC", "HarmonyOS Sans SC", sans-serif;
-  --cb-font-body: "DM Sans", "PingFang SC", "HarmonyOS Sans SC", sans-serif;
+  --cb-font-display: "Sora", "PingFang SC", "HarmonyOS Sans SC", sans-serif;
+  --cb-font-body: "Manrope", "PingFang SC", "HarmonyOS Sans SC", sans-serif;
   --cb-font-mono: "IBM Plex Mono", "Cascadia Code", ui-monospace, monospace;
-  --cb-radius: 12px;
-  --cb-radius-sm: 8px;
+  --cb-radius: 14px;
+  --cb-radius-sm: 10px;
+  --cb-radius-lg: 20px;
   --cb-space-xs: 8px;
   --cb-space-sm: 12px;
   --cb-space-md: 16px;
-  --cb-space-lg: 20px;
-  --cb-accent-pick: #0d9488;
-  --cb-accent-pair: #0369a1;
+  --cb-space-lg: 24px;
+  --cb-accent-pick: #0f766e;
+  --cb-accent-pair: #0e7490;
   --cb-primary: var(--cb-accent-pick);
   --cb-ok: #059669;
   --cb-warn: #d97706;
   --cb-bad: #dc2626;
-  --cb-ink: #111827;
-  --cb-ink-2: #6b7280;
-  --cb-ink-3: #9ca3af;
-  --cb-bg: #f3f4f6;
+  --cb-ink: #0f172a;
+  --cb-ink-2: #475569;
+  --cb-ink-3: #94a3b8;
+  --cb-bg: #eef2f6;
   --cb-surface: #fff;
-  --cb-surface-2: #f9fafb;
-  --cb-stroke: rgba(17, 24, 39, 0.08);
-  --cb-stroke-strong: rgba(17, 24, 39, 0.14);
-  --cb-shadow: 0 1px 2px rgba(17, 24, 39, 0.06);
-  --cb-ease: 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  --cb-surface-2: #f8fafc;
+  --cb-stroke: rgba(15, 23, 42, 0.08);
+  --cb-stroke-strong: rgba(15, 23, 42, 0.14);
+  --cb-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --cb-ease: 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+  --cb-page-pad: 16px;
+  --cb-dock-pad: 0px;
 }
 
 html[data-theme="dark"] {
-  --cb-ink: #f3f4f6;
-  --cb-ink-2: #9ca3af;
-  --cb-ink-3: #6b7280;
-  --cb-bg: #0b0f14;
-  --cb-surface: #151b23;
-  --cb-surface-2: #1c2430;
-  --cb-stroke: rgba(255, 255, 255, 0.08);
-  --cb-stroke-strong: rgba(255, 255, 255, 0.14);
-  --cb-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --cb-ink: #f1f5f9;
+  --cb-ink-2: #94a3b8;
+  --cb-ink-3: #64748b;
+  --cb-bg: #0b1220;
+  --cb-surface: #121a27;
+  --cb-surface-2: #1a2433;
+  --cb-stroke: rgba(248, 250, 252, 0.08);
+  --cb-stroke-strong: rgba(248, 250, 252, 0.14);
+  --cb-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 }
 
 *,

@@ -2,12 +2,16 @@
 
 ## Unreleased
 
+- WebUI 三套主题全量重设计：设置 / 控制台 / 工作室在 **Shell、页面布局、文案语气** 上均可区分（非仅圆角配色）；默认强调色青绿 / 钢蓝 / 暖石
 - WebUI 全面重设计：三套主题「设置 / 控制台 / 工作室」，抛弃旧 classic/material/fluid 视觉
 - 概览新增「挂载与隐藏实况」：显示 Root 方案、挂载模式、临时层路径、检测到的隐藏助手、SuSFS try_umount 是否已注册（后迁至 WebUI **隐藏** 专页）
 - WebUI 底部新增 **隐藏** 页；文档站新增 [挂载隐藏说明](/guide/hide) 专页
 - 更多页曾含现代 Root 隐藏说明（Magisk 排除列表、Shamiko、ZygiskNext/ReZygisk/NeoZygisk、SuSFS、APatch 排除修改等），现集中于隐藏页
 - 临时层默认迁到 `/dev/.cb0` / `/dev/.cb1`（`tmpfs_style=dev`）；保留 short/legacy 可切换；卸载清理全部路径
 - SuSFS / ksud kernel umount：bind 成功后自动 `add_try_umount`（参考 bindhosts）
+- **挂载隐藏协助改为可选安装**：默认不安装；自定义安装可勾选。未安装时删除 `hide_assist.sh`、不写 `hide-assist.conf`、WebUI 不显示「隐藏」页
+- 已安装隐藏组件时，WebUI「隐藏」页提供 **启用开关**（`hide_allow`，**默认开启**）；关闭时不登记 try_umount、不写隐藏状态文件
+- WebUI / 文档补充抓包注意：对 Reqable 与被抓包 App 开「卸载模块」会导致「根证书未安装」或断网，须关闭后再抓
 - 修复 Lite：`cbx509` 打包漏掉内部类导致安装导入 CA 时「无法计算系统库文件名」；D8 现打入全部 class，hash 失败时回退 `-certbridge_info`
 - 开机与 WebUI 刷新时，自动从已启用的 Reqable / ProxyPin 同步最新 CA；证书未变则跳过，读失败保留原文件
 - WebUI 下拉刷新会尝试同步 App 证书，有更新时提示重启后生效

@@ -1,49 +1,85 @@
 html[data-pack="console"] {
-  --cb-font-body: var(--cb-font-mono);
-  --cb-font-display: var(--cb-font-mono);
-  --cb-radius: 6px;
   --cb-topbar-h: 44px;
   --cb-dock-h: 48px;
-  --cb-bg: #0f1419;
-  --cb-surface: #151b23;
-  --cb-surface-2: #1a222d;
-  --cb-ink: #e6edf3;
-  --cb-ink-2: #8b949e;
-  --cb-ink-3: #6e7681;
-  --cb-primary: #58a6ff;
-  --cb-stroke: rgba(240, 246, 252, 0.08);
-  --cb-stroke-strong: rgba(240, 246, 252, 0.14);
+  --cb-dock-pad: 0px;
+  --cb-radius: 6px;
+  --cb-radius-sm: 4px;
+  --cb-radius-lg: 8px;
+  --cb-font-display: "IBM Plex Mono", "Cascadia Code", ui-monospace, monospace;
+  --cb-font-body: "IBM Plex Mono", "Cascadia Code", ui-monospace, monospace;
+  --cb-bg: #0a0e14;
+  --cb-surface: #121820;
+  --cb-surface-2: #171e28;
+  --cb-ink: #e2e8f0;
+  --cb-ink-2: #94a3b8;
+  --cb-ink-3: #64748b;
+  --cb-stroke: rgba(148, 163, 184, 0.16);
+  --cb-stroke-strong: rgba(148, 163, 184, 0.28);
+  --cb-shadow: none;
+  --cb-page-pad: 12px;
+  --cb-space-md: 12px;
 
-  .cb-topbar,
-  .cb-dock {
-    background: #0d1117;
+  color-scheme: dark;
+
+  .cb-card__title,
+  .cb-list__label,
+  .cb-hero__kicker,
+  .cb-metric span {
+    font-family: var(--cb-font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.68rem;
   }
 
   .cb-hero {
-    background: linear-gradient(180deg, #1a222d, #151b23);
     border-left: 3px solid var(--cb-primary);
+    border-radius: 0 6px 6px 0;
+    padding: 12px 14px;
+  }
+
+  .cb-hero__title {
+    font-size: 1.05rem;
+    font-family: var(--cb-font-mono);
+  }
+
+  .cb-metrics {
+    gap: 6px;
   }
 
   .cb-metric {
-    font-variant-numeric: tabular-nums;
+    border-radius: 4px;
+    padding: 8px 2px;
   }
 
-  .cb-row__title {
-    font-size: 0.84rem;
+  .cb-btn {
+    border-radius: 4px;
+    font-family: var(--cb-font-mono);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 8px 12px;
+    min-height: 40px;
+  }
+
+  .cb-row {
+    padding: 10px 12px;
+    min-height: 44px;
+  }
+
+  .cb-log {
+    border: 1px solid var(--cb-stroke-strong);
   }
 }
 
 html[data-pack="console"][data-theme="light"] {
-  --cb-bg: #f0f3f8;
+  --cb-bg: #e8edf3;
   --cb-surface: #fff;
-  --cb-surface-2: #eef2f7;
+  --cb-surface-2: #f1f5f9;
   --cb-ink: #0f172a;
   --cb-ink-2: #475569;
   --cb-ink-3: #64748b;
-  --cb-primary: #2563eb;
+  --cb-stroke: rgba(15, 23, 42, 0.1);
+  --cb-stroke-strong: rgba(15, 23, 42, 0.18);
 
-  .cb-topbar,
-  .cb-dock {
-    background: #e8edf4;
-  }
+  color-scheme: light;
 }

@@ -3,16 +3,17 @@ import { MetricGrid } from "@/shared/ui/layout";
 
 type TrustMetricsProps = {
   overview: TrustOverview;
+  labels: { active: string; custom: string; baseline: string; store: string };
 };
 
-export function TrustMetrics({ overview }: TrustMetricsProps) {
+export function TrustMetrics({ overview, labels }: TrustMetricsProps) {
   return (
     <MetricGrid
       items={[
-        { label: "启用", value: overview.activeCount },
-        { label: "自定义", value: overview.customCount },
-        { label: "基线", value: overview.baselineCount },
-        { label: "库内", value: overview.storeCount },
+        { label: labels.active, value: overview.activeCount },
+        { label: labels.custom, value: overview.customCount },
+        { label: labels.baseline, value: overview.baselineCount },
+        { label: labels.store, value: overview.storeCount },
       ]}
     />
   );

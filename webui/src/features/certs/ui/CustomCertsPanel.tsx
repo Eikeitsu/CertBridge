@@ -7,6 +7,9 @@ type CustomCertsPanelProps = {
   isPending: boolean;
   onImport: (file: File) => void | Promise<unknown>;
   onRemove: (name: string) => void;
+  title?: string;
+  emptyLabel?: string;
+  importLabel?: string;
 };
 
 export function CustomCertsPanel({
@@ -14,9 +17,12 @@ export function CustomCertsPanel({
   isPending,
   onImport,
   onRemove,
+  title,
+  emptyLabel = "暂无自定义证书",
+  importLabel = "导入 CA",
 }: CustomCertsPanelProps) {
   return (
-    <Card title={`自定义证书 (${certificates.length})`}>
+    <Card title={title ?? `自定义证书 (${certificates.length})`}>
       <ListGroup>
         {certificates.length ? (
           certificates.map((cert) => (
@@ -25,18 +31,22 @@ export function CustomCertsPanel({
               title={cert.display || cert.name}
               desc={cert.name}
               extra={
-                <Button variant="ghost" disabled={isPending} onClick={() => onRemove(cert.name)}>
+                <Button
+                  variant="ghost"
+                  disabled={isPending}
+                  onClick={() => onRemove(cert.name)}
+                >
                   删除
                 </Button>
               }
             />
           ))
         ) : (
-          <div className="cb-empty">暂无自定义证书</div>
+          <div className="cb-empty">{emptyLabel}</div>
         )}
       </ListGroup>
       <div style={{ marginTop: 12 }}>
-        <CertImportButton disabled={isPending} onImport={onImport} />
+        <CertImportButton disabled={isPending} onImport={onImport} label={importLabel} />
       </div>
     </Card>
   );

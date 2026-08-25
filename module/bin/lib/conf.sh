@@ -13,7 +13,7 @@ read_conf() {
 write_conf() {
   key="$1"
   value="$2"
-  case "$key" in reqable|proxypin|schema_version|mount_mode|tmpfs_style|hot_allow) ;; *) return 1 ;; esac
+  case "$key" in reqable|proxypin|schema_version|mount_mode|tmpfs_style|hot_allow|hide_allow) ;; *) return 1 ;; esac
   mkdir -p "$CONFDIR" 2>/dev/null || return 1
   tmp="$CONFDIR/.write.$$.$key"
   if [ -f "$CONF" ]; then

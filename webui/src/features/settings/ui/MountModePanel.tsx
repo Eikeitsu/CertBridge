@@ -10,11 +10,21 @@ type MountModePanelProps = {
   mountMode: MountMode;
   pending?: boolean;
   onChange: (mode: MountMode) => void;
+  dense?: boolean;
 };
 
-export function MountModePanel({ mountMode, pending, onChange }: MountModePanelProps) {
+export function MountModePanel({
+  mountMode,
+  pending,
+  onChange,
+  dense,
+}: MountModePanelProps) {
   return (
-    <Card title="证书挂载模式" meta={MOUNT_HELP_FOOTNOTE}>
+    <Card
+      title="证书挂载模式"
+      meta={MOUNT_HELP_FOOTNOTE}
+      className={dense ? "cb-card--dense" : undefined}
+    >
       <Segment
         value={mountMode}
         disabled={pending}
@@ -25,7 +35,14 @@ export function MountModePanel({ mountMode, pending, onChange }: MountModePanelP
         }))}
         onChange={(value) => onChange(value as MountMode)}
       />
-      <ul style={{ margin: "12px 0 0", paddingLeft: "1.2em", fontSize: "0.78rem", color: "var(--cb-ink-3)" }}>
+      <ul
+        style={{
+          margin: "12px 0 0",
+          paddingLeft: "1.2em",
+          fontSize: "0.78rem",
+          color: "var(--cb-ink-3)",
+        }}
+      >
         {MOUNT_ROOT_NOTES.map((note) => (
           <li key={note.name}>
             <strong>{note.name}</strong>：{note.note}

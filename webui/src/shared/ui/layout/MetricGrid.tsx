@@ -19,7 +19,10 @@ export function MetricGrid({ items, columns, className, style }: MetricGridProps
   };
 
   return (
-    <div className={["cb-metrics", className].filter(Boolean).join(" ")} style={gridStyle}>
+    <div
+      className={["cb-metrics", className].filter(Boolean).join(" ")}
+      style={gridStyle}
+    >
       {items.map((item) => (
         <div key={item.label} className="cb-metric">
           <strong>{item.value}</strong>

@@ -341,6 +341,25 @@ cmd_set_hot_allow() {
   echo "hot_allow=$val"
 }
 
+cmd_set_hide_allow() {
+  val="$1"
+  case "$val" in
+    0|1) ;;
+    *) echo "error=invalid_hide_allow"; return 1 ;;
+  esac
+  [ -f "$LIBDIR/hide_assist.sh" ] || { echo "error=hide_feature_not_installed"; return 1; }
+  write_conf hide_allow "$val" || { echo "error=write_failed"; return 1; }
+  if [ "$val" = "0" ]; then
+    hide_clear_applied 2>/dev/null || rm -f "$STATEDIR/hide-assist.conf" 2>/dev/null
+    log_info "config: hide_allow=0 (cleared hide state; reboot clears kernel try_umount)"
+  else
+    log_info "config: hide_allow=1 (will register on next inject / hot mount)"
+  fi
+  echo "ok=1"
+  echo "hide_allow=$val"
+  echo "hint=开启后需重新注入或热挂载才会登记 try_umount；关闭后需重启以清除内核侧登记"
+}
+
 cmd_hot_mount() {
   mode="$1"
   sd_path="$2"
@@ -368,13 +387,14 @@ case "$1" in
   hot_mount) cmd_hot_mount "$2" "$3" ;;
   hot_unmount) cmd_hot_unmount ;;
   set_hot_allow) cmd_set_hot_allow "$2" ;;
+  set_hide_allow) cmd_set_hide_allow "$2" ;;
   reinject|sync)
     echo "error=hot_reload_disabled"
     echo "reboot_required=1"
     exit 1
     ;;
   *)
-    echo "usage: cert_manager.sh {status|list_custom|toggle|sync_apps|set_mount_mode|set_tmpfs_style|set_hot_allow|install_custom|remove_custom|cert_info|hot_mount|hot_unmount}"
+    echo "usage: cert_manager.sh {status|list_custom|toggle|sync_apps|set_mount_mode|set_tmpfs_style|set_hot_allow|set_hide_allow|install_custom|remove_custom|cert_info|hot_mount|hot_unmount}"
     exit 1
     ;;
 esac

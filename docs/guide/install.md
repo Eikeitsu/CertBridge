@@ -22,8 +22,8 @@
 1. 从 [GitHub Releases](https://github.com/Eikeitsu/CertBridge/releases) 下载最新 zip（完整版或 Lite）
 2. 在模块管理器中刷入
 3. 在 20 秒内用音量键选择：
-   - **音量上：默认安装（推荐）**——检测 Reqable / ProxyPin；ProxyPin 无 App 证时用内置兜底；安装 WebUI 与免重启热挂载；挂载模式固定为**完整兼容**
-   - **音量下：自定义安装**——依次选择 Reqable、ProxyPin、WebUI、免重启热挂载，并选择**挂载模式**（完整兼容 / 轻量 Magic）
+   - **音量上：默认安装（推荐）**——检测 Reqable / ProxyPin；ProxyPin 无 App 证时用内置兜底；安装 WebUI 与免重启热挂载；**不安装**挂载隐藏协助；挂载模式固定为**完整兼容**
+   - **音量下：自定义安装**——依次选择 Reqable、ProxyPin、WebUI、免重启热挂载、**挂载隐藏协助**，并选择**挂载模式**（完整兼容 / 轻量 Magic）
    - 若检测到 **HttpCanary**、**ADGuard**，会再依次询问是否导入为自定义
    - 未检测到按键或超时 → 默认完整安装
 4. **重启**手机
@@ -63,6 +63,7 @@
 │   ├── openssl/         # 仅完整版：安装后按 ABI 精简
 │   ├── cbx509/          # 仅 Lite：classes.dex
 │   └── hot_mount.sh     # 可选热挂载
+│   └── lib/hide_assist.sh  # 可选挂载隐藏协助
 ├── certs/
 │   ├── builtin/         # 仅 ProxyPin 兜底
 │   ├── sources/         # 从 App 导入的 Reqable / ProxyPin

@@ -49,7 +49,12 @@ export function CustomCertsGroup({
                 >
                   详情
                 </Button>
-                <Button size="mini" fill="none" color="danger" onClick={() => onRemove(cert.name)}>
+                <Button
+                  size="mini"
+                  fill="none"
+                  color="danger"
+                  onClick={() => onRemove(cert.name)}
+                >
                   移除
                 </Button>
               </Space>

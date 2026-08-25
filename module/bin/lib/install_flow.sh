@@ -46,6 +46,7 @@ certbridge_install_choose_mode() {
   INSTALL_PROXYPIN=1
   INSTALL_WEBUI=1
   INSTALL_HOT=1
+  INSTALL_HIDE=0
   INSTALL_MOUNT_MODE="compatible"
 
   ui_print "--------------------------------"
@@ -54,6 +55,7 @@ certbridge_install_choose_mode() {
   ui_print "   自动检测已安装抓包 App 的 CA"
   ui_print "   ProxyPin 未检测到时使用内置兜底"
   ui_print "   并安装 WebUI 与免重启热挂载"
+  ui_print "   不安装挂载隐藏协助（可自定义安装勾选）"
   ui_print "   挂载：完整兼容模式（运行时 bind）"
   ui_print " 音量下：自定义安装"
   ui_print "   逐项选择证书、附加功能与挂载模式"
@@ -74,6 +76,13 @@ certbridge_install_choose_mode() {
       ui_print " 存储卡中的 CA，请仅使用可信证书"
       certbridge_choose_component "免重启热挂载"
       INSTALL_HOT="$COMPONENT_CHOICE"
+      ui_print "--------------------------------"
+      ui_print " 挂载隐藏协助：bind 后向 SuSFS / 内核"
+      ui_print " 注册 try_umount。抓包时勿对 Reqable"
+      ui_print " 与被抓包 App 开「卸载模块」，否则"
+      ui_print " 会显示根证未安装或抓包断网。"
+      certbridge_choose_component "挂载隐藏协助（SuSFS try_umount）"
+      INSTALL_HIDE="$COMPONENT_CHOICE"
       ui_print "--------------------------------"
       ui_print " 请选择挂载模式"
       ui_print " 音量上：完整兼容（推荐，默认方案）"
@@ -278,10 +287,24 @@ certbridge_install_write_config() {
       echo "hot_allow=1" >>"$MODPATH/config/certs.conf"
     fi
   fi
+  if [ "$INSTALL_HIDE" = "1" ]; then
+    if grep -q '^hide_allow=' "$MODPATH/config/certs.conf" 2>/dev/null; then
+      sed -i "s/^hide_allow=.*/hide_allow=1/" "$MODPATH/config/certs.conf"
+    else
+      echo "hide_allow=1" >>"$MODPATH/config/certs.conf"
+    fi
+  else
+    # 未安装隐藏组件：不保留 hide_allow，避免误导
+    if grep -q '^hide_allow=' "$MODPATH/config/certs.conf" 2>/dev/null; then
+      sed -i '/^hide_allow=/d' "$MODPATH/config/certs.conf"
+    fi
+    rm -f "$MODPATH/data/state/hide-assist.conf" 2>/dev/null
+  fi
   cat >"$MODPATH/config/install-profile.conf" <<EOF
 install_mode=$INSTALL_MODE
 webui=$INSTALL_WEBUI
 hot_reload=$INSTALL_HOT
+hide_assist=$INSTALL_HIDE
 mount_mode=$INSTALL_MOUNT_MODE
 reqable_source=$([ "$REQABLE_SRC_OK" = "1" ] && echo app || echo none)
 proxypin_source=$PROXYPIN_SRC
@@ -311,6 +334,10 @@ certbridge_install_trim_components() {
   if [ "$INSTALL_HOT" != "1" ]; then
     rm -f "$MODPATH/bin/hot_mount.sh"
   fi
+  if [ "$INSTALL_HIDE" != "1" ]; then
+    rm -f "$MODPATH/bin/lib/hide_assist.sh"
+    rm -f "$MODPATH/data/state/hide-assist.conf" 2>/dev/null
+  fi
 }
 
 certbridge_install_print_summary() {
@@ -327,6 +354,7 @@ certbridge_install_print_summary() {
   esac
   [ "$INSTALL_WEBUI" = "1" ] && WEBUI_LABEL="已安装" || WEBUI_LABEL="未安装"
   [ "$INSTALL_HOT" = "1" ] && HOT_LABEL="已安装" || HOT_LABEL="未安装"
+  [ "$INSTALL_HIDE" = "1" ] && HIDE_LABEL="已安装（默认开启，可在 WebUI 关闭）" || HIDE_LABEL="未安装"
   if [ "$INSTALL_MOUNT_MODE" = "magic" ]; then
     MOUNT_LABEL="轻量 Magic Mount"
   else
@@ -340,7 +368,8 @@ certbridge_install_print_summary() {
   ui_print " ProxyPin：$PROXYPIN_LABEL"
   ui_print " WebUI：$WEBUI_LABEL"
   ui_print " 免重启热挂载：$HOT_LABEL"
-  log_info "安装选项：方案=$MODE_LABEL，挂载=$MOUNT_LABEL，Reqable=$REQABLE_LABEL，ProxyPin=$PROXYPIN_LABEL，WebUI=$WEBUI_LABEL，免重启热挂载=$HOT_LABEL"
+  ui_print " 挂载隐藏协助：$HIDE_LABEL"
+  log_info "安装选项：方案=$MODE_LABEL，挂载=$MOUNT_LABEL，Reqable=$REQABLE_LABEL，ProxyPin=$PROXYPIN_LABEL，WebUI=$WEBUI_LABEL，免重启热挂载=$HOT_LABEL，挂载隐藏=$HIDE_LABEL"
   ui_print "--------------------------------"
   ui_print " 开机将再次尝试从 App 刷新 CA"
   if [ "$INSTALL_MOUNT_MODE" = "magic" ]; then
@@ -355,6 +384,11 @@ certbridge_install_print_summary() {
     ui_print " 永久配置重启生效；临时证书支持免重启"
   else
     ui_print " 永久配置重启生效；未安装临时热挂载"
+  fi
+  if [ "$INSTALL_HIDE" = "1" ]; then
+    ui_print " 隐藏协助已安装：默认开启 try_umount"
+    ui_print " WebUI「隐藏」页可关闭；抓包勿对 Reqable"
+    ui_print " 与被抓包 App 开「卸载模块」"
   fi
   ui_print " Android 14+ 自动注入 APEX"
   ui_print "--------------------------------"

@@ -1,8 +1,21 @@
 #!/system/bin/sh
-# 挂载隐藏协助：SuSFS try_umount / 内核 umount + 隐藏栈探测
+# 挂载隐藏协助：SuSFS try_umount / 内核 umount + 隐藏栈探测（可选安装组件）
 
 SUSFS_BIN="${SUSFS_BIN:-/data/adb/ksu/bin/ksu_susfs}"
 HIDE_STATE_FILE="${HIDE_STATE_FILE:-$STATEDIR/hide-assist.conf}"
+
+hide_assist_available() {
+  return 0
+}
+
+# conf hide_allow=1 时才真正注册 try_umount / 写状态文件（安装组件后默认开启）
+hide_assist_enabled() {
+  [ "$(read_conf hide_allow 1)" = "1" ]
+}
+
+hide_clear_applied() {
+  rm -f "$HIDE_STATE_FILE" 2>/dev/null
+}
 
 hide_module_enabled() {
   moddir="$1"
@@ -30,10 +43,11 @@ hide_read_applied() {
   [ -f "$HIDE_STATE_FILE" ] && grep -q '^hide_applied=1' "$HIDE_STATE_FILE" 2>/dev/null
 }
 
-# 对单个 cacerts 目标注册 try_umount（bind 成功后调用）
+# 对单个 cacerts 目标注册 try_umount（bind 成功后调用；需开启 hide_allow）
 hide_assist_for_target() {
   target="$1"
   [ -n "$target" ] || return 0
+  hide_assist_enabled || return 0
   applied=0
 
   if hide_susfs_available; then
@@ -57,6 +71,10 @@ hide_assist_for_target() {
 
 # 注入完成后对所有目标路径注册隐藏协助
 hide_assist_after_inject() {
+  hide_assist_enabled || {
+    hide_clear_applied
+    return 0
+  }
   for target in $(list_target_stores); do
     hide_assist_for_target "$target"
   done
@@ -163,14 +181,25 @@ compose_hide_summary() {
 }
 
 emit_hide_status() {
-  provider=$(detect_hide_provider)
+  echo "hide_supported=1"
+  echo "hide_allow=$(read_conf hide_allow 1)"
   echo "stage_root=$RUNTIME_MOUNT_ROOT"
-  echo "hide_provider=$provider"
-  echo "hide_provider_label=$(hide_provider_label "$provider")"
-  if hide_read_applied; then
-    echo "hide_applied=1"
+  if hide_assist_enabled; then
+    provider=$(detect_hide_provider)
+    echo "hide_provider=$provider"
+    echo "hide_provider_label=$(hide_provider_label "$provider")"
+    if hide_read_applied; then
+      echo "hide_applied=1"
+    else
+      echo "hide_applied=0"
+    fi
+    echo "hide_summary=$(compose_hide_summary)"
   else
+    echo "hide_provider=none"
+    echo "hide_provider_label=已关闭（开关未开）"
     echo "hide_applied=0"
+    echo "hide_summary=隐藏协助已关闭，不会注册 try_umount"
   fi
-  echo "hide_summary=$(compose_hide_summary)"
 }
+
+HIDE_ASSIST_LOADED=1

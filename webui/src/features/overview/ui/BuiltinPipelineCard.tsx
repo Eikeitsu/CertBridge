@@ -3,11 +3,15 @@ import { Card, ListGroup, Row, Tag } from "@/shared/ui/primitives";
 
 type BuiltinPipelineCardProps = {
   pipeline: TrustOverview["builtinPipeline"];
+  title?: string;
 };
 
-export function BuiltinPipelineCard({ pipeline }: BuiltinPipelineCardProps) {
+export function BuiltinPipelineCard({
+  pipeline,
+  title = "内置证书管道",
+}: BuiltinPipelineCardProps) {
   return (
-    <Card title="内置证书管道">
+    <Card title={title}>
       <ListGroup>
         {pipeline.map((row) => (
           <Row

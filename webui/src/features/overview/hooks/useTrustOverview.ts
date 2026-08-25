@@ -119,7 +119,14 @@ export function useTrustOverview() {
     if (activeCount > 0 && trust.tone === TrustTone.Ok) return 96;
     if (activeCount > 0) return 78;
     return 52;
-  }, [statusError, isDisabled, status.inject_error, trust.tone, isPendingReboot, activeCount]);
+  }, [
+    statusError,
+    isDisabled,
+    status.inject_error,
+    trust.tone,
+    isPendingReboot,
+    activeCount,
+  ]);
 
   const mountMode = parseEnum(MountMode, status.mount_mode, MountMode.Compatible);
   const tmpfsStyle = parseEnum(TmpfsStyle, status.tmpfs_style, TmpfsStyle.Dev);

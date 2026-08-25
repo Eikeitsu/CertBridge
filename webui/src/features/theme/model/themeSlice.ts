@@ -4,11 +4,7 @@ import { ACCENTS, PACK_CHROME_PRESETS, THEME_DEFAULTS } from "@/shared/config/th
 import { FLAG_OFF, FLAG_ON, FONT_SCALE } from "@/shared/config/constants";
 import { ThemeMode, ThemePack, type ResolvedTheme } from "@/entities/module/enums";
 import { parseEnum } from "@/shared/lib/enum";
-import {
-  applyThemeToDom,
-  migratePack,
-  resolveThemeMode,
-} from "../lib/applyTheme";
+import { applyThemeToDom, migratePack, resolveThemeMode } from "../lib/applyTheme";
 import { syncChromeBars } from "../lib/chrome";
 
 export type ThemeState = {

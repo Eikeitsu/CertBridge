@@ -6,5 +6,7 @@ type PageStackProps = {
 };
 
 export function PageStack({ children, className }: PageStackProps) {
-  return <div className={["cb-stack", className].filter(Boolean).join(" ")}>{children}</div>;
+  return (
+    <div className={["cb-stack", className].filter(Boolean).join(" ")}>{children}</div>
+  );
 }

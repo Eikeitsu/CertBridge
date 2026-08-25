@@ -9,6 +9,12 @@
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#ededed" />
     <title>证书桥</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Sora:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
     <script>
       (function () {
         try {
@@ -20,7 +26,8 @@
           var pack = read("cb_theme_pack", "settings");
           var legacy = { classic: "settings", material: "console", fluid: "studio" };
           if (legacy[pack]) pack = legacy[pack];
-          if (pack !== "settings" && pack !== "console" && pack !== "studio") pack = "settings";
+          if (pack !== "settings" && pack !== "console" && pack !== "studio")
+            pack = "settings";
           var mode = read("cb_theme_mode", "system");
           var prefersDark =
             !!window.matchMedia &&

@@ -6,6 +6,8 @@ type LogToolbarProps = {
   onLevelChange: (filter: string) => void;
   onRefresh: () => void;
   onClear: () => void;
+  refreshLabel?: string;
+  clearLabel?: string;
 };
 
 export function LogToolbar({
@@ -13,6 +15,8 @@ export function LogToolbar({
   onLevelChange,
   onRefresh,
   onClear,
+  refreshLabel = "刷新",
+  clearLabel = "清空",
 }: LogToolbarProps) {
   return (
     <>
@@ -26,9 +30,9 @@ export function LogToolbar({
       />
       <div className="cb-btn-row" style={{ margin: "12px 0" }}>
         <Button variant="primary" onClick={onRefresh}>
-          刷新
+          {refreshLabel}
         </Button>
-        <Button onClick={onClear}>清空</Button>
+        <Button onClick={onClear}>{clearLabel}</Button>
       </div>
     </>
   );

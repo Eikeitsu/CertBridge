@@ -85,7 +85,24 @@ certbridge_load_libs_runtime() {
   certbridge_load_lib generation.sh
   certbridge_load_lib status.sh
   certbridge_load_lib inject_diag.sh
-  certbridge_load_lib hide_assist.sh
+  # 挂载隐藏为可选组件：未安装时不加载，并提供空实现避免调用点报错
+  if [ -f "$LIBDIR/hide_assist.sh" ]; then
+    certbridge_load_lib hide_assist.sh
+  else
+    hide_assist_available() { return 1; }
+    hide_assist_enabled() { return 1; }
+    hide_assist_for_target() { return 0; }
+    hide_assist_after_inject() { return 0; }
+    emit_hide_status() {
+      echo "hide_supported=0"
+      echo "hide_allow=0"
+      echo "stage_root=$RUNTIME_MOUNT_ROOT"
+      echo "hide_provider=none"
+      echo "hide_provider_label=未安装隐藏组件"
+      echo "hide_applied=0"
+      echo "hide_summary=未安装挂载隐藏组件"
+    }
+  fi
 }
 
 certbridge_init_paths "$0"

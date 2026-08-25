@@ -1,34 +1,38 @@
 html[data-pack="settings"] {
-  --cb-radius: 10px;
-  --cb-topbar-h: 48px;
-  --cb-dock-h: 52px;
-  --cb-bg: #ededed;
-  --cb-surface: #fff;
-  --cb-surface-2: #f7f7f7;
-  --cb-primary: #07c160;
+  --cb-topbar-h: 56px;
+  --cb-dock-h: 60px;
+  --cb-dock-pad: 0px;
+  --cb-radius: 12px;
+  --cb-radius-sm: 10px;
+  --cb-radius-lg: 16px;
+  --cb-font-display: "Sora", "PingFang SC", "HarmonyOS Sans SC", sans-serif;
+  --cb-font-body: "Manrope", "PingFang SC", "HarmonyOS Sans SC", sans-serif;
+  --cb-bg: #eef1f5;
+  --cb-shadow: none;
+  --cb-page-pad: 16px;
 
-  .cb-topbar,
-  .cb-dock {
-    background: #ededed;
-  }
-
-  .cb-card,
-  .cb-list {
+  .cb-card {
     box-shadow: none;
   }
 
+  .cb-list,
+  .cb-inset {
+    border-radius: 12px;
+  }
+
   .cb-hero {
-    background: #fff;
+    background: var(--cb-surface);
+  }
+
+  .cb-tag {
+    border-radius: 6px;
+  }
+
+  .cb-page-title {
+    font-size: 1.7rem;
   }
 }
 
 html[data-pack="settings"][data-theme="dark"] {
-  --cb-bg: #111;
-  --cb-surface: #1c1c1e;
-  --cb-surface-2: #2c2c2e;
-
-  .cb-topbar,
-  .cb-dock {
-    background: #1c1c1e;
-  }
+  --cb-bg: #0c1118;
 }

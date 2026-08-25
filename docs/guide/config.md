@@ -12,12 +12,12 @@ mount_mode=compatible
 tmpfs_style=dev
 ```
 
-| 键               | 含义                                                                 | 默认         |
-| ---------------- | -------------------------------------------------------------------- | ------------ |
-| `schema_version` | 配置结构版本，请勿手动修改                                           | `3`          |
-| `reqable`        | 启用 Reqable（App 导入）CA                                           | `1`          |
-| `proxypin`       | 启用 ProxyPin CA（App 或内置兜底）                                   | `1`          |
-| `mount_mode`     | 挂载模式：`compatible` 或 `magic`                                    | `compatible` |
+| 键               | 含义                                                                                       | 默认         |
+| ---------------- | ------------------------------------------------------------------------------------------ | ------------ |
+| `schema_version` | 配置结构版本，请勿手动修改                                                                 | `3`          |
+| `reqable`        | 启用 Reqable（App 导入）CA                                                                 | `1`          |
+| `proxypin`       | 启用 ProxyPin CA（App 或内置兜底）                                                         | `1`          |
+| `mount_mode`     | 挂载模式：`compatible` 或 `magic`                                                          | `compatible` |
 | `tmpfs_style`    | 临时挂载路径：`dev`（`/dev/.cb*`）、`short`（`.fs0`/`.fs1`）或 `legacy`（`sys-ca-merge*`） | `dev`        |
 
 ### 挂载模式
@@ -26,15 +26,15 @@ tmpfs_style=dev
 
 #### 完整兼容（`compatible`，默认）
 
-| 项目           | 行为                                                                                                     |
-| -------------- | -------------------------------------------------------------------------------------------------------- |
-| 原理           | 开机从当前系统 / Conscrypt 信任库做**完整合并**，加上启用的 addon，经 tmpfs 后 `bind` 到目标路径         |
-| 模块 `system/` | **不写**叠层目录（避免错误叠层导致系统 CA 被遮蔽）                                                       |
-| Android 7–13   | bind `/system/etc/security/cacerts`                                                                      |
-| Android 14+    | bind APEX Conscrypt 与 system 双路径（供 Flutter 等检测）                                                |
+| 项目           | 行为                                                                                                                          |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| 原理           | 开机从当前系统 / Conscrypt 信任库做**完整合并**，加上启用的 addon，经 tmpfs 后 `bind` 到目标路径                              |
+| 模块 `system/` | **不写**叠层目录（避免错误叠层导致系统 CA 被遮蔽）                                                                            |
+| Android 7–13   | bind `/system/etc/security/cacerts`                                                                                           |
+| Android 14+    | bind APEX Conscrypt 与 system 双路径（供 Flutter 等检测）                                                                     |
 | 临时目录       | 由 `tmpfs_style` 决定：默认 `/dev/.cb0`（热挂载 `/dev/.cb1`）；`short` 为 local/tmp `.fs*`；`legacy` 为 `sys-ca-merge{,-hot}` |
-| 元模块         | **不需要**。Magisk / KernelSU / APatch 只要能跑 `post-fs-data` / `service` 即可                          |
-| 特点           | 兼容面宽、行为可控；mountinfo 中可见临时目录挂载                                                         |
+| 元模块         | **不需要**。Magisk / KernelSU / APatch 只要能跑 `post-fs-data` / `service` 即可                                               |
+| 特点           | 兼容面宽、行为可控；mountinfo 中可见临时目录挂载                                                                              |
 
 适合：大多数用户、KernelSU 未确认挂载叠层是否正确、需要多 CA / 热挂载 / 与完整校验一致的场景。
 
@@ -70,21 +70,22 @@ tmpfs_style=dev
 
 完整兼容与热挂载会把合并后的证书集放到临时层再 bind。可用 WebUI「更多 → 临时挂载路径」或直接改 `certs.conf`：
 
-| 值              | 开机注入     | 热挂载       | 说明                                              |
-| --------------- | ------------ | ------------ | ------------------------------------------------- |
-| `dev`（默认）   | `/dev/.cb0`  | `/dev/.cb1`  | 避开 `/data/local/tmp` 关键词扫描；**不能替代 umount 隐藏** |
-| `short`         | `/data/local/tmp/.fs0` | `/data/local/tmp/.fs1` | 短路径                                            |
-| `legacy`        | `/data/local/tmp/sys-ca-merge` | `/data/local/tmp/sys-ca-merge-hot` | 旧版可读路径，便于排障                            |
+| 值            | 开机注入                       | 热挂载                             | 说明                                                        |
+| ------------- | ------------------------------ | ---------------------------------- | ----------------------------------------------------------- |
+| `dev`（默认） | `/dev/.cb0`                    | `/dev/.cb1`                        | 避开 `/data/local/tmp` 关键词扫描；**不能替代 umount 隐藏** |
+| `short`       | `/data/local/tmp/.fs0`         | `/data/local/tmp/.fs1`             | 短路径                                                      |
+| `legacy`      | `/data/local/tmp/sys-ca-merge` | `/data/local/tmp/sys-ca-merge-hot` | 旧版可读路径，便于排障                                      |
 
 切换后需**重启**。卸载会同时清理全部路径。
 
 ### 挂载隐藏（与 bindhosts 思路一致）
 
 - **换路径 ≠ 隐身**：检测方仍可能看到 cacerts 上的 bind mount。
-- **KernelSU + SuSFS**：模块 bind 成功后会尝试 `add_try_umount`；WebUI **隐藏页** 会显示是否已注册。
+- **KernelSU + SuSFS**：若**自定义安装**勾选了挂载隐藏协助，并在 WebUI「隐藏」页开启开关，模块 bind 成功后会尝试 `add_try_umount`。
+- **抓包时**：对 Reqable / ProxyPin 与被抓包目标 **关闭**「卸载模块 / Umount / 排除修改」，否则会出现「根证书未安装」或断网。详见 [挂载隐藏 · 抓包必读](/guide/hide#抓包必读不要对抓包链路开卸载模块)。
 - **Magisk**：对目标 App 配置**排除列表（DenyList）**，并配合 Shamiko 或 ZygiskNext/ReZygisk/NeoZygisk 的 umount；使用 Shamiko 时通常应**关闭**「强制执行排除列表（Enforce DenyList）」。
 - **APatch**：对目标 App 开「排除修改」，并安装 Zygisk 助手模块。
-- 详细说明见 [挂载隐藏说明](/guide/hide) 与 WebUI **「隐藏」** 页。
+- 详细说明见 [挂载隐藏说明](/guide/hide)；WebUI「隐藏」页仅在安装了该可选组件时出现。
 
 这也只减弱字符串特征，挡不住「信任库被 bind」本身。
 
@@ -100,6 +101,7 @@ tmpfs_style=dev
 install_mode=default
 webui=1
 hot_reload=1
+hide_assist=0
 mount_mode=compatible
 reqable_source=app
 proxypin_source=builtin
@@ -110,11 +112,12 @@ proxypin_source=builtin
 | `install_mode`    | `default` 或 `custom`                                    |
 | `webui`           | 是否安装了 WebUI（`1` / `0`）                            |
 | `hot_reload`      | 是否安装了免重启热挂载（`1` / `0`）                      |
+| `hide_assist`     | 是否安装了挂载隐藏协助（`1` / `0`；默认安装为 `0`）      |
 | `mount_mode`      | `compatible` 或 `magic`                                  |
 | `reqable_source`  | `app` 或 `none`（未导入成功则为 none，对应开关会被关掉） |
 | `proxypin_source` | `app` / `builtin` / `none`                               |
 
-选择不安装 WebUI 不影响开机证书注入；选择不安装热挂载后，设备上不会保留 `bin/hot_mount.sh`，WebUI 也会隐藏对应区域。
+选择不安装 WebUI 不影响开机证书注入；选择不安装热挂载后，设备上不会保留 `bin/hot_mount.sh`，WebUI 也会隐藏对应区域。选择不安装挂载隐藏后，不会保留 `bin/lib/hide_assist.sh`，不写隐藏状态文件，WebUI 不显示「隐藏」页。
 
 默认安装固定 `mount_mode=compatible`；仅**自定义安装**会询问挂载模式。
 

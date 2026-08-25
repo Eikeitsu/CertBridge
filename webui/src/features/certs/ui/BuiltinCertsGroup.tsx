@@ -42,7 +42,12 @@ export function BuiltinCertsGroup({
                 {flags.length ? (
                   <Space wrap>
                     {flags.map((flag) => (
-                      <Tag key={flag.label} color={flagColor(flag.tone)} fill="outline" round>
+                      <Tag
+                        key={flag.label}
+                        color={flagColor(flag.tone)}
+                        fill="outline"
+                        round
+                      >
                         {flag.label}
                       </Tag>
                     ))}
@@ -55,7 +60,9 @@ export function BuiltinCertsGroup({
                 <Switch
                   checked={item.isEnabled}
                   loading={pendingKind === item.kind}
-                  disabled={!canToggle || Boolean(pendingKind && pendingKind !== item.kind)}
+                  disabled={
+                    !canToggle || Boolean(pendingKind && pendingKind !== item.kind)
+                  }
                   onChange={(checked) => onToggle(item.kind, checked)}
                 />
                 <Button

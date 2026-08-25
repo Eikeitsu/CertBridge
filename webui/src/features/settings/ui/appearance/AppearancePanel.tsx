@@ -12,15 +12,28 @@ import { AccentPickerRow } from "./AccentPickerRow";
 import { FontScaleRow } from "./FontScaleRow";
 import { Card } from "@/shared/ui/primitives";
 
-export function AppearancePanel() {
+type AppearancePanelProps = {
+  title?: string;
+  meta?: string;
+  dense?: boolean;
+  heroCards?: boolean;
+};
+
+export function AppearancePanel({
+  title = "外观",
+  meta = "主题包会改变布局与文案语气",
+  dense,
+  heroCards,
+}: AppearancePanelProps) {
   const dispatch = useAppDispatch();
   const theme = useAppSelector(selectThemeState);
 
   return (
-    <Card title="外观" meta="三套独立主题：设置 / 控制台 / 工作室">
+    <Card title={title} meta={meta} className={dense ? "cb-card--dense" : undefined}>
       <ThemePackPickerRow
         value={theme.pack}
         onChange={(value) => dispatch(setThemePack(value))}
+        previewCards={heroCards}
       />
       <ThemeModePickerRow
         value={theme.mode}

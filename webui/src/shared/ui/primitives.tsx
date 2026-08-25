@@ -15,10 +15,7 @@ export function Card({
   );
 }
 
-export function ListGroup({
-  label,
-  children,
-}: PropsWithChildren<{ label?: string }>) {
+export function ListGroup({ label, children }: PropsWithChildren<{ label?: string }>) {
   return (
     <div>
       {label ? <div className="cb-list__label">{label}</div> : null}
@@ -45,7 +42,9 @@ export function Row({
       type={onClick ? "button" : undefined}
       className="cb-row"
       onClick={onClick}
-      style={onClick ? { width: "100%", textAlign: "left", cursor: "pointer" } : undefined}
+      style={
+        onClick ? { width: "100%", textAlign: "left", cursor: "pointer" } : undefined
+      }
     >
       <div className="cb-row__main">
         {title ? <div className="cb-row__title">{title}</div> : null}

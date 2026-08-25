@@ -60,9 +60,7 @@ export function CertDetailBody({ detail, brandKind }: CertDetailBodyProps) {
               {detail.flags.map((flag) => (
                 <Tag
                   key={flag}
-                  color={
-                    flag === "已过期" || flag === "即将到期" ? "warning" : "primary"
-                  }
+                  color={flag === "已过期" || flag === "即将到期" ? "warning" : "primary"}
                   fill="outline"
                   round
                 >

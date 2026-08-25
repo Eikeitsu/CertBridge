@@ -2,71 +2,44 @@ import { ThemeMode, ThemePack } from "@/entities/module/enums";
 
 export const THEME_DEFAULTS = {
   mode: ThemeMode.System,
-  pack: ThemePack.Classic,
-  accentId: "wechat",
+  pack: ThemePack.Settings,
+  accentId: "teal",
   fontScale: 1,
   compact: false,
-  floatDock: false,
-  dockGlass: true,
-  barBlur: true,
-  monet: true,
-  uiCustom: false,
 } as const;
 
-/** 新视觉基线强调色（非旧印章青绿） */
 export const ACCENTS = [
-  { id: "wechat", label: "微信绿", color: "#07C160", pair: "#576B95" },
-  { id: "alipay", label: "支付蓝", color: "#1677FF", pair: "#13C2C2" },
-  { id: "rose", label: "珊瑚红", color: "#E11D48", pair: "#4F46E5" },
-  { id: "ink", label: "墨黑", color: "#111827", pair: "#F59E0B" },
+  { id: "teal", label: "青绿", color: "#0D9488", pair: "#0369A1" },
+  { id: "blue", label: "天蓝", color: "#2563EB", pair: "#0891B2" },
+  { id: "amber", label: "琥珀", color: "#D97706", pair: "#B45309" },
+  { id: "rose", label: "玫红", color: "#E11D48", pair: "#7C3AED" },
 ] as const;
 
 export const PACK_OPTIONS = [
   {
-    value: ThemePack.Classic,
-    label: "印记",
-    hint: "微信灰底 · 分组列表 · 细线单元格",
+    value: ThemePack.Settings,
+    label: "设置",
+    hint: "灰底分组列表 · 细线 · 扁平底栏",
   },
   {
-    value: ThemePack.Material,
-    label: "层积",
-    hint: "支付宝色块 · 渐变看板 · 抬升卡片",
+    value: ThemePack.Console,
+    label: "控制台",
+    hint: "高密度指标 · 等宽日志 · 深色友好",
   },
   {
-    value: ThemePack.Fluid,
-    label: "虹桥",
-    hint: "玻璃浮岛 · 柔渐变 · 口语化",
+    value: ThemePack.Studio,
+    label: "工作室",
+    hint: "大状态 Hero · 轻氛围 · 克制产品感",
   },
 ] as const;
 
-/** 切换主题包时（未开高级自定义）自动套用的壳层预设 */
 export const PACK_CHROME_PRESETS: Record<
   ThemePack,
-  {
-    floatDock: boolean;
-    dockGlass: boolean;
-    barBlur: boolean;
-    accentId: string;
-  }
+  { accentId: string }
 > = {
-  [ThemePack.Classic]: {
-    floatDock: false,
-    dockGlass: false,
-    barBlur: false,
-    accentId: "wechat",
-  },
-  [ThemePack.Material]: {
-    floatDock: false,
-    dockGlass: true,
-    barBlur: true,
-    accentId: "alipay",
-  },
-  [ThemePack.Fluid]: {
-    floatDock: true,
-    dockGlass: true,
-    barBlur: true,
-    accentId: "rose",
-  },
+  [ThemePack.Settings]: { accentId: "teal" },
+  [ThemePack.Console]: { accentId: "blue" },
+  [ThemePack.Studio]: { accentId: "rose" },
 };
 
 export const THEME_MODE_OPTIONS = [
@@ -75,10 +48,6 @@ export const THEME_MODE_OPTIONS = [
   { value: ThemeMode.Dark, label: "深色" },
 ] as const;
 
-export const MONET_PACKS: ThemePack[] = [ThemePack.Fluid, ThemePack.Material];
-
-export const MONET_TOKEN_KEYS = ["--md-sys-color-primary", "--primary"] as const;
-
-export function supportsMonet(pack: ThemePack): boolean {
-  return MONET_PACKS.includes(pack);
+export function supportsMonet(_pack: ThemePack): boolean {
+  return false;
 }

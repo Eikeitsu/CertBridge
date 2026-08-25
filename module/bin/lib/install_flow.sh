@@ -269,7 +269,7 @@ certbridge_install_write_config() {
     echo "schema_version=3" >>"$MODPATH/config/certs.conf"
   fi
   if ! grep -q '^tmpfs_style=' "$MODPATH/config/certs.conf" 2>/dev/null; then
-    echo "tmpfs_style=short" >>"$MODPATH/config/certs.conf"
+    echo "tmpfs_style=dev" >>"$MODPATH/config/certs.conf"
   fi
   if [ "$INSTALL_HOT" = "1" ]; then
     if grep -q '^hot_allow=' "$MODPATH/config/certs.conf" 2>/dev/null; then

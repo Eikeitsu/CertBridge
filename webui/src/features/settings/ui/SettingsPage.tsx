@@ -1,9 +1,10 @@
-import { AppearancePanel } from "@/features/theme/ui/AppearancePanel";
-import { AboutSection } from "@/features/about/ui/AboutSection";
 import { useMountMode } from "@/features/settings/hooks/useMountMode";
 import { useTmpfsStyle } from "@/features/settings/hooks/useTmpfsStyle";
+import { PageStack } from "@/shared/ui/layout";
+import { AppearancePanel } from "./appearance/AppearancePanel";
 import { MountModePanel } from "./MountModePanel";
 import { TmpfsPathPanel } from "./TmpfsPathPanel";
+import { AboutSection } from "@/features/about/ui/AboutSection";
 
 export function SettingsPage() {
   const {
@@ -18,7 +19,7 @@ export function SettingsPage() {
   } = useTmpfsStyle();
 
   return (
-    <div className="ov-stack settings-page">
+    <PageStack>
       <AppearancePanel />
       <MountModePanel
         mountMode={mountMode}
@@ -31,6 +32,6 @@ export function SettingsPage() {
         onChange={(style) => void handleTmpfsChange(style)}
       />
       <AboutSection />
-    </div>
+    </PageStack>
   );
 }

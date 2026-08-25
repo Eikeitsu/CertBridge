@@ -54,7 +54,7 @@ inject_reason_hint() {
     overlay_prepare_failed) echo "检查挂载模式设置，或改回「完整兼容」后重装/重启" ;;
     generation_failed|generation_invalid) echo "查看日志中 generation 相关行；确认系统 CA 可读取" ;;
     no_target) echo "确认设备存在 /system 或 APEX 证书目录" ;;
-    tmpfs_failed|stage_copy_failed) echo "检查 /data/local/tmp 空间与权限；可切换临时路径风格后重启" ;;
+    tmpfs_failed|stage_copy_failed) echo "检查临时层路径（/dev 或 /data/local/tmp）空间与权限；可切换临时路径风格后重启" ;;
     selinux_failed) echo "部分 ROM 限制 chcon；可尝试完整兼容模式" ;;
     bind_failed|boot_inject_failed) echo "重启后再试；仍失败请到日志页搜索 inject:" ;;
     nsenter_unavailable) echo "当前 Root 方案可能裁剪了 nsenter，建议完整兼容模式或更换环境" ;;

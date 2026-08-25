@@ -1,0 +1,64 @@
+html[data-pack="studio"] {
+  --cb-font-display: "Fraunces", "Songti SC", "Noto Serif SC", serif;
+  --cb-radius: 18px;
+  --cb-topbar-h: 56px;
+  --cb-dock-h: 64px;
+  --cb-bg: #f5f0eb;
+  --cb-surface: rgba(255, 255, 255, 0.88);
+  --cb-surface-2: rgba(255, 255, 255, 0.62);
+  --cb-primary: #b45309;
+  --cb-stroke: rgba(69, 26, 3, 0.08);
+
+  body {
+    background:
+      radial-gradient(90% 60% at 0% 0%, rgba(180, 83, 9, 0.12), transparent 55%),
+      radial-gradient(70% 50% at 100% 0%, rgba(14, 116, 144, 0.1), transparent 50%),
+      var(--cb-bg);
+  }
+
+  .cb-topbar,
+  .cb-dock {
+    background: transparent;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .cb-hero {
+    padding: var(--cb-space-lg);
+    background: linear-gradient(
+      160deg,
+      rgba(255, 255, 255, 0.95),
+      rgba(255, 251, 245, 0.75)
+    );
+    box-shadow: 0 16px 40px rgba(69, 26, 3, 0.08);
+  }
+
+  .cb-hero__title {
+    font-size: 1.65rem;
+  }
+
+  .cb-dock {
+    margin: 0 12px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--cb-stroke);
+    height: calc(var(--cb-inset-bottom) + var(--cb-dock-h) - 8px);
+  }
+
+  .cb-shell {
+    padding-bottom: calc(var(--cb-inset-bottom) + var(--cb-dock-h) + 8px);
+  }
+}
+
+html[data-pack="studio"][data-theme="dark"] {
+  --cb-bg: #14110f;
+  --cb-surface: rgba(28, 25, 23, 0.92);
+  --cb-surface-2: rgba(41, 37, 36, 0.75);
+  --cb-primary: #f59e0b;
+  --cb-ink: #fafaf9;
+
+  body {
+    background:
+      radial-gradient(80% 50% at 0% 0%, rgba(245, 158, 11, 0.12), transparent 50%),
+      var(--cb-bg);
+  }
+}

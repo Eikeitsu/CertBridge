@@ -1,0 +1,34 @@
+html[data-pack="settings"] {
+  --cb-radius: 10px;
+  --cb-topbar-h: 48px;
+  --cb-dock-h: 52px;
+  --cb-bg: #ededed;
+  --cb-surface: #fff;
+  --cb-surface-2: #f7f7f7;
+  --cb-primary: #07c160;
+
+  .cb-topbar,
+  .cb-dock {
+    background: #ededed;
+  }
+
+  .cb-card,
+  .cb-list {
+    box-shadow: none;
+  }
+
+  .cb-hero {
+    background: #fff;
+  }
+}
+
+html[data-pack="settings"][data-theme="dark"] {
+  --cb-bg: #111;
+  --cb-surface: #1c1c1e;
+  --cb-surface-2: #2c2c2e;
+
+  .cb-topbar,
+  .cb-dock {
+    background: #1c1c1e;
+  }
+}

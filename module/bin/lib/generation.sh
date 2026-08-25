@@ -253,8 +253,12 @@ config_matches_applied() {
   app_pp=$(read_applied_conf proxypin 1)
   app_mm=$(read_applied_conf mount_mode compatible | tr 'A-Z' 'a-z')
   case "$app_mm" in magic|builtin|lightweight) app_mm=magic ;; *) app_mm=compatible ;; esac
-  app_tf=$(read_applied_conf tmpfs_style short | tr 'A-Z' 'a-z')
-  case "$app_tf" in legacy|classic|verbose|long) app_tf=legacy ;; *) app_tf=short ;; esac
+  app_tf=$(read_applied_conf tmpfs_style dev | tr 'A-Z' 'a-z')
+  case "$app_tf" in
+    legacy|classic|verbose|long) app_tf=legacy ;;
+    short|tmp) app_tf=short ;;
+    *) app_tf=dev ;;
+  esac
 
   [ "$cur_req" = "$app_req" ] || return 1
   [ "$cur_pp" = "$app_pp" ] || return 1

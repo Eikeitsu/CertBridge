@@ -330,6 +330,7 @@ inject_boot_namespaces() {
     record_inject_fail no_target
     return 1
   }
+  hide_assist_after_inject
   return "$rc"
 }
 

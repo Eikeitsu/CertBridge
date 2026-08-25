@@ -20,7 +20,7 @@ export const ABOUT_LINKS = [
   { id: "repo", url: LINKS.repo, label: "开源仓库" },
   { id: "coolapk", url: LINKS.coolapk, label: "酷安主页" },
   { id: BuiltinCertKind.Reqable, url: LINKS.reqable, label: "Reqable 官网" },
-  { id: BuiltinCertKind.ProxyPin, url: LINKS.proxypin, label: "ProxyPin 仓库" },
+  { id: BuiltinCertKind.Proxypin, url: LINKS.proxypin, label: "ProxyPin 仓库" },
 ] as const;
 
 export const ABOUT_TIP = {

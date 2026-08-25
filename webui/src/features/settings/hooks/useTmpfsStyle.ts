@@ -20,7 +20,7 @@ export function useTmpfsStyle() {
   const dispatch = useAppDispatch();
   const status = useAppSelector(selectModuleStatus);
   const { isPending, runExclusive } = useAsyncLock();
-  const statusStyle = parseEnum(TmpfsStyle, status.tmpfs_style, TmpfsStyle.Short);
+  const statusStyle = parseEnum(TmpfsStyle, status.tmpfs_style, TmpfsStyle.Dev);
   const [draft, setDraft] = useState<TmpfsStyle | null>(null);
   const tmpfsStyle = draft ?? statusStyle;
 

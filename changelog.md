@@ -2,8 +2,13 @@
 
 ## Unreleased
 
+- WebUI 全面重设计：三套主题「设置 / 控制台 / 工作室」，抛弃旧 classic/material/fluid 视觉
+- 概览新增「挂载与隐藏实况」：显示 Root 方案、挂载模式、临时层路径、检测到的隐藏助手、SuSFS try_umount 是否已注册（后迁至 WebUI **隐藏** 专页）
+- WebUI 底部新增 **隐藏** 页；文档站新增 [挂载隐藏说明](/guide/hide) 专页
+- 更多页曾含现代 Root 隐藏说明（Magisk 排除列表、Shamiko、ZygiskNext/ReZygisk/NeoZygisk、SuSFS、APatch 排除修改等），现集中于隐藏页
+- 临时层默认迁到 `/dev/.cb0` / `/dev/.cb1`（`tmpfs_style=dev`）；保留 short/legacy 可切换；卸载清理全部路径
+- SuSFS / ksud kernel umount：bind 成功后自动 `add_try_umount`（参考 bindhosts）
 - 修复 Lite：`cbx509` 打包漏掉内部类导致安装导入 CA 时「无法计算系统库文件名」；D8 现打入全部 class，hash 失败时回退 `-certbridge_info`
-- WebUI：使用 React 全面重构 WebUI 页面
 - 开机与 WebUI 刷新时，自动从已启用的 Reqable / ProxyPin 同步最新 CA；证书未变则跳过，读失败保留原文件
 - WebUI 下拉刷新会尝试同步 App 证书，有更新时提示重启后生效
 - 热挂载：可改存储卡证书目录，默认改为「文档」下的 `cacerts`（不再用储存卡根目录）；支持用户区 / 存储卡 / 合并挂载与无痕卸载

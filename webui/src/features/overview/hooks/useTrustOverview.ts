@@ -122,7 +122,7 @@ export function useTrustOverview() {
   }, [statusError, isDisabled, status.inject_error, trust.tone, isPendingReboot, activeCount]);
 
   const mountMode = parseEnum(MountMode, status.mount_mode, MountMode.Compatible);
-  const tmpfsStyle = parseEnum(TmpfsStyle, status.tmpfs_style, TmpfsStyle.Short);
+  const tmpfsStyle = parseEnum(TmpfsStyle, status.tmpfs_style, TmpfsStyle.Dev);
 
   return {
     status,
@@ -173,3 +173,5 @@ export function useTrustOverview() {
     customCertificates,
   };
 }
+
+export type TrustOverview = ReturnType<typeof useTrustOverview>;

@@ -43,9 +43,9 @@ certbridge_init_paths() {
   ROOT_CACHE_FILE="$STATEDIR/root-impl.cache"
   APEX_CACERTS="/apex/com.android.conscrypt/cacerts"
   SYSTEM_CACERTS="/system/etc/security/cacerts"
-  # 默认短路径；最终以 certs.conf 的 tmpfs_style 为准（见 apply_tmpfs_style）
-  RUNTIME_MOUNT_ROOT="/data/local/tmp/.fs0"
-  HOT_RUNTIME_ROOT="/data/local/tmp/.fs1"
+  # 默认 /dev 短路径；最终以 certs.conf 的 tmpfs_style 为准（见 apply_tmpfs_style）
+  RUNTIME_MOUNT_ROOT="/dev/.cb0"
+  HOT_RUNTIME_ROOT="/dev/.cb1"
   MIN_SAFE_CERTS=10
   MAX_CUSTOM_BYTES=65536
 }
@@ -85,6 +85,7 @@ certbridge_load_libs_runtime() {
   certbridge_load_lib generation.sh
   certbridge_load_lib status.sh
   certbridge_load_lib inject_diag.sh
+  certbridge_load_lib hide_assist.sh
 }
 
 certbridge_init_paths "$0"

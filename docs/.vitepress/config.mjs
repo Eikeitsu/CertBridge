@@ -28,6 +28,7 @@ export default defineConfig({
       { text: "WebUI", link: "/guide/webui" },
       { text: "安装", link: "/guide/install" },
       { text: "配置说明", link: "/guide/config" },
+      { text: "挂载隐藏", link: "/guide/hide" },
       { text: "更新日志", link: "/guide/changelog" },
     ],
     sidebar: [
@@ -38,6 +39,7 @@ export default defineConfig({
           { text: "WebUI 使用说明", link: "/guide/webui" },
           { text: "安装与升级", link: "/guide/install" },
           { text: "配置说明", link: "/guide/config" },
+          { text: "挂载隐藏说明", link: "/guide/hide" },
           { text: "更新日志", link: "/guide/changelog" },
           { text: "常见问题", link: "/guide/faq" },
           { text: "相关软件", link: "/guide/related" },

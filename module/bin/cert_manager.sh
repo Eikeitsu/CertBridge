@@ -89,6 +89,7 @@ hot_failed=0"
   fi
   echo "mount_mode=$(get_mount_mode)"
   echo "tmpfs_style=$(get_tmpfs_style)"
+  emit_hide_status
   echo "version=$(grep '^version=' "$MODDIR/module.prop" 2>/dev/null | cut -d= -f2-)"
   echo "$hot_status"
 }
@@ -306,7 +307,7 @@ cmd_set_mount_mode() {
 cmd_set_tmpfs_style() {
   style="$1"
   case "$style" in
-    short|legacy) ;;
+    dev|short|legacy) ;;
     *) echo "error=invalid_tmpfs_style"; return 1 ;;
   esac
   write_conf tmpfs_style "$style" || { echo "error=write_failed"; return 1; }

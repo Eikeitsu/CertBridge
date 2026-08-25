@@ -5,11 +5,11 @@ export enum ThemeMode {
   Dark = "dark",
 }
 
-/** 主题包（写入 localStorage / data-pack） */
+/** 主题包：设置 / 控制台 / 工作室 */
 export enum ThemePack {
-  Classic = "classic",
-  Material = "material",
-  Fluid = "fluid",
+  Settings = "settings",
+  Console = "console",
+  Studio = "studio",
 }
 
 /** 解析后的实际深浅色 */
@@ -22,12 +22,13 @@ export enum TabName {
   Home = "home",
   Certs = "certs",
   Log = "log",
+  Hide = "hide",
   More = "more",
 }
 
 export enum BuiltinCertKind {
   Reqable = "reqable",
-  ProxyPin = "proxypin",
+  Proxypin = "proxypin",
 }
 
 export enum MountMode {
@@ -36,6 +37,7 @@ export enum MountMode {
 }
 
 export enum TmpfsStyle {
+  Dev = "dev",
   Short = "short",
   Legacy = "legacy",
 }
@@ -59,7 +61,6 @@ export enum FlagTone {
   Ok = "ok",
 }
 
-/** 安装 / 注入日志等级（与 shell [LEVEL] 前缀一致） */
 export enum LogLevel {
   Info = "info",
   Warn = "warn",

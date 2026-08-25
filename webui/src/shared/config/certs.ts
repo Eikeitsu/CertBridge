@@ -73,7 +73,7 @@ export const BUILTIN_BRAND_ICON = {
     src: "img/brands/reqable/app_icon.png",
     srcDark: "img/brands/reqable/ic_tray_normal.jpg",
   },
-  [BuiltinCertKind.ProxyPin]: {
+  [BuiltinCertKind.Proxypin]: {
     label: "ProxyPin",
     src: "img/brands/proxypin/icon.png",
     srcDark: "img/brands/proxypin/icon_foreground.png",
@@ -101,8 +101,8 @@ export const BUILTIN_CERTS = [
     missingHint: "未检测到证书",
   },
   {
-    kind: BuiltinCertKind.ProxyPin,
-    fallbackTitle: BUILTIN_BRAND_ICON[BuiltinCertKind.ProxyPin].label,
+    kind: BuiltinCertKind.Proxypin,
+    fallbackTitle: BUILTIN_BRAND_ICON[BuiltinCertKind.Proxypin].label,
     missingHint: "未检测到证书",
   },
 ] as const;

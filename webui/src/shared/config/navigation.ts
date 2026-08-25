@@ -5,6 +5,7 @@ export const TABS: { key: TabName; label: string }[] = [
   { key: TabName.Home, label: "首页" },
   { key: TabName.Certs, label: "证书" },
   { key: TabName.Log, label: "日志" },
+  { key: TabName.Hide, label: "隐藏" },
   { key: TabName.More, label: "更多" },
 ];
 
@@ -16,5 +17,6 @@ export const TAB_PATH: Record<TabName, string> = {
   [TabName.Home]: "/",
   [TabName.Certs]: "/certs",
   [TabName.Log]: "/log",
+  [TabName.Hide]: "/hide",
   [TabName.More]: "/more",
 };

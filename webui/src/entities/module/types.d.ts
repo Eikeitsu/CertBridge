@@ -50,6 +50,11 @@ export type ModuleStatus = {
   hot_allow?: string;
   mount_mode?: string;
   tmpfs_style?: string;
+  stage_root?: string;
+  hide_provider?: string;
+  hide_provider_label?: string;
+  hide_applied?: string;
+  hide_summary?: string;
   version?: string;
   hot_active?: string;
   hot_partial?: string;

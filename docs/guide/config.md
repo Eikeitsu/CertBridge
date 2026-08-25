@@ -9,7 +9,7 @@ schema_version=3
 reqable=1
 proxypin=1
 mount_mode=compatible
-tmpfs_style=short
+tmpfs_style=dev
 ```
 
 | 键               | 含义                                                                 | 默认         |
@@ -18,7 +18,7 @@ tmpfs_style=short
 | `reqable`        | 启用 Reqable（App 导入）CA                                           | `1`          |
 | `proxypin`       | 启用 ProxyPin CA（App 或内置兜底）                                   | `1`          |
 | `mount_mode`     | 挂载模式：`compatible` 或 `magic`                                    | `compatible` |
-| `tmpfs_style`    | 临时挂载路径：`short`（`.fs0`/`.fs1`）或 `legacy`（`sys-ca-merge*`） | `short`      |
+| `tmpfs_style`    | 临时挂载路径：`dev`（`/dev/.cb*`）、`short`（`.fs0`/`.fs1`）或 `legacy`（`sys-ca-merge*`） | `dev`        |
 
 ### 挂载模式
 
@@ -32,7 +32,7 @@ tmpfs_style=short
 | 模块 `system/` | **不写**叠层目录（避免错误叠层导致系统 CA 被遮蔽）                                                       |
 | Android 7–13   | bind `/system/etc/security/cacerts`                                                                      |
 | Android 14+    | bind APEX Conscrypt 与 system 双路径（供 Flutter 等检测）                                                |
-| 临时目录       | 由 `tmpfs_style` 决定：默认 `/data/local/tmp/.fs0`（热挂载 `.fs1`）；`legacy` 时为 `sys-ca-merge{,-hot}` |
+| 临时目录       | 由 `tmpfs_style` 决定：默认 `/dev/.cb0`（热挂载 `/dev/.cb1`）；`short` 为 local/tmp `.fs*`；`legacy` 为 `sys-ca-merge{,-hot}` |
 | 元模块         | **不需要**。Magisk / KernelSU / APatch 只要能跑 `post-fs-data` / `service` 即可                          |
 | 特点           | 兼容面宽、行为可控；mountinfo 中可见临时目录挂载                                                         |
 
@@ -68,14 +68,25 @@ tmpfs_style=short
 
 ### 临时挂载路径（`tmpfs_style`）
 
-完整兼容与热挂载会把合并后的证书集放到 `/data/local/tmp` 下再 bind。可用 WebUI「更多 → 临时挂载路径」或直接改 `certs.conf`：
+完整兼容与热挂载会把合并后的证书集放到临时层再 bind。可用 WebUI「更多 → 临时挂载路径」或直接改 `certs.conf`：
 
-| 值              | 开机注入                       | 热挂载                             | 说明                              |
-| --------------- | ------------------------------ | ---------------------------------- | --------------------------------- |
-| `short`（默认） | `/data/local/tmp/.fs0`         | `/data/local/tmp/.fs1`             | 降低 mountinfo 中的可读关键词特征 |
-| `legacy`        | `/data/local/tmp/sys-ca-merge` | `/data/local/tmp/sys-ca-merge-hot` | 旧版可读路径，便于排障            |
+| 值              | 开机注入     | 热挂载       | 说明                                              |
+| --------------- | ------------ | ------------ | ------------------------------------------------- |
+| `dev`（默认）   | `/dev/.cb0`  | `/dev/.cb1`  | 避开 `/data/local/tmp` 关键词扫描；**不能替代 umount 隐藏** |
+| `short`         | `/data/local/tmp/.fs0` | `/data/local/tmp/.fs1` | 短路径                                            |
+| `legacy`        | `/data/local/tmp/sys-ca-merge` | `/data/local/tmp/sys-ca-merge-hot` | 旧版可读路径，便于排障                            |
 
-切换后需**重启**。卸载会同时清理两套目录。这只减弱字符串特征，挡不住「信任库被 bind」本身。
+切换后需**重启**。卸载会同时清理全部路径。
+
+### 挂载隐藏（与 bindhosts 思路一致）
+
+- **换路径 ≠ 隐身**：检测方仍可能看到 cacerts 上的 bind mount。
+- **KernelSU + SuSFS**：模块 bind 成功后会尝试 `add_try_umount`；WebUI **隐藏页** 会显示是否已注册。
+- **Magisk**：对目标 App 配置**排除列表（DenyList）**，并配合 Shamiko 或 ZygiskNext/ReZygisk/NeoZygisk 的 umount；使用 Shamiko 时通常应**关闭**「强制执行排除列表（Enforce DenyList）」。
+- **APatch**：对目标 App 开「排除修改」，并安装 Zygisk 助手模块。
+- 详细说明见 [挂载隐藏说明](/guide/hide) 与 WebUI **「隐藏」** 页。
+
+这也只减弱字符串特征，挡不住「信任库被 bind」本身。
 
 也可在 WebUI「证书」页用开关修改 Reqable / ProxyPin。**下拉刷新**会尝试从已启用 App 同步最新 CA（有变化则提示重启）。开关与自定义永久证书仍在**重启后**生效。
 
@@ -209,8 +220,9 @@ proxypin_source=builtin
 
 在已安装 WebUI 时可用，详见 [WebUI 使用说明](/guide/webui#更多)。
 
-- **外观**：主题包（经典 / Material / 流体）、深浅色、强调色、莫奈取色、悬浮底栏、紧凑与字号等
+- **外观**：主题包（设置 / 控制台 / 工作室）、深浅色、强调色、字号
 - **挂载模式** / **临时挂载路径**：见上文
+- **挂载隐藏**：见 [挂载隐藏说明](/guide/hide)
 - **关于**：版本、文档、开源与打赏入口
 
 深色模式下模块会同步状态栏图标颜色（依赖管理器 WebUI 桥接）。

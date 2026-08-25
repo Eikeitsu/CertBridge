@@ -63,13 +63,15 @@ is_magic_mount_mode() {
   [ "$(get_mount_mode)" = "magic" ]
 }
 
-# short  = /data/local/tmp/.fs0 | .fs1（默认，降低 mountinfo 关键词特征）
+# dev    = /dev/.cb0 | .cb1（默认，避开 local/tmp 关键词扫描）
+# short  = /data/local/tmp/.fs0 | .fs1
 # legacy = /data/local/tmp/sys-ca-merge | sys-ca-merge-hot（可读旧路径）
 get_tmpfs_style() {
-  style=$(read_conf tmpfs_style short | tr 'A-Z' 'a-z')
+  style=$(read_conf tmpfs_style dev | tr 'A-Z' 'a-z')
   case "$style" in
     legacy|classic|verbose|long) echo legacy ;;
-    *) echo short ;;
+    short|tmp) echo short ;;
+    *) echo dev ;;
   esac
 }
 
@@ -79,9 +81,13 @@ apply_tmpfs_style() {
       RUNTIME_MOUNT_ROOT="/data/local/tmp/sys-ca-merge"
       HOT_RUNTIME_ROOT="/data/local/tmp/sys-ca-merge-hot"
       ;;
-    *)
+    short)
       RUNTIME_MOUNT_ROOT="/data/local/tmp/.fs0"
       HOT_RUNTIME_ROOT="/data/local/tmp/.fs1"
+      ;;
+    *)
+      RUNTIME_MOUNT_ROOT="/dev/.cb0"
+      HOT_RUNTIME_ROOT="/dev/.cb1"
       ;;
   esac
 }

@@ -6,6 +6,7 @@ import { haptic } from "@/shared/lib/haptic";
 function resolveTabFromPath(pathname: string): TabName {
   if (pathname.startsWith(TAB_PATH[TabName.Certs])) return TabName.Certs;
   if (pathname.startsWith(TAB_PATH[TabName.Log])) return TabName.Log;
+  if (pathname.startsWith(TAB_PATH[TabName.Hide])) return TabName.Hide;
   if (pathname.startsWith(TAB_PATH[TabName.More])) return TabName.More;
   return TabName.Home;
 }

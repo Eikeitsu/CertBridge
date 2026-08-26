@@ -17,10 +17,10 @@ export function LogLines({ entries, filtered }: LogLinesProps) {
   return (
     <div className="cb-log-lines">
       {entries.map((entry, index) => (
-        <span key={`${index}-${entry.raw}`} className={`cb-log-line lv-${entry.level}`}>
-          <span className="cb-log-line__tag">[{entry.level.toUpperCase()}]</span>
+        <div key={`${index}-${entry.raw}`} className={`cb-log-line lv-${entry.level}`}>
+          <span className={`cb-log-line__tag lv-${entry.level}`}>{entry.level.toUpperCase()}</span>
           <span className="cb-log-line__body">{entry.body}</span>
-        </span>
+        </div>
       ))}
     </div>
   );

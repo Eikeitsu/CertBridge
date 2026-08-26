@@ -1,6 +1,6 @@
 import type { useBuiltinCerts } from "@/features/certs/hooks/useBuiltinCerts";
 import { BuiltinCertKind } from "@/entities/module/enums";
-import { Button, Card, ListGroup, Row, Switch } from "@/shared/ui/primitives";
+import { Card, ListGroup, Row, Switch } from "@/shared/ui/primitives";
 
 type BuiltinCert = ReturnType<typeof useBuiltinCerts>[number];
 
@@ -23,38 +23,51 @@ function resolveCertDesc(cert: BuiltinCert) {
   return "未检测到 App 证书";
 }
 
-function CertActions({
+function CertInfoButton({
+  enabled,
+  label,
+  onClick,
+}: {
+  enabled: boolean;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className="cb-info-btn"
+      disabled={!enabled}
+      aria-label={label}
+      title={label}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+    >
+      <span aria-hidden="true">i</span>
+    </button>
+  );
+}
+
+function CertTitle({
   cert,
-  isPending,
-  pendingKind,
-  onToggle,
-  onOpenDetail,
   detailLabel,
+  onOpenDetail,
 }: {
   cert: BuiltinCert;
-  isPending: boolean;
-  pendingKind: string | null;
-  onToggle: (kind: BuiltinCertKind, checked: boolean) => void;
-  onOpenDetail: (id: string, title: string) => void;
   detailLabel: string;
+  onOpenDetail: (id: string, title: string) => void;
 }) {
   const canInspect = cert.isAvailable || cert.isActive;
   return (
-    <div className="cb-btn-row" style={{ gap: 8, margin: 0 }}>
-      <Button
-        variant="ghost"
-        disabled={!canInspect}
+    <span className="cb-cert-title">
+      <span className="cb-cert-title__name">{cert.title}</span>
+      <CertInfoButton
+        enabled={canInspect}
+        label={detailLabel}
         onClick={() => onOpenDetail(cert.kind, cert.title)}
-        aria-label={detailLabel}
-      >
-        ℹ️
-      </Button>
-      <Switch
-        checked={cert.isEnabled}
-        disabled={isPending && pendingKind === cert.kind}
-        onChange={(checked) => onToggle(cert.kind, checked)}
       />
-    </div>
+    </span>
   );
 }
 
@@ -87,13 +100,11 @@ export function BuiltinCertsPanel({
                 <td>{cert.title}</td>
                 <td>{resolveCertDesc(cert)}</td>
                 <td>
-                  <Button
-                    variant="ghost"
-                    disabled={!(cert.isAvailable || cert.isActive)}
+                  <CertInfoButton
+                    enabled={cert.isAvailable || cert.isActive}
+                    label={detailLabel}
                     onClick={() => onOpenDetail(cert.kind, cert.title)}
-                  >
-                    {detailLabel}
-                  </Button>
+                  />
                 </td>
                 <td>
                   <Switch
@@ -119,16 +130,19 @@ export function BuiltinCertsPanel({
         {certs.map((cert) => (
           <div key={cert.kind} className="cb-cert-tile">
             <div className="cb-cert-tile__body">
-              <div className="cb-row__title">{cert.title}</div>
+              <div className="cb-row__title">
+                <CertTitle
+                  cert={cert}
+                  detailLabel={detailLabel}
+                  onOpenDetail={onOpenDetail}
+                />
+              </div>
               <div className="cb-row__desc">{resolveCertDesc(cert)}</div>
             </div>
-            <CertActions
-              cert={cert}
-              isPending={isPending}
-              pendingKind={pendingKind}
-              onToggle={onToggle}
-              onOpenDetail={onOpenDetail}
-              detailLabel={detailLabel}
+            <Switch
+              checked={cert.isEnabled}
+              disabled={isPending && pendingKind === cert.kind}
+              onChange={(checked) => onToggle(cert.kind, checked)}
             />
           </div>
         ))}
@@ -142,16 +156,19 @@ export function BuiltinCertsPanel({
         {certs.map((cert) => (
           <Row
             key={cert.kind}
-            title={cert.title}
+            title={
+              <CertTitle
+                cert={cert}
+                detailLabel={detailLabel}
+                onOpenDetail={onOpenDetail}
+              />
+            }
             desc={resolveCertDesc(cert)}
             extra={
-              <CertActions
-                cert={cert}
-                isPending={isPending}
-                pendingKind={pendingKind}
-                onToggle={onToggle}
-                onOpenDetail={onOpenDetail}
-                detailLabel={detailLabel}
+              <Switch
+                checked={cert.isEnabled}
+                disabled={isPending && pendingKind === cert.kind}
+                onChange={(checked) => onToggle(cert.kind, checked)}
               />
             }
           />

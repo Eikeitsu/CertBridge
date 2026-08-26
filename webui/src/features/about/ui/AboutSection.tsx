@@ -9,27 +9,15 @@ type AboutSectionProps = {
 };
 
 export function AboutSection({ title = "关于证书桥", heroEmphasis }: AboutSectionProps) {
-  if (heroEmphasis) {
-    return (
-      <>
-        <div className="cb-about-hero-block">
-          <AboutHero large />
-        </div>
-        <Card title={title}>
-          <AboutModuleInfo />
-        </Card>
-        <AboutLinksCard />
-      </>
-    );
-  }
-
   return (
-    <>
-      <Card title={title}>
-        <AboutHero />
+    <div className="cb-stack">
+      <section className={`cb-card cb-about-head${heroEmphasis ? " is-hero" : ""}`}>
+        <AboutHero large={heroEmphasis} />
+      </section>
+      <Card title={title} meta="本机与模块运行信息">
         <AboutModuleInfo />
       </Card>
       <AboutLinksCard />
-    </>
+    </div>
   );
 }

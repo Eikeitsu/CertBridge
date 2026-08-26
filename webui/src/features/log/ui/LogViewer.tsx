@@ -10,6 +10,10 @@ type LogViewerProps = {
   terminal?: boolean;
 };
 
+function levelLabel(level: string) {
+  return level.toUpperCase();
+}
+
 export function LogViewer({
   loading,
   entries,
@@ -28,7 +32,8 @@ export function LogViewer({
     <div className={`cb-log${terminal ? " cb-log--terminal" : ""}`}>
       {entries.map((entry, index) => (
         <div key={`${index}-${entry.raw}`} className={`cb-log-line lv-${entry.level}`}>
-          [{entry.level.toUpperCase()}] {entry.body}
+          <span className={`cb-log-line__tag lv-${entry.level}`}>{levelLabel(entry.level)}</span>
+          <span className="cb-log-line__body">{entry.body}</span>
         </div>
       ))}
     </div>

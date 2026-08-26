@@ -26,7 +26,7 @@ set_perm_recursive "$MODPATH/certs/sources" root root 0700 0600
 [ -d "$MODPATH/system/etc/security/cacerts" ] && \
   set_perm_recursive "$MODPATH/system/etc/security/cacerts" root root 0755 0644
 [ -d "$MODPATH/webroot" ] && set_perm_recursive "$MODPATH/webroot" root root 0755 0644
-for s in post-fs-data.sh service.sh action.sh uninstall.sh customize.sh; do
+for s in post-fs-data.sh service.sh action.sh uninstall.sh customize.sh hotinstall.sh; do
   [ -f "$MODPATH/$s" ] && set_perm "$MODPATH/$s" root root 0755
 done
 

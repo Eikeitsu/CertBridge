@@ -23,7 +23,9 @@ export function HideStatusCard({
     HIDE_PROVIDER_LABELS[status.hide_provider || "none"] ||
     "未检测到";
   const hideApplied = isFlagOn(status.hide_applied);
-  const meta = status.hide_summary || "基于当前设备探测";
+  const znSupported = isFlagOn(status.zn_hide_supported);
+  const znAllow = isFlagOn(status.zn_hide_allow);
+  const meta = status.hide_summary || status.zn_hide_summary || "基于当前设备探测";
 
   const rows = [
     { k: "Root", v: status.root || "—" },
@@ -33,6 +35,12 @@ export function HideStatusCard({
     { k: "助手", v: provider },
     { k: "try_umount", v: hideApplied ? "已注册" : "未注册" },
   ];
+  if (znSupported) {
+    rows.push({ k: "Zygisk过滤", v: znAllow ? "已开启" : "已关闭" });
+    if (isFlagOn(status.zn_hide_zn_module)) {
+      rows.push({ k: "ZN辅路径", v: "已声明" });
+    }
+  }
 
   if (variant === "table") {
     return (
@@ -81,6 +89,19 @@ export function HideStatusCard({
             </Tag>
           }
         />
+        {znSupported ? (
+          <Row
+            title="Zygisk 挂载过滤"
+            extra={
+              <Tag tone={znAllow ? "ok" : "default"}>
+                {znAllow ? "已开启" : "已关闭"}
+              </Tag>
+            }
+          />
+        ) : null}
+        {znSupported && isFlagOn(status.zn_hide_zn_module) ? (
+          <Row title="ZN Module 辅路径" extra={<Tag tone="ok">已声明</Tag>} />
+        ) : null}
       </ListGroup>
     </Card>
   );

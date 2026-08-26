@@ -94,6 +94,10 @@ export async function setHideAllow(value: FlagValue) {
   return cli(`set_hide_allow ${value}`);
 }
 
+export async function setZnHideAllow(value: FlagValue) {
+  return cli(`set_zn_hide_allow ${value}`);
+}
+
 export async function hotMount(mode: HotMountMode, sdPath?: string) {
   const extra = sdPath ? ` '${sdPath.replace(/'/g, "")}'` : "";
   return cli(`hot_mount ${mode}${extra}`, CLI_TIMEOUT_MS.HOT_MOUNT);

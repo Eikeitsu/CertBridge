@@ -48,6 +48,9 @@ certbridge_install_choose_mode() {
   INSTALL_HOT=1
   INSTALL_HIDE=1
   INSTALL_HIDE_ALLOW=0
+  # Zygisk 挂载痕迹过滤：默认不装；自定义可选。开关 zn_hide_allow 与 hide_allow 独立
+  INSTALL_ZN_HIDE=0
+  INSTALL_ZN_HIDE_ALLOW=0
   INSTALL_MOUNT_MODE="compatible"
 
   ui_print "--------------------------------"
@@ -57,6 +60,7 @@ certbridge_install_choose_mode() {
   ui_print "   ProxyPin 未检测到时使用内置兜底"
   ui_print "   并安装 WebUI、免重启热挂载与挂载隐藏协助"
   ui_print "   隐藏协助默认关闭（可在 WebUI「隐藏」页开启）"
+  ui_print "   不含 Zygisk 挂载痕迹过滤（自定义可选）"
   ui_print "   挂载：完整兼容模式（运行时 bind）"
   ui_print " 音量下：自定义安装"
   ui_print "   逐项选择证书、附加功能与挂载模式"
@@ -90,6 +94,19 @@ certbridge_install_choose_mode() {
         INSTALL_HIDE_ALLOW=1
       else
         INSTALL_HIDE_ALLOW=0
+      fi
+      ui_print "--------------------------------"
+      ui_print " Zygisk 挂载痕迹过滤：在 App 进程中"
+      ui_print " 过滤 mountinfo/mounts 里本模块相关行"
+      ui_print "（经典 Zygisk API；需已启用 Zygisk）。"
+      ui_print " 与 SuSFS 隐藏协助独立；勾选后默认开启。"
+      ui_print " Reqable/ProxyPin 白名单不过滤。"
+      certbridge_choose_component "Zygisk 挂载痕迹过滤"
+      INSTALL_ZN_HIDE="$COMPONENT_CHOICE"
+      if [ "$INSTALL_ZN_HIDE" = "1" ]; then
+        INSTALL_ZN_HIDE_ALLOW=1
+      else
+        INSTALL_ZN_HIDE_ALLOW=0
       fi
       ui_print "--------------------------------"
       ui_print " 请选择挂载模式"
@@ -308,11 +325,23 @@ certbridge_install_write_config() {
     fi
     rm -f "$MODPATH/data/state/hide-assist.conf" 2>/dev/null
   fi
+  if [ "$INSTALL_ZN_HIDE" = "1" ]; then
+    if grep -q '^zn_hide_allow=' "$MODPATH/config/certs.conf" 2>/dev/null; then
+      sed -i "s/^zn_hide_allow=.*/zn_hide_allow=$INSTALL_ZN_HIDE_ALLOW/" "$MODPATH/config/certs.conf"
+    else
+      echo "zn_hide_allow=$INSTALL_ZN_HIDE_ALLOW" >>"$MODPATH/config/certs.conf"
+    fi
+  else
+    if grep -q '^zn_hide_allow=' "$MODPATH/config/certs.conf" 2>/dev/null; then
+      sed -i '/^zn_hide_allow=/d' "$MODPATH/config/certs.conf"
+    fi
+  fi
   cat >"$MODPATH/config/install-profile.conf" <<EOF
 install_mode=$INSTALL_MODE
 webui=$INSTALL_WEBUI
 hot_reload=$INSTALL_HOT
 hide_assist=$INSTALL_HIDE
+zn_hide=$INSTALL_ZN_HIDE
 mount_mode=$INSTALL_MOUNT_MODE
 reqable_source=$([ "$REQABLE_SRC_OK" = "1" ] && echo app || echo none)
 proxypin_source=$PROXYPIN_SRC
@@ -346,6 +375,29 @@ certbridge_install_trim_components() {
     rm -f "$MODPATH/bin/lib/hide_assist.sh"
     rm -f "$MODPATH/data/state/hide-assist.conf" 2>/dev/null
   fi
+  if [ "$INSTALL_ZN_HIDE" != "1" ]; then
+    rm -rf "$MODPATH/zygisk"
+    rm -f "$MODPATH/zn_modules.txt" 2>/dev/null
+    rm -f "$MODPATH/libcb_zn_hide.so" 2>/dev/null
+  else
+    # 禁止空壳：空或仅空白的 zn_modules.txt 一律删除
+    if [ -f "$MODPATH/zn_modules.txt" ]; then
+      if ! grep -q '[^[:space:]]' "$MODPATH/zn_modules.txt" 2>/dev/null; then
+        rm -f "$MODPATH/zn_modules.txt"
+      fi
+    fi
+    # 勾选但 zip 未带 so：安装后无法生效，给出提示（不阻断）
+    zn_so=0
+    if [ -d "$MODPATH/zygisk" ]; then
+      for f in "$MODPATH/zygisk"/*.so; do
+        [ -f "$f" ] && zn_so=1 && break
+      done
+    fi
+    if [ "$zn_so" != "1" ]; then
+      ui_print "! 警告：已勾选 Zygisk 过滤，但模块包内无 zygisk/*.so"
+      ui_print "  请使用含 NDK 构建产物的正式发布包"
+    fi
+  fi
 }
 
 certbridge_install_print_summary() {
@@ -371,6 +423,15 @@ certbridge_install_print_summary() {
   else
     HIDE_LABEL="未安装"
   fi
+  if [ "$INSTALL_ZN_HIDE" = "1" ]; then
+    if [ "$INSTALL_ZN_HIDE_ALLOW" = "1" ]; then
+      ZN_HIDE_LABEL="已安装（默认开启，可在 WebUI 关闭）"
+    else
+      ZN_HIDE_LABEL="已安装（默认关闭，可在 WebUI 开启）"
+    fi
+  else
+    ZN_HIDE_LABEL="未安装"
+  fi
   if [ "$INSTALL_MOUNT_MODE" = "magic" ]; then
     MOUNT_LABEL="轻量 Magic Mount"
   else
@@ -385,7 +446,8 @@ certbridge_install_print_summary() {
   ui_print " WebUI：$WEBUI_LABEL"
   ui_print " 免重启热挂载：$HOT_LABEL"
   ui_print " 挂载隐藏协助：$HIDE_LABEL"
-  log_info "安装选项：方案=$MODE_LABEL，挂载=$MOUNT_LABEL，Reqable=$REQABLE_LABEL，ProxyPin=$PROXYPIN_LABEL，WebUI=$WEBUI_LABEL，免重启热挂载=$HOT_LABEL，挂载隐藏=$HIDE_LABEL"
+  ui_print " Zygisk 挂载过滤：$ZN_HIDE_LABEL"
+  log_info "安装选项：方案=$MODE_LABEL，挂载=$MOUNT_LABEL，Reqable=$REQABLE_LABEL，ProxyPin=$PROXYPIN_LABEL，WebUI=$WEBUI_LABEL，免重启热挂载=$HOT_LABEL，挂载隐藏=$HIDE_LABEL，Zygisk过滤=$ZN_HIDE_LABEL"
   ui_print "--------------------------------"
   ui_print " 开机将再次尝试从 App 刷新 CA"
   if [ "$INSTALL_MOUNT_MODE" = "magic" ]; then
@@ -410,6 +472,10 @@ certbridge_install_print_summary() {
       ui_print " 需要时在 WebUI「隐藏」页开启；抓包勿对 Reqable"
     fi
     ui_print " 与被抓包 App 开「卸载模块」"
+  fi
+  if [ "$INSTALL_ZN_HIDE" = "1" ]; then
+    ui_print " Zygisk 过滤：需启用 Zygisk / ZygiskNext 等"
+    ui_print " WebUI「隐藏」页可开关 zn_hide_allow；重启后生效"
   fi
   ui_print " Android 14+ 自动注入 APEX"
   ui_print "--------------------------------"

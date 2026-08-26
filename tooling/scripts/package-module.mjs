@@ -377,6 +377,31 @@ async function packageOne(edition, version) {
   copyDirFromModule("config");
   copyDirFromModule("bin");
   copyDirFromModule("certs");
+  // Zygisk so（由 build:zygisk-hide 生成）；仅复制 .so，不打入 README 占位
+  if (existsSync(join(moduleRoot, "zygisk"))) {
+    mkdirSync(join(staging, "zygisk"), { recursive: true });
+    for (const name of readdirSync(join(moduleRoot, "zygisk"))) {
+      if (!name.endsWith(".so")) continue;
+      copyFromModule(`zygisk/${name}`);
+    }
+  }
+  // ZN Module 辅路径：禁止空壳。仅当 PACK_ZN_MODULE=1 且 zn_modules.txt 非空、so 存在时打入
+  if (process.env.PACK_ZN_MODULE === "1") {
+    const znTxt = join(moduleRoot, "zn_modules.txt");
+    const znSo = join(moduleRoot, "libcb_zn_hide.so");
+    if (
+      existsSync(znTxt) &&
+      statSync(znTxt).size > 0 &&
+      existsSync(znSo) &&
+      statSync(znSo).size > 1000
+    ) {
+      copyFromModule("zn_modules.txt");
+      copyFromModule("libcb_zn_hide.so");
+      log("packaged ZN module track (zn_modules.txt + libcb_zn_hide.so)");
+    } else {
+      log("PACK_ZN_MODULE=1 but missing non-empty zn_modules.txt or libcb_zn_hide.so — skipped");
+    }
+  }
   applyEdition(edition);
 
   if (!existsSync(builtWebDir)) {

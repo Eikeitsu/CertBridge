@@ -38,6 +38,11 @@ export type PackVoice = {
     allowTitle: string;
     allowOn: string;
     allowOff: string;
+    znSwitchTitle: string;
+    znSwitchMeta: string;
+    znAllowTitle: string;
+    znAllowOn: string;
+    znAllowOff: string;
     captureTitle: string;
     captureMeta: string;
     introTitle: string;
@@ -101,6 +106,11 @@ const SETTINGS: PackVoice = {
     allowTitle: "启用挂载隐藏协助",
     allowOn: "注入 / 热挂载成功后登记 SuSFS try_umount",
     allowOff: "关闭时不写隐藏状态、不注册 umount",
+    znSwitchTitle: "Zygisk 挂载过滤",
+    znSwitchMeta: "过滤 App 内 mountinfo 中的本模块痕迹",
+    znAllowTitle: "启用 Zygisk 挂载痕迹过滤",
+    znAllowOn: "对非白名单过滤 mount/maps（需 Zygisk；重启 App 生效）",
+    znAllowOff: "关闭后不再挂钩；已运行进程需重启才恢复",
     captureTitle: "抓包注意",
     captureMeta: "比开关更重要",
     introTitle: "挂载隐藏",
@@ -161,6 +171,11 @@ const CONSOLE: PackVoice = {
     allowTitle: "hide_allow",
     allowOn: "register after inject / hot",
     allowOff: "skip assist + clear state file",
+    znSwitchTitle: "ZN.HIDE",
+    znSwitchMeta: "filter mountinfo traces",
+    znAllowTitle: "zn_hide_allow",
+    znAllowOn: "filter mount/maps (needs Zygisk)",
+    znAllowOff: "no hooks; restart apps after change",
     captureTitle: "WARN · CAPTURE",
     captureMeta: "umount kills CA visibility",
     introTitle: "MOUNT HIDE",
@@ -221,6 +236,11 @@ const STUDIO: PackVoice = {
     allowTitle: "打开隐身协助",
     allowOn: "下次注入时自动登记 umount",
     allowOff: "安静模式：不登记、不写状态",
+    znSwitchTitle: "Zygisk 过滤",
+    znSwitchMeta: "在 App 里藏起本模块的挂载行",
+    znAllowTitle: "打开 Zygisk 挂载过滤",
+    znAllowOn: "过滤 mount/maps（需 Zygisk；重启 App 后生效）",
+    znAllowOff: "关掉挂钩；改完请重启相关 App",
     captureTitle: "抓包前请确认",
     captureMeta: "别对链路开卸载模块",
     introTitle: "关于隐身",

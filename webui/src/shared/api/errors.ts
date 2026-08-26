@@ -24,6 +24,8 @@ export function friendlyError(code?: string): string {
     invalid_hot_allow: "无效的临时挂载开关",
     hide_feature_not_installed: "未安装挂载隐藏组件",
     invalid_hide_allow: "无效的隐藏开关",
+    zn_hide_feature_not_installed: "未安装 Zygisk 挂载过滤组件",
+    invalid_zn_hide_allow: "无效的 Zygisk 过滤开关",
     hot_unmount_incomplete: "临时证书未能完全卸除，建议重启",
     hot_reload_disabled: "该操作已停用",
     invalid_sd_path: "存储卡路径不受支持",

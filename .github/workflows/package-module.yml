@@ -6,8 +6,10 @@ on:
     paths:
       - "webui/**"
       - "module/**"
+      - "native/**"
       - "tooling/scripts/build-web.mjs"
       - "tooling/scripts/build-cbx509.mjs"
+      - "tooling/scripts/build-zygisk-hide.mjs"
       - "tooling/scripts/package-module.mjs"
       - "tooling/scripts/lib/**"
       - "tooling/cbx509/**"
@@ -20,8 +22,10 @@ on:
     paths:
       - "webui/**"
       - "module/**"
+      - "native/**"
       - "tooling/scripts/build-web.mjs"
       - "tooling/scripts/build-cbx509.mjs"
+      - "tooling/scripts/build-zygisk-hide.mjs"
       - "tooling/scripts/package-module.mjs"
       - "tooling/scripts/lib/**"
       - "tooling/cbx509/**"
@@ -42,7 +46,19 @@ jobs:
 
       - uses: ./.github/actions/setup-node-npm
 
-      - run: npm run build:module
+      - name: Setup Android NDK
+        uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r26d
+          link-to-sdk: true
+
+      - name: Build module zip
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+          REQUIRE_ZYGISK_HIDE: "1"
+          ZYGISK_ABIS: arm64-v8a,armeabi-v7a
+        run: npm run build:module
 
       - uses: actions/upload-artifact@v4
         with:

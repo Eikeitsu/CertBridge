@@ -50,6 +50,10 @@ export type ModuleStatus = {
   hot_allow?: string;
   hide_supported?: string;
   hide_allow?: string;
+  zn_hide_supported?: string;
+  zn_hide_allow?: string;
+  zn_hide_zn_module?: string;
+  zn_hide_summary?: string;
   mount_mode?: string;
   tmpfs_style?: string;
   stage_root?: string;

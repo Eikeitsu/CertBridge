@@ -21,8 +21,9 @@
     "format:check": "prettier --check \"webui/**/*.{ts,tsx,scss,css,json,html,md}\" \"tooling/**/*.{mjs,md,js}\" \"docs/**/*.{md,mjs}\" \"*.{md,json,yml,js,cjs,mjs}\" \".github/**/*.{yml,yaml}\"",
     "check": "npm run typecheck:web && npm run lint && npm run format:check",
     "build:cbx509": "node tooling/scripts/build-cbx509.mjs",
+    "build:zygisk-hide": "node tooling/scripts/build-zygisk-hide.mjs",
     "package:module": "node tooling/scripts/package-module.mjs",
-    "build:module": "npm run build:web && npm run package:module",
+    "build:module": "npm run build:web && npm run build:zygisk-hide && npm run package:module",
     "dev:docs": "vitepress dev docs",
     "build:docs": "vitepress build docs",
     "preview:docs": "vitepress preview docs"

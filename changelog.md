@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Zygisk 挂载痕迹过滤**（可选）：自定义安装可勾选；主路径为经典 Zygisk API（`zygisk/*.so`），在 App 进程中过滤 `/proc/.../mountinfo`、`mounts`、`maps`/`smaps` 中本模块相关行，并对指向本模块路径的 `readlink` 返回不存在。ZN Module 辅路径源码已预留，无校准服务目标时**不打包**空 `zn_modules.txt`。默认安装不装；配置键 `zn_hide_allow`（与 `hide_allow` 独立）。需设备已启用 Zygisk（含 ZygiskNext / ReZygisk / NeoZygisk 等）。Reqable / ProxyPin 白名单不过滤。挂钩体不可 `dlclose`，Zygisk 底座与 PLT 异常仍可能被检出
 - 修复误报「Zygote 命名空间证书校验未通过」：状态只校验 TLS 主路径；整库精确匹配失败但绑定归属正确或 addon 已可见时视为成功（证书能用却报异常）
 - 恢复 WebUI 证书详情底栏：内置 / 自定义证书可打开分组详情（主体、颁发者、有效期、指纹等），点按可复制
 - 默认安装改为全量组件：安装挂载隐藏协助，但 `hide_allow` **默认关闭**；自定义安装勾选隐藏后 `hide_allow` **默认开启**
@@ -11,8 +12,8 @@
 - WebUI 底部新增 **隐藏** 页；文档站新增 [挂载隐藏说明](/guide/hide) 专页
 - 更多页曾含现代 Root 隐藏说明（Magisk 排除列表、Shamiko、ZygiskNext/ReZygisk/NeoZygisk、SuSFS、APatch 排除修改等），现集中于隐藏页
 - 临时层默认迁到 `/dev/.cb0` / `/dev/.cb1`（`tmpfs_style=dev`）；保留 short/legacy 可切换；卸载清理全部路径
-- SuSFS / ksud kernel umount：bind 成功后自动 `add_try_umount`（参考 bindhosts）
-- 挂载隐藏协助：默认安装会装上（`hide_allow=0`）；自定义安装可跳过，勾选则 `hide_allow=1`。未安装时删除 `hide_assist.sh`、不写 `hide-assist.conf`、WebUI 不显示「隐藏」页
+- SuSFS / ksud kernel umount：bind 成功后自动 `add_try_umount`
+- 挂载隐藏协助：默认安装会装上（`hide_allow=0`）；自定义安装可跳过，勾选则 `hide_allow=1`。未安装时删除 `hide_assist.sh`、不写 `hide-assist.conf`、WebUI 不显示「隐藏」页（若仅装 Zygisk 过滤仍会显示）
 - WebUI「隐藏」页提供 **启用开关**（`hide_allow`）；关闭时不登记 try_umount、不写隐藏状态文件
 - WebUI / 文档补充抓包注意：对 Reqable 与被抓包 App 开「卸载模块」会导致「根证书未安装」或断网，须关闭后再抓
 - 修复 Lite：`cbx509` 打包漏掉内部类导致安装导入 CA 时「无法计算系统库文件名」；D8 现打入全部 class，hash 失败时回退 `-certbridge_info`

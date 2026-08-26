@@ -1,5 +1,5 @@
 /**
- * 机型 / 系统文案：参考充电控制、fastfetch、APatch 等对厂商 market name 的兜底。
+ * 机型 / 系统文案：多厂商 getprop 兜底（小米 / 一加 / OPPO / vivo / 荣耀等 market name）。
  * 注意：getprop 属性不存在时仍 exit 0 且输出空串，不能用 `||` 串联。
  */
 

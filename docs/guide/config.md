@@ -102,6 +102,7 @@ install_mode=default
 webui=1
 hot_reload=1
 hide_assist=1
+zn_hide=0
 mount_mode=compatible
 reqable_source=app
 proxypin_source=builtin
@@ -113,13 +114,16 @@ proxypin_source=builtin
 | `webui`           | 是否安装了 WebUI（`1` / `0`）                            |
 | `hot_reload`      | 是否安装了免重启热挂载（`1` / `0`）                      |
 | `hide_assist`     | 是否安装了挂载隐藏协助（`1` / `0`；**默认安装为 `1`**）  |
+| `zn_hide`         | 是否安装了 Zygisk 挂载痕迹过滤（`1` / `0`；**默认 `0`**） |
 | `mount_mode`      | `compatible` 或 `magic`                                  |
 | `reqable_source`  | `app` 或 `none`（未导入成功则为 none，对应开关会被关掉） |
 | `proxypin_source` | `app` / `builtin` / `none`                               |
 
-选择不安装 WebUI 不影响开机证书注入；选择不安装热挂载后，设备上不会保留 `bin/hot_mount.sh`，WebUI 也会隐藏对应区域。选择不安装挂载隐藏后，不会保留 `bin/lib/hide_assist.sh`，不写隐藏状态文件，WebUI 不显示「隐藏」页。
+选择不安装 WebUI 不影响开机证书注入；选择不安装热挂载后，设备上不会保留 `bin/hot_mount.sh`，WebUI 也会隐藏对应区域。选择不安装挂载隐藏后，不会保留 `bin/lib/hide_assist.sh`，不写隐藏状态文件；若 Zygisk 过滤也未安装，WebUI 不显示「隐藏」页。选择不安装 Zygisk 过滤时会删除 `zygisk/`。
 
 `certs.conf` 中的 `hide_allow`：默认安装写入 `0`；自定义安装勾选隐藏协助时写入 `1`。
+
+`certs.conf` 中的 `zn_hide_allow`：仅在安装 Zygisk 过滤组件时写入；自定义勾选时默认 `1`。
 
 默认安装固定 `mount_mode=compatible`；仅**自定义安装**会询问挂载模式。
 

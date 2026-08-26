@@ -1,10 +1,12 @@
 # 挂载隐藏说明
 
-证书桥通过 **bind mount** 将合并后的 CA 写入系统信任库路径。检测方仍可能从 `mountinfo`、路径特征或 trust store 内容发现异常。**换临时层路径不能替代 umount**；真正有效的隐藏依赖 SuSFS、Shamiko、ZygiskNext / ReZygisk / NeoZygisk 等对目标进程的 **umount**。
+证书桥通过 **bind mount** 将合并后的 CA 写入系统信任库路径。检测方仍可能从 `mountinfo`、路径特征或 trust store 内容发现异常。**换临时层路径不能替代 umount**；内核侧真正卸掉挂载依赖 SuSFS 等 try_umount；进程内读到的挂载表还可由本模块的 **Zygisk 挂载痕迹过滤** 去掉本模块相关行。
 
 ## 可选组件
 
-挂载隐藏协助（`bin/lib/hide_assist.sh`）随安装方案写入开关默认值：
+### 挂载隐藏协助（SuSFS try_umount）
+
+`bin/lib/hide_assist.sh` 随安装方案写入开关默认值：
 
 | 安装方式   | 是否安装隐藏组件 | `hide_allow` 默认                         |
 | ---------- | ---------------- | ----------------------------------------- |
@@ -14,7 +16,7 @@
 未安装时（仅自定义安装跳过该项）：
 
 - 设备上不保留 `hide_assist.sh`，不写 `data/state/hide-assist.conf`
-- WebUI **不显示「隐藏」页**
+- 若也未安装 Zygisk 过滤，WebUI **不显示「隐藏」页**
 
 已安装时：
 
@@ -22,7 +24,27 @@
 - 开关打开时，注入 / 热挂载成功会向 SuSFS / 内核登记 `try_umount`
 - 关闭开关会清除本模块记录的隐藏状态文件；内核侧登记通常需**重启**才清掉
 
-WebUI 隐藏页会展示本机探测到的隐藏助手与 `try_umount` 注册状态，并分 Root 方案给出配置建议。
+### Zygisk 挂载痕迹过滤
+
+发布包可含 `zygisk/<abi>.so`。自定义安装音量键可选；**默认安装不安装**。
+
+本能力按双轨设计，与 SuSFS `hide_assist` 并行、互不替代：
+
+| 轨 | 技术 | 作用范围 | 当前发布包 |
+| -- | ---- | -------- | ---------- |
+| **A（主）** | 经典 Zygisk API：`zygisk/<abi>.so` | 普通 App：过滤其读到的 mountinfo / mounts | **交付** |
+| **B（辅）** | ZN Module：`zn_modules.txt` + 服务侧 so | 仅 init 拉起的服务进程同类过滤 | **不打空壳**；校准目标前不打包 |
+
+| 项目       | 说明                                                                               |
+| ---------- | ---------------------------------------------------------------------------------- |
+| 作用（A）  | 过滤 mountinfo/mounts；并过滤 maps/smaps、弱化 map_files readlink，减轻对本模块 zygisk so 的路径扫描 |
+| 配置       | `certs.conf` 的 `zn_hide_allow`（与 `hide_allow` 独立；A/B 共用）                  |
+| 勾选后默认 | 自定义勾选时默认 **开启**（`1`）                                                   |
+| 运行条件   | 设备需已启用 Zygisk（Magisk 内置或 ZygiskNext / ReZygisk / NeoZygisk 等）           |
+| 白名单     | Reqable / ProxyPin 等抓包包名**不过滤**，避免读不到系统 CA                           |
+| 未安装时   | 删除 `zygisk/` 与空/无效的 `zn_modules.txt`；无 so 时 `zn_hide_supported=0`         |
+
+WebUI 隐藏页在安装了 SuSFS 协助和/或 Zygisk 过滤任一组件时出现，并分 Root 方案给出配置建议。
 
 ---
 
@@ -47,11 +69,12 @@ WebUI 隐藏页会展示本机探测到的隐藏助手与 `try_umount` 注册状
 
 ## 诚实边界（请先读）
 
-| 事实     | 说明                                                                                                |
-| -------- | --------------------------------------------------------------------------------------------------- |
-| 路径迁移 | 默认临时层在 `/dev/.cb*` 是为避开对 `/data/local/tmp` 的关键词扫描，**不能**让 bind 消失            |
-| 无助手时 | 没有 SuSFS / Zygisk umount 助手时，读 mountinfo 的检测仍可能发现 cacerts 上的 bind                  |
-| 注入方式 | 不存在类似 ZN-hostsredirect 的「无挂载 CA 注入」公共方案；证书必须写入信任库路径才能被系统 TLS 使用 |
+| 事实        | 说明                                                                               |
+| ----------- | ---------------------------------------------------------------------------------- |
+| 路径迁移    | 默认临时层在 `/dev/.cb*` 是为避开对 `/data/local/tmp` 的关键词扫描，**不能**让 bind 消失 |
+| 无助手时    | 没有 SuSFS / Zygisk umount 助手时，读 mountinfo 的检测仍可能发现 cacerts 上的 bind |
+| Zygisk 过滤 | 可去掉 App 读到的本模块 mount / maps 行；so 仍在内存，PLT/行为与 Zygisk 底座仍可能被检出 |
+| 注入方式    | 证书必须写入信任库路径才能被系统 TLS 使用；不存在无挂载的公共 CA 注入方案          |
 
 ---
 
@@ -71,23 +94,23 @@ WebUI 隐藏页会展示本机探测到的隐藏助手与 `try_umount` 注册状
 
 ### Zygisk 助手模块
 
-Magisk 可安装 **ZygiskNext**、**ReZygisk**、**NeoZygisk**（通常需关闭内置 Zygisk），它们同样能对目标进程 umount 模块挂载痕迹。
+Magisk 可安装 **ZygiskNext**、**ReZygisk**、**NeoZygisk**（通常需关闭内置 Zygisk），它们同样能对目标进程 umount 模块挂载痕迹。本模块的 Zygisk 过滤 so 也由同一类加载器加载。
 
 ### 常见组合
 
 - **Shamiko** + 排除列表（关闭 Enforce）
 - **ZygiskNext / ReZygisk / NeoZygisk** 的 umount / 遵循排除列表
 - **Zygisk Assistant / NoHello**（偏 bind mount 隐藏）
+- 本模块可选 **Zygisk 挂载痕迹过滤** + SuSFS **try_umount**（可同时使用）
 
 ---
 
-## KernelSU / SukiSU / MKSU
+## KernelSU / SukiSU / 同类
 
-1. **仅对需要躲检测的 App** 开启管理器的 **「卸载模块 / Umount modules」**，并确保内核支持 `path_umount`（GKI 或已 backport）。
-2. **Reqable、ProxyPin、被抓包目标**：**不要**开「卸载模块」，否则会出现「根证书未安装」或抓包断网。
-3. **SuSFS**：若已安装隐藏组件并开启 `hide_allow`，证书桥会在 bind 成功后自动 `add_try_umount` 到 cacerts 路径；WebUI **隐藏页** 会显示「已注册」。
-4. 可叠加 **NeoZygisk**、**ReZygisk** 或 **ZygiskNext**「仅还原挂载 / umount only」（同样不要对抓包链路 App 启用）。
-5. 避免与 **Magical OverlayFS** 等冲突模块同时启用。
+1. 管理器内对需要躲检测的 App 开启 **「卸载模块」**（Umount modules）。
+2. **不要**对 Reqable / ProxyPin / 被抓包目标开启卸载模块。
+3. 若内核支持 **SuSFS**，本模块在 `hide_allow=1` 时会自动 `add_try_umount`。
+4. 需要进程内过滤 mountinfo 时，额外安装本模块的 Zygisk 过滤组件，并保证已启用兼容的 Zygisk 加载器。
 
 ---
 
@@ -95,7 +118,7 @@ Magisk 可安装 **ZygiskNext**、**ReZygisk**、**NeoZygisk**（通常需关闭
 
 1. **仅对需要躲检测的 App** 启用 **「排除修改（Exclude Modifications）」**。
 2. **不要**对 Reqable / ProxyPin / 被抓包目标启用排除修改。
-3. 建议安装 **NeoZygisk**、**ReZygisk** 或 **ZygiskNext**（umount only），与 [bindhosts 隐藏指南](https://github.com/bindhosts/bindhosts) 一致。
+3. 建议安装 **NeoZygisk**、**ReZygisk** 或 **ZygiskNext**（umount only）。
 4. 也可使用 **Zygisk Assistant / NoHello** 辅助隐藏 bind mount。
 
 ---
@@ -106,12 +129,12 @@ Magisk 可安装 **ZygiskNext**、**ReZygisk**、**NeoZygisk**（通常需关闭
 | ---------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------ |
 | 临时层路径       | WebUI「更多 → 临时挂载路径」或 `certs.conf` 的 `tmpfs_style` | `dev`（默认）/ `short` / `legacy`；切换后需重启                          |
 | SuSFS try_umount | 可选组件 + WebUI 开关                                        | 安装隐藏组件并开启 `hide_allow` 后，bind 成功由 `hide_assist.sh` 注册    |
+| Zygisk 挂载过滤  | 可选组件 + WebUI 开关                                        | `zn_hide_allow`；主路径 `zygisk/*.so`；辅路径仅在有非空 `zn_modules.txt` 时 |
 | 挂载模式         | WebUI「更多 → 挂载模式」                                     | 完整兼容 vs 轻量 Magic；见 [配置说明 · 挂载模式](/guide/config#挂载模式) |
 
 ---
 
-## 参考
+## 相关文档
 
 - WebUI：[WebUI 使用说明 · 隐藏页](/guide/webui#隐藏)
 - 配置：[配置说明 · 临时挂载路径](/guide/config#临时挂载路径-tmpfs_style)
-- 外部：[bindhosts](https://github.com/bindhosts/bindhosts)（hosts 重定向模块的隐藏思路，证书 bind 场景可类比 umount 需求）

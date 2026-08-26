@@ -103,6 +103,36 @@ certbridge_load_libs_runtime() {
       echo "hide_summary=未安装挂载隐藏组件"
     }
   fi
+  # Zygisk 过滤状态：与 hide_assist 是否安装无关
+  zn_hide_component_present() {
+    [ -d "$MODDIR/zygisk" ] || return 1
+    for _zn_so in "$MODDIR/zygisk"/*.so; do
+      [ -f "$_zn_so" ] && return 0
+    done
+    return 1
+  }
+  emit_zn_hide_status() {
+    if zn_hide_component_present; then
+      echo "zn_hide_supported=1"
+      echo "zn_hide_allow=$(read_conf zn_hide_allow 0)"
+      # 非空 zn_modules.txt 视为启用了 ZN Module 辅路径声明（禁止空壳）
+      zn_mod=0
+      if [ -f "$MODDIR/zn_modules.txt" ] && [ -s "$MODDIR/zn_modules.txt" ]; then
+        zn_mod=1
+      fi
+      echo "zn_hide_zn_module=$zn_mod"
+      if [ "$zn_mod" = "1" ]; then
+        echo "zn_hide_summary=经典 Zygisk 过滤已安装；另含 ZN Module 辅路径声明"
+      else
+        echo "zn_hide_summary=经典 Zygisk 过滤已安装（mount/maps 自藏；需启用 Zygisk）"
+      fi
+    else
+      echo "zn_hide_supported=0"
+      echo "zn_hide_allow=0"
+      echo "zn_hide_zn_module=0"
+      echo "zn_hide_summary=未安装 Zygisk 挂载痕迹过滤"
+    fi
+  }
 }
 
 certbridge_init_paths "$0"

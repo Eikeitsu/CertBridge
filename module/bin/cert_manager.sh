@@ -90,6 +90,7 @@ hot_failed=0"
   echo "mount_mode=$(get_mount_mode)"
   echo "tmpfs_style=$(get_tmpfs_style)"
   emit_hide_status
+  emit_zn_hide_status
   echo "version=$(grep '^version=' "$MODDIR/module.prop" 2>/dev/null | cut -d= -f2-)"
   echo "$hot_status"
 }
@@ -360,6 +361,20 @@ cmd_set_hide_allow() {
   echo "hint=开启后需重新注入或热挂载才会登记 try_umount；关闭后需重启以清除内核侧登记"
 }
 
+cmd_set_zn_hide_allow() {
+  val="$1"
+  case "$val" in
+    0|1) ;;
+    *) echo "error=invalid_zn_hide_allow"; return 1 ;;
+  esac
+  zn_hide_component_present || { echo "error=zn_hide_feature_not_installed"; return 1; }
+  write_conf zn_hide_allow "$val" || { echo "error=write_failed"; return 1; }
+  log_info "config: zn_hide_allow=$val (Zygisk mount filter; reboot apps / device to apply)"
+  echo "ok=1"
+  echo "zn_hide_allow=$val"
+  echo "hint=开关变更后需重启相关 App 或整机后 Zygisk 挂钩才会按新配置生效"
+}
+
 cmd_hot_mount() {
   mode="$1"
   sd_path="$2"
@@ -388,13 +403,14 @@ case "$1" in
   hot_unmount) cmd_hot_unmount ;;
   set_hot_allow) cmd_set_hot_allow "$2" ;;
   set_hide_allow) cmd_set_hide_allow "$2" ;;
+  set_zn_hide_allow) cmd_set_zn_hide_allow "$2" ;;
   reinject|sync)
     echo "error=hot_reload_disabled"
     echo "reboot_required=1"
     exit 1
     ;;
   *)
-    echo "usage: cert_manager.sh {status|list_custom|toggle|sync_apps|set_mount_mode|set_tmpfs_style|set_hot_allow|set_hide_allow|install_custom|remove_custom|cert_info|hot_mount|hot_unmount}"
+    echo "usage: cert_manager.sh {status|list_custom|toggle|sync_apps|set_mount_mode|set_tmpfs_style|set_hot_allow|set_hide_allow|set_zn_hide_allow|install_custom|remove_custom|cert_info|hot_mount|hot_unmount}"
     exit 1
     ;;
 esac

@@ -13,7 +13,7 @@ import {
 } from "node:fs";
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createZipFromDir } from "./lib/create-zip.mjs";
+import { createZipFromDir, verifyZipHasEntries } from "./lib/create-zip.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const moduleRoot = join(repoRoot, "module");
@@ -389,7 +389,17 @@ async function packageOne(edition, version) {
   if (existsSync(zipPath)) rmSync(zipPath);
   log(`packaging ${zipName}...`);
   await createZipFromDir(staging, zipPath);
-  log(`created ${zipPath} (${(statSync(zipPath).size / 1024).toFixed(1)} KB)`);
+  const entries = verifyZipHasEntries(zipPath, [
+    "META-INF/com/google/android/update-binary",
+    "module.prop",
+    "hotinstall.sh",
+    "bin/lib/hot_update.sh",
+    "post-fs-data.sh",
+    "webroot/index.html",
+  ]);
+  log(
+    `created ${zipPath} (${(statSync(zipPath).size / 1024).toFixed(1)} KB, ${entries.length} files)`,
+  );
   rmSync(staging, { recursive: true, force: true });
 }
 

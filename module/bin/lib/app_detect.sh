@@ -65,6 +65,36 @@ find_live_app_cert() {
       done
       return 1
       ;;
+    charles)
+      # 多为用户导出到下载目录；亦试常见自定义路径
+      _app_cert_first_existing \
+        "/storage/emulated/0/Download/charles-ssl-proxying-certificate.pem" \
+        "/storage/emulated/0/Download/charles-proxy-ssl-proxying-certificate.pem" \
+        "/data/media/0/Download/charles-ssl-proxying-certificate.pem" \
+        "/sdcard/Download/charles-ssl-proxying-certificate.pem" \
+        "/storage/emulated/0/Documents/charles-ssl-proxying-certificate.pem" \
+        "/data/local/tmp/charles-ssl-proxying-certificate.pem"
+      ;;
+    mitmproxy)
+      _app_cert_first_existing \
+        "/storage/emulated/0/Download/mitmproxy-ca-cert.pem" \
+        "/storage/emulated/0/Download/mitmproxy-ca-cert.cer" \
+        "/data/media/0/Download/mitmproxy-ca-cert.pem" \
+        "/sdcard/Download/mitmproxy-ca-cert.pem" \
+        "/storage/emulated/0/Documents/mitmproxy-ca-cert.pem" \
+        "/data/local/tmp/mitmproxy-ca-cert.pem" \
+        "/data/data/org.mitmproxy.android/files/mitmproxy-ca-cert.pem"
+      ;;
+    pcapdroid)
+      _app_cert_first_existing \
+        "/data/user/0/com.emanuelef.remote_capture/files/cacert.pem" \
+        "/data/user/0/com.emanuelef.remote_capture/files/ca.crt" \
+        "/data/data/com.emanuelef.remote_capture/files/cacert.pem" \
+        "/data/data/com.emanuelef.remote_capture/files/ca.crt" \
+        "/storage/emulated/0/Download/PCAPdroid_CA.crt" \
+        "/storage/emulated/0/Download/PCAPdroid_CA.pem" \
+        "/sdcard/Download/PCAPdroid_CA.crt"
+      ;;
     *) return 1 ;;
   esac
 }
@@ -75,6 +105,14 @@ app_cert_label() {
     proxypin) echo "ProxyPin" ;;
     httpcanary) echo "HttpCanary" ;;
     adguard) echo "ADGuard" ;;
+    charles) echo "Charles" ;;
+    mitmproxy) echo "mitmproxy" ;;
+    pcapdroid) echo "PCAPdroid" ;;
     *) echo "$1" ;;
   esac
+}
+
+# 可作为「自定义导入预设」探测的 kind（不含 Reqable/ProxyPin 源开关）
+optional_custom_app_kinds() {
+  echo "httpcanary adguard charles mitmproxy pcapdroid"
 }

@@ -1,9 +1,27 @@
 #include "mount_filter.hpp"
 
+#include <cstdio>
 #include <cstring>
+#include <fcntl.h>
+#include <mutex>
+#include <unistd.h>
+#include <vector>
 
 namespace cb_hide {
 namespace {
+
+std::mutex g_wl_mu;
+std::vector<std::string> g_whitelist;
+bool g_whitelist_ready = false;
+
+constexpr const char *kBuiltinWhitelist[] = {
+    "com.reqable.android",
+    "com.reqable.android.pro",
+    "com.reqable",
+    "com.proxy.pin",
+    "com.network.proxy",
+    "com.wangyu.proxypin",
+};
 
 bool contains_ci(std::string_view hay, std::string_view needle) {
   if (needle.empty() || hay.size() < needle.size()) return false;
@@ -33,29 +51,78 @@ bool ends_with(std::string_view hay, std::string_view suffix) {
   return hay.compare(hay.size() - suffix.size(), suffix.size(), suffix) == 0;
 }
 
+bool pkg_matches(std::string_view process_name, std::string_view pkg) {
+  if (pkg.empty() || process_name.size() < pkg.size()) return false;
+  if (process_name.compare(0, pkg.size(), pkg) != 0) return false;
+  if (process_name.size() == pkg.size()) return true;
+  return process_name[pkg.size()] == ':' || process_name[pkg.size()] == '/';
+}
+
+void ensure_builtin_whitelist_locked() {
+  if (g_whitelist_ready) return;
+  g_whitelist.clear();
+  for (const char *p : kBuiltinWhitelist) g_whitelist.emplace_back(p);
+  g_whitelist_ready = true;
+}
+
+void parse_whitelist_text(std::string_view text, std::vector<std::string> *out) {
+  size_t start = 0;
+  while (start <= text.size()) {
+    size_t end = text.find('\n', start);
+    std::string_view line =
+        end == std::string_view::npos ? text.substr(start) : text.substr(start, end - start);
+    while (!line.empty() && (line.back() == '\r' || line.back() == ' ' || line.back() == '\t')) {
+      line.remove_suffix(1);
+    }
+    while (!line.empty() && (line.front() == ' ' || line.front() == '\t')) {
+      line.remove_prefix(1);
+    }
+    if (!line.empty() && line.front() != '#') {
+      out->emplace_back(line);
+    }
+    if (end == std::string_view::npos) break;
+    start = end + 1;
+  }
+}
+
 }  // namespace
 
+void load_whitelist_from_moddir(int moddir_fd) {
+  std::lock_guard<std::mutex> lock(g_wl_mu);
+  g_whitelist.clear();
+  g_whitelist_ready = false;
+  if (moddir_fd >= 0) {
+    int fd = openat(moddir_fd, "config/zn_whitelist.txt", O_RDONLY | O_CLOEXEC);
+    if (fd >= 0) {
+      std::string raw;
+      char tmp[1024];
+      for (;;) {
+        ssize_t n = ::read(fd, tmp, sizeof(tmp));
+        if (n < 0) break;
+        if (n == 0) break;
+        raw.append(tmp, static_cast<size_t>(n));
+        if (raw.size() > 64 * 1024) break;
+      }
+      ::close(fd);
+      parse_whitelist_text(raw, &g_whitelist);
+    }
+  }
+  if (g_whitelist.empty()) {
+    for (const char *p : kBuiltinWhitelist) g_whitelist.emplace_back(p);
+  }
+  g_whitelist_ready = true;
+}
+
 bool is_capture_whitelist(std::string_view process_name) {
-  static constexpr const char *kPkgs[] = {
-      "com.reqable.android",
-      "com.reqable.android.pro",
-      "com.reqable",
-      "com.proxy.pin",
-      "com.network.proxy",
-      "com.wangyu.proxypin",
-  };
-  for (const char *pkg : kPkgs) {
-    const size_t n = std::strlen(pkg);
-    if (process_name.size() < n) continue;
-    if (process_name.compare(0, n, pkg) != 0) continue;
-    if (process_name.size() == n) return true;
-    if (process_name[n] == ':' || process_name[n] == '/') return true;
+  std::lock_guard<std::mutex> lock(g_wl_mu);
+  ensure_builtin_whitelist_locked();
+  for (const auto &pkg : g_whitelist) {
+    if (pkg_matches(process_name, pkg)) return true;
   }
   return false;
 }
 
 bool line_is_certbridge_trace(std::string_view line) {
-  // 模块目录、Zygisk so、临时层、合并层 —— 仅本模块
   if (contains(line, "modules/CertBridge")) return true;
   if (contains(line, "/CertBridge/")) return true;
   if (contains(line, "/CertBridge")) return true;
@@ -79,7 +146,6 @@ bool path_is_mount_table(std::string_view path) {
 
 bool path_is_maps_table(std::string_view path) {
   if (path.empty()) return false;
-  // /proc/self/maps、/proc/<pid>/smaps、smaps_rollup
   if (ends_with(path, "/maps") && contains(path, "/proc/")) return true;
   if (ends_with(path, "/smaps") && contains(path, "/proc/")) return true;
   if (ends_with(path, "/smaps_rollup") && contains(path, "/proc/")) return true;

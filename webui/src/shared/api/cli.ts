@@ -78,6 +78,41 @@ export async function installCustom(payload: string) {
   return cli(`install_custom '${payload}'`, CLI_TIMEOUT_MS.IMPORT);
 }
 
+export type AppPresetKind =
+  | "httpcanary"
+  | "adguard"
+  | "charles"
+  | "mitmproxy"
+  | "pcapdroid";
+
+export async function importAppPreset(kind: AppPresetKind) {
+  return cli(`import_app_preset ${kind}`, CLI_TIMEOUT_MS.IMPORT);
+}
+
+export type AppliedFingerprint = {
+  label: string;
+  name: string;
+  sha256: string;
+  display: string;
+};
+
+export async function listAppliedFingerprints(): Promise<AppliedFingerprint[]> {
+  const result = await cli("list_applied_fps", CLI_TIMEOUT_MS.IMPORT);
+  const rows: AppliedFingerprint[] = [];
+  for (const line of String(result.stdout || "").split("\n")) {
+    if (!line.startsWith("fp|")) continue;
+    const parts = line.split("|");
+    if (parts.length < 4) continue;
+    rows.push({
+      label: parts[1] || "",
+      name: parts[2] || "",
+      sha256: parts[3] || "",
+      display: parts.slice(4).join("|") || parts[1] || "",
+    });
+  }
+  return rows;
+}
+
 export async function removeCustom(fileName: string) {
   return cli(`remove_custom '${fileName.replace(/'/g, "")}'`);
 }
@@ -96,6 +131,31 @@ export async function setHideAllow(value: FlagValue) {
 
 export async function setZnHideAllow(value: FlagValue) {
   return cli(`set_zn_hide_allow ${value}`);
+}
+
+function textToBase64(text: string): string {
+  const bytes = new TextEncoder().encode(text);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]!);
+  return btoa(binary);
+}
+
+export async function getZnWhitelist(): Promise<string> {
+  const result = await cli("get_zn_whitelist");
+  if (result.errno && result.errno !== 0) return "";
+  const stdout = result.stdout || "";
+  const begin = stdout.indexOf("begin_whitelist");
+  const end = stdout.indexOf("end_whitelist");
+  if (begin < 0 || end < 0 || end <= begin) return "";
+  return stdout
+    .slice(begin + "begin_whitelist".length, end)
+    .replace(/^\r?\n/, "")
+    .replace(/\r?\n$/, "");
+}
+
+export async function setZnWhitelist(text: string) {
+  const payload = textToBase64(text);
+  return cli(`set_zn_whitelist '${payload}'`, CLI_TIMEOUT_MS.IMPORT);
 }
 
 export async function hotMount(mode: HotMountMode, sdPath?: string) {

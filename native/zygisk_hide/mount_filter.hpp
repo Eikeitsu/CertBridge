@@ -3,8 +3,12 @@
 #include <cstddef>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace cb_hide {
+
+/** 从模块 config/zn_whitelist.txt 加载额外/覆盖白名单（空文件则仅用内置默认） */
+void load_whitelist_from_moddir(int moddir_fd);
 
 /** 是否为抓包白名单包名（不过滤其 mount / maps 视图，避免读不到系统 CA） */
 bool is_capture_whitelist(std::string_view process_name);
@@ -26,7 +30,6 @@ bool path_needs_trace_filter(std::string_view path);
  */
 std::string filter_trace_text(std::string_view raw);
 
-/** @deprecated 同 filter_trace_text，保留旧名 */
 inline std::string filter_mount_table_text(std::string_view raw) {
   return filter_trace_text(raw);
 }

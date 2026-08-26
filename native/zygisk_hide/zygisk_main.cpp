@@ -15,6 +15,7 @@
 #include <fcntl.h>
 #include <mutex>
 #include <string>
+#include <string_view>
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
 #include <unistd.h>
@@ -120,20 +121,51 @@ ssize_t filtered_read(int fd, void *buf, size_t count) {
     }
   }
 
-  std::string raw;
+  // 按行流式过滤：不全文吞进 raw，只保留跨 chunk 的半行 + 过滤后输出
+  std::string filtered;
+  std::string carry;
   char tmp[4096];
+  constexpr size_t kMaxFiltered = 4 * 1024 * 1024;
+  auto append_kept_line = [&](std::string_view line, bool with_nl) {
+    if (cb_hide::line_is_certbridge_trace(line)) return;
+    if (filtered.size() + line.size() + (with_nl ? 1 : 0) > kMaxFiltered) return;
+    filtered.append(line.data(), line.size());
+    if (with_nl) filtered.push_back('\n');
+  };
+
   for (;;) {
     ssize_t n = orig_read ? orig_read(fd, tmp, sizeof(tmp)) : ::read(fd, tmp, sizeof(tmp));
     if (n < 0) {
       if (errno == EINTR) continue;
       return n;
     }
-    if (n == 0) break;
-    raw.append(tmp, static_cast<size_t>(n));
-    if (raw.size() > 4 * 1024 * 1024) break;
+    if (n == 0) {
+      if (!carry.empty()) append_kept_line(carry, false);
+      break;
+    }
+    size_t start = 0;
+    for (size_t i = 0; i < static_cast<size_t>(n); ++i) {
+      if (tmp[i] != '\n') continue;
+      if (carry.empty()) {
+        append_kept_line(std::string_view(tmp + start, i - start), true);
+      } else {
+        carry.append(tmp + start, i - start);
+        append_kept_line(carry, true);
+        carry.clear();
+      }
+      start = i + 1;
+    }
+    if (start < static_cast<size_t>(n)) {
+      carry.append(tmp + start, static_cast<size_t>(n) - start);
+      if (carry.size() > 256 * 1024) {
+        // 异常超长行：按整段判定一次后丢弃，避免 OOM
+        append_kept_line(carry, false);
+        carry.clear();
+      }
+    }
+    if (filtered.size() >= kMaxFiltered) break;
   }
 
-  std::string filtered = cb_hide::filter_trace_text(raw);
   {
     std::lock_guard<std::mutex> lock(g_mu);
     if (filtered.empty()) {
@@ -264,10 +296,11 @@ class CertBridgeHideModule : public ModuleBase {
     if (name) env->ReleaseStringUTFChars(args->nice_name, name);
 
     if (proc.empty() || proc == "system_server") return;
-    if (cb_hide::is_capture_whitelist(proc)) return;
 
     int modfd = api->getModuleDir();
     if (modfd < 0) return;
+    cb_hide::load_whitelist_from_moddir(modfd);
+    if (cb_hide::is_capture_whitelist(proc)) return;
     if (!read_conf_zn_hide_allow(modfd)) return;
 
     should_hook = true;

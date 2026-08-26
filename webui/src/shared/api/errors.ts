@@ -37,6 +37,9 @@ export function friendlyError(code?: string): string {
     nsenter_unavailable: "当前环境无法完成临时挂载",
     invalid_tmpfs_style: "无效的临时路径风格",
     invalid_mount_mode: "无效的挂载模式",
+    invalid_preset: "不支持的导入预设",
+    preset_cert_not_found: "未找到该软件的证书文件，请先导出到下载目录",
+    import_failed: "导入失败，请检查证书是否有效",
   };
   if (messageByCode[errorCode]) return messageByCode[errorCode];
   return errorCode || "操作未完成，请稍后重试";

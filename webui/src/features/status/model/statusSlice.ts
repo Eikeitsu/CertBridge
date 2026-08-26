@@ -87,8 +87,8 @@ function formatSyncToast(sync: {
 }): string | null {
   if (sync.updated > 0) {
     return sync.rebootRequired
-      ? `已从 App 更新 ${sync.updated} 张证书，重启后生效`
-      : `已从 App 更新 ${sync.updated} 张证书`;
+      ? `已从 App 更新 ${sync.updated} 张证书（含可选自定义），重启后生效`
+      : `已从 App 更新 ${sync.updated} 张证书（含可选自定义）`;
   }
   if (sync.miss > 0 && sync.kept === 0 && sync.updated === 0) {
     return "未从 App 读到新证书（已保留现有）";

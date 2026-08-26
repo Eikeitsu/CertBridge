@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- 工程拆分收尾：`apex_inject`→`inject/*`；`hot_*` / `status_*` / `generation_*` / `store_*` / `cert_*` / `cli_*` / `install_*` / `hide_*` / `inject_*` 按域拆文件；`profile_status` 从 `common.sh` 抽出
+- 工程拆分：`cert_manager.sh` → `cli_{status,certs,config,hot}.sh`；`cert_optional.sh` 从 `cert_sources` 拆出
+- 工程拆分：`status.sh` 拆为 `status_runtime` / `status_desc`；证书页导入 / 热挂载 toast 与确认框纳入 packVoice
+- 工程拆分：`hot_mount.sh` 实现迁至 `bin/lib/hot/`；`install_flow` 拆为 choose / import / apply（入口仍为 `install_flow.sh`）
+- Zygisk 过滤改为按行流式读取 mountinfo/maps，避免整文件吞入内存
+- 隐藏相关 toast / 确认框文案纳入 packVoice；控制台 / 工作室隐藏页补上文档入口
+- 自定义证书支持从常见路径一键导入：HttpCanary / ADGuard / Charles / mitmproxy / PCAPdroid；刷新与安装探测同步覆盖
+- WebUI / CLI 可导出已应用 CA 的 SHA-256 指纹列表（`list_applied_fps`）
+- Zygisk 底座探测：status / 隐藏页展示 ZygiskNext、ReZygisk、NeoZygisk 或 Magisk 内置 Zygisk；组件已装但底座未开时告警
+- Zygisk 抓包白名单可配置：`config/zn_whitelist.txt`，WebUI 隐藏页可编辑；修改后强停 App 生效
+- 隐藏页新增可关闭的「抓包检查清单」（首次打开）
+- WebUI「设置」主题隐藏页补上「挂载与隐藏实况」；未装 Zygisk 过滤时提示需自定义重刷；关于页展示安装组件档案
+- WebUI 刷新同步：除 Reqable / ProxyPin 外，检测到 HttpCanary / ADGuard 现场 CA 且指纹未见时自动导入为自定义证书
+- 文档对齐：隐藏页出现条件、Zygisk FAQ、功能表与 Lite 约 14KB 表述；隐藏说明文案含 maps/readlink 自藏
 - **Zygisk 挂载痕迹过滤**（可选）：自定义安装可勾选；主路径为经典 Zygisk API（`zygisk/*.so`），在 App 进程中过滤 `/proc/.../mountinfo`、`mounts`、`maps`/`smaps` 中本模块相关行，并对指向本模块路径的 `readlink` 返回不存在。ZN Module 辅路径源码已预留，无校准服务目标时**不打包**空 `zn_modules.txt`。默认安装不装；配置键 `zn_hide_allow`（与 `hide_allow` 独立）。需设备已启用 Zygisk（含 ZygiskNext / ReZygisk / NeoZygisk 等）。Reqable / ProxyPin 白名单不过滤。挂钩体不可 `dlclose`，Zygisk 底座与 PLT 异常仍可能被检出
 - 修复误报「Zygote 命名空间证书校验未通过」：状态只校验 TLS 主路径；整库精确匹配失败但绑定归属正确或 addon 已可见时视为成功（证书能用却报异常）
 - 恢复 WebUI 证书详情底栏：内置 / 自定义证书可打开分组详情（主体、颁发者、有效期、指纹等），点按可复制

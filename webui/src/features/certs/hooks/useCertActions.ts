@@ -5,18 +5,23 @@ import {
   patchStatus,
   refreshStatus,
 } from "@/features/status/model/statusSlice";
+import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
 import {
   hotMount,
   hotUnmount,
+  importAppPreset,
   installCustom,
+  listAppliedFingerprints,
   removeCustom,
   setHotAllow,
   toggleBuiltin,
+  type AppPresetKind,
 } from "@/shared/api/cli";
 import { errorFromResult } from "@/shared/api/errors";
 import { toast } from "@/shared/api/ksu";
 import { isCliFailure } from "@/shared/lib/cliResult";
 import { confirmAction } from "@/shared/lib/confirmAction";
+import { copyText } from "@/shared/lib/copyText";
 import { fileToBase64, parseKv } from "@/shared/lib/parse";
 import { toastByRebootFlag } from "@/shared/lib/rebootToast";
 import { isSafeSdPath } from "@/shared/lib/sdPath";
@@ -29,6 +34,8 @@ const SILENT_REFRESH = { syncApps: false } as const;
 
 export function useCertActions() {
   const dispatch = useAppDispatch();
+  const { voice } = usePackVoice();
+  const c = voice.certs;
   const { isPending, runExclusive } = useAsyncLock();
   const [pendingKind, setPendingKind] = useState<string | null>(null);
 
@@ -74,20 +81,55 @@ export function useCertActions() {
           toastByRebootFlag(kv, "已导入，重启后生效", "已导入（无需重启）");
           void dispatch(refreshStatus(SILENT_REFRESH));
         } catch {
-          toast("读取文件失败", "bad");
+          toast(c.importReadFail, "bad");
         }
       });
       return false;
     },
-    [dispatch, runExclusive],
+    [c.importReadFail, dispatch, runExclusive],
   );
+
+  const handleImportPreset = useCallback(
+    (kind: AppPresetKind) => {
+      void runExclusive(async () => {
+        const result = await importAppPreset(kind);
+        if (isCliFailure(result)) {
+          toast(errorFromResult(result.stdout, result.stderr), "bad");
+          return;
+        }
+        const kv = parseKv(result.stdout || "");
+        dispatch(mergeStatus(kv));
+        if (kv.unchanged === FLAG_ON) {
+          toast(c.presetUnchanged, "ok");
+        } else {
+          toastByRebootFlag(kv, "已导入，重启后生效", "已导入（无需重启）");
+        }
+        void dispatch(refreshStatus(SILENT_REFRESH));
+      });
+    },
+    [c.presetUnchanged, dispatch, runExclusive],
+  );
+
+  const handleExportFingerprints = useCallback(() => {
+    void runExclusive(async () => {
+      const rows = await listAppliedFingerprints();
+      if (!rows.length) {
+        toast(c.exportFpsEmpty, "warn");
+        return;
+      }
+      const text = rows
+        .map((r) => `${r.display || r.label}\t${r.sha256}\t${r.name}`)
+        .join("\n");
+      await copyText(text, c.exportFpsOk);
+    });
+  }, [c.exportFpsEmpty, c.exportFpsOk, runExclusive]);
 
   const handleRemoveCustom = useCallback(
     (fileName: string) => {
       confirmAction({
-        title: "移除自定义证书？",
-        content: "重启后才会从系统信任库撤下。",
-        okText: "移除",
+        title: c.removeConfirmTitle,
+        content: c.removeConfirmBody,
+        okText: c.removeConfirmOk,
         danger: true,
         onOk: async () => {
           const result = await removeCustom(fileName);
@@ -102,7 +144,7 @@ export function useCertActions() {
         },
       });
     },
-    [dispatch],
+    [c.removeConfirmBody, c.removeConfirmOk, c.removeConfirmTitle, dispatch],
   );
 
   const handleSetHotAllow = useCallback(
@@ -118,14 +160,14 @@ export function useCertActions() {
           }
           const kv = parseKv(result.stdout || "");
           dispatch(mergeStatus(kv));
-          toast(checked ? "已允许手动临时挂载" : "已关闭临时挂载", "ok");
+          toast(checked ? c.hotAllowOn : c.hotAllowOff, "ok");
         });
 
       if (!checked) {
         confirmAction({
-          title: "关闭临时挂载？",
-          content: "关闭后无法新建临时会话；若当前有会话，将一并无痕卸载。",
-          okText: "关闭",
+          title: c.hotConfirmOffTitle,
+          content: c.hotConfirmOffBody,
+          okText: c.hotConfirmOffOk,
           danger: true,
           onOk: apply,
         });
@@ -134,23 +176,23 @@ export function useCertActions() {
 
       void apply();
     },
-    [dispatch, runExclusive],
+    [c, dispatch, runExclusive],
   );
 
   const handleHotMount = useCallback(
     (mode: HotMountMode, sdPath?: string) => {
       if (mode !== HotMountMode.User && !isSafeSdPath(sdPath || "")) {
-        toast("存储卡路径不安全或不受支持", "warn");
+        toast(c.hotSdPathBad, "warn");
         return;
       }
 
       confirmAction({
         title: `立即挂载${HOT_MOUNT_CONFIRM_LABEL[mode]}中的有效 CA？`,
-        content: "无需重启，仅建立临时会话；重启后自动失效。",
-        okText: "挂载",
+        content: c.hotMountConfirmBody,
+        okText: c.hotMountConfirmOk,
         onOk: () =>
           runExclusive(async () => {
-            toast("正在建立临时证书会话…");
+            toast(c.hotMounting);
             const result = await hotMount(
               mode,
               mode === HotMountMode.User ? undefined : sdPath?.trim(),
@@ -174,18 +216,18 @@ export function useCertActions() {
           }),
       });
     },
-    [dispatch, runExclusive],
+    [c, dispatch, runExclusive],
   );
 
   const handleHotUnmount = useCallback(() => {
     confirmAction({
-      title: "无痕卸载当前临时证书会话？",
-      content: "永久配置与系统文件不会改变。",
-      okText: "卸载",
+      title: c.hotUnmountConfirmTitle,
+      content: c.hotUnmountConfirmBody,
+      okText: c.hotUnmountConfirmOk,
       danger: true,
       onOk: () =>
         runExclusive(async () => {
-          toast("正在安全卸载临时证书…");
+          toast(c.hotUnmounting);
           const result = await hotUnmount();
           const fields = parseKv(result.stdout);
           if (isCliFailure(result) || fields.ok !== FLAG_ON) {
@@ -199,17 +241,19 @@ export function useCertActions() {
             return;
           }
           dispatch(mergeStatus(fields));
-          toast("临时证书已无痕卸载", "ok");
+          toast(c.hotUnmounted, "ok");
           void dispatch(refreshStatus(SILENT_REFRESH));
         }),
     });
-  }, [dispatch, runExclusive]);
+  }, [c, dispatch, runExclusive]);
 
   return {
     isPending,
     pendingKind,
     handleToggleBuiltin,
     handleImportFile,
+    handleImportPreset,
+    handleExportFingerprints,
     handleRemoveCustom,
     handleSetHotAllow,
     handleHotMount,

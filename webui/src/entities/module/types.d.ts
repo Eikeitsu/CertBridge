@@ -54,6 +54,14 @@ export type ModuleStatus = {
   zn_hide_allow?: string;
   zn_hide_zn_module?: string;
   zn_hide_summary?: string;
+  zygisk_loader?: string;
+  zygisk_loader_label?: string;
+  zygisk_loader_ok?: string;
+  profile_webui?: string;
+  profile_hot?: string;
+  profile_hide_assist?: string;
+  profile_zn_hide?: string;
+  profile_install_mode?: string;
   mount_mode?: string;
   tmpfs_style?: string;
   stage_root?: string;

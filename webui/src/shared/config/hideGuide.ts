@@ -38,7 +38,7 @@ export const HIDE_GUIDE_SECTIONS = [
     body: [
       "仅对需要躲检测的 App 启用「排除修改（Exclude Modifications）」。",
       "不要对 Reqable / ProxyPin / 被抓包目标启用排除修改，否则 CA 挂载对其不可见。",
-      "建议安装 NeoZygisk、ReZygisk 或 ZygiskNext（umount only），与 bindhosts 隐藏指南一致。",
+      "建议安装 NeoZygisk、ReZygisk 或 ZygiskNext（umount only）。",
       "也可使用 Zygisk Assistant / NoHello 辅助隐藏 bind mount。",
     ],
   },
@@ -48,7 +48,10 @@ export const HIDE_GUIDE_SECTIONS = [
     body: [
       "默认临时层在 /dev/.cb* 是为避开对 /data/local/tmp 的关键词扫描，不能替代 umount；检测方仍可能看到 cacerts 上的 bind。",
       "无 SuSFS / Zygisk umount 助手时，读 mountinfo 的检测仍可能发现异常。",
-      "不存在类似 ZN-hostsredirect 的「无挂载 CA 注入」公共方案；证书必须写入信任库路径才能被系统 TLS 使用。",
+      "可选 Zygisk 过滤可去掉 App 读到的本模块 mount/maps 行，并对指向本模块路径的 readlink 返回不存在；so 仍在内存，PLT 与 Zygisk 底座仍可能被检出。",
+      "Reqable / ProxyPin 在 Zygisk 过滤白名单内，不会过滤其挂载视图，以免读不到系统 CA。",
+      "默认安装不含 Zygisk 过滤组件；需重新自定义安装勾选，且发布包含 zygisk/*.so。",
+      "证书必须写入信任库路径才能被系统 TLS 使用；不存在无挂载的公共 CA 注入方案。",
     ],
   },
 ] as const;

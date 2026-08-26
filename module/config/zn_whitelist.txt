@@ -1,0 +1,9 @@
+# Zygisk 挂载过滤白名单：一行一个包名（可含 :进程后缀，按前缀匹配）
+# 以 # 开头的行为注释。名单内进程不过滤 mount/maps，避免抓包 App 读不到系统 CA。
+# 修改后需强停相关 App 或重启后生效。
+com.reqable.android
+com.reqable.android.pro
+com.reqable
+com.proxy.pin
+com.network.proxy
+com.wangyu.proxypin

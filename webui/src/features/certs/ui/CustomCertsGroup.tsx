@@ -33,7 +33,7 @@ export function CustomCertsGroup({
     >
       {customCertificates.length === 0 ? (
         <List.Item>
-          <EmptyHint>可导入 HttpCanary、ADGuard、Charles 等 CA</EmptyHint>
+          <EmptyHint>可导入 HttpCanary、ADGuard、Charles、mitmproxy、PCAPdroid 等；刷新时也会尝试从常见路径同步</EmptyHint>
         </List.Item>
       ) : (
         customCertificates.map((cert) => (

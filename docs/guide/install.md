@@ -62,8 +62,13 @@
 ├── bin/                 # common / APEX 注入 / CLI
 │   ├── openssl/         # 仅完整版：安装后按 ABI 精简
 │   ├── cbx509/          # 仅 Lite：classes.dex
-│   └── hot_mount.sh     # 可选热挂载
-│   └── lib/hide_assist.sh  # 可选挂载隐藏协助
+│   ├── hot_mount.sh     # 可选热挂载入口
+│   ├── apex_inject.sh   # 开机 / 命名空间注入入口
+│   └── lib/
+│       ├── inject/      # apex_inject 实现
+│       ├── hot/         # 可选热挂载实现
+│       ├── hide_assist.sh / hide_actions.sh / hide_status.sh  # 可选挂载隐藏
+│       └── …            # 其余公共库（见 tooling/BUILD.md）
 ├── zygisk/              # 可选：挂载痕迹过滤 so
 ├── certs/
 │   ├── builtin/         # 仅 ProxyPin 兜底

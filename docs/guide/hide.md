@@ -37,11 +37,11 @@
 
 | 项目       | 说明                                                                               |
 | ---------- | ---------------------------------------------------------------------------------- |
-| 作用（A）  | 过滤 mountinfo/mounts；并过滤 maps/smaps、弱化 map_files readlink，减轻对本模块 zygisk so 的路径扫描 |
+| 作用（A）  | 过滤 mountinfo/mounts；并过滤 maps/smaps、弱化 map_files readlink，减轻对本模块 zygisk so 的路径扫描；读结果按行流式过滤，避免整表吞入内存 |
 | 配置       | `certs.conf` 的 `zn_hide_allow`（与 `hide_allow` 独立；A/B 共用）                  |
 | 勾选后默认 | 自定义勾选时默认 **开启**（`1`）                                                   |
-| 运行条件   | 设备需已启用 Zygisk（Magisk 内置或 ZygiskNext / ReZygisk / NeoZygisk 等）           |
-| 白名单     | Reqable / ProxyPin 等抓包包名**不过滤**，避免读不到系统 CA                           |
+| 运行条件   | 设备需已启用 Zygisk（Magisk 内置或 ZygiskNext / ReZygisk / NeoZygisk 等）；隐藏页会探测底座 |
+| 白名单     | `config/zn_whitelist.txt`（WebUI 可编辑）；默认含 Reqable / ProxyPin；名单内不过滤     |
 | 未安装时   | 删除 `zygisk/` 与空/无效的 `zn_modules.txt`；无 so 时 `zn_hide_supported=0`         |
 
 WebUI 隐藏页在安装了 SuSFS 协助和/或 Zygisk 过滤任一组件时出现，并分 Root 方案给出配置建议。

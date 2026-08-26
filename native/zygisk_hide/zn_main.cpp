@@ -9,9 +9,10 @@
 #include "mount_filter.hpp"
 #include "zygisk_next_api.h"
 
-#include <android/log.h>
 #include <cstdarg>
+#include <cstdio>
 #include <cstring>
+#include <dirent.h>
 #include <fcntl.h>
 #include <mutex>
 #include <string>
@@ -20,9 +21,6 @@
 #include <unistd.h>
 #include <unordered_map>
 #include <unordered_set>
-
-#define LOG_TAG "CertBridgeZnMod"
-#define ALOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
 
 namespace {
 
@@ -48,6 +46,45 @@ bool read_conf_zn_hide_allow_path(const char *mod_conf) {
   if (!p) return false;
   p += sizeof("zn_hide_allow=") - 1;
   return *p == '1';
+}
+
+bool module_prop_is_certbridge(const char *prop_path) {
+  int fd = open(prop_path, O_RDONLY | O_CLOEXEC);
+  if (fd < 0) return false;
+  char buf[512];
+  ssize_t n = ::read(fd, buf, sizeof(buf) - 1);
+  ::close(fd);
+  if (n <= 0) return false;
+  buf[n] = '\0';
+  return std::strstr(buf, "id=CertBridge") != nullptr;
+}
+
+/** 按 module.prop 的 id=CertBridge 定位配置，避免写死目录名之外的唯一路径 */
+bool read_conf_zn_hide_allow_resolved() {
+  static constexpr const char *kDirect[] = {
+      "/data/adb/modules/CertBridge/config/certs.conf",
+      "/data/adb/modules_update/CertBridge/config/certs.conf",
+  };
+  for (const char *p : kDirect) {
+    if (read_conf_zn_hide_allow_path(p)) return true;
+  }
+  static constexpr const char *kRoots[] = {"/data/adb/modules", "/data/adb/modules_update"};
+  for (const char *root : kRoots) {
+    DIR *d = opendir(root);
+    if (!d) continue;
+    while (dirent *ent = readdir(d)) {
+      if (ent->d_name[0] == '.') continue;
+      char prop[256];
+      char conf[288];
+      std::snprintf(prop, sizeof(prop), "%s/%s/module.prop", root, ent->d_name);
+      if (!module_prop_is_certbridge(prop)) continue;
+      std::snprintf(conf, sizeof(conf), "%s/%s/config/certs.conf", root, ent->d_name);
+      closedir(d);
+      return read_conf_zn_hide_allow_path(conf);
+    }
+    closedir(d);
+  }
+  return false;
 }
 
 void mark_fd_if_mount_table(int fd, const char *path) {
@@ -160,14 +197,8 @@ ssize_t hooked_read(int fd, void *buf, size_t count) {
 extern "C" [[gnu::visibility("default")]] void zn_module_entry_v1(ZnApiTableV1 *api,
                                                                   const char *process_name) {
   (void)process_name;
-  if (!api || !api->pltHook || !api->pltHookCommit) {
-    ALOGW("ZN api incomplete");
-    return;
-  }
-  // 模块目录约定：/data/adb/modules/CertBridge/config/certs.conf
-  if (!read_conf_zn_hide_allow_path("/data/adb/modules/CertBridge/config/certs.conf")) {
-    return;
-  }
+  if (!api || !api->pltHook || !api->pltHookCommit) return;
+  if (!read_conf_zn_hide_allow_resolved()) return;
   g_enabled = true;
   api->pltHook(".*libc\\.so$", "open", reinterpret_cast<void *>(hooked_open),
                reinterpret_cast<void **>(&orig_open));
@@ -177,8 +208,5 @@ extern "C" [[gnu::visibility("default")]] void zn_module_entry_v1(ZnApiTableV1 *
                reinterpret_cast<void **>(&orig_close));
   api->pltHook(".*libc\\.so$", "read", reinterpret_cast<void *>(hooked_read),
                reinterpret_cast<void **>(&orig_read));
-  if (!api->pltHookCommit()) {
-    ALOGW("ZN pltHookCommit failed");
-    g_enabled = false;
-  }
+  if (!api->pltHookCommit()) g_enabled = false;
 }

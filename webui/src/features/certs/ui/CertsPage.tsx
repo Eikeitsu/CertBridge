@@ -31,6 +31,8 @@ export function CertsPage() {
     pendingKind,
     handleToggleBuiltin,
     handleImportFile,
+    handleImportPreset,
+    handleExportFingerprints,
     handleRemoveCustom,
     handleSetHotAllow,
     handleHotMount,
@@ -72,12 +74,17 @@ export function CertsPage() {
         certificates={customCertificates}
         isPending={isPending}
         onImport={handleImportFile}
+        onImportPreset={handleImportPreset}
+        onExportFingerprints={handleExportFingerprints}
         onRemove={handleRemoveCustom}
         onOpenDetail={(id, title) => void detail.openDetail(id, title)}
         title={`${voice.certs.customTitle} (${customCertificates.length})`}
         emptyLabel={voice.certs.customEmpty}
         importLabel={voice.certs.importLabel}
         detailLabel={voice.certs.detailLabel}
+        presetsTitle={voice.certs.presetsTitle}
+        presetsMeta={voice.certs.presetsMeta}
+        exportFpsLabel={voice.certs.exportFps}
       />
       <HotMountPanel
         busy={isPending}

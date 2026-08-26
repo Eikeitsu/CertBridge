@@ -119,7 +119,7 @@ proxypin_source=builtin
 | `reqable_source`  | `app` 或 `none`（未导入成功则为 none，对应开关会被关掉） |
 | `proxypin_source` | `app` / `builtin` / `none`                               |
 
-选择不安装 WebUI 不影响开机证书注入；选择不安装热挂载后，设备上不会保留 `bin/hot_mount.sh`，WebUI 也会隐藏对应区域。选择不安装挂载隐藏后，不会保留 `bin/lib/hide_assist.sh`，不写隐藏状态文件；若 Zygisk 过滤也未安装，WebUI 不显示「隐藏」页。选择不安装 Zygisk 过滤时会删除 `zygisk/`。
+选择不安装 WebUI 不影响开机证书注入；选择不安装热挂载后，设备上不会保留 `bin/hot_mount.sh` 与 `bin/lib/hot/`，WebUI 也会隐藏对应区域。选择不安装挂载隐藏后，不会保留 `bin/lib/hide_assist.sh`，不写隐藏状态文件；若 Zygisk 过滤也未安装，WebUI 不显示「隐藏」页。选择不安装 Zygisk 过滤时会删除 `zygisk/`。
 
 `certs.conf` 中的 `hide_allow`：默认安装写入 `0`；自定义安装勾选隐藏协助时写入 `1`。
 
@@ -129,15 +129,17 @@ proxypin_source=builtin
 
 ## 自定义证书
 
-适用于 HttpCanary、ADGuard、Charles、mitmproxy 等，或 Reqable / ProxyPin 未自动检测到时。显示名优先取证书 CN（其次 O）。
+适用于 HttpCanary、ADGuard、Charles、mitmproxy、PCAPdroid 等，或 Reqable / ProxyPin 未自动检测到时。显示名优先取证书 CN（其次 O）。
 
 1. WebUI 支持 PEM（Base64 文本）与 DER（二进制）；后缀常见 `.pem`、`.crt`、`.cer`、`.der`，按**内容**识别，不必先改名
-2. 模块使用自带 **X509 工具**校验（完整版为静态 OpenSSL；Lite 为 `cbx509` dex）。检查 X.509、有效期和 `CA:TRUE`
-3. 自动计算 8 位十六进制 `subject_hash_old` 作为系统信任库文件名，冲突时分配 `.1`、`.2` 等
-4. 单个文件最大 64 KiB；保存后写入**系统**信任库，**重启生效**（与「仅装到用户证书」不是同一层）
-5. 长期只用自定义证书时，可关闭 Reqable / ProxyPin 开关，避免多张并存造成困惑
+2. 亦可点「从常见路径导入」：探测 Download / App 目录中的 Charles、mitmproxy、PCAPdroid 等导出文件；刷新状态时也会自动同步指纹未见的现场 CA
+3. 模块使用自带 **X509 工具**校验（完整版为静态 OpenSSL；Lite 为 `cbx509` dex）。检查 X.509、有效期和 `CA:TRUE`
+4. 自动计算 8 位十六进制 `subject_hash_old` 作为系统信任库文件名，冲突时分配 `.1`、`.2` 等
+5. 单个文件最大 64 KiB；保存后写入**系统**信任库，**重启生效**（与「仅装到用户证书」不是同一层）
+6. 「复制已应用指纹」可导出当前生效集的 SHA-256，便于核对
+7. 长期只用自定义证书时，可关闭 Reqable / ProxyPin 开关，避免多张并存造成困惑
 
-也可将证书放入 `certs/custom/`，下次开机一并合并；日常更推荐 WebUI。安装时若检测到 HttpCanary、ADGuard，也会询问是否直接导入到该目录。
+也可将证书放入 `certs/custom/`，下次开机一并合并；日常更推荐 WebUI。安装时若检测到上述可选 App / 导出路径，也会询问是否直接导入到该目录。
 
 ## 临时免重启挂载（热挂载）
 
@@ -161,7 +163,7 @@ proxypin_source=builtin
 - 选择**默认安装**，或
 - **自定义安装**时对「免重启热挂载」按音量上确认
 
-否则不会保留 `bin/hot_mount.sh`，WebUI 隐藏热挂载区，Action 实用菜单会提示组件未安装。
+否则不会保留 `bin/hot_mount.sh` 与 `bin/lib/hot/`，WebUI 隐藏热挂载区，Action 实用菜单会提示组件未安装。
 
 ### 三种挂载模式
 

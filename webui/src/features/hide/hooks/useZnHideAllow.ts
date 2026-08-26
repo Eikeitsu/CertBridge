@@ -6,6 +6,7 @@ import {
   patchStatus,
   refreshStatus,
 } from "@/features/status/model/statusSlice";
+import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
 import { setZnHideAllow } from "@/shared/api/cli";
 import { errorFromResult } from "@/shared/api/errors";
 import { toast } from "@/shared/api/ksu";
@@ -21,6 +22,8 @@ const SILENT_REFRESH = { syncApps: false } as const;
 export function useZnHideAllow() {
   const dispatch = useAppDispatch();
   const status = useAppSelector(selectModuleStatus);
+  const { voice } = usePackVoice();
+  const h = voice.hide;
   const { isPending, runExclusive } = useAsyncLock();
   const znHideAllow = isFlagOn(status.zn_hide_allow);
   const znHideSupported = isFlagOn(status.zn_hide_supported);
@@ -38,20 +41,14 @@ export function useZnHideAllow() {
           }
           const kv = parseKv(result.stdout || "");
           dispatch(mergeStatus(kv));
-          toast(
-            checked
-              ? "已开启 Zygisk 挂载过滤（重启相关 App 后生效）"
-              : "已关闭 Zygisk 挂载过滤（已运行进程需重启）",
-            "ok",
-          );
+          toast(checked ? h.znToastOn : h.znToastOff, "ok");
         });
 
       if (!checked) {
         confirmAction({
-          title: "关闭 Zygisk 挂载过滤？",
-          content:
-            "关闭后新启动的 App 不再挂钩过滤 mountinfo。已运行中的进程需强停或重启后才会去掉挂钩。",
-          okText: "关闭",
+          title: h.znConfirmOffTitle,
+          content: h.znConfirmOffBody,
+          okText: h.znConfirmOffOk,
           danger: true,
           onOk: apply,
         });
@@ -60,7 +57,7 @@ export function useZnHideAllow() {
 
       void apply();
     },
-    [dispatch, runExclusive],
+    [dispatch, runExclusive, h],
   );
 
   return { znHideAllow, znHideSupported, isPending, handleChange };

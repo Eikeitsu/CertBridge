@@ -25,7 +25,8 @@ export function HideStatusCard({
   const hideApplied = isFlagOn(status.hide_applied);
   const znSupported = isFlagOn(status.zn_hide_supported);
   const znAllow = isFlagOn(status.zn_hide_allow);
-  const meta = status.hide_summary || status.zn_hide_summary || "基于当前设备探测";
+  const metaParts = [status.hide_summary, status.zn_hide_summary].filter(Boolean);
+  const meta = metaParts.length ? metaParts.join(" · ") : "基于当前设备探测";
 
   const rows = [
     { k: "Root", v: status.root || "—" },
@@ -37,6 +38,10 @@ export function HideStatusCard({
   ];
   if (znSupported) {
     rows.push({ k: "Zygisk过滤", v: znAllow ? "已开启" : "已关闭" });
+    rows.push({
+      k: "Zygisk底座",
+      v: status.zygisk_loader_label || status.zygisk_loader || "—",
+    });
     if (isFlagOn(status.zn_hide_zn_module)) {
       rows.push({ k: "ZN辅路径", v: "已声明" });
     }
@@ -95,6 +100,16 @@ export function HideStatusCard({
             extra={
               <Tag tone={znAllow ? "ok" : "default"}>
                 {znAllow ? "已开启" : "已关闭"}
+              </Tag>
+            }
+          />
+        ) : null}
+        {znSupported ? (
+          <Row
+            title="Zygisk 底座"
+            extra={
+              <Tag tone={isFlagOn(status.zygisk_loader_ok) ? "ok" : "warn"}>
+                {status.zygisk_loader_label || status.zygisk_loader || "未检测"}
               </Tag>
             }
           />

@@ -131,6 +131,16 @@
 
 临时挂载与无痕卸载请在 **WebUI 证书页** 操作；Action 仅显示热挂载状态摘要。
 
+## 为什么没有 Zygisk 挂载过滤 / 隐藏页看不到 Zygisk 开关？
+
+**默认安装不含** Zygisk 过滤组件（只装 SuSFS 挂载隐藏协助）。若要过滤 App 内 mountinfo/maps 并减轻对本模块 `zygisk/*.so` 路径的扫描：
+
+1. 重新刷入模块 zip
+2. 选**自定义安装**，勾选「Zygisk 挂载痕迹过滤」
+3. 确认发布包内含 `zygisk/*.so`（正式 CI 包），并在设备上启用 Zygisk / ZygiskNext / ReZygisk / NeoZygisk 等
+
+无法在 WebUI 里「后装」该 so；未安装时隐藏页会提示需重刷。详见 [挂载隐藏说明](/guide/hide)。
+
 ## 自定义证书无法上传？
 
 模块用自带 X509 工具（完整版 OpenSSL / Lite `cbx509`）校验，并拒绝无效、过期、非 `CA:TRUE` 或超过 64 KiB 的证书。文件名无需手动改为 hash。若提示工具不可用，见下一问。

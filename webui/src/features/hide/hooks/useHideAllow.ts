@@ -6,6 +6,7 @@ import {
   patchStatus,
   refreshStatus,
 } from "@/features/status/model/statusSlice";
+import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
 import { setHideAllow } from "@/shared/api/cli";
 import { errorFromResult } from "@/shared/api/errors";
 import { toast } from "@/shared/api/ksu";
@@ -21,6 +22,8 @@ const SILENT_REFRESH = { syncApps: false } as const;
 export function useHideAllow() {
   const dispatch = useAppDispatch();
   const status = useAppSelector(selectModuleStatus);
+  const { voice } = usePackVoice();
+  const h = voice.hide;
   const { isPending, runExclusive } = useAsyncLock();
   const hideAllow = isFlagOn(status.hide_allow);
   const hideSupported = isFlagOn(status.hide_supported);
@@ -38,20 +41,14 @@ export function useHideAllow() {
           }
           const kv = parseKv(result.stdout || "");
           dispatch(mergeStatus(kv));
-          toast(
-            checked
-              ? "已开启隐藏协助（下次注入 / 热挂载时登记）"
-              : "已关闭隐藏协助（重启后清除内核登记）",
-            "ok",
-          );
+          toast(checked ? h.toastOn : h.toastOff, "ok");
         });
 
       if (!checked) {
         confirmAction({
-          title: "关闭挂载隐藏协助？",
-          content:
-            "关闭后不再向 SuSFS / 内核注册 try_umount。已登记项需重启后才会从内核清除。",
-          okText: "关闭",
+          title: h.confirmOffTitle,
+          content: h.confirmOffBody,
+          okText: h.confirmOffOk,
           danger: true,
           onOk: apply,
         });
@@ -60,7 +57,7 @@ export function useHideAllow() {
 
       void apply();
     },
-    [dispatch, runExclusive],
+    [dispatch, runExclusive, h],
   );
 
   return { hideAllow, hideSupported, isPending, handleChange };

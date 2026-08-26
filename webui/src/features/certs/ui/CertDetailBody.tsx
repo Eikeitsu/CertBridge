@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { Tag } from "antd-mobile";
 import type { BuiltinCertKind } from "@/entities/module/enums";
+import { Tag } from "@/shared/ui/primitives";
 import type { FormattedCertDetail } from "../lib/types";
 import { CertBrandIcon } from "./CertBrandIcon";
 import { CertDnBlock } from "./CertDnBlock";
@@ -43,9 +43,7 @@ export function CertDetailBody({ detail, brandKind }: CertDetailBodyProps) {
           className={`nx-detail-hero__mark${brandKind ? " has-brand" : ""}`}
           aria-hidden
         >
-          {brandKind ? (
-            <CertBrandIcon kind={brandKind} className="nx-brand-icon" />
-          ) : null}
+          {brandKind ? <CertBrandIcon kind={brandKind} /> : null}
         </div>
         <div className="nx-detail-hero__body">
           <p className="nx-detail-hero__kicker">
@@ -60,9 +58,7 @@ export function CertDetailBody({ detail, brandKind }: CertDetailBodyProps) {
               {detail.flags.map((flag) => (
                 <Tag
                   key={flag}
-                  color={flag === "已过期" || flag === "即将到期" ? "warning" : "primary"}
-                  fill="outline"
-                  round
+                  tone={flag === "已过期" || flag === "即将到期" ? "warn" : "default"}
                 >
                   {flag}
                 </Tag>

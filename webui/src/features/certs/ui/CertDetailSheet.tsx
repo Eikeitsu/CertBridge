@@ -1,5 +1,5 @@
-import { Button } from "antd-mobile";
 import { BottomSheet } from "@/shared/ui/BottomSheet";
+import { Button } from "@/shared/ui/primitives";
 import { formatCertDetail } from "../lib/formatCertDetail";
 import { resolveCertBrandKind } from "../lib/resolveCertBrand";
 import { CertDetailBody } from "./CertDetailBody";
@@ -39,7 +39,7 @@ export function CertDetailSheet({
         </p>
       )}
       {!detail && fields?.error ? (
-        <Button block fill="outline" onClick={onClose}>
+        <Button variant="ghost" onClick={onClose} style={{ width: "100%", marginTop: 8 }}>
           关闭
         </Button>
       ) : null}

@@ -8,9 +8,10 @@ hide_assist_available() {
   return 0
 }
 
-# conf hide_allow=1 时才真正注册 try_umount / 写状态文件（安装组件后默认开启）
+# conf hide_allow=1 时才真正注册 try_umount / 写状态文件
+# 默认安装写入 hide_allow=0；自定义安装勾选隐藏时写入 hide_allow=1
 hide_assist_enabled() {
-  [ "$(read_conf hide_allow 1)" = "1" ]
+  [ "$(read_conf hide_allow 0)" = "1" ]
 }
 
 hide_clear_applied() {
@@ -182,7 +183,7 @@ compose_hide_summary() {
 
 emit_hide_status() {
   echo "hide_supported=1"
-  echo "hide_allow=$(read_conf hide_allow 1)"
+  echo "hide_allow=$(read_conf hide_allow 0)"
   echo "stage_root=$RUNTIME_MOUNT_ROOT"
   if hide_assist_enabled; then
     provider=$(detect_hide_provider)

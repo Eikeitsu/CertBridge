@@ -46,7 +46,8 @@ certbridge_install_choose_mode() {
   INSTALL_PROXYPIN=1
   INSTALL_WEBUI=1
   INSTALL_HOT=1
-  INSTALL_HIDE=0
+  INSTALL_HIDE=1
+  INSTALL_HIDE_ALLOW=0
   INSTALL_MOUNT_MODE="compatible"
 
   ui_print "--------------------------------"
@@ -54,8 +55,8 @@ certbridge_install_choose_mode() {
   ui_print " 音量上：默认安装（推荐）"
   ui_print "   自动检测已安装抓包 App 的 CA"
   ui_print "   ProxyPin 未检测到时使用内置兜底"
-  ui_print "   并安装 WebUI 与免重启热挂载"
-  ui_print "   不安装挂载隐藏协助（可自定义安装勾选）"
+  ui_print "   并安装 WebUI、免重启热挂载与挂载隐藏协助"
+  ui_print "   隐藏协助默认关闭（可在 WebUI「隐藏」页开启）"
   ui_print "   挂载：完整兼容模式（运行时 bind）"
   ui_print " 音量下：自定义安装"
   ui_print "   逐项选择证书、附加功能与挂载模式"
@@ -81,8 +82,15 @@ certbridge_install_choose_mode() {
       ui_print " 注册 try_umount。抓包时勿对 Reqable"
       ui_print " 与被抓包 App 开「卸载模块」，否则"
       ui_print " 会显示根证未安装或抓包断网。"
+      ui_print " 勾选后默认开启；可在 WebUI 关闭。"
       certbridge_choose_component "挂载隐藏协助（SuSFS try_umount）"
       INSTALL_HIDE="$COMPONENT_CHOICE"
+      # 自定义安装勾选隐藏时默认开启；未勾选则不安装
+      if [ "$INSTALL_HIDE" = "1" ]; then
+        INSTALL_HIDE_ALLOW=1
+      else
+        INSTALL_HIDE_ALLOW=0
+      fi
       ui_print "--------------------------------"
       ui_print " 请选择挂载模式"
       ui_print " 音量上：完整兼容（推荐，默认方案）"
@@ -105,8 +113,8 @@ certbridge_install_choose_mode() {
           ;;
       esac
       ;;
-    0) ui_print "- 已选择默认安装（完整兼容挂载）" ;;
-    *) ui_print "- 未检测到按键，使用默认安装（完整兼容挂载）" ;;
+    0) ui_print "- 已选择默认安装（完整兼容挂载；隐藏协助已装、默认关闭）" ;;
+    *) ui_print "- 未检测到按键，使用默认安装（完整兼容挂载；隐藏协助已装、默认关闭）" ;;
   esac
 }
 
@@ -289,9 +297,9 @@ certbridge_install_write_config() {
   fi
   if [ "$INSTALL_HIDE" = "1" ]; then
     if grep -q '^hide_allow=' "$MODPATH/config/certs.conf" 2>/dev/null; then
-      sed -i "s/^hide_allow=.*/hide_allow=1/" "$MODPATH/config/certs.conf"
+      sed -i "s/^hide_allow=.*/hide_allow=$INSTALL_HIDE_ALLOW/" "$MODPATH/config/certs.conf"
     else
-      echo "hide_allow=1" >>"$MODPATH/config/certs.conf"
+      echo "hide_allow=$INSTALL_HIDE_ALLOW" >>"$MODPATH/config/certs.conf"
     fi
   else
     # 未安装隐藏组件：不保留 hide_allow，避免误导
@@ -354,7 +362,15 @@ certbridge_install_print_summary() {
   esac
   [ "$INSTALL_WEBUI" = "1" ] && WEBUI_LABEL="已安装" || WEBUI_LABEL="未安装"
   [ "$INSTALL_HOT" = "1" ] && HOT_LABEL="已安装" || HOT_LABEL="未安装"
-  [ "$INSTALL_HIDE" = "1" ] && HIDE_LABEL="已安装（默认开启，可在 WebUI 关闭）" || HIDE_LABEL="未安装"
+  if [ "$INSTALL_HIDE" = "1" ]; then
+    if [ "$INSTALL_HIDE_ALLOW" = "1" ]; then
+      HIDE_LABEL="已安装（默认开启，可在 WebUI 关闭）"
+    else
+      HIDE_LABEL="已安装（默认关闭，可在 WebUI 开启）"
+    fi
+  else
+    HIDE_LABEL="未安装"
+  fi
   if [ "$INSTALL_MOUNT_MODE" = "magic" ]; then
     MOUNT_LABEL="轻量 Magic Mount"
   else
@@ -386,8 +402,13 @@ certbridge_install_print_summary() {
     ui_print " 永久配置重启生效；未安装临时热挂载"
   fi
   if [ "$INSTALL_HIDE" = "1" ]; then
-    ui_print " 隐藏协助已安装：默认开启 try_umount"
-    ui_print " WebUI「隐藏」页可关闭；抓包勿对 Reqable"
+    if [ "$INSTALL_HIDE_ALLOW" = "1" ]; then
+      ui_print " 隐藏协助已安装：默认开启 try_umount"
+      ui_print " WebUI「隐藏」页可关闭；抓包勿对 Reqable"
+    else
+      ui_print " 隐藏协助已安装：默认关闭 try_umount"
+      ui_print " 需要时在 WebUI「隐藏」页开启；抓包勿对 Reqable"
+    fi
     ui_print " 与被抓包 App 开「卸载模块」"
   fi
   ui_print " Android 14+ 自动注入 APEX"

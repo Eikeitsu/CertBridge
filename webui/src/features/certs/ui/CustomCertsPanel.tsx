@@ -7,9 +7,11 @@ type CustomCertsPanelProps = {
   isPending: boolean;
   onImport: (file: File) => void | Promise<unknown>;
   onRemove: (name: string) => void;
+  onOpenDetail: (id: string, title: string) => void;
   title?: string;
   emptyLabel?: string;
   importLabel?: string;
+  detailLabel?: string;
 };
 
 export function CustomCertsPanel({
@@ -17,9 +19,11 @@ export function CustomCertsPanel({
   isPending,
   onImport,
   onRemove,
+  onOpenDetail,
   title,
   emptyLabel = "暂无自定义证书",
   importLabel = "导入 CA",
+  detailLabel = "详情",
 }: CustomCertsPanelProps) {
   return (
     <Card title={title ?? `自定义证书 (${certificates.length})`}>
@@ -31,13 +35,24 @@ export function CustomCertsPanel({
               title={cert.display || cert.name}
               desc={cert.name}
               extra={
-                <Button
-                  variant="ghost"
-                  disabled={isPending}
-                  onClick={() => onRemove(cert.name)}
-                >
-                  删除
-                </Button>
+                <div className="cb-btn-row" style={{ gap: 8, margin: 0 }}>
+                  <Button
+                    variant="ghost"
+                    disabled={isPending}
+                    onClick={() =>
+                      onOpenDetail(`custom:${cert.name}`, cert.display || cert.name)
+                    }
+                  >
+                    {detailLabel}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    disabled={isPending}
+                    onClick={() => onRemove(cert.name)}
+                  >
+                    删除
+                  </Button>
+                </div>
               }
             />
           ))

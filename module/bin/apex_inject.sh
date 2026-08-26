@@ -6,19 +6,6 @@
 MODDIR=${MODDIR:-${0%/*}/..}
 . "$MODDIR/bin/common.sh"
 
-target_stage_dir() {
-  target="$1"
-  case "$target" in
-    "$APEX_CACERTS") echo "$RUNTIME_MOUNT_ROOT/apex" ;;
-    "$SYSTEM_CACERTS") echo "$RUNTIME_MOUNT_ROOT/system" ;;
-    *)
-      # versioned apex or unexpected path
-      name=$(echo "$target" | tr '/@' '__' | sed 's/__*/_/g')
-      echo "$RUNTIME_MOUNT_ROOT/$name"
-      ;;
-  esac
-}
-
 current_mount_id() {
   target="$1"
   awk -v target="$target" '

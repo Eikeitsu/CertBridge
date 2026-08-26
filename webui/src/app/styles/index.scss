@@ -1,6 +1,7 @@
 @import "https://mui.kernelsu.org/internal/insets.css";
 @import "./layout";
 @import "./components";
+@import "./sheet";
 @import "./packs/settings";
 @import "./packs/console";
 @import "./packs/studio";
@@ -27,12 +28,17 @@
   --cb-ok: #059669;
   --cb-warn: #d97706;
   --cb-bad: #dc2626;
+  --cb-ok-soft: color-mix(in srgb, var(--cb-ok) 12%, var(--cb-surface));
+  --cb-warn-soft: color-mix(in srgb, var(--cb-warn) 14%, var(--cb-surface));
+  --cb-bad-soft: color-mix(in srgb, var(--cb-bad) 12%, var(--cb-surface));
   --cb-ink: #0f172a;
   --cb-ink-2: #475569;
   --cb-ink-3: #94a3b8;
   --cb-bg: #eef2f6;
+  --cb-chrome: var(--cb-bg);
   --cb-surface: #fff;
   --cb-surface-2: #f8fafc;
+  --cb-card-inset-bg: color-mix(in srgb, var(--cb-ink) 4%, var(--cb-surface));
   --cb-stroke: rgba(15, 23, 42, 0.08);
   --cb-stroke-strong: rgba(15, 23, 42, 0.14);
   --cb-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
@@ -46,8 +52,10 @@ html[data-theme="dark"] {
   --cb-ink-2: #94a3b8;
   --cb-ink-3: #64748b;
   --cb-bg: #0b1220;
+  --cb-chrome: var(--cb-bg);
   --cb-surface: #121a27;
   --cb-surface-2: #1a2433;
+  --cb-card-inset-bg: color-mix(in srgb, var(--cb-ink) 8%, var(--cb-surface));
   --cb-stroke: rgba(248, 250, 252, 0.08);
   --cb-stroke-strong: rgba(248, 250, 252, 0.14);
   --cb-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);

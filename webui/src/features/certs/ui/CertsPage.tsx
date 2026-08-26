@@ -7,12 +7,14 @@ import {
 import { refreshStatus } from "@/features/status/model/statusSlice";
 import { useCertActions } from "@/features/certs/hooks/useCertActions";
 import { useBuiltinCerts } from "@/features/certs/hooks/useBuiltinCerts";
+import { useCertDetail } from "@/features/certs/hooks/useCertDetail";
 import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
 import { ThemePack } from "@/entities/module/enums";
 import { PageStack } from "@/shared/ui/layout";
 import { Button, Loader } from "@/shared/ui/primitives";
 import { BuiltinCertsPanel } from "./BuiltinCertsPanel";
 import { CustomCertsPanel } from "./CustomCertsPanel";
+import { CertDetailSheet } from "./CertDetailSheet";
 import { HotMountPanel } from "./HotMountPanel";
 
 export function CertsPage() {
@@ -22,6 +24,7 @@ export function CertsPage() {
   const customCertificates = useAppSelector(selectCustomCertificates);
   const builtinCerts = useBuiltinCerts();
   const { pack, voice } = usePackVoice();
+  const detail = useCertDetail();
   const showBootSpin = isStatusLoading && !bootstrapped;
   const {
     isPending,
@@ -59,18 +62,22 @@ export function CertsPage() {
         isPending={isPending}
         pendingKind={pendingKind}
         onToggle={(kind, checked) => void handleToggleBuiltin(kind, checked)}
+        onOpenDetail={(id, title) => void detail.openDetail(id, title)}
         title={voice.certs.builtinTitle}
         meta={voice.certs.builtinMeta}
         variant={builtinVariant}
+        detailLabel={voice.certs.detailLabel}
       />
       <CustomCertsPanel
         certificates={customCertificates}
         isPending={isPending}
         onImport={handleImportFile}
         onRemove={handleRemoveCustom}
+        onOpenDetail={(id, title) => void detail.openDetail(id, title)}
         title={`${voice.certs.customTitle} (${customCertificates.length})`}
         emptyLabel={voice.certs.customEmpty}
         importLabel={voice.certs.importLabel}
+        detailLabel={voice.certs.detailLabel}
       />
       <HotMountPanel
         busy={isPending}
@@ -82,6 +89,14 @@ export function CertsPage() {
       <Button variant="ghost" onClick={() => void dispatch(refreshStatus(true))}>
         {voice.certs.refresh}
       </Button>
+      <CertDetailSheet
+        open={detail.isOpen}
+        title={detail.title}
+        sourceId={detail.sourceId}
+        fields={detail.fields}
+        loading={detail.loading}
+        onClose={detail.closeDetail}
+      />
     </PageStack>
   );
 }

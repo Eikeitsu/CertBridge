@@ -20,6 +20,7 @@ export type PackVoice = {
     customTitle: string;
     customEmpty: string;
     importLabel: string;
+    detailLabel: string;
     refresh: string;
     hotTitle: string;
   };
@@ -82,6 +83,7 @@ const SETTINGS: PackVoice = {
     customTitle: "自定义证书",
     customEmpty: "暂无自定义证书",
     importLabel: "导入 CA",
+    detailLabel: "详情",
     refresh: "刷新证书状态",
     hotTitle: "临时挂载",
   },
@@ -141,6 +143,7 @@ const CONSOLE: PackVoice = {
     customTitle: "CUSTOM CA",
     customEmpty: "empty",
     importLabel: "IMPORT",
+    detailLabel: "INFO",
     refresh: "SYNC STATUS",
     hotTitle: "HOT SESSION",
   },
@@ -200,6 +203,7 @@ const STUDIO: PackVoice = {
     customTitle: "你的证书",
     customEmpty: "空空如也，导入一张开始",
     importLabel: "导入文件",
+    detailLabel: "查看",
     refresh: "同步状态",
     hotTitle: "免重启挂载",
   },

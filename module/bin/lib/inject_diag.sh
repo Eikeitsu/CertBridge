@@ -136,6 +136,7 @@ format_inject_error_line() {
 }
 
 # 校验失败时推断可读原因（用于 finalize 发现 apex_ok=0）
+# 与 check_store_injected 同一套「主路径 + 可运营」标准，避免误诊
 diagnose_verify_failure_reason() {
   if is_magic_mount_mode; then
     if ! verify_magic_overlay_live 2>/dev/null; then
@@ -143,18 +144,18 @@ diagnose_verify_failure_reason() {
       return 0
     fi
   fi
-  for target in $(list_target_stores); do
-    if ! verify_namespace_store 1 "$target" 2>/dev/null; then
+  for target in $(list_status_verify_targets); do
+    if ! namespace_store_operational 1 "$target" 2>/dev/null; then
       echo verify_init_failed
       return 0
     fi
     for zygote in zygote zygote64; do
-      for pid in $(pidof "$zygote" 2>/dev/null); do
-        if ! verify_namespace_store "$pid" "$target" 2>/dev/null; then
-          echo verify_zygote_failed
-          return 0
-        fi
-      done
+      pid=$(pidof "$zygote" 2>/dev/null | awk '{print $1; exit}')
+      [ -n "$pid" ] || continue
+      if ! namespace_store_operational "$pid" "$target" 2>/dev/null; then
+        echo verify_zygote_failed
+        return 0
+      fi
     done
   done
   echo verify_failed

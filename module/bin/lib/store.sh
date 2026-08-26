@@ -17,6 +17,19 @@ get_target_store() {
 
 MODULE_SYSTEM_CACERTS="$MODDIR/system/etc/security/cacerts"
 
+# 每个信任库目标对应的 runtime tmpfs 目录（注入与状态校验共用）
+target_stage_dir() {
+  target="$1"
+  case "$target" in
+    "$APEX_CACERTS") echo "$RUNTIME_MOUNT_ROOT/apex" ;;
+    "$SYSTEM_CACERTS") echo "$RUNTIME_MOUNT_ROOT/system" ;;
+    *)
+      name=$(echo "$target" | tr '/@' '__' | sed 's/__*/_/g')
+      echo "$RUNTIME_MOUNT_ROOT/$name"
+      ;;
+  esac
+}
+
 # 当前命名空间里，target 是否仍绑着本模块 runtime tmpfs（软重启残留）
 is_certbridge_runtime_bind() {
   target="$1"

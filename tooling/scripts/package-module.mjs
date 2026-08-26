@@ -28,6 +28,7 @@ const ROOT_FILES = [
   "customize.sh",
   "action.sh",
   "uninstall.sh",
+  "hotinstall.sh",
   "icon.png",
 ];
 
@@ -61,6 +62,7 @@ const BIN_LIBS = [
   "bin/lib/verify.sh",
   "bin/lib/generation.sh",
   "bin/lib/status.sh",
+  "bin/lib/hot_update.sh",
 ];
 
 const OPENSSL_ALL_BINARIES = [

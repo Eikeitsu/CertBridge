@@ -240,6 +240,12 @@ compose_module_description() {
     return 0
   fi
 
+  if [ -f "$STATEDIR/hot-update" ]; then
+    format_module_description "♻️热更新中" "重新注入证书" \
+      "本次更新无需重启；完成后自动显示实际状态"
+    return 0
+  fi
+
   case "$hint" in
     启动中)
       format_module_description "🔎启动中" "准备信任库" "$DESC_INTRO"
@@ -374,6 +380,7 @@ compose_webui_description() {
 compute_status_tag() {
   force_verify="${1:-0}"
   [ -f "$MODDIR/disable" ] && { echo "⛔已禁用"; return 0; }
+  [ -f "$STATEDIR/hot-update" ] && { echo "♻️热更新中"; return 0; }
 
   if hot_session_recorded; then
     hot_failed=$(awk -F= '$1 == "namespace_failed" { print $2; exit }' \

@@ -454,6 +454,7 @@ certbridge_install_try_hot_update() {
   fi
   # shellcheck disable=SC1090
   . "$LIBDIR/hot_update.sh"
+  HOT_UPDATE_DESC="[♻️热更新中 | 重新注入证书] 本次更新无需重启；完成后自动显示实际状态"
   # system/（Magic 叠层）、sepolicy、zygisk 变更需重启；其余可热更并重跑 post-fs-data
   if hot_update_try CertBridge system sepolicy.rule zygisk; then
     ui_print " 热更新将重新执行证书注入 "

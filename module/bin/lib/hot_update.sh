@@ -176,6 +176,7 @@ hu_wait_stable() {
 }
 
 [ -n "$MODID" ] || exit 0
+hu_log "start: 收尾作业已启动 (pid $$)"
 if ! hu_wait_stable; then
 	hu_log "abort: modules_update 未在 60s 内稳定"
 	exit 0
@@ -198,14 +199,19 @@ fi
 hu_log "ok: 已就地覆盖到 $OLD"
 
 # 管理器可能在我们之后才 touch update / 回写暂存，持续清理一段时间。
+# 窗口给足 120 秒：第三方安装器（InstallX 等）收尾比管理器慢得多，
+# 原先 20 秒经常是我们先退场、它后 touch update，用户就又看到「需重启」。
 # 暂存只在前几秒清：再往后出现的暂存更可能是用户又刷了一次包，不能删。
 _i=0
-while [ "$_i" -lt 20 ]; do
+_seen_update=0
+while [ "$_i" -lt 120 ]; do
 	[ "$_i" -lt 5 ] && rm -rf "$NEW" 2>/dev/null
+	[ -f "$OLD/update" ] && _seen_update=$((_seen_update + 1))
 	rm -f "$OLD/update" "$OLD/remove" 2>/dev/null
 	sleep 1
 	_i=$((_i + 1))
 done
+[ "$_seen_update" -gt 0 ] && hu_log "info: 期间清理 update 标记 ${_seen_update} 次"
 [ -e "$NEW" ] && hu_log "warn: $NEW 仍残留"
 [ -f "$OLD/update" ] && hu_log "warn: $OLD/update 仍残留"
 

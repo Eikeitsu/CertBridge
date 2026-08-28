@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1"
+    />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#ededed" />
+    <title>证书桥</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Sora:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      (function () {
+        try {
+          var root = document.documentElement;
+          var read = function (key, fallback) {
+            var value = localStorage.getItem(key);
+            return value === null || value === "" ? fallback : value;
+          };
+          var pack = read("cb_theme_pack", "settings");
+          var legacy = { classic: "settings", material: "console", fluid: "studio" };
+          if (legacy[pack]) pack = legacy[pack];
+          if (pack !== "settings" && pack !== "console" && pack !== "studio")
+            pack = "settings";
+          var mode = read("cb_theme_mode", "system");
+          var prefersDark =
+            !!window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches;
+          root.dataset.theme =
+            mode === "dark" || (mode !== "light" && prefersDark) ? "dark" : "light";
+          root.dataset.pack = pack;
+          root.dataset.compact = read("cb_compact", "0") === "1" ? "1" : "0";
+          var scale = parseFloat(read("cb_font_scale", "1"));
+          root.style.setProperty("--cb-font-scale", String(scale > 0 ? scale : 1));
+          var hex = /^#[0-9a-fA-F]{3,8}$/;
+          var pick = read("cb_accent_color", "");
+          var pair = read("cb_accent_pair", "");
+          if (hex.test(pick)) root.style.setProperty("--cb-accent-pick", pick);
+          if (hex.test(pair)) root.style.setProperty("--cb-accent-pair", pair);
+        } catch (error) {}
+      })();
+    </script>
+    <script type="module" crossorigin src="./js/app.js"></script>
+    <link rel="stylesheet" crossorigin href="./css/style.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

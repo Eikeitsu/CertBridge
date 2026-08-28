@@ -2,6 +2,18 @@
 MODDIR=${0%/*}
 . "$MODDIR/bin/common.sh"
 
+# 如果安装器在热更新期间杀掉了 worker，完整副本仍保存在模块目录之外；
+# 开机时重新拉起，确保不会因为 modules_update 被清理而丢失更新。
+if [ -d "/data/adb/.certbridge_hot_update_payload/CACertStore" ] \
+	&& [ -f "$MODDIR/bin/lib/hot_update.sh" ]; then
+	# shellcheck disable=SC1090
+	. "$MODDIR/bin/lib/hot_update.sh" 2>/dev/null || true
+	if type hot_update_spawn_worker >/dev/null 2>&1; then
+		hot_update_spawn_worker CACertStore hotinstall.sh \
+			"/data/adb/.certbridge_hot_update_payload/CACertStore" || true
+	fi
+fi
+
 SERVICE_HAS_LOCK=0
 service_finalize() {
   if [ "$SERVICE_HAS_LOCK" = "1" ]; then

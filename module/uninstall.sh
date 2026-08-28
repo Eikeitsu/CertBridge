@@ -21,3 +21,13 @@ rm -rf /dev/.cb0 /dev/.cb1 \
   /data/local/tmp/sys-ca-merge /data/local/tmp/sys-ca-merge-hot \
   /data/local/tmp/certbridge-* 2>/dev/null
 rm -rf "$MODDIR/data/runtime-mounts" 2>/dev/null
+
+# 清理免重启更新产生的外部副本、worker、锁和模块专属暂存。
+# 不使用通配的 modules_update 清理，避免影响其它模块。
+command -v pkill >/dev/null 2>&1 && pkill -f '/data/adb/.certbridge_hot_update.sh' 2>/dev/null
+rm -rf \
+  /data/adb/.certbridge_hot_update_payload \
+  /data/adb/.certbridge_hot_update.sh \
+  /data/adb/.CACertStore.hot_update.lock \
+  /data/adb/modules_update/CACertStore 2>/dev/null
+rm -f "$MODDIR/update" 2>/dev/null

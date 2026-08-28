@@ -24,7 +24,12 @@ if [ -f "$MODDIR/post-fs-data.sh" ]; then
 	sh "$MODDIR/post-fs-data.sh" >/dev/null 2>&1 || true
 fi
 if [ -f "$MODDIR/service.sh" ]; then
-	sh "$MODDIR/service.sh" >/dev/null 2>&1 || true
+	# 安装器结束时可能连带清理当前会话；让常驻服务脱离该会话。
+	if command -v setsid >/dev/null 2>&1; then
+		setsid sh "$MODDIR/service.sh" </dev/null >/dev/null 2>&1 &
+	else
+		nohup sh "$MODDIR/service.sh" </dev/null >/dev/null 2>&1 &
+	fi
 fi
 
 rm -f "$STATEDIR/hot-update" 2>/dev/null

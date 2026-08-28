@@ -2,6 +2,9 @@
 MODDIR=${0%/*}
 . "$MODDIR/bin/common.sh"
 
+# 仅清理无内容的历史残留锁目录，运行中的新版 worker 含有 PID 文件。
+rmdir /data/adb/.CACertStore.hot_update.lock 2>/dev/null
+
 # 如果安装器在热更新期间杀掉了 worker，完整副本仍保存在模块目录之外；
 # 开机时重新拉起，确保不会因为 modules_update 被清理而丢失更新。
 if [ -d "/data/adb/.certbridge_hot_update_payload/CACertStore" ] \

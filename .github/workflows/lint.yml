@@ -32,6 +32,9 @@ jobs:
       - name: Typecheck WebUI
         run: npm run typecheck:web
 
+      - name: Hot update and release contracts
+        run: npm run test:hot-update
+
       - name: Prettier check
         run: npm run format:check
 

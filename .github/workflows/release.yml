@@ -107,6 +107,9 @@ jobs:
 
       - run: npm run build:module
 
+      - name: Verify hot update and release contracts
+        run: npm run test:hot-update
+
       - name: Upload zip artifact
         uses: actions/upload-artifact@v4
         with:

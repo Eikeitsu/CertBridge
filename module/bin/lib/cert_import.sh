@@ -62,8 +62,13 @@ import_ca_into_dir() {
   }
   tmp="$DATADIR/import.$$.pem"
   mkdir -p "$DATADIR" 2>/dev/null
+  # DER 快路径：首字节非 ASN.1 SEQUENCE(0x30) 时优先当 PEM，减少误报
+  first_byte=$(od -An -N1 -tx1 "$src" 2>/dev/null | tr -d ' \n')
   inform=""
-  if $openssl_cmd x509 -in "$src" -noout >/dev/null 2>&1; then
+  if [ "$first_byte" = "30" ] && \
+      $openssl_cmd x509 -inform DER -in "$src" -noout >/dev/null 2>&1; then
+    inform="-inform DER"
+  elif $openssl_cmd x509 -in "$src" -noout >/dev/null 2>&1; then
     inform=""
   elif $openssl_cmd x509 -inform DER -in "$src" -noout >/dev/null 2>&1; then
     inform="-inform DER"

@@ -1,6 +1,15 @@
 # 由 cert_manager.sh 加载；WebUI / CLI 命令实现
 # status 聚合输出
+# live=1 时强制实测并回写 runtime-status，再输出（供刷新复核 / adb）
 cmd_status() {
+  live=0
+  case "${1:-}" in
+    --live|live|verify) live=1 ;;
+  esac
+  if [ "$live" = "1" ]; then
+    live_finalize_runtime_status live >/dev/null 2>&1 || true
+  fi
+
   api=$(get_api)
   release=$(getprop ro.build.version.release)
   disabled=0
@@ -42,8 +51,12 @@ hot_failed=0"
   echo "store_count=$(count_certs "$GEN_CERTS")"
   if runtime_status_fresh; then
     echo "apex_ok=$(read_runtime_status apex_ok)"
+    echo "status_phase=$(read_runtime_status phase)"
+    echo "status_tag=$(read_runtime_status tag)"
   else
     echo "apex_ok=2"
+    echo "status_phase="
+    echo "status_tag="
   fi
   echo "pending_reboot=$([ -f "$PENDING_FILE" ] && echo 1 || echo 0)"
   emit_inject_error_status
@@ -53,6 +66,7 @@ hot_failed=0"
     echo "desc_short=$(compute_status_tag)"
   fi
   echo "status_cached=$(runtime_status_fresh && echo 1 || echo 0)"
+  echo "status_live=$live"
   echo "desc_body=$(compose_webui_description)"
   echo "reqable_enabled=$(read_conf reqable 1)"
   echo "reqable_active=$(is_addon_applied reqable && echo 1 || echo 0)"
@@ -90,4 +104,9 @@ hot_failed=0"
   emit_zygisk_loader_status
   echo "version=$(grep '^version=' "$MODDIR/module.prop" 2>/dev/null | cut -d= -f2-)"
   echo "$hot_status"
+}
+
+cmd_verify() {
+  live_finalize_runtime_status live >/dev/null 2>&1 || true
+  cmd_status
 }

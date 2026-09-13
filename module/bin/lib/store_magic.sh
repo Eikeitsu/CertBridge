@@ -59,9 +59,45 @@ clear_magic_overlay() {
   return 0
 }
 
+# 防御：若模块目录曾落盘静态 APEX cacerts（含版本化 @ver），
+# 在非 Magic 或 OTA 换版后清掉，避免 Hybrid Overlay 把过期树挂进 apexd。
+clear_stale_module_apex_trees() {
+  root="${1:-$MODDIR}"
+  apex_root="$root/apex"
+  [ -d "$apex_root" ] || return 0
+
+  live_ver=""
+  for live in /apex/com.android.conscrypt@*; do
+    [ -d "$live" ] || continue
+    live_ver=${live##*/}
+    break
+  done
+
+  removed=0
+  for staged in "$apex_root"/com.android.conscrypt "$apex_root"/com.android.conscrypt@*; do
+    [ -e "$staged" ] || continue
+    base=${staged##*/}
+    if is_magic_mount_mode; then
+      # Magic 一般不依赖模块内 apex 树；若存在且与当前 live 版本不一致则删
+      if [ -n "$live_ver" ] && [ "$base" != "com.android.conscrypt" ] && \
+          [ "$base" != "$live_ver" ]; then
+        rm -rf "$staged" 2>/dev/null && removed=$((removed + 1))
+      fi
+    else
+      rm -rf "$staged" 2>/dev/null && removed=$((removed + 1))
+    fi
+  done
+  if [ "$removed" -gt 0 ]; then
+    log_msg "mount: cleared $removed stale module apex tree(s)"
+  fi
+  rmdir "$apex_root" 2>/dev/null
+  return 0
+}
+
 # 开机前按模式准备叠层：magic 同步 addon；compatible 清掉 system/ 叠层
 prepare_mount_mode_overlay() {
   root="${1:-$MODDIR}"
+  clear_stale_module_apex_trees "$root"
   if is_magic_mount_mode; then
     sync_magic_overlay "$root" >/dev/null
   else

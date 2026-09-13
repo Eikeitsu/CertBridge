@@ -49,5 +49,9 @@ else
   log_msg "service: namespace injection failed"
 fi
 finalize_runtime_status service >/dev/null
+# 覆盖「boot_completed 后立刻校验仍假阴性、稍后才真正可用」窗口
+if [ "$rc" -eq 0 ]; then
+  heal_runtime_status_later 45
+fi
 trap - 1 2 15
 log_msg "service done"

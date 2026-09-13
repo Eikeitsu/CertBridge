@@ -9,7 +9,6 @@ import { useCertActions } from "@/features/certs/hooks/useCertActions";
 import { useBuiltinCerts } from "@/features/certs/hooks/useBuiltinCerts";
 import { useCertDetail } from "@/features/certs/hooks/useCertDetail";
 import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
-import { ThemePack } from "@/entities/module/enums";
 import { PageStack } from "@/shared/ui/layout";
 import { Button, Loader } from "@/shared/ui/primitives";
 import { BuiltinCertsPanel } from "./BuiltinCertsPanel";
@@ -23,7 +22,7 @@ export function CertsPage() {
   const bootstrapped = useAppSelector(selectStatusBootstrapped);
   const customCertificates = useAppSelector(selectCustomCertificates);
   const builtinCerts = useBuiltinCerts();
-  const { pack, voice } = usePackVoice();
+  const { voice } = usePackVoice();
   const detail = useCertDetail();
   const showBootSpin = isStatusLoading && !bootstrapped;
   const {
@@ -41,24 +40,12 @@ export function CertsPage() {
 
   if (showBootSpin) return <Loader label={voice.loadingHint} />;
 
-  const builtinVariant =
-    pack === ThemePack.Console ? "table" : pack === ThemePack.Studio ? "tiles" : "list";
-
-  const stackClass =
-    pack === ThemePack.Studio
-      ? "cb-stack--loose"
-      : pack === ThemePack.Console
-        ? "cb-stack--tight"
-        : undefined;
-
   return (
-    <PageStack className={stackClass}>
-      {pack === ThemePack.Settings ? (
-        <div>
-          <h1 className="cb-page-title">{voice.tabs.certs}</h1>
-          <p className="cb-page-sub">{voice.certs.builtinMeta}</p>
-        </div>
-      ) : null}
+    <PageStack className="cb-stack--loose">
+      <div>
+        <h1 className="cb-page-title">{voice.tabs.certs}</h1>
+        <p className="cb-page-sub">{voice.certs.builtinMeta}</p>
+      </div>
       <BuiltinCertsPanel
         certs={builtinCerts}
         isPending={isPending}
@@ -67,7 +54,7 @@ export function CertsPage() {
         onOpenDetail={(id, title) => void detail.openDetail(id, title)}
         title={voice.certs.builtinTitle}
         meta={voice.certs.builtinMeta}
-        variant={builtinVariant}
+        variant="list"
         detailLabel={voice.certs.detailLabel}
       />
       <CustomCertsPanel

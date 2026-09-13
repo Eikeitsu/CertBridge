@@ -1,47 +1,23 @@
-import { TabName, ThemePack } from "@/entities/module/enums";
+import { TabName } from "@/entities/module/enums";
 
 type AppDockProps = {
-  pack: ThemePack;
   activeTab: TabName;
   onSwitch: (tab: TabName) => void;
   tabs: { key: TabName; label: string }[];
 };
 
-const TAB_ICON: Record<ThemePack, Record<TabName, string>> = {
-  [ThemePack.Settings]: {
-    [TabName.Home]: "⌂",
-    [TabName.Certs]: "▣",
-    [TabName.Log]: "☰",
-    [TabName.Hide]: "◌",
-    [TabName.More]: "⚙",
-  },
-  [ThemePack.Console]: {
-    [TabName.Home]: "◆",
-    [TabName.Certs]: "⌘",
-    [TabName.Log]: "▤",
-    [TabName.Hide]: "⊘",
-    [TabName.More]: "⧉",
-  },
-  [ThemePack.Studio]: {
-    [TabName.Home]: "●",
-    [TabName.Certs]: "◆",
-    [TabName.Log]: "≡",
-    [TabName.Hide]: "○",
-    [TabName.More]: "◎",
-  },
+const TAB_ICON: Record<TabName, string> = {
+  [TabName.Home]: "⌂",
+  [TabName.Certs]: "▣",
+  [TabName.Log]: "☰",
+  [TabName.Hide]: "◌",
+  [TabName.More]: "⚙",
 };
 
-export function AppDock({ pack, activeTab, onSwitch, tabs }: AppDockProps) {
-  const dockClass =
-    pack === ThemePack.Console
-      ? "cb-dock cb-dock--console"
-      : pack === ThemePack.Studio
-        ? "cb-dock cb-dock--studio"
-        : "cb-dock";
-
+export function AppDock({ activeTab, onSwitch, tabs }: AppDockProps) {
   return (
     <nav
-      className={dockClass}
+      className="cb-dock"
       aria-label="主导航"
       style={{ gridTemplateColumns: `repeat(${tabs.length}, 1fr)` }}
     >
@@ -53,7 +29,7 @@ export function AppDock({ pack, activeTab, onSwitch, tabs }: AppDockProps) {
           onClick={() => onSwitch(tab.key)}
         >
           <span className="cb-dock__icon" aria-hidden>
-            {TAB_ICON[pack][tab.key]}
+            {TAB_ICON[tab.key]}
           </span>
           <span>{tab.label}</span>
         </button>

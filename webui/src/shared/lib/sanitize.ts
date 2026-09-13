@@ -33,6 +33,14 @@ export function resolveTrustLabel(status: {
     };
   }
 
+  if (/稳定中|注入中|检测中|启动中/.test(shortLabel)) {
+    return {
+      tone: TrustTone.Idle,
+      title: shortLabel || "稳定中…",
+      hint: cleanStatusBody(status.desc_body) || "正在确认注入是否生效，请稍候",
+    };
+  }
+
   if (isFlagOn(status.inject_error) || /失败|异常|需重装/.test(shortLabel)) {
     return {
       tone: TrustTone.Bad,
@@ -67,7 +75,7 @@ export function resolveTrustLabel(status: {
 }
 
 function stripStatusEmoji(text: string): string {
-  return text.replace(/^(?:✅|⚠️|⚠|❌|⏳|🔥|💤|\uFE0F|\s)+/u, "").trim();
+  return text.replace(/^(?:✅|⚠️|⚠|❌|⏳|🔥|💤|✨|🔎|⛔|\uFE0F|\s)+/u, "").trim();
 }
 
 function cleanStatusBody(body?: string): string {

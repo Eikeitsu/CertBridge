@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **开机状态假阴性修复**：`service` 校验带退避重试；失败缓存可在约 45s 后延迟自愈；中间态「稳定中」
+- **CLI / WebUI 强制复核**：`cert_manager.sh status --live` 与 `verify`；短包装 `bin/cb`；首页刷新走 live 实测并写回缓存
+- **挂载 hardening**：模式切到兼容时清 staged；防御性清理模块内过期 `conscrypt@*`；DER 导入首字节快路径
+- **WebUI Trust Signal 重构**：取消三套布局主题包，统一视觉与文案；首页 Status Stage 优先；证书/日志/隐藏/更多单布局；外观仅保留深浅色与强调色
 - 工程拆分收尾：`apex_inject`→`inject/*`；`hot_*` / `status_*` / `generation_*` / `store_*` / `cert_*` / `cli_*` / `install_*` / `hide_*` / `inject_*` 按域拆文件；`profile_status` 从 `common.sh` 抽出
 - 工程拆分：`cert_manager.sh` → `cli_{status,certs,config,hot}.sh`；`cert_optional.sh` 从 `cert_sources` 拆出
 - 工程拆分：`status.sh` 拆为 `status_runtime` / `status_desc`；证书页导入 / 热挂载 toast 与确认框纳入 packVoice

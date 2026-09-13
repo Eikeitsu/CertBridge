@@ -5,7 +5,7 @@ export enum ThemeMode {
   Dark = "dark",
 }
 
-/** 主题包：设置 / 控制台 / 工作室 */
+/** 主题包枚举保留兼容；运行时已收敛为单一 Trust Signal */
 export enum ThemePack {
   Settings = "settings",
   Console = "console",

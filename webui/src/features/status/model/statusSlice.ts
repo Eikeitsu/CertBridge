@@ -29,18 +29,21 @@ export type RefreshStatusArg =
   | {
       toast?: boolean;
       syncApps?: boolean;
+      /** 强制实测注入状态并回写缓存（首页刷新 / 稳定中自愈） */
+      live?: boolean;
     }
   | undefined;
 
 function resolveRefreshArg(arg: RefreshStatusArg) {
-  if (arg === true) return { toast: true, syncApps: true };
+  if (arg === true) return { toast: true, syncApps: true, live: true };
   if (arg && typeof arg === "object") {
     return {
       toast: Boolean(arg.toast),
       syncApps: arg.syncApps !== false,
+      live: Boolean(arg.live),
     };
   }
-  return { toast: false, syncApps: true };
+  return { toast: false, syncApps: true, live: false };
 }
 
 /** CLI 回包里的 reboot_required → pending_reboot，并过滤非状态键 */
@@ -99,7 +102,7 @@ function formatSyncToast(sync: {
 export const refreshStatus = createAsyncThunk(
   "status/refresh",
   async (arg: RefreshStatusArg) => {
-    const { toast: showToast, syncApps } = resolveRefreshArg(arg);
+    const { toast: showToast, syncApps, live } = resolveRefreshArg(arg);
     const sync = syncApps
       ? await syncAppSources().catch(() => ({
           updated: 0,
@@ -109,11 +112,11 @@ export const refreshStatus = createAsyncThunk(
         }))
       : { updated: 0, kept: 0, miss: 0, rebootRequired: false };
     const [status, customCertificates] = await Promise.all([
-      fetchStatus(),
+      fetchStatus(live),
       listCustom().catch(() => [] as CustomCertificate[]),
     ]);
     if (showToast) {
-      toast(formatSyncToast(sync) || "状态已刷新");
+      toast(formatSyncToast(sync) || (live ? "已复核注入状态" : "状态已刷新"));
     }
     restoreChromeInsets();
     return { status, customCertificates };

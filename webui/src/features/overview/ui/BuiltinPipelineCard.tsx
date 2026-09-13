@@ -4,12 +4,31 @@ import { Card, ListGroup, Row, Tag } from "@/shared/ui/primitives";
 type BuiltinPipelineCardProps = {
   pipeline: TrustOverview["builtinPipeline"];
   title?: string;
+  compact?: boolean;
 };
 
 export function BuiltinPipelineCard({
   pipeline,
-  title = "内置证书管道",
+  title = "内置证书",
+  compact = false,
 }: BuiltinPipelineCardProps) {
+  if (compact) {
+    return (
+      <div className="cb-chip-row" aria-label={title}>
+        <span className="cb-chip-row__label">{title}</span>
+        {pipeline.map((row) => (
+          <span
+            key={row.kind}
+            className={`cb-chip${row.active ? " is-on" : row.enabled ? " is-pend" : ""}`}
+          >
+            {row.title}
+            <em>{row.active ? "生效" : row.enabled ? "待重启" : row.available ? "可用" : "缺失"}</em>
+          </span>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <Card title={title}>
       <ListGroup>

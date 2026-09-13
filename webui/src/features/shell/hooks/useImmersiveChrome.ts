@@ -13,7 +13,7 @@ const RESUME_PIN_MS = 280;
 export function useImmersiveChrome(
   resolvedTheme: ResolvedTheme,
   isBarBlurEnabled: boolean,
-  themePack: ThemePack,
+  _themePack: ThemePack | undefined,
   pathname: string,
 ) {
   useEffect(() => {
@@ -52,7 +52,7 @@ export function useImmersiveChrome(
       window.visualViewport?.removeEventListener("resize", onViewportGlitch);
       window.visualViewport?.removeEventListener("scroll", onViewportGlitch);
     };
-  }, [resolvedTheme, isBarBlurEnabled, themePack]);
+  }, [resolvedTheme, isBarBlurEnabled]);
 
   useEffect(() => {
     restorePinnedInsets();

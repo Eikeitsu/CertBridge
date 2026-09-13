@@ -16,7 +16,8 @@ MODDIR=${MODDIR:-${0%/*}/..}
 . "$LIBDIR/cli_hot.sh"
 
 case "$1" in
-  status) cmd_status ;;
+  status) cmd_status "$2" ;;
+  verify) cmd_verify ;;
   list_custom) cmd_list_custom ;;
   list_applied_fps) cmd_list_applied_fps ;;
   toggle) cmd_toggle "$2" "$3" ;;
@@ -40,7 +41,7 @@ case "$1" in
     exit 1
     ;;
   *)
-    echo "usage: cert_manager.sh {status|list_custom|list_applied_fps|toggle|sync_apps|set_mount_mode|set_tmpfs_style|set_hot_allow|set_hide_allow|set_zn_hide_allow|get_zn_whitelist|set_zn_whitelist|install_custom|import_app_preset|remove_custom|cert_info|hot_mount|hot_unmount}"
+    echo "usage: cert_manager.sh {status [--live]|verify|list_custom|list_applied_fps|toggle|sync_apps|set_mount_mode|set_tmpfs_style|set_hot_allow|set_hide_allow|set_zn_hide_allow|get_zn_whitelist|set_zn_whitelist|install_custom|import_app_preset|remove_custom|cert_info|hot_mount|hot_unmount}"
     exit 1
     ;;
 esac

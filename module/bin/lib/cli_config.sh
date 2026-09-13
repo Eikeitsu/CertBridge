@@ -7,6 +7,11 @@ cmd_set_mount_mode() {
     *) echo "error=invalid_mount_mode"; return 1 ;;
   esac
   write_conf mount_mode "$mode" || { echo "error=write_failed"; return 1; }
+  # 立刻按新模式清理 / 同步 staged，避免下次开机前脏 overlay 仍被 Magic Mount
+  if [ "$mode" = "compatible" ]; then
+    clear_magic_overlay "$MODDIR" 2>/dev/null || true
+    clear_stale_module_apex_trees "$MODDIR" 2>/dev/null || true
+  fi
   pending_line=$(note_conf_dirty)
   log_info "config: mount_mode=$mode (reboot required)"
   echo "ok=1"

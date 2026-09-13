@@ -1,8 +1,8 @@
-import { useAppSelector } from "@/app/store/hooks";
-import { selectThemePack } from "@/features/theme/model/selectors";
-import { getPackVoice } from "@/shared/config/packVoice";
+import { useMemo } from "react";
+import { APP_VOICE } from "@/shared/config/packVoice";
+import { ThemePack } from "@/entities/module/enums";
 
+/** 文案已统一；pack 固定为兼容值，不再驱动布局分支 */
 export function usePackVoice() {
-  const pack = useAppSelector(selectThemePack);
-  return { pack, voice: getPackVoice(pack) };
+  return useMemo(() => ({ pack: ThemePack.Settings, voice: APP_VOICE }), []);
 }

@@ -37,6 +37,9 @@ export type ModuleStatus = {
   desc_short?: string;
   desc_body?: string;
   status_cached?: string;
+  status_live?: string;
+  status_phase?: string;
+  status_tag?: string;
   reqable_enabled?: string;
   reqable_active?: string;
   reqable_available?: string;

@@ -26,8 +26,8 @@ export async function cli(args: string, timeoutMs?: number): Promise<ExecResult>
   return exec(`sh '${PATHS.CLI}' ${args}`, timeoutMs);
 }
 
-export async function fetchStatus(): Promise<ModuleStatus> {
-  const result = await cli("status");
+export async function fetchStatus(live = false): Promise<ModuleStatus> {
+  const result = await cli(live ? "status --live" : "status", live ? CLI_TIMEOUT_MS.IMPORT : undefined);
   if (result.errno !== 0 && !result.stdout) {
     throw new Error(result.stderr || "status_failed");
   }

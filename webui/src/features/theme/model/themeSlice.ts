@@ -1,6 +1,6 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { STORAGE_KEYS } from "@/shared/config/paths";
-import { ACCENTS, PACK_CHROME_PRESETS, THEME_DEFAULTS } from "@/shared/config/theme";
+import { ACCENTS, THEME_DEFAULTS } from "@/shared/config/theme";
 import { FLAG_OFF, FLAG_ON, FONT_SCALE } from "@/shared/config/constants";
 import { ThemeMode, ThemePack, type ResolvedTheme } from "@/entities/module/enums";
 import { parseEnum } from "@/shared/lib/enum";
@@ -70,12 +70,10 @@ const themeSlice = createSlice({
       applyThemeToDom(state);
       syncChromeBars(state.resolved, false);
     },
-    setThemePack(state, action: PayloadAction<ThemePack>) {
-      state.pack = action.payload;
-      localStorage.setItem(STORAGE_KEYS.themePack, action.payload);
-      const preset = PACK_CHROME_PRESETS[action.payload];
-      state.accentId = preset.accentId;
-      localStorage.setItem(STORAGE_KEYS.accent, preset.accentId);
+    setThemePack(state, _action: PayloadAction<ThemePack>) {
+      // 主题包已收敛；保留 action 以免旧调用崩溃
+      state.pack = ThemePack.Settings;
+      localStorage.setItem(STORAGE_KEYS.themePack, ThemePack.Settings);
       applyThemeToDom(state);
       syncChromeBars(state.resolved, false);
     },

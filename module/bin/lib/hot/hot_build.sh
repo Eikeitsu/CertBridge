@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 hot_mount.sh 加载；勿单独执行
 # 临时会话证书集合构建
 hot_build_generation() {

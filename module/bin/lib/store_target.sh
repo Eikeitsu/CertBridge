@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 common 加载
 # API、目标信任库、运行时 bind 探测与拆除
 get_api() {

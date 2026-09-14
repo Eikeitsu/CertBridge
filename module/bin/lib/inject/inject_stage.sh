@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 apex_inject.sh 加载
 # 临时层准备与可见性
 current_mount_id() {

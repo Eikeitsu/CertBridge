@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 common runtime 加载
 # 注入失败记录与文案
 clear_inject_error() {

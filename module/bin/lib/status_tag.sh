@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 status.sh 加载
 # 短标签与 module.prop 刷新
 compute_status_tag() {

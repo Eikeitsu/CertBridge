@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 apex_inject.sh 加载
 # boot / namespaces 注入编排
 inject_one_target() {

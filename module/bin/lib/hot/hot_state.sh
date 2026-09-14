@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 hot_mount.sh 加载；勿单独执行
 # 会话状态 / boot / 锁清理
 hot_exit_cleanup() {

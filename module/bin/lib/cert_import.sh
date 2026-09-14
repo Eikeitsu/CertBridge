@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 common / cert_domain 加载
 # subject_hash、规范化导入、meta 显示名
 _openssl_pick_hash8() {

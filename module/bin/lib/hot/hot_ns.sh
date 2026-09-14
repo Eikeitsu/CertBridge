@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 hot_mount.sh 加载；勿单独执行
 # 命名空间探测与会话归属判断
 hot_namespace_id() {

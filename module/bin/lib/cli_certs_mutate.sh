@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 cert_manager.sh 加载
 # 开关 / 同步 / 导入 / 删除
 cmd_toggle() {

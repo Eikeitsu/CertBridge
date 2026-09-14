@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 cert_manager.sh 加载；WebUI / CLI 命令实现
 # status 聚合输出
 # live=1 时强制实测并回写 runtime-status，再输出（供刷新复核 / adb）

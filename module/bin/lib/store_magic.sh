@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 common 加载
 # Magic Mount 覆盖层、SELinux、路径身份
 sync_magic_overlay() {

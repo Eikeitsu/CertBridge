@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 install_flow 加载；安装阶段专用
 # 安装摘要与主流程
 certbridge_install_print_summary() {

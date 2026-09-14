@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 status.sh 加载
 # 模块列表简介与 WebUI 描述
 compose_module_description() {

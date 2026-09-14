@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 common / cert_domain 加载
 # 可选抓包 App / 路径预设导入与指纹列表
 

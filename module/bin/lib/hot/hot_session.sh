@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 hot_mount.sh 加载；勿单独执行
 # 挂载编排、启停与 status
 hot_mount_namespaces() {

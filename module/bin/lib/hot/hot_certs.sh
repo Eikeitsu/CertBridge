@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 hot_mount.sh 加载；勿单独执行
 # 证书归一化与收集（用户区 / 存储卡）
 hot_normalize_cert() {

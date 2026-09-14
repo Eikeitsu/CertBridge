@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 hot_mount.sh 加载；勿单独执行
 # bind / 校验 / 卸载
 hot_verify_pid() {

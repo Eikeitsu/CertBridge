@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 common 经 generation.sh 加载
 # 待重启标记与 applied 查询
 mark_reboot_required() {

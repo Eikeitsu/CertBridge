@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 status.sh 加载
 # boot-epoch / runtime-status 缓存 / Root 识别 / 热挂载会话探测
 current_boot_id() {

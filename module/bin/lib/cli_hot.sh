@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 cert_manager.sh 加载；WebUI / CLI 命令实现
 # 临时热挂载命令
 cmd_hot_mount() {

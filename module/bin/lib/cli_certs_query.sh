@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 cert_manager.sh 加载
 # 列表 / 预设 / 指纹 / 详情（只读向）
 cmd_list_custom() {

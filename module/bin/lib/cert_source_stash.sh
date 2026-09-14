@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 common / cert_domain 加载
 # addon 快照、可启用判断与批量同步
 stash_addon_source() {

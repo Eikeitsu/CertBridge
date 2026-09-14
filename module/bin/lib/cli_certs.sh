@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 cert_manager.sh 加载
 # shellcheck disable=SC1090
 . "$LIBDIR/cli_certs_query.sh"

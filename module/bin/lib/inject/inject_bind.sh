@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 apex_inject.sh 加载
 # bind 单次与命名空间收集
 bind_current_once() {

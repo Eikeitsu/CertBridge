@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 install_flow 加载；安装阶段专用
 # 写 certs.conf 与组件裁剪
 certbridge_install_write_config() {

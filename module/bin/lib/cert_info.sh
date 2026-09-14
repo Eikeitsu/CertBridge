@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 common / cert_domain 加载
 # 显示名、详情、指纹
 cert_display_name_from_file() {

@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 common / cert_domain 加载
 # App 源同步与 addon 查找
 diagnose_app_cert_import() {

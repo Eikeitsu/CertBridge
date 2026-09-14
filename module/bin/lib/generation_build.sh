@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 common 经 generation.sh 加载
 # 开机证书集合构建与有效性
 source_identity() {

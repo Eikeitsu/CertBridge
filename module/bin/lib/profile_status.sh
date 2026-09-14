@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 common runtime 加载
 # Zygisk 过滤组件状态、安装档案、Zygisk 底座探测
 # Zygisk 过滤状态：与 hide_assist 是否安装无关

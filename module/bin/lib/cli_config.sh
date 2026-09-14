@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 cert_manager.sh 加载；WebUI / CLI 命令实现
 # 挂载模式、隐藏与白名单配置
 cmd_set_mount_mode() {

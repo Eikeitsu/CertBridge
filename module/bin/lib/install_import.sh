@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 install_flow / common 加载；安装阶段专用
 # App CA 导入与目录树打印
 certbridge_install_log() {

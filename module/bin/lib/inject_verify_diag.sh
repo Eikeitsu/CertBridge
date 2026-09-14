@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 common runtime 加载
 # 校验失败诊断与 status 输出
 diagnose_verify_failure_reason() {

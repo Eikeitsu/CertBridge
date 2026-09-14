@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 install_flow / common 加载；安装阶段专用
 # 音量键选择与目录准备
 certbridge_choose_component() {

@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 由 status.sh 加载
 # 证书摘要与简介格式化
 applied_cert_fallback_display() {

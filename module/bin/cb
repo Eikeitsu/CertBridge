@@ -1,0 +1,4 @@
+#!/system/bin/sh
+# Thin wrapper for adb / shell: cb status --live
+MODDIR=${0%/*}/..
+exec sh "$MODDIR/bin/cert_manager.sh" "$@"

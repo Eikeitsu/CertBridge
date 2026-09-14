@@ -13,6 +13,7 @@ import {
 } from "node:fs";
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createZipFromDir } from "./lib/create-zip.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const moduleRoot = join(repoRoot, "module");
@@ -51,15 +52,52 @@ const BIN_LIBS = [
   "bin/lib/conf.sh",
   "bin/lib/lock.sh",
   "bin/lib/store.sh",
+  "bin/lib/store_target.sh",
+  "bin/lib/store_magic.sh",
   "bin/lib/certs.sh",
   "bin/lib/openssl.sh",
   "bin/lib/app_detect.sh",
   "bin/lib/cert_parse.sh",
+  "bin/lib/cert_info.sh",
+  "bin/lib/cert_import.sh",
   "bin/lib/cert_sources.sh",
+  "bin/lib/cert_source_sync.sh",
+  "bin/lib/cert_source_stash.sh",
+  "bin/lib/cert_optional.sh",
   "bin/lib/install_flow.sh",
+  "bin/lib/install_choose.sh",
+  "bin/lib/install_import.sh",
+  "bin/lib/install_apply.sh",
+  "bin/lib/install_config.sh",
+  "bin/lib/install_finish.sh",
   "bin/lib/verify.sh",
   "bin/lib/generation.sh",
+  "bin/lib/generation_build.sh",
+  "bin/lib/generation_meta.sh",
   "bin/lib/status.sh",
+  "bin/lib/status_runtime.sh",
+  "bin/lib/status_summary.sh",
+  "bin/lib/status_describe.sh",
+  "bin/lib/status_tag.sh",
+  "bin/lib/profile_status.sh",
+  "bin/lib/inject_diag.sh",
+  "bin/lib/inject_error.sh",
+  "bin/lib/inject_verify_diag.sh",
+  "bin/lib/inject/inject_stage.sh",
+  "bin/lib/inject/inject_bind.sh",
+  "bin/lib/inject/inject_ops.sh",
+  "bin/lib/cli_status.sh",
+  "bin/lib/cli_certs.sh",
+  "bin/lib/cli_certs_query.sh",
+  "bin/lib/cli_certs_mutate.sh",
+  "bin/lib/cli_config.sh",
+  "bin/lib/cli_hot.sh",
+  "bin/lib/hot/hot_state.sh",
+  "bin/lib/hot/hot_certs.sh",
+  "bin/lib/hot/hot_ns.sh",
+  "bin/lib/hot/hot_bind.sh",
+  "bin/lib/hot/hot_build.sh",
+  "bin/lib/hot/hot_session.sh",
 ];
 
 const OPENSSL_ALL_BINARIES = [
@@ -143,9 +181,7 @@ function extractZip(zipPath, extractDir) {
 async function ensureOpensslBinaries() {
   const dest = join(moduleRoot, "bin", "openssl");
   mkdirSync(dest, { recursive: true });
-  const missing = OPENSSL_BINARIES.filter(
-    (name) => !existsSync(join(dest, name)),
-  );
+  const missing = OPENSSL_BINARIES.filter((name) => !existsSync(join(dest, name)));
   if (!missing.length) {
     log("bundled openssl binaries present");
     return;
@@ -208,13 +244,9 @@ function listBuiltinCertFiles(kind) {
   if (!existsSync(dir)) {
     throw new Error(`missing builtin cert directory: certs/builtin/${kind}`);
   }
-  const files = readdirSync(dir).filter((name) =>
-    /^[0-9a-fA-F]{8}\.\d+$/.test(name),
-  );
+  const files = readdirSync(dir).filter((name) => /^[0-9a-fA-F]{8}\.\d+$/.test(name));
   if (files.length < 1) {
-    throw new Error(
-      `missing builtin hash.N certificate under certs/builtin/${kind}/`,
-    );
+    throw new Error(`missing builtin hash.N certificate under certs/builtin/${kind}/`);
   }
   return files.map((name) => join("certs", "builtin", kind, name));
 }
@@ -248,9 +280,7 @@ function validateSources() {
   for (const relPath of ["system", "certs/system_base", "certs/active"]) {
     const legacyPath = join(moduleRoot, relPath);
     if (existsSync(legacyPath) && directoryHasFiles(legacyPath)) {
-      throw new Error(
-        `legacy certificate overlay must not be packaged: ${relPath}`,
-      );
+      throw new Error(`legacy certificate overlay must not be packaged: ${relPath}`);
     }
   }
 
@@ -271,16 +301,12 @@ function validateSources() {
 
   for (const relPath of builtinCerts) {
     const content = readFileSync(join(moduleRoot, relPath));
-    const isPem = content
-      .subarray(0, 27)
-      .toString("ascii")
-      .includes("BEGIN CERTIFICATE");
+    const isPem = content.subarray(0, 27).toString("ascii").includes("BEGIN CERTIFICATE");
     const isDer = content[0] === 0x30;
     if (!isPem && !isDer)
       throw new Error(`invalid built-in certificate encoding: ${relPath}`);
     const certificate = new X509Certificate(content);
-    if (!certificate.ca)
-      throw new Error(`built-in certificate is not a CA: ${relPath}`);
+    if (!certificate.ca) throw new Error(`built-in certificate is not a CA: ${relPath}`);
     if (Date.parse(certificate.validTo) <= Date.now())
       throw new Error(`built-in certificate expired: ${relPath}`);
   }
@@ -349,24 +375,6 @@ function copyDirFromModule(relPath) {
   }
 }
 
-function createZip(zipPath) {
-  if (process.platform === "win32") {
-    const escapedZip = zipPath.replace(/'/g, "''");
-    const escapedStaging = staging.replace(/'/g, "''");
-    const ps = [
-      `$staging = '${escapedStaging}'`,
-      `$zip = '${escapedZip}'`,
-      "if (Test-Path $zip) { Remove-Item $zip -Force }",
-      "Push-Location $staging",
-      "Compress-Archive -Path * -DestinationPath $zip -Force",
-      "Pop-Location",
-    ].join("; ");
-    execSync(`powershell -NoProfile -Command "${ps}"`, { stdio: "inherit" });
-    return;
-  }
-  execSync(`cd "${staging}" && zip -qr9 "${zipPath}" .`, { stdio: "inherit" });
-}
-
 function applyEdition(edition) {
   writeFileSync(join(staging, "bin", "edition"), `${edition}\n`, "utf8");
   if (edition === "lite") {
@@ -391,11 +399,9 @@ function applyEdition(edition) {
   log("edition=full (openssl only)");
 }
 
-function packageOne(edition, version) {
+async function packageOne(edition, version) {
   const zipName =
-    edition === "lite"
-      ? `CertBridge_${version}_lite.zip`
-      : `CertBridge_${version}.zip`;
+    edition === "lite" ? `CertBridge_${version}_lite.zip` : `CertBridge_${version}.zip`;
   const zipPath = join(releaseDir, zipName);
 
   rmSync(staging, { recursive: true, force: true });
@@ -408,6 +414,31 @@ function packageOne(edition, version) {
   copyDirFromModule("config");
   copyDirFromModule("bin");
   copyDirFromModule("certs");
+  // Zygisk so（由 build:zygisk-hide 生成）；仅复制 .so，不打入 README 占位
+  if (existsSync(join(moduleRoot, "zygisk"))) {
+    mkdirSync(join(staging, "zygisk"), { recursive: true });
+    for (const name of readdirSync(join(moduleRoot, "zygisk"))) {
+      if (!name.endsWith(".so")) continue;
+      copyFromModule(`zygisk/${name}`);
+    }
+  }
+  // ZN Module 辅路径：禁止空壳。仅当 PACK_ZN_MODULE=1 且 zn_modules.txt 非空、so 存在时打入
+  if (process.env.PACK_ZN_MODULE === "1") {
+    const znTxt = join(moduleRoot, "zn_modules.txt");
+    const znSo = join(moduleRoot, "libcb_zn_hide.so");
+    if (
+      existsSync(znTxt) &&
+      statSync(znTxt).size > 0 &&
+      existsSync(znSo) &&
+      statSync(znSo).size > 1000
+    ) {
+      copyFromModule("zn_modules.txt");
+      copyFromModule("libcb_zn_hide.so");
+      log("packaged ZN module track (zn_modules.txt + libcb_zn_hide.so)");
+    } else {
+      log("PACK_ZN_MODULE=1 but missing non-empty zn_modules.txt or libcb_zn_hide.so — skipped");
+    }
+  }
   applyEdition(edition);
 
   if (!existsSync(builtWebDir)) {
@@ -417,7 +448,7 @@ function packageOne(edition, version) {
 
   if (existsSync(zipPath)) rmSync(zipPath);
   log(`packaging ${zipName}...`);
-  createZip(zipPath);
+  await createZipFromDir(staging, zipPath);
   log(`created ${zipPath} (${(statSync(zipPath).size / 1024).toFixed(1)} KB)`);
   rmSync(staging, { recursive: true, force: true });
 }
@@ -447,6 +478,6 @@ if (editions.includes("full")) {
 validateSources();
 
 for (const edition of editions) {
-  packageOne(edition, version);
+  await packageOne(edition, version);
 }
 log(`done (${editions.join(", ")})`);

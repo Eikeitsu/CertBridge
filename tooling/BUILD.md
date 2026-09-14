@@ -5,16 +5,22 @@
 ## 仓库结构
 
 ```text
+webui/                  # WebUI 源码（React + Redux Toolkit + antd）
+  public/               # 会打进模块的静态资源（构建时再剔除未引用图片）
+  stock/                # 库存图，不参与 Vite / 模块打包
+  src/app/              # 入口组装：providers / router / store / 全局样式
+  src/features/         # 业务切片：overview / certs / log / settings / theme / …
+  src/shared/           # 桥接 API、配置、工具
+  src/entities/         # 领域类型
 module/                 # Magisk 模块本体
   bin/
     common.sh           # 路径初始化 + 按 install/runtime 加载 lib/*
     lib/                # 按功能拆分的公共库
-      # 证书域: app_detect / cert_parse / cert_sources
-      # 安装: install_flow（仅刷入时加载）
     apex_inject.sh      # 开机 / 命名空间注入
     hot_mount.sh        # 免重启热挂载（可选）
     cert_manager.sh     # WebUI / CLI
-  webroot/              # WebUI 可读源码
+  webroot/              # WebUI 构建产物（勿手改；由 npm run build:web 覆盖）
+archives/               # 旧版原生 WebUI 归档
 tooling/scripts/        # 构建脚本
 docs/                   # VitePress 用户文档
 .release / .build/      # 本地产物（不入库）
@@ -22,22 +28,26 @@ docs/                   # VitePress 用户文档
 
 ### bin/lib 职责
 
-| 文件 | 职责 |
+按入口加载；括号内为拆出的实现文件。
+
+| 入口 / 目录 | 职责 |
 | --- | --- |
-| `log.sh` | 安装/运行日志 |
-| `keys.sh` | 音量键选择 |
-| `conf.sh` | `certs.conf` 读写 |
-| `lock.sh` | 写锁 |
-| `store.sh` | 信任库路径、SELinux、路径身份 |
-| `certs.sh` | 证书文件名、复制、addon 合并 |
-| `openssl.sh` | OpenSSL 定位（优先模块内置静态二进制） |
-| `app_detect.sh` | 已安装抓包 App 的 CA 路径探测 |
-| `cert_parse.sh` | 显示名 / 详情解析、规范化导入 |
-| `cert_sources.sh` | sources 同步与 addon 查找（含 ProxyPin 内置） |
-| `install_flow.sh` | 刷入安装编排（仅 `CERTBRIDGE_PROFILE=install`） |
+| `log.sh` / `keys.sh` / `conf.sh` / `lock.sh` | 日志、音量键、配置、写锁 |
+| `store.sh`（`store_target` / `store_magic`） | 目标信任库、Magic Mount、SELinux、路径身份 |
+| `certs.sh` / `openssl.sh` / `app_detect.sh` | 证书合并、OpenSSL 定位、抓包 App 路径 |
+| `cert_parse.sh`（`cert_info` / `cert_import`） | 显示名、详情、规范化导入 |
+| `cert_sources.sh`（`cert_source_sync` / `cert_source_stash`） | Reqable/ProxyPin 源同步与快照 |
+| `cert_optional.sh` | 可选 App/路径预设与已应用指纹 |
+| `install_flow.sh`（`choose` / `import` / `apply`→`config`+`finish`） | 刷入安装编排 |
+| `generation.sh`（`generation_build` / `generation_meta`） | 开机证书集合与 applied 元数据 |
+| `status.sh`（`runtime` / `summary` / `describe` / `tag`） | 模块状态与简介 |
+| `profile_status.sh` | Zygisk 过滤组件、安装档案、底座探测 |
+| `inject_diag.sh`（`inject_error` / `inject_verify_diag`） | 注入失败诊断 |
+| `inject/*.sh` | `apex_inject.sh` 实现（stage / bind / ops） |
+| `cli_*.sh` | `cert_manager.sh` 命令实现 |
+| `hot/*.sh` | `hot_mount.sh` 实现；不装热挂载时整目录删除 |
+| `hide_assist.sh`（`hide_actions` / `hide_status`） | 可选 SuSFS try_umount；不装时删除三者 |
 | `verify.sh` | 注入结果校验 |
-| `generation.sh` | 开机证书集合生成 |
-| `status.sh` | 模块状态标签与描述 |
 
 `common.sh` 按 `CERTBRIDGE_PROFILE` 加载：`install` 仅装入安装所需库；默认 `runtime` 装入开机 / WebUI / Action 所需库。
 
@@ -45,9 +55,10 @@ docs/                   # VitePress 用户文档
 
 ```bash
 npm install
-npm run dev:web          # 预览 module/webroot
-npm run build:web        # 压缩 → .build/webroot
-npm run package:module   # 打 Magisk zip（默认同时产出完整版 + Lite）
+npm run dev:web          # Vite 开发 WebUI（webui/）
+npm run build:web        # 构建并同步 → module/webroot（未引用的静态图不打入）
+npm run typecheck:web    # TypeScript 检查
+npm run package:module   # 打 Magisk zip（Node 统一打包，默认完整版 + Lite）
 npm run build:module     # build:web + package:module
 npm run build:cbx509     # 构建 Lite 用的 cbx509.dex（便携 JDK + D8）
 npm run dev:docs
@@ -87,7 +98,7 @@ Lite 依赖设备上的 `app_process`/`dalvikvm`（Magisk 应用内刷入通常�
 
 ## 工作流
 
-共用 composite：`.github/actions/setup-node-npm`（Node 22 + `npm ci`）。
+共用 composite：`.github/actions/setup-node-npm`（Node 24 + `npm ci`）。
 
 | 工作流           | 触发                | 职责                                                                 |
 | ---------------- | ------------------- | -------------------------------------------------------------------- |

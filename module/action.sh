@@ -40,8 +40,10 @@ else
   echo "模块: 开启"
 fi
 
-if [ -f "$STATEDIR/inject-error" ]; then
-  echo "注入错误: $(cat "$STATEDIR/inject-error" 2>/dev/null | tr -d '\r')"
+if inject_error_present 2>/dev/null; then
+  echo "注入错误: $(format_inject_error_line 2>/dev/null)"
+  _inj_hint=$(read_inject_error_field hint 2>/dev/null)
+  [ -n "$_inj_hint" ] && echo "建议: $_inj_hint"
 elif runtime_status_fresh 2>/dev/null; then
   _apex=$(read_runtime_status apex_ok 2>/dev/null)
   case "$_apex" in

@@ -5,10 +5,10 @@
 
 ## 日志写哪里
 
-| 文件 | 用途 |
-| --- | --- |
-| 仓库根目录 `changelog.md` | **唯一手写源**。开发中把条目写在 `## Unreleased` 下 |
-| `docs/guide/changelog.md` | 文档站「更新日志」页；**发版工作流生成**，勿手写 Unreleased |
+| 文件                       | 用途                                                                         |
+| -------------------------- | ---------------------------------------------------------------------------- |
+| 仓库根目录 `changelog.md`  | **唯一手写源**。开发中把条目写在 `## Unreleased` 下                          |
+| `docs/guide/changelog.md`  | 文档站「更新日志」页；**发版工作流生成**，勿手写 Unreleased                  |
 | `docs/public/changelog.md` | Pages / `updateJson` 指向的 changelog；**发版工作流生成**，勿手写 Unreleased |
 
 ### Unreleased 写法
@@ -20,8 +20,8 @@
 - 一条一个要点；不要写「对齐某某」「参考某某」等对外无关措辞
 ```
 
-- 发版前保持 `## Unreleased` 在文件最上方（标题 `# 更新日志` 之后）。  
-- 空的 stub 可以保留：`## Unreleased` 下面暂时无条目。  
+- 发版前保持 `## Unreleased` 在文件最上方（标题 `# 更新日志` 之后）。
+- 空的 stub 可以保留：`## Unreleased` 下面暂时无条目。
 - **不要**在开发中直接新建 `## vX.Y.Z` / `## 2026.xx.xx`（除非刻意补历史版本说明）。
 
 ## 发版时工作流做什么
@@ -31,7 +31,7 @@ Actions → **Release Module**（或推送 `v*` tag）：
 1. 打包模块 zip，创建 GitHub Release（正文优先取当前版本节；没有则回退 Unreleased）
 2. `promote-changelog.py <version>`：非空 `Unreleased` → 当前版本号，并留下空 stub
 3. `promote-changelog.py --export-docs`：文档站两份 changelog **去掉 Unreleased**
-4. 更新 `update.json` / `module.prop` / `package.json` 等并推送主分支；因 `GITHUB_TOKEN` 推送不会连锁触发其它 Actions，脚本会再 `gh workflow run build-docs.yml`
+4. 更新 `update.json` / `module.prop` / `package.json` 等并推送主分支；Pages 目录只保留**本次** zip（删除上一版包）；因 `GITHUB_TOKEN` 推送不会连锁触发其它 Actions，脚本会再 `gh workflow run build-docs.yml`
 
 工作流拆为 `build` → `publish` → `post` 三阶段；版本解析见 `resolve-release-version.py`，回写见 `post-release-update.sh`。版本号仍为 semver：`vMAJOR.MINOR.PATCH`。
 

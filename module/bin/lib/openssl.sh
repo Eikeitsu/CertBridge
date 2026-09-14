@@ -131,6 +131,11 @@ diagnose_bundled_openssl() {
     echo "resolve_openssl=fail"
     if w=$(resolve_cbx509_wrapper 2>/dev/null); then
       echo "cbx509_wrapper=$w"
+      if out=$("$w" version 2>&1); then
+        echo "cbx509_version_ok=$out"
+      else
+        echo "cbx509_version_fail=$out"
+      fi
       return 0
     fi
     echo "resolve_cbx509=fail"
@@ -152,8 +157,10 @@ find_openssl() {
     return 0
   fi
   if lite=$(resolve_cbx509_wrapper); then
-    echo "$lite"
-    return 0
+    if "$lite" version >/dev/null 2>&1; then
+      echo "$lite"
+      return 0
+    fi
   fi
 
   candidate=""

@@ -8,6 +8,7 @@ import {
   createWriteStream,
   existsSync,
   mkdirSync,
+  readdirSync,
   rmSync,
   statSync,
   writeFileSync,
@@ -30,14 +31,7 @@ const srcMain = join(
   "x509",
   "Main.java",
 );
-const sampleCert = join(
-  repoRoot,
-  "module",
-  "certs",
-  "builtin",
-  "proxypin",
-  "243f0bfb.0",
-);
+const sampleCert = join(repoRoot, "module", "certs", "builtin", "proxypin", "243f0bfb.0");
 
 function log(msg) {
   console.log(`[build-cbx509] ${msg}`);
@@ -96,10 +90,7 @@ function hostJdkAsset() {
 
 async function ensureJdk() {
   const asset = hostJdkAsset();
-  const archive = join(
-    cacheDir,
-    asset.kind === "zip" ? "jdk17.zip" : "jdk17.tar.gz",
-  );
+  const archive = join(cacheDir, asset.kind === "zip" ? "jdk17.zip" : "jdk17.tar.gz");
   const home = join(cacheDir, "jdk");
   const javac = join(home, ...asset.javacRel);
   if (existsSync(javac)) return { javac, java: join(home, ...asset.javaRel) };
@@ -175,18 +166,67 @@ async function main() {
     { stdio: "inherit" },
   );
 
-  const classFile = join(
-    classesDir,
-    "com",
-    "certbridge",
-    "x509",
-    "Main.class",
-  );
+  const classFile = join(classesDir, "com", "certbridge", "x509", "Main.class");
   if (!existsSync(classFile)) throw new Error("Main.class missing");
+
+  if (existsSync(sampleCert)) {
+    const dump = execFileSync(
+      java,
+      [
+        "-cp",
+        classesDir,
+        "com.certbridge.x509.Main",
+        "x509",
+        "-in",
+        sampleCert,
+        "-noout",
+        "-certbridge_info",
+      ],
+      { encoding: "utf8" },
+    );
+    if (!dump.includes("ok=1") || !dump.includes("fingerprint_sha256=")) {
+      throw new Error("cbx509 -certbridge_info smoke test failed");
+    }
+    log("certbridge_info smoke test ok");
+    const hashOut = execFileSync(
+      java,
+      [
+        "-cp",
+        classesDir,
+        "com.certbridge.x509.Main",
+        "x509",
+        "-in",
+        sampleCert,
+        "-noout",
+        "-subject_hash_old",
+      ],
+      { encoding: "utf8" },
+    )
+      .trim()
+      .toLowerCase();
+    if (hashOut !== "243f0bfb") {
+      throw new Error(`subject_hash_old smoke test failed: ${hashOut}`);
+    }
+    log("subject_hash_old smoke test ok");
+  }
 
   // Clear previous dex
   const dexOut = join(outDir, "classes.dex");
   if (existsSync(dexOut)) rmSync(dexOut);
+
+  // Must pass nested classes (Main$DerCursor / Main$Base64). Only Main.class
+  // → NoClassDefFoundError on device when computing subject_hash_old.
+  const classFiles = [];
+  const collectClasses = (dir) => {
+    for (const name of readdirSync(dir)) {
+      const p = join(dir, name);
+      if (statSync(p).isDirectory()) collectClasses(p);
+      else if (name.endsWith(".class")) classFiles.push(p);
+    }
+  };
+  collectClasses(classesDir);
+  if (!classFiles.includes(classFile)) classFiles.push(classFile);
+  log(`d8 ← ${classFiles.length} class files`);
 
   log("d8 → classes.dex");
   execFileSync(
@@ -199,7 +239,7 @@ async function main() {
       "24",
       "--output",
       outDir,
-      classFile,
+      ...classFiles,
     ],
     { stdio: "inherit" },
   );

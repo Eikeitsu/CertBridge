@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 挂载隐藏协助（可选组件）
 # try_umount 登记与注入后回调
 hide_assist_available() {

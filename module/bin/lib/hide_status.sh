@@ -1,3 +1,4 @@
+#!/system/bin/sh
 # 挂载隐藏协助（可选组件）
 # 隐藏栈探测与 WebUI 状态输出
 detect_hide_provider() {

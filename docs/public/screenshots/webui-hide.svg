@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="780" viewBox="0 0 360 780" role="img" aria-label="WebUI Hide">
+  <rect width="360" height="780" rx="28" fill="#f4f6f8"/>
+  <rect x="16" y="52" width="328" height="640" rx="20" fill="#ffffff" stroke="#e2e8f0"/>
+  <text x="180" y="88" text-anchor="middle" font-family="system-ui,sans-serif" font-size="16" font-weight="600" fill="#0f172a">Hide</text>
+  <text x="32" y="118" font-family="system-ui,sans-serif" font-size="12" font-weight="600" fill="#334155">Mount &amp; hide status</text>
+  <rect x="32" y="132" width="296" height="88" rx="12" fill="#f8fafc" stroke="#e2e8f0"/>
+  <text x="48" y="162" font-family="system-ui,sans-serif" font-size="13" fill="#0f172a">Root: KernelSU</text>
+  <text x="48" y="184" font-family="system-ui,sans-serif" font-size="11" fill="#64748b">Stage: /dev/.cb0</text>
+  <text x="48" y="204" font-family="system-ui,sans-serif" font-size="11" fill="#047857">SuSFS try_umount: registered</text>
+  <text x="32" y="248" font-family="system-ui,sans-serif" font-size="12" font-weight="600" fill="#334155">Hide guide</text>
+  <rect x="32" y="262" width="296" height="48" rx="12" fill="#f8fafc" stroke="#e2e8f0"/>
+  <text x="48" y="292" font-family="system-ui,sans-serif" font-size="13" fill="#0f172a">Magisk / DenyList / Shamiko</text>
+  <rect x="32" y="322" width="296" height="48" rx="12" fill="#f8fafc" stroke="#e2e8f0"/>
+  <text x="48" y="352" font-family="system-ui,sans-serif" font-size="13" fill="#0f172a">KernelSU / SuSFS</text>
+  <rect x="32" y="382" width="296" height="48" rx="12" fill="#ecfdf5" stroke="#6ee7b7"/>
+  <text x="48" y="412" font-family="system-ui,sans-serif" font-size="13" fill="#047857">Honest limits</text>
+  <rect x="0" y="708" width="360" height="72" fill="#ffffff" stroke="#e2e8f0"/>
+  <text x="36" y="752" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" fill="#94a3b8">Home</text>
+  <text x="108" y="752" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" fill="#94a3b8">Certs</text>
+  <text x="180" y="752" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" fill="#94a3b8">Log</text>
+  <text x="252" y="752" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" fill="#0f766e">Hide</text>
+  <text x="324" y="752" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" fill="#94a3b8">More</text>
+</svg>

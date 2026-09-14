@@ -2,6 +2,51 @@
 
 ## Unreleased
 
+- **开机状态假阴性修复**：`service` 校验带退避重试；失败缓存可在约 45s 后延迟自愈；中间态「稳定中」
+- **CLI / WebUI 强制复核**：`cert_manager.sh status --live` 与 `verify`；短包装 `bin/cb`；首页刷新走 live 实测并写回缓存
+- **挂载 hardening**：模式切到兼容时清 staged；防御性清理模块内过期 `conscrypt@*`；DER 导入首字节快路径
+- **WebUI Trust Signal 重构**：取消三套布局主题包，统一视觉与文案；首页 Status Stage 优先；证书/日志/隐藏/更多单布局；外观仅保留深浅色与强调色
+- 工程拆分收尾：`apex_inject`→`inject/*`；`hot_*` / `status_*` / `generation_*` / `store_*` / `cert_*` / `cli_*` / `install_*` / `hide_*` / `inject_*` 按域拆文件；`profile_status` 从 `common.sh` 抽出
+- 工程拆分：`cert_manager.sh` → `cli_{status,certs,config,hot}.sh`；`cert_optional.sh` 从 `cert_sources` 拆出
+- 工程拆分：`status.sh` 拆为 `status_runtime` / `status_desc`；证书页导入 / 热挂载 toast 与确认框纳入 packVoice
+- 工程拆分：`hot_mount.sh` 实现迁至 `bin/lib/hot/`；`install_flow` 拆为 choose / import / apply（入口仍为 `install_flow.sh`）
+- Zygisk 过滤改为按行流式读取 mountinfo/maps，避免整文件吞入内存
+- 隐藏相关 toast / 确认框文案纳入 packVoice；控制台 / 工作室隐藏页补上文档入口
+- 自定义证书支持从常见路径一键导入：HttpCanary / ADGuard / Charles / mitmproxy / PCAPdroid；刷新与安装探测同步覆盖
+- WebUI / CLI 可导出已应用 CA 的 SHA-256 指纹列表（`list_applied_fps`）
+- Zygisk 底座探测：status / 隐藏页展示 ZygiskNext、ReZygisk、NeoZygisk 或 Magisk 内置 Zygisk；组件已装但底座未开时告警
+- Zygisk 抓包白名单可配置：`config/zn_whitelist.txt`，WebUI 隐藏页可编辑；修改后强停 App 生效
+- 隐藏页新增可关闭的「抓包检查清单」（首次打开）
+- WebUI「设置」主题隐藏页补上「挂载与隐藏实况」；未装 Zygisk 过滤时提示需自定义重刷；关于页展示安装组件档案
+- WebUI 刷新同步：除 Reqable / ProxyPin 外，检测到 HttpCanary / ADGuard 现场 CA 且指纹未见时自动导入为自定义证书
+- 文档对齐：隐藏页出现条件、Zygisk FAQ、功能表与 Lite 约 14KB 表述；隐藏说明文案含 maps/readlink 自藏
+- **Zygisk 挂载痕迹过滤**（可选）：自定义安装可勾选；主路径为经典 Zygisk API（`zygisk/*.so`），在 App 进程中过滤 `/proc/.../mountinfo`、`mounts`、`maps`/`smaps` 中本模块相关行，并对指向本模块路径的 `readlink` 返回不存在。ZN Module 辅路径源码已预留，无校准服务目标时**不打包**空 `zn_modules.txt`。默认安装不装；配置键 `zn_hide_allow`（与 `hide_allow` 独立）。需设备已启用 Zygisk（含 ZygiskNext / ReZygisk / NeoZygisk 等）。Reqable / ProxyPin 白名单不过滤。挂钩体不可 `dlclose`，Zygisk 底座与 PLT 异常仍可能被检出
+- 修复误报「Zygote 命名空间证书校验未通过」：状态只校验 TLS 主路径；整库精确匹配失败但绑定归属正确或 addon 已可见时视为成功（证书能用却报异常）
+- 恢复 WebUI 证书详情底栏：内置 / 自定义证书可打开分组详情（主体、颁发者、有效期、指纹等），点按可复制
+- 默认安装改为全量组件：安装挂载隐藏协助，但 `hide_allow` **默认关闭**；自定义安装勾选隐藏后 `hide_allow` **默认开启**
+- WebUI 三套主题全量重设计：设置 / 控制台 / 工作室在 **Shell、页面布局、文案语气** 上均可区分（非仅圆角配色）；默认强调色青绿 / 钢蓝 / 暖石
+- WebUI 全面重设计：三套主题「设置 / 控制台 / 工作室」，抛弃旧 classic/material/fluid 视觉
+- 概览新增「挂载与隐藏实况」：显示 Root 方案、挂载模式、临时层路径、检测到的隐藏助手、SuSFS try_umount 是否已注册（后迁至 WebUI **隐藏** 专页）
+- WebUI 底部新增 **隐藏** 页；文档站新增 [挂载隐藏说明](/guide/hide) 专页
+- 更多页曾含现代 Root 隐藏说明（Magisk 排除列表、Shamiko、ZygiskNext/ReZygisk/NeoZygisk、SuSFS、APatch 排除修改等），现集中于隐藏页
+- 临时层默认迁到 `/dev/.cb0` / `/dev/.cb1`（`tmpfs_style=dev`）；保留 short/legacy 可切换；卸载清理全部路径
+- SuSFS / ksud kernel umount：bind 成功后自动 `add_try_umount`
+- 挂载隐藏协助：默认安装会装上（`hide_allow=0`）；自定义安装可跳过，勾选则 `hide_allow=1`。未安装时删除 `hide_assist.sh`、不写 `hide-assist.conf`、WebUI 不显示「隐藏」页（若仅装 Zygisk 过滤仍会显示）
+- WebUI「隐藏」页提供 **启用开关**（`hide_allow`）；关闭时不登记 try_umount、不写隐藏状态文件
+- WebUI / 文档补充抓包注意：对 Reqable 与被抓包 App 开「卸载模块」会导致「根证书未安装」或断网，须关闭后再抓
+- 修复 Lite：`cbx509` 打包漏掉内部类导致安装导入 CA 时「无法计算系统库文件名」；D8 现打入全部 class，hash 失败时回退 `-certbridge_info`
+- 开机与 WebUI 刷新时，自动从已启用的 Reqable / ProxyPin 同步最新 CA；证书未变则跳过，读失败保留原文件
+- WebUI 下拉刷新会尝试同步 App 证书，有更新时提示重启后生效
+- 热挂载：可改存储卡证书目录，默认改为「文档」下的 `cacerts`（不再用储存卡根目录）；支持用户区 / 存储卡 / 合并挂载与无痕卸载
+- 临时挂载路径可选「短路径」或「传统路径」（更多页切换，重启后生效），减轻部分检测对挂载特征的识别；旧路径仍会一并清理
+- 注入失败时给出可读原因与建议（WebUI 概览 / Action / 模块简介）
+- WebUI 使用说明与界面示意图（文档站 [WebUI](/guide/webui) 专页）
+- WebUI：证书详情展示序列号、公钥与签名、密钥用法、SAN、SKI/AKI、SHA-1/SHA-256 等可解析字段，点按可复制
+- Lite `cbx509` 增加 `-certbridge_info` 一次导出完整证书详情（完整版 OpenSSL 从 `-text` 补全同等字段）
+- WebUI：机型/系统改为多厂商 getprop 兜底（小米 / 一加 / OPPO / vivo / 荣耀等），避免空属性只显示 Android 或内部型号
+
+## v2.2.1
+
 - 修复软重启后仍可能注入已关闭证书的问题（例如关掉 ProxyPin 后日志仍报注入失败）
 - 开机注入更稳健：刷新失败会自动重试；改过开关后会按新配置重新生成证书
 - WebUI：证书开关已关但旧证尚未卸掉时，会提示「仍在生效（重启后移除）」

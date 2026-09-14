@@ -1,0 +1,104 @@
+@import "https://mui.kernelsu.org/internal/insets.css";
+@import "./layout";
+@import "./components";
+@import "./sheet";
+
+:root {
+  --cb-inset-top: var(--window-inset-top, env(safe-area-inset-top, 0px));
+  --cb-inset-bottom: var(--window-inset-bottom, env(safe-area-inset-bottom, 0px));
+  --cb-topbar-h: 56px;
+  --cb-dock-h: 60px;
+  --cb-font-scale: 1;
+  --cb-font-display: "Sora", "PingFang SC", "HarmonyOS Sans SC", sans-serif;
+  --cb-font-body: "Manrope", "PingFang SC", "HarmonyOS Sans SC", sans-serif;
+  --cb-font-mono: "IBM Plex Mono", "Cascadia Code", ui-monospace, monospace;
+  --cb-radius: 16px;
+  --cb-radius-sm: 10px;
+  --cb-radius-lg: 22px;
+  --cb-space-xs: 8px;
+  --cb-space-sm: 12px;
+  --cb-space-md: 16px;
+  --cb-space-lg: 24px;
+  --cb-accent-pick: #0d9488;
+  --cb-accent-pair: #0f766e;
+  --cb-primary: var(--cb-accent-pick);
+  --cb-ok: #059669;
+  --cb-warn: #d97706;
+  --cb-bad: #dc2626;
+  --cb-ok-soft: color-mix(in srgb, var(--cb-ok) 12%, var(--cb-surface));
+  --cb-warn-soft: color-mix(in srgb, var(--cb-warn) 14%, var(--cb-surface));
+  --cb-bad-soft: color-mix(in srgb, var(--cb-bad) 12%, var(--cb-surface));
+  --cb-ink: #0f172a;
+  --cb-ink-2: #475569;
+  --cb-ink-3: #94a3b8;
+  --cb-bg: #e8eef5;
+  --cb-chrome: var(--cb-bg);
+  --cb-surface: #fff;
+  --cb-surface-2: #f5f8fc;
+  --cb-card-inset-bg: color-mix(in srgb, var(--cb-ink) 4%, var(--cb-surface));
+  --cb-stroke: rgba(15, 23, 42, 0.08);
+  --cb-stroke-strong: rgba(15, 23, 42, 0.14);
+  --cb-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --cb-ease: 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+  --cb-page-pad: 16px;
+  --cb-dock-pad: 0px;
+}
+
+html[data-theme="dark"] {
+  --cb-ink: #f1f5f9;
+  --cb-ink-2: #94a3b8;
+  --cb-ink-3: #64748b;
+  --cb-bg: #0a1018;
+  --cb-chrome: var(--cb-bg);
+  --cb-surface: #121a27;
+  --cb-surface-2: #1a2433;
+  --cb-card-inset-bg: color-mix(in srgb, var(--cb-ink) 8%, var(--cb-surface));
+  --cb-stroke: rgba(248, 250, 252, 0.08);
+  --cb-stroke-strong: rgba(248, 250, 252, 0.14);
+  --cb-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  background:
+    radial-gradient(120% 80% at 10% -10%, color-mix(in srgb, var(--cb-primary) 18%, transparent), transparent 55%),
+    radial-gradient(90% 60% at 100% 0%, color-mix(in srgb, var(--cb-accent-pair) 12%, transparent), transparent 50%),
+    linear-gradient(180deg, #0c1420, var(--cb-bg));
+  background-attachment: fixed;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+html {
+  background:
+    radial-gradient(120% 80% at 10% -10%, color-mix(in srgb, var(--cb-primary) 14%, transparent), transparent 55%),
+    radial-gradient(90% 60% at 100% 0%, color-mix(in srgb, var(--cb-accent-pair) 10%, transparent), transparent 50%),
+    linear-gradient(180deg, color-mix(in srgb, #c7d4e6 35%, var(--cb-bg)), var(--cb-bg));
+  background-attachment: fixed;
+  font-size: calc(16px * var(--cb-font-scale));
+}
+
+body {
+  font-family: var(--cb-font-body);
+  color: var(--cb-ink);
+  background: transparent;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+a {
+  color: var(--cb-primary);
+}

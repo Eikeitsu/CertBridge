@@ -1,0 +1,89 @@
+export type {
+  ThemeMode,
+  ThemePack,
+  ResolvedTheme,
+  TabName,
+  BuiltinCertKind,
+  MountMode,
+  TmpfsStyle,
+  HotMountMode,
+  TrustTone,
+  FlagTone,
+} from "./enums";
+
+export type ExecResult = {
+  errno: number;
+  stdout: string;
+  stderr: string;
+};
+
+export type ModuleStatus = {
+  module_ok?: string;
+  hot_supported?: string;
+  disabled?: string;
+  api?: string;
+  release?: string;
+  root?: string;
+  active_count?: string;
+  custom_count?: string;
+  base_count?: string;
+  store_count?: string;
+  apex_ok?: string;
+  pending_reboot?: string;
+  inject_error?: string;
+  inject_reason?: string;
+  inject_message?: string;
+  inject_hint?: string;
+  desc_short?: string;
+  desc_body?: string;
+  status_cached?: string;
+  status_live?: string;
+  status_phase?: string;
+  status_tag?: string;
+  reqable_enabled?: string;
+  reqable_active?: string;
+  reqable_available?: string;
+  reqable_display?: string;
+  reqable_title?: string;
+  proxypin_enabled?: string;
+  proxypin_active?: string;
+  proxypin_available?: string;
+  proxypin_display?: string;
+  proxypin_title?: string;
+  hot_allow?: string;
+  hide_supported?: string;
+  hide_allow?: string;
+  zn_hide_supported?: string;
+  zn_hide_allow?: string;
+  zn_hide_zn_module?: string;
+  zn_hide_summary?: string;
+  zygisk_loader?: string;
+  zygisk_loader_label?: string;
+  zygisk_loader_ok?: string;
+  profile_webui?: string;
+  profile_hot?: string;
+  profile_hide_assist?: string;
+  profile_zn_hide?: string;
+  profile_install_mode?: string;
+  mount_mode?: string;
+  tmpfs_style?: string;
+  stage_root?: string;
+  hide_provider?: string;
+  hide_provider_label?: string;
+  hide_applied?: string;
+  hide_summary?: string;
+  version?: string;
+  hot_active?: string;
+  hot_partial?: string;
+  hot_stale?: string;
+  hot_added?: string;
+  hot_namespaces?: string;
+  hot_failed?: string;
+  hot_mode?: string;
+  [key: string]: string | undefined;
+};
+
+export type CustomCertificate = {
+  name: string;
+  display: string;
+};

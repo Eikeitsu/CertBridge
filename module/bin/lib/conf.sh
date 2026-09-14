@@ -9,24 +9,40 @@ read_conf() {
   [ -n "$val" ] && echo "$val" || echo "$default"
 }
 
+# 原子写配置：同目录临时文件 + cat 落盘（避免跨挂载点 mv 失败导致 write_failed）
 write_conf() {
   key="$1"
   value="$2"
-  case "$key" in reqable|proxypin|schema_version|mount_mode) ;; *) return 1 ;; esac
-  mkdir -p "$CONFDIR" 2>/dev/null
-  tmp="$CONF.tmp.$$"
+  case "$key" in reqable|proxypin|schema_version|mount_mode|tmpfs_style|hot_allow|hide_allow|zn_hide_allow) ;; *) return 1 ;; esac
+  mkdir -p "$CONFDIR" 2>/dev/null || return 1
+  tmp="$CONFDIR/.write.$$.$key"
   if [ -f "$CONF" ]; then
     awk -F= -v key="$key" -v value="$value" '
       BEGIN { done=0 }
       $1 == key { print key "=" value; done=1; next }
       { print }
       END { if (!done) print key "=" value }
-    ' "$CONF" >"$tmp" || return 1
+    ' "$CONF" >"$tmp" 2>/dev/null || { rm -f "$tmp"; return 1; }
   else
-    echo "$key=$value" >"$tmp" || return 1
+    printf '%s=%s\n' "$key" "$value" >"$tmp" 2>/dev/null || return 1
   fi
   chmod 0600 "$tmp" 2>/dev/null
-  mv -f "$tmp" "$CONF"
+  # 优先同卷 cat 覆盖；失败再尝试 mv
+  if cat "$tmp" >"$CONF" 2>/dev/null; then
+    rm -f "$tmp"
+    return 0
+  fi
+  if mv -f "$tmp" "$CONF" 2>/dev/null; then
+    return 0
+  fi
+  rm -f "$tmp"
+  return 1
+}
+
+# WebUI 热路径：只打 pending，不做 generation_valid / 指纹扫描
+note_conf_dirty() {
+  mark_reboot_required
+  echo "reboot_required=1"
 }
 
 is_enabled() {
@@ -45,4 +61,33 @@ get_mount_mode() {
 
 is_magic_mount_mode() {
   [ "$(get_mount_mode)" = "magic" ]
+}
+
+# dev    = /dev/.cb0 | .cb1（默认，避开 local/tmp 关键词扫描）
+# short  = /data/local/tmp/.fs0 | .fs1
+# legacy = /data/local/tmp/sys-ca-merge | sys-ca-merge-hot（可读旧路径）
+get_tmpfs_style() {
+  style=$(read_conf tmpfs_style dev | tr 'A-Z' 'a-z')
+  case "$style" in
+    legacy|classic|verbose|long) echo legacy ;;
+    short|tmp) echo short ;;
+    *) echo dev ;;
+  esac
+}
+
+apply_tmpfs_style() {
+  case "$(get_tmpfs_style)" in
+    legacy)
+      RUNTIME_MOUNT_ROOT="/data/local/tmp/sys-ca-merge"
+      HOT_RUNTIME_ROOT="/data/local/tmp/sys-ca-merge-hot"
+      ;;
+    short)
+      RUNTIME_MOUNT_ROOT="/data/local/tmp/.fs0"
+      HOT_RUNTIME_ROOT="/data/local/tmp/.fs1"
+      ;;
+    *)
+      RUNTIME_MOUNT_ROOT="/dev/.cb0"
+      HOT_RUNTIME_ROOT="/dev/.cb1"
+      ;;
+  esac
 }

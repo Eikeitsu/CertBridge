@@ -91,11 +91,11 @@ quiet_prop=1
 ### 挂载隐藏（与 bindhosts 思路一致）
 
 - **换路径 ≠ 隐身**：检测方仍可能看到 cacerts 上的 bind mount。
-- **KernelSU + SuSFS**：若**自定义安装**勾选了挂载隐藏协助，并在 WebUI「隐藏」页开启开关，模块 bind 成功后会尝试 `add_try_umount`。
-- **抓包时**：对 Reqable / ProxyPin 与被抓包目标 **关闭**「卸载模块 / Umount / 排除修改」，否则会出现「根证书未安装」或断网。详见 [挂载隐藏 · 抓包必读](/guide/hide#抓包必读不要对抓包链路开卸载模块)。
+- **KernelSU + SuSFS**：若安装了挂载隐藏协助组件并开启开关，模块 bind 成功后会尝试 `add_try_umount`。
+- **抓包时**：对 Reqable / ProxyPin 与被抓包目标 **关闭**「卸载模块 / Umount / 排除修改」，否则会出现「根证书未安装」或断网。详见 [常见问题 · 根证书未安装 / 断网](/guide/faq#root-cert-missing)。
 - **Magisk**：对目标 App 配置**排除列表（DenyList）**，并配合 Shamiko 或 ZygiskNext/ReZygisk/NeoZygisk 的 umount；使用 Shamiko 时通常应**关闭**「强制执行排除列表（Enforce DenyList）」。
 - **APatch**：对目标 App 开「排除修改」，并安装 Zygisk 助手模块。
-- 详细说明见 [挂载隐藏说明](/guide/hide)；WebUI「隐藏」页仅在安装了该可选组件时出现。
+- 挂载隐藏协助为可选组件；未安装时 WebUI 不显示「隐藏」页。专项说明随该组件文档一并提供。
 
 这也只减弱字符串特征，挡不住「信任库被 bind」本身。
 
@@ -231,7 +231,7 @@ proxypin_source=builtin
 
 - **外观**：深浅色、强调色、字号（统一 Trust Signal 视觉；旧主题包已移除）
 - **挂载模式** / **临时挂载路径** / **动态模块简介**：见上文
-- **挂载隐藏**：见 [挂载隐藏说明](/guide/hide)
+- **挂载隐藏**：可选组件；抓包链路勿对目标开 umount，见 [常见问题](/guide/faq#root-cert-missing)
 - **关于**：版本、文档、开源与打赏入口
 
 深色模式下模块会同步状态栏图标颜色（依赖管理器 WebUI 桥接，如 MMRL / WebUI-X）。

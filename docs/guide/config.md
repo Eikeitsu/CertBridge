@@ -99,7 +99,7 @@ quiet_prop=1
 
 这也只减弱字符串特征，挡不住「信任库被 bind」本身。
 
-![证书页](/screenshots/webui-certs.svg)
+![证书页](/screenshots/webui-certs.png)
 
 ## 安装组件记录
 

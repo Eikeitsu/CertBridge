@@ -122,7 +122,7 @@ hot_session_active() {
   hot_target=$(awk -F= '$1 == "target" { sub(/^[^=]*=/, ""); print; exit }' "$hot_state" 2>/dev/null)
   [ -n "$hot_target" ] || return 1
   actual=$(nsenter --mount=/proc/1/ns/mnt -- \
-    sh -c "cat '$hot_target/certbridge_session' 2>/dev/null" 2>/dev/null | tr -d '\r\n')
+    sh -c "cat '$hot_target/.sess' 2>/dev/null || cat '$hot_target/certbridge_session' 2>/dev/null" 2>/dev/null | tr -d '\r\n')
   [ "$actual" = "$hot_session" ]
 }
 

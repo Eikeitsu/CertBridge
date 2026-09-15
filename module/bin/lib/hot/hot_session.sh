@@ -41,6 +41,8 @@ hot_mount_namespaces() {
     hot_unmount_internal >/dev/null 2>&1
     return 1
   fi
+  # 拆除临时层挂载点；目标 bind 与 .sess 标记仍保留
+  orphan_tmpfs_stage "$HOT_BIND_ROOT"
   hot_state_set namespace_count "$HOT_OK" || log_warn "hot: failed to persist namespace count"
   hot_state_set namespace_failed "$HOT_FAIL" || log_warn "hot: failed to persist namespace failures"
   log_info "hot: mounted session=$HOT_SESSION mode=$(hot_read_state mode) added=$(hot_read_state added_count) namespaces=$HOT_OK failed=$HOT_FAIL"

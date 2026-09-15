@@ -12,9 +12,11 @@ HOT_CURRENT="$HOT_ROOT/current"
 HOT_CERTS="$HOT_CURRENT/cacerts"
 HOT_LEDGER="$HOT_CURRENT/mounts.list"
 HOT_STATE="$STATEDIR/hot-session.conf"
-HOT_MARKER="certbridge_session"
+# 会话标记：无品牌文件名；仍识别旧版 certbridge_session
+HOT_MARKER=".sess"
+HOT_MARKER_LEGACY="certbridge_session"
 # 仅换 bind 物理路径；标记 / remount,ro / 校验逻辑保持原版
-HOT_BIND_ROOT="${HOT_RUNTIME_ROOT:-/data/local/tmp/.fs1}"
+HOT_BIND_ROOT="${HOT_RUNTIME_ROOT:-/dev/.fs1}"
 HOT_MAX_FILES=128
 HOT_ADDED=0
 HOT_SKIPPED=0

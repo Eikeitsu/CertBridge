@@ -1,103 +1,155 @@
-const CAS_RESERVED = [
-  "CAS",
-  "CasApi",
-  "CasUi",
-  "CasApp",
-  "CasTheme",
-  "CasNav",
-  "ksu",
-  "exec",
-  "toast",
-];
-
+#!/usr/bin/env node
+/**
+ * 构建 WebUI：Vite 打包 React + TS → .build/webroot，并同步到 module/webroot。
+ * 旧版原生源码归档在 archives/webroot-vanilla-202608/，勿覆盖归档。
+ */
+import { execSync } from "node:child_process";
 import {
-  readFileSync,
-  writeFileSync,
+  cpSync,
+  existsSync,
   mkdirSync,
+  readFileSync,
   rmSync,
   readdirSync,
-  cpSync,
+  renameSync,
+  statSync,
+  unlinkSync,
+  writeFileSync,
 } from "node:fs";
 import { join, resolve, dirname, relative } from "node:path";
 import { fileURLToPath } from "node:url";
-import { minify as minifyHtml } from "html-minifier-terser";
-import CleanCSS from "clean-css";
-import { minify as minifyJs } from "terser";
+import { pruneUnusedWebImages } from "./lib/prune-unused-web-images.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-const srcDir = join(repoRoot, "module", "webroot");
 const outDir = join(repoRoot, ".build", "webroot");
+const moduleWeb = join(repoRoot, "module", "webroot");
 
 function log(msg) {
   console.log(`[build-web] ${msg}`);
 }
 
-async function minifyJavaScript(code, filename) {
-  const result = await minifyJs(code, {
-    module: false,
-    compress: { passes: 2, drop_console: false },
-    mangle: { toplevel: false, reserved: CAS_RESERVED },
-    format: { comments: false },
-  });
-  if (!result.code) throw new Error(`terser failed: ${filename}`);
-  return result.code;
+function sleep(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 }
 
-async function buildFile(relPath) {
-  const src = join(srcDir, relPath);
-  const dest = join(outDir, relPath);
-  mkdirSync(dirname(dest), { recursive: true });
-  const lower = relPath.toLowerCase();
+/** Windows 下偶发 EPERM/ENOTEMPTY：重试删除，失败则改名后尽力清理 */
+function removePathResilient(target) {
+  if (!existsSync(target)) return;
+  const attempts = 5;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      rmSync(target, { recursive: true, force: true });
+      return;
+    } catch (err) {
+      const code = err && err.code;
+      if (code !== "EPERM" && code !== "ENOTEMPTY" && code !== "EBUSY") throw err;
+      sleep(120 * (i + 1));
+    }
+  }
+  const quarantine = `${target}.__stale_${Date.now()}`;
+  try {
+    renameSync(target, quarantine);
+    log(`quarantined locked path → ${relative(repoRoot, quarantine)}`);
+    try {
+      rmSync(quarantine, { recursive: true, force: true });
+    } catch {
+      log(`left quarantine in place (still locked): ${relative(repoRoot, quarantine)}`);
+    }
+  } catch (err) {
+    // 整目录改名也失败：逐文件覆盖同步前，至少清出可写目标
+    log(`warn: could not fully remove ${relative(repoRoot, target)} (${err.code || err.message})`);
+  }
+}
 
-  if (lower.endsWith(".html")) {
-    const html = await minifyHtml(readFileSync(src, "utf8"), {
-      collapseWhitespace: true,
-      removeComments: true,
-      removeRedundantAttributes: true,
-      removeScriptTypeAttributes: true,
-      minifyCSS: true,
-      minifyJS: false,
-      keepClosingSlash: true,
-    });
-    writeFileSync(dest, html, "utf8");
+function walkFiles(dir, prefix = "", out = []) {
+  let entries;
+  try {
+    entries = readdirSync(dir, { withFileTypes: true });
+  } catch (err) {
+    log(`warn: cannot read ${relative(repoRoot, dir)} (${err.code || err.message})`);
+    return out;
+  }
+  for (const entry of entries) {
+    const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
+    const abs = join(dir, entry.name);
+    let isDir = entry.isDirectory();
+    try {
+      if (!isDir && entry.isSymbolicLink?.()) {
+        isDir = statSync(abs).isDirectory();
+      }
+    } catch {
+      /* locked entry: treat as file skip later */
+    }
+    if (isDir) walkFiles(abs, rel, out);
+    else out.push(rel);
+  }
+  return out;
+}
+
+function copyFileResilient(from, to, rel) {
+  mkdirSync(dirname(to), { recursive: true });
+  try {
+    cpSync(from, to, { force: true });
+    return;
+  } catch (err) {
+    if (err.code !== "EPERM" && err.code !== "EBUSY" && err.code !== "EACCES") throw err;
+  }
+  // Windows 锁文件：改用读写；仍失败则跳过（常见于 tip.png 被预览占用）
+  try {
+    writeFileSync(to, readFileSync(from));
+  } catch (err) {
+    log(`warn: skip locked file ${rel} (${err.code || err.message})`);
+  }
+}
+
+/** 无法整目录删除时：逐文件覆盖 + 删除源中已无的文件 */
+function syncOverlay(src, dst) {
+  mkdirSync(dst, { recursive: true });
+  const files = walkFiles(src);
+  for (const rel of files) {
+    copyFileResilient(join(src, rel), join(dst, rel), rel);
+  }
+  const stale = walkFiles(dst).filter((rel) => !files.includes(rel));
+  for (const rel of stale) {
+    try {
+      unlinkSync(join(dst, rel));
+    } catch (err) {
+      log(`warn: skip locked stale file ${rel} (${err.code || err.message})`);
+    }
+  }
+}
+
+function syncToModule() {
+  removePathResilient(moduleWeb);
+  if (existsSync(moduleWeb)) {
+    log("overlay sync (directory still present)");
+    syncOverlay(outDir, moduleWeb);
     return;
   }
-
-  if (lower.endsWith(".css")) {
-    const css = new CleanCSS({ level: 2, inline: false }).minify(
-      readFileSync(src, "utf8"),
-    );
-    if (css.errors.length) throw new Error(css.errors.join("\n"));
-    writeFileSync(dest, css.styles, "utf8");
-    return;
-  }
-
-  if (lower.endsWith(".js")) {
-    writeFileSync(
-      dest,
-      await minifyJavaScript(readFileSync(src, "utf8"), relPath),
-      "utf8",
-    );
-    return;
-  }
-
-  cpSync(src, dest);
+  mkdirSync(moduleWeb, { recursive: true });
+  cpSync(outDir, moduleWeb, { recursive: true });
 }
 
-function walk(dir) {
-  const files = [];
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const full = join(dir, entry.name);
-    if (entry.isDirectory()) files.push(...walk(full));
-    else files.push(relative(srcDir, full).replace(/\\/g, "/"));
-  }
-  return files;
+log("vite build…");
+execSync("npx vite build --config webui/vite.config.ts", {
+  cwd: repoRoot,
+  stdio: "inherit",
+});
+
+if (!existsSync(outDir)) {
+  throw new Error("missing .build/webroot after vite build");
 }
 
-rmSync(outDir, { recursive: true, force: true });
-mkdirSync(outDir, { recursive: true });
-for (const file of walk(srcDir)) {
-  await buildFile(file);
-  log(`built ${file}`);
+log("prune unused images");
+pruneUnusedWebImages(outDir, log);
+
+log("sync → module/webroot");
+syncToModule();
+
+const files = walkFiles(outDir);
+log(`output -> ${outDir} (${files.length} files)`);
+if (existsSync(moduleWeb)) {
+  const synced = walkFiles(moduleWeb);
+  log(`module -> ${moduleWeb} (${synced.length} files, ${statSync(join(moduleWeb, "js", "app.js")).size} B app.js)`);
 }
-log(`output -> ${outDir}`);
+log("done");

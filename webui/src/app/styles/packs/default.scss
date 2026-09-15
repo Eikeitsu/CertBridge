@@ -1,0 +1,28 @@
+/* 默认包：干净现代 App / 设置感 */
+html[data-pack="default"] {
+  --bf-topbar-h: 52px;
+  --bf-dock-h: 58px;
+  --bf-radius: 14px;
+  --bf-page-pad: 16px;
+}
+
+html[data-pack="default"][data-theme="light"] {
+  --bf-bg: #eef2f6;
+  background:
+    radial-gradient(
+      110% 70% at 8% -8%,
+      color-mix(in srgb, var(--bf-primary) 12%, transparent),
+      transparent 55%
+    ),
+    linear-gradient(180deg, #f5f7fa, var(--bf-bg));
+}
+
+html[data-pack="default"][data-theme="dark"] {
+  background:
+    radial-gradient(
+      110% 70% at 8% -8%,
+      color-mix(in srgb, var(--bf-primary) 16%, transparent),
+      transparent 55%
+    ),
+    linear-gradient(180deg, #101820, var(--bf-bg));
+}

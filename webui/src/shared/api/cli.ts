@@ -1,0 +1,206 @@
+import { PATHS } from "@/shared/config/paths";
+import { exec } from "@/shared/api/ksu";
+import { parseKv } from "@/shared/lib/parse";
+import {
+  CLI_TIMEOUT_MS,
+  FLAG_ON,
+  LOG_LINE_MAX,
+  LOG_LINE_MIN,
+  LOG_TAIL_LINES,
+} from "@/shared/config/constants";
+import type { FlagValue } from "@/shared/config/constants";
+import type {
+  BuiltinCertKind,
+  CustomCertificate,
+  ExecResult,
+  HotMountMode,
+  MountMode,
+  ModuleStatus,
+  TmpfsStyle,
+} from "@/entities/module/types";
+import { DEVICE_INFO_SHELL, formatDeviceLabel } from "@/shared/lib/device";
+
+const CUSTOM_LIST_PREFIX = "custom|";
+
+export async function cli(args: string, timeoutMs?: number): Promise<ExecResult> {
+  return exec(`sh '${PATHS.CLI}' ${args}`, timeoutMs);
+}
+
+export async function fetchStatus(live = false): Promise<ModuleStatus> {
+  const result = await cli(live ? "status --live" : "status", live ? CLI_TIMEOUT_MS.IMPORT : undefined);
+  if (result.errno !== 0 && !result.stdout) {
+    throw new Error(result.stderr || "status_failed");
+  }
+  return parseKv(result.stdout) as ModuleStatus;
+}
+
+export async function listCustom(): Promise<CustomCertificate[]> {
+  const result = await cli("list_custom");
+  const rows: CustomCertificate[] = [];
+  for (const line of String(result.stdout || "").split("\n")) {
+    if (!line.startsWith(CUSTOM_LIST_PREFIX)) continue;
+    const parts = line.split("|");
+    if (parts.length < 3) continue;
+    rows.push({ name: parts[1], display: parts.slice(2).join("|") || parts[1] });
+  }
+  return rows;
+}
+
+export async function toggleBuiltin(kind: BuiltinCertKind, value: FlagValue) {
+  return cli(`toggle ${kind} ${value}`);
+}
+
+export async function syncAppSources(): Promise<{
+  updated: number;
+  kept: number;
+  miss: number;
+  rebootRequired: boolean;
+}> {
+  const result = await cli("sync_apps", CLI_TIMEOUT_MS.IMPORT);
+  const kv = parseKv(result.stdout || "");
+  return {
+    updated: Number(kv.updated || 0),
+    kept: Number(kv.kept || 0),
+    miss: Number(kv.miss || 0),
+    rebootRequired: kv.reboot_required === FLAG_ON,
+  };
+}
+
+export async function setMountMode(mode: MountMode) {
+  return cli(`set_mount_mode ${mode}`);
+}
+
+export async function setTmpfsStyle(style: TmpfsStyle) {
+  return cli(`set_tmpfs_style ${style}`);
+}
+
+export async function setQuietProp(value: 0 | 1) {
+  return cli(`set_quiet_prop ${value}`);
+}
+
+export async function installCustom(payload: string) {
+  return cli(`install_custom '${payload}'`, CLI_TIMEOUT_MS.IMPORT);
+}
+
+export type AppPresetKind =
+  | "httpcanary"
+  | "adguard"
+  | "charles"
+  | "mitmproxy"
+  | "pcapdroid";
+
+export async function importAppPreset(kind: AppPresetKind) {
+  return cli(`import_app_preset ${kind}`, CLI_TIMEOUT_MS.IMPORT);
+}
+
+export type AppliedFingerprint = {
+  label: string;
+  name: string;
+  sha256: string;
+  display: string;
+};
+
+export async function listAppliedFingerprints(): Promise<AppliedFingerprint[]> {
+  const result = await cli("list_applied_fps", CLI_TIMEOUT_MS.IMPORT);
+  const rows: AppliedFingerprint[] = [];
+  for (const line of String(result.stdout || "").split("\n")) {
+    if (!line.startsWith("fp|")) continue;
+    const parts = line.split("|");
+    if (parts.length < 4) continue;
+    rows.push({
+      label: parts[1] || "",
+      name: parts[2] || "",
+      sha256: parts[3] || "",
+      display: parts.slice(4).join("|") || parts[1] || "",
+    });
+  }
+  return rows;
+}
+
+export async function removeCustom(fileName: string) {
+  return cli(`remove_custom '${fileName.replace(/'/g, "")}'`);
+}
+
+export async function certInfo(target: string) {
+  return cli(`cert_info '${target.replace(/'/g, "")}'`);
+}
+
+export async function setHotAllow(value: FlagValue) {
+  return cli(`set_hot_allow ${value}`);
+}
+
+export async function setHideAllow(value: FlagValue) {
+  return cli(`set_hide_allow ${value}`);
+}
+
+export async function setZnHideAllow(value: FlagValue) {
+  return cli(`set_zn_hide_allow ${value}`);
+}
+
+function textToBase64(text: string): string {
+  const bytes = new TextEncoder().encode(text);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]!);
+  return btoa(binary);
+}
+
+export async function getZnWhitelist(): Promise<string> {
+  const result = await cli("get_zn_whitelist");
+  if (result.errno && result.errno !== 0) return "";
+  const stdout = result.stdout || "";
+  const begin = stdout.indexOf("begin_whitelist");
+  const end = stdout.indexOf("end_whitelist");
+  if (begin < 0 || end < 0 || end <= begin) return "";
+  return stdout
+    .slice(begin + "begin_whitelist".length, end)
+    .replace(/^\r?\n/, "")
+    .replace(/\r?\n$/, "");
+}
+
+export async function setZnWhitelist(text: string) {
+  const payload = textToBase64(text);
+  return cli(`set_zn_whitelist '${payload}'`, CLI_TIMEOUT_MS.IMPORT);
+}
+
+export async function hotMount(mode: HotMountMode, sdPath?: string) {
+  const extra = sdPath ? ` '${sdPath.replace(/'/g, "")}'` : "";
+  return cli(`hot_mount ${mode}${extra}`, CLI_TIMEOUT_MS.HOT_MOUNT);
+}
+
+export async function hotUnmount() {
+  return cli("hot_unmount", CLI_TIMEOUT_MS.HOT_MOUNT);
+}
+
+export async function readLog(
+  lineCount = LOG_TAIL_LINES,
+): Promise<{ text: string; bytes: number }> {
+  const safeCount = Math.max(LOG_LINE_MIN, Math.min(LOG_LINE_MAX, lineCount));
+  const result = await exec(
+    `{ wc -c < '${PATHS.LOG}' 2>/dev/null; echo '---'; tail -n ${safeCount} '${PATHS.LOG}' 2>/dev/null; } || true`,
+  );
+  const rawOutput = result.stdout || "";
+  const separatorIndex = rawOutput.indexOf("---");
+  const byteHead = separatorIndex >= 0 ? rawOutput.slice(0, separatorIndex) : "";
+  const text =
+    separatorIndex >= 0
+      ? rawOutput.slice(separatorIndex + 3).replace(/^\r?\n/, "")
+      : rawOutput;
+  const bytes = Number(String(byteHead).trim().split(/\s+/)[0] || 0) || 0;
+  return { text, bytes };
+}
+
+export async function clearLog() {
+  return exec(`: > '${PATHS.LOG}'`);
+}
+
+export async function rebootDevice() {
+  return exec("svc power reboot || reboot");
+}
+
+export async function fetchDeviceLabel(): Promise<string> {
+  const result = await exec(DEVICE_INFO_SHELL);
+  if (result.errno === -1 && /no_bridge|no_ksu_bridge/.test(result.stderr || "")) {
+    return "未检测到 WebUI 桥接";
+  }
+  return formatDeviceLabel(result.stdout);
+}

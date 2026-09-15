@@ -1,0 +1,47 @@
+@import "./tokens";
+@import "./layout";
+@import "./components";
+@import "./sheet";
+@import "../../packs/default/styles";
+@import "../../packs/console/styles";
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+html {
+  font-size: calc(16px * var(--bf-font-scale));
+  background: var(--bf-bg);
+  background-attachment: fixed;
+}
+
+body {
+  font-family: var(--bf-font-body);
+  color: var(--bf-ink);
+  background: transparent;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+a {
+  color: var(--bf-primary);
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}

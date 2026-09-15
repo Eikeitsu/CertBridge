@@ -153,11 +153,18 @@
 - **短路径**：local/tmp 下的 `.fs0` / `.fs1`
 - **传统路径**：`sys-ca-merge*`
 
-切换后需 **重启**。换路径不能替代 umount 隐藏；详见 [挂载隐藏说明](/guide/hide)。
+切换后需 **重启**。换路径不能替代 umount 隐藏。抓包时勿对 Reqable / 目标开卸载模块，见 [常见问题](/guide/faq#root-cert-missing)。
 
 ### 动态模块简介
 
 默认关闭：管理器列表保持中性产品文案。开启后，列表 `description` 会写入 emoji 运行状态。WebUI 内状态页不受影响。详见 [配置说明 · 动态模块简介](/guide/config#动态模块简介quiet_prop)。
+
+### 更新通道
+
+- **正式**：与管理器在线更新相同（GitHub Pages）
+- **CI**：读 `ci-dist` 分支上的 `update.json` 与 zip（清单与产物同分支）；可选经 jsDelivr
+
+可检查更新并下载安装。模块刷入后若启用热更新组件（`hot-reload` 合入后），仅 WebUI / 非开机脚本变更可能免重启。
 
 ### 关于
 

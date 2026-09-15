@@ -35,6 +35,12 @@ Actions → **Release Module**（或推送 `v*` tag）：
 
 工作流拆为 `build` → `publish` → `post` 三阶段；版本解析见 `resolve-release-version.py`，回写见 `post-release-update.sh`。版本号仍为 semver：`vMAJOR.MINOR.PATCH`。
 
+### 正式 vs CI 通道
+
+- **正式**：本工作流写 Pages `update.json` + `releases/` zip；`module.prop` 的 `updateJson` 始终指向 Pages。
+- **CI**：`Package Module` 在 push `master` 时 stamp `*.ci.N` 并推到 **`ci-dist`**（清单与 zip 同 tip，无单独 `updates` 分支）。WebUI「更多 → 更新通道」可读 CI。
+- Release 的「预发布」勾选只影响 GitHub Release 标记，**不**单独建预发布更新通道。
+
 因此：
 
 - 根目录 `changelog.md`：发版后仍有空的 `## Unreleased`（给下一轮开发用）

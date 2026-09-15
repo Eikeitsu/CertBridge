@@ -99,6 +99,11 @@ hot_failed=0"
   fi
   echo "mount_mode=$(get_mount_mode)"
   echo "tmpfs_style=$(get_tmpfs_style)"
+  if is_quiet_prop 2>/dev/null; then
+    echo "quiet_prop=1"
+  else
+    echo "quiet_prop=0"
+  fi
   emit_hide_status
   emit_zn_hide_status
   emit_install_profile_status

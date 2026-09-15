@@ -5,18 +5,22 @@
 路径：`/data/adb/modules/CertBridge/config/certs.conf`
 
 ```text
-schema_version=3
+schema_version=4
 reqable=1
 proxypin=1
 mount_mode=compatible
+tmpfs_style=dev
+quiet_prop=1
 ```
 
-| 键               | 含义                       | 默认 |
-| ---------------- | -------------------------- | ---- |
-| `schema_version` | 配置结构版本，请勿手动修改 | `3`  |
-| `reqable`        | 启用 Reqable（App 导入）CA | `1`  |
-| `proxypin`       | 启用 ProxyPin CA（App 或内置兜底） | `1`  |
-| `mount_mode`     | 挂载模式：`compatible` 或 `magic` | `compatible` |
+| 键               | 含义                                                                                       | 默认         |
+| ---------------- | ------------------------------------------------------------------------------------------ | ------------ |
+| `schema_version` | 配置结构版本，请勿手动修改                                                                 | `4`          |
+| `reqable`        | 启用 Reqable（App 导入）CA                                                                 | `1`          |
+| `proxypin`       | 启用 ProxyPin CA（App 或内置兜底）                                                         | `1`          |
+| `mount_mode`     | 挂载模式：`compatible` 或 `magic`                                                          | `compatible` |
+| `tmpfs_style`    | 临时挂载路径：`dev` / `mnt` / `short` / `legacy`                                           | `dev`        |
+| `quiet_prop`     | `1`=管理器列表中性简介；`0`=动态写入运行状态                                               | `1`          |
 
 ### 挂载模式
 
@@ -30,9 +34,10 @@ mount_mode=compatible
 | 模块 `system/` | **不写**叠层目录（避免错误叠层导致系统 CA 被遮蔽） |
 | Android 7–13 | bind `/system/etc/security/cacerts` |
 | Android 14+ | bind APEX Conscrypt 与 system 双路径（供 Flutter 等检测） |
-| 临时目录 | `/data/local/tmp/sys-ca-merge`（热挂载为 `sys-ca-merge-hot`） |
+| 临时目录 | 默认 `/dev/.fs0`（热挂载 `/dev/.fs1`）；可选 `mnt` / `short` / `legacy` |
+| 注入后 | 目标 bind 保留，临时 staging 挂载点立即拆除，降低 mountinfo 路径指纹 |
 | 元模块 | **不需要**。Magisk / KernelSU / APatch 只要能跑 `post-fs-data` / `service` 即可 |
-| 特点 | 兼容面宽、行为可控；mountinfo 中可见临时目录挂载 |
+| 特点 | 兼容面宽；默认 `quiet_prop=1` 时管理器列表不写 emoji 状态 |
 
 适合：大多数用户、KernelSU 未确认挂载叠层是否正确、需要多 CA / 热挂载 / 与完整校验一致的场景。
 
@@ -45,7 +50,7 @@ mount_mode=compatible
 | Android 7–13 | 主要依赖 Magic Mount，开机脚本不再对 system 做整库 bind |
 | Android 14+ | system 仍靠 Magic Mount；**APEX 仍由脚本 bind**（管理器通常无法 Magic Mount `/apex`） |
 | 元模块 | 见下表 |
-| 特点 | 痕迹更接近「多几张系统 CA」；依赖管理器叠层实现正确 |
+| 特点 | system 侧痕迹更接近「多几张系统 CA」；依赖管理器叠层实现正确。若 Magic Mount 在 mountinfo 暴露模块路径，请改用完整兼容（注入后拆除临时挂载点） |
 
 | Root 方案 | 轻量模式是否需要元模块 |
 | --- | --- |
@@ -64,9 +69,37 @@ mount_mode=compatible
 
 也可在 WebUI「更多 → 挂载模式」切换，**重启后生效**。
 
-也可在 WebUI「证书」页用开关修改 Reqable / ProxyPin。开关与自定义永久证书仍在**重启后**生效，避免重写正在使用的开机证书层。点击证书行可展开详情（主题、颁发者、有效期、指纹等由模块 X509 工具解析；标题自动取 CN / O）。
+### 动态模块简介（`quiet_prop`）
 
-![证书页](/screenshots/webui-certs.png)
+管理器列表里的 `description` 默认保持中性产品文案（`quiet_prop=1`），不写入 emoji / 运行状态。可在 WebUI「更多」页用 **动态模块简介** 开关打开；打开后列表会随运行状态更新（`quiet_prop=0`）。WebUI 内状态展示不受此开关影响。
+
+### 临时层路径（`tmpfs_style`）
+
+完整兼容与热挂载会把合并后的证书集放到临时层再 bind。可用 WebUI「更多 → 临时挂载路径」或直接改 `certs.conf`（切换后需**重启**）：
+
+| 值 | 开机注入 | 热挂载 | 说明 |
+| --- | --- | --- | --- |
+| `dev`（默认） | `/dev/.fs0` | `/dev/.fs1` | 避开 `/data/local/tmp` 关键词；注入后拆除临时挂载点 |
+| `mnt` | `/mnt/.ca0` | `/mnt/.ca1` | `/mnt` 下短名临时层 |
+| `short` | `/data/local/tmp/.fs0` | `/data/local/tmp/.fs1` | 短路径 |
+| `legacy` | `/data/local/tmp/sys-ca-merge` | `/data/local/tmp/sys-ca-merge-hot` | 旧版可读路径，便于排障 |
+
+热挂载会话标记为 `.sess`（升级后仍识别旧文件名）。卸载会清理上述路径。
+
+也可在 WebUI「证书」页用开关修改 Reqable / ProxyPin。开关与自定义永久证书仍在**重启后**生效，避免重写正在使用的开机证书层。点击证书行可展开详情（主题、颁发者、有效期、指纹等由模块 X509 工具解析；标题自动取 CN / O）。**下拉刷新**会尝试从已启用 App 同步最新 CA（有变化则提示重启）。
+
+### 挂载隐藏（与 bindhosts 思路一致）
+
+- **换路径 ≠ 隐身**：检测方仍可能看到 cacerts 上的 bind mount。
+- **KernelSU + SuSFS**：若**自定义安装**勾选了挂载隐藏协助，并在 WebUI「隐藏」页开启开关，模块 bind 成功后会尝试 `add_try_umount`。
+- **抓包时**：对 Reqable / ProxyPin 与被抓包目标 **关闭**「卸载模块 / Umount / 排除修改」，否则会出现「根证书未安装」或断网。详见 [挂载隐藏 · 抓包必读](/guide/hide#抓包必读不要对抓包链路开卸载模块)。
+- **Magisk**：对目标 App 配置**排除列表（DenyList）**，并配合 Shamiko 或 ZygiskNext/ReZygisk/NeoZygisk 的 umount；使用 Shamiko 时通常应**关闭**「强制执行排除列表（Enforce DenyList）」。
+- **APatch**：对目标 App 开「排除修改」，并安装 Zygisk 助手模块。
+- 详细说明见 [挂载隐藏说明](/guide/hide)；WebUI「隐藏」页仅在安装了该可选组件时出现。
+
+这也只减弱字符串特征，挡不住「信任库被 bind」本身。
+
+![证书页](/screenshots/webui-certs.svg)
 
 ## 安装组件记录
 
@@ -196,16 +229,16 @@ proxypin_source=builtin
 
 在已安装 WebUI 时可用：
 
-- 主题：浅色 / 深色 / 跟随系统；可选莫奈（Material You）取色  
-- 布局：经典底栏 / 悬浮分页（Dock）  
-- 紧凑卡片、字号等阅读偏好  
-- 概览页可请求重启；关于里有酷安、GitHub、在线文档与打赏入口  
+- **外观**：深浅色、强调色、字号（统一 Trust Signal 视觉；旧主题包已移除）
+- **挂载模式** / **临时挂载路径** / **动态模块简介**：见上文
+- **挂载隐藏**：见 [挂载隐藏说明](/guide/hide)
+- **关于**：版本、文档、开源与打赏入口
 
 深色模式下模块会同步状态栏图标颜色（依赖管理器 WebUI 桥接，如 MMRL / WebUI-X）。
 
 ## 状态与简介
 
-模块列表简介格式：`[大状态|子状态] 说明`  
+默认关闭动态简介时，管理器列表只显示中性产品文案。开启后，列表简介格式为：`[大状态|子状态] 说明`  
 （emoji 后无空格；方括号内 `|` 两侧不加空格；括号外若用到 `|` 则两侧加空格）
 
 例如：`[✅运行正常|已挂载:2] 当前生效：Reqable、ProxyPin`。

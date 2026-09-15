@@ -24,6 +24,7 @@ case "$1" in
   sync_apps) cmd_sync_apps ;;
   set_mount_mode) cmd_set_mount_mode "$2" ;;
   set_tmpfs_style) cmd_set_tmpfs_style "$2" ;;
+  set_quiet_prop) cmd_set_quiet_prop "$2" ;;
   install_custom) cmd_install_custom "$2" ;;
   import_app_preset) cmd_import_app_preset "$2" ;;
   remove_custom) cmd_remove_custom "$2" ;;
@@ -41,7 +42,7 @@ case "$1" in
     exit 1
     ;;
   *)
-    echo "usage: cert_manager.sh {status [--live]|verify|list_custom|list_applied_fps|toggle|sync_apps|set_mount_mode|set_tmpfs_style|set_hot_allow|set_hide_allow|set_zn_hide_allow|get_zn_whitelist|set_zn_whitelist|install_custom|import_app_preset|remove_custom|cert_info|hot_mount|hot_unmount}"
+    echo "usage: cert_manager.sh {status [--live]|verify|list_custom|list_applied_fps|toggle|sync_apps|set_mount_mode|set_tmpfs_style|set_quiet_prop|set_hot_allow|set_hide_allow|set_zn_hide_allow|get_zn_whitelist|set_zn_whitelist|install_custom|import_app_preset|remove_custom|cert_info|hot_mount|hot_unmount}"
     exit 1
     ;;
 esac

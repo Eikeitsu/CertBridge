@@ -3,6 +3,7 @@
 # 模块列表简介与 WebUI 描述
 compose_module_description() {
   # 目前所有调用点都不传参；保持 hint 为空即可避免 shellcheck 报 SC2120。
+  # 注意：WebUI 也走此函数；安静模式只作用于 module.prop 写入（update_module_description）。
   hint=""
 
   if [ -f "$MODDIR/disable" ]; then

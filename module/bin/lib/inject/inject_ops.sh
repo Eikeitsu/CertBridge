@@ -61,6 +61,11 @@ inject_one_target() {
     record_inject_fail nsenter_unavailable
     rc=1
   fi
+  # bind 完成后拆掉 staging 挂载点，避免 mountinfo 长期暴露临时路径
+  if [ -n "$stage" ]; then
+    orphan_tmpfs_stage "$stage"
+    log_debug "inject: orphaned stage $stage"
+  fi
   return "$rc"
 }
 

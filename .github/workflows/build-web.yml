@@ -4,9 +4,9 @@ on:
   push:
     branches: [main, master]
     paths:
+      - "webui/**"
       - "module/webroot/**"
       - "tooling/scripts/build-web.mjs"
-      - "tooling/scripts/publish-web-branch.mjs"
       - "package.json"
       - "package-lock.json"
       - ".github/actions/setup-node-npm/**"
@@ -14,6 +14,7 @@ on:
   pull_request:
     branches: [main, master]
     paths:
+      - "webui/**"
       - "module/webroot/**"
       - "tooling/scripts/build-web.mjs"
       - "package.json"
@@ -21,6 +22,10 @@ on:
       - ".github/actions/setup-node-npm/**"
       - ".github/workflows/build-web.yml"
   workflow_dispatch:
+
+concurrency:
+  group: build-web-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-web:
@@ -39,27 +44,4 @@ jobs:
           name: web-dist
           path: .build/webroot/
           if-no-files-found: error
-
-  publish-web:
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    needs: build-web
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: web-dist
-          path: .build/webroot/
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-
-      - name: Publish dist-web branch
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-        run: node tooling/scripts/publish-web-branch.mjs
+          retention-days: 7

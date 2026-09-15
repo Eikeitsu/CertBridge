@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// Deprecated: CI updates now publish to ci-dist (update.json + zip). Build Web no longer pushes dist-web.
 import { execSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";

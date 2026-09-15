@@ -14,12 +14,12 @@ export function BuiltinPipelineCard({
 }: BuiltinPipelineCardProps) {
   if (compact) {
     return (
-      <div className="cb-chip-row" aria-label={title}>
-        <span className="cb-chip-row__label">{title}</span>
+      <div className="bf-chip-row" aria-label={title}>
+        <span className="bf-chip-row__label">{title}</span>
         {pipeline.map((row) => (
           <span
             key={row.kind}
-            className={`cb-chip${row.active ? " is-on" : row.enabled ? " is-pend" : ""}`}
+            className={`bf-chip${row.active ? " is-on" : row.enabled ? " is-pend" : ""}`}
           >
             {row.title}
             <em>{row.active ? "生效" : row.enabled ? "待重启" : row.available ? "可用" : "缺失"}</em>

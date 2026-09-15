@@ -40,7 +40,7 @@ function CertActions({
 }) {
   const canInspect = cert.isAvailable || cert.isActive;
   return (
-    <div className="cb-btn-row" style={{ gap: 8, margin: 0 }}>
+    <div className="bf-btn-row" style={{ gap: 8, margin: 0 }}>
       <Button
         variant="ghost"
         disabled={!canInspect}
@@ -72,7 +72,7 @@ export function BuiltinCertsPanel({
   if (variant === "table") {
     return (
       <Card title={title} meta={meta}>
-        <table className="cb-table">
+        <table className="bf-table">
           <thead>
             <tr>
               <th>name</th>
@@ -112,15 +112,15 @@ export function BuiltinCertsPanel({
 
   if (variant === "tiles") {
     return (
-      <div className="cb-stack cb-stack--tight">
-        <p className="cb-list__label" style={{ padding: 0 }}>
+      <div className="bf-stack bf-stack--tight">
+        <p className="bf-list__label" style={{ padding: 0 }}>
           {title}
         </p>
         {certs.map((cert) => (
-          <div key={cert.kind} className="cb-cert-tile">
-            <div className="cb-cert-tile__body">
-              <div className="cb-row__title">{cert.title}</div>
-              <div className="cb-row__desc">{resolveCertDesc(cert)}</div>
+          <div key={cert.kind} className="bf-cert-tile">
+            <div className="bf-cert-tile__body">
+              <div className="bf-row__title">{cert.title}</div>
+              <div className="bf-row__desc">{resolveCertDesc(cert)}</div>
             </div>
             <CertActions
               cert={cert}

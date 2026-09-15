@@ -7,9 +7,9 @@ export function Card({
   className = "",
 }: PropsWithChildren<{ title?: string; meta?: string; className?: string }>) {
   return (
-    <section className={`cb-card ${className}`.trim()}>
-      {title ? <h3 className="cb-card__title">{title}</h3> : null}
-      {meta ? <p className="cb-card__meta">{meta}</p> : null}
+    <section className={`bf-card ${className}`.trim()}>
+      {title ? <h3 className="bf-card__title">{title}</h3> : null}
+      {meta ? <p className="bf-card__meta">{meta}</p> : null}
       {children}
     </section>
   );
@@ -18,8 +18,8 @@ export function Card({
 export function ListGroup({ label, children }: PropsWithChildren<{ label?: string }>) {
   return (
     <div>
-      {label ? <div className="cb-list__label">{label}</div> : null}
-      <div className="cb-list">{children}</div>
+      {label ? <div className="bf-list__label">{label}</div> : null}
+      <div className="bf-list">{children}</div>
     </div>
   );
 }
@@ -36,23 +36,23 @@ export function Row({
   extra?: ReactNode;
   onClick?: () => void;
 }>) {
-  const Tag = onClick ? "button" : "div";
+  const Element = onClick ? "button" : "div";
   return (
-    <Tag
+    <Element
       type={onClick ? "button" : undefined}
-      className="cb-row"
+      className="bf-row"
       onClick={onClick}
       style={
         onClick ? { width: "100%", textAlign: "left", cursor: "pointer" } : undefined
       }
     >
-      <div className="cb-row__main">
-        {title ? <div className="cb-row__title">{title}</div> : null}
-        {desc ? <div className="cb-row__desc">{desc}</div> : null}
+      <div className="bf-row__main">
+        {title ? <div className="bf-row__title">{title}</div> : null}
+        {desc ? <div className="bf-row__desc">{desc}</div> : null}
         {children}
       </div>
-      {extra ? <div className="cb-row__extra">{extra}</div> : null}
-    </Tag>
+      {extra ? <div className="bf-row__extra">{extra}</div> : null}
+    </Element>
   );
 }
 
@@ -61,7 +61,7 @@ export function Tag({
   children,
 }: PropsWithChildren<{ tone?: "default" | "ok" | "warn" | "bad" }>) {
   return (
-    <span className={`cb-tag${tone !== "default" ? ` cb-tag--${tone}` : ""}`}>
+    <span className={`bf-tag${tone !== "default" ? ` bf-tag--${tone}` : ""}`}>
       {children}
     </span>
   );
@@ -77,7 +77,7 @@ export function Button({
   return (
     <button
       type="button"
-      className={`cb-btn${variant === "primary" ? " cb-btn--primary" : ""}${variant === "ghost" ? " cb-btn--ghost" : ""} ${className}`.trim()}
+      className={`bf-btn${variant === "primary" ? " bf-btn--primary" : ""}${variant === "ghost" ? " bf-btn--ghost" : ""} ${className}`.trim()}
       {...props}
     />
   );
@@ -98,7 +98,7 @@ export function Switch({
       role="switch"
       aria-checked={checked}
       disabled={disabled}
-      className={`cb-switch${checked ? " is-on" : ""}`}
+      className={`bf-switch${checked ? " is-on" : ""}`}
       onClick={() => onChange(!checked)}
     />
   );
@@ -116,17 +116,17 @@ export function Segment({
   onChange: (value: string) => void;
 }) {
   return (
-    <div className="cb-segment">
+    <div className="bf-segment">
       {options.map((option) => (
         <button
           key={option.value}
           type="button"
           disabled={disabled}
-          className={`cb-segment__option${value === option.value ? " is-on" : ""}`}
+          className={`bf-segment__option${value === option.value ? " is-on" : ""}`}
           onClick={() => onChange(option.value)}
         >
-          <div className="cb-segment__label">{option.label}</div>
-          {option.hint ? <div className="cb-segment__hint">{option.hint}</div> : null}
+          <div className="bf-segment__label">{option.label}</div>
+          {option.hint ? <div className="bf-segment__hint">{option.hint}</div> : null}
         </button>
       ))}
     </div>
@@ -139,17 +139,17 @@ export function Notice({
 }: PropsWithChildren<{ tone?: "default" | "alert" | "error" }>) {
   return (
     <div
-      className={`cb-notice${tone === "alert" ? " cb-notice--alert" : ""}${tone === "error" ? " cb-notice--error" : ""}`}
+      className={`bf-notice${tone === "alert" ? " bf-notice--alert" : ""}${tone === "error" ? " bf-notice--error" : ""}`}
     >
       {children}
     </div>
   );
 }
 
-export function Loader({ label = "加载中…" }: { label?: string }) {
+export function Loader({ label = "???�" }: { label?: string }) {
   return (
-    <div className="cb-loader">
-      <div className="cb-loader__spin" aria-hidden />
+    <div className="bf-loader">
+      <div className="bf-loader__spin" aria-hidden />
       <span>{label}</span>
     </div>
   );

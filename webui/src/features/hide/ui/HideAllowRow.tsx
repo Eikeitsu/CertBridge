@@ -21,10 +21,10 @@ export function HideAllowRow({
 }: HideAllowRowProps) {
   if (large) {
     return (
-      <div className="cb-hide-switch-card">
-        <div className="cb-hide-switch-card__text">
-          <div className="cb-row__title">{title}</div>
-          <div className="cb-row__desc">{checked ? descOn : descOff}</div>
+      <div className="bf-hide-switch-card">
+        <div className="bf-hide-switch-card__text">
+          <div className="bf-row__title">{title}</div>
+          <div className="bf-row__desc">{checked ? descOn : descOff}</div>
         </div>
         <Switch checked={checked} disabled={disabled} onChange={onChange} />
       </div>

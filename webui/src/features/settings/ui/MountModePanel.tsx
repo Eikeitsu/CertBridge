@@ -23,7 +23,7 @@ export function MountModePanel({
     <Card
       title="证书挂载模式"
       meta={MOUNT_HELP_FOOTNOTE}
-      className={dense ? "cb-card--dense" : undefined}
+      className={dense ? "bf-card--dense" : undefined}
     >
       <Segment
         value={mountMode}
@@ -40,7 +40,7 @@ export function MountModePanel({
           margin: "12px 0 0",
           paddingLeft: "1.2em",
           fontSize: "0.78rem",
-          color: "var(--cb-ink-3)",
+          color: "var(--bf-ink-3)",
         }}
       >
         {MOUNT_ROOT_NOTES.map((note) => (

@@ -37,7 +37,7 @@ export function HotMountForm({
       />
       {needsSdPath ? (
         <input
-          className="cb-btn"
+          className="bf-btn"
           style={{ width: "100%", marginTop: 8 }}
           value={sdPath}
           placeholder={DEFAULT_SD_CERT_DIR}
@@ -45,7 +45,7 @@ export function HotMountForm({
           onChange={(event) => onSdPathChange(event.target.value)}
         />
       ) : null}
-      <div className="cb-btn-row" style={{ marginTop: 12 }}>
+      <div className="bf-btn-row" style={{ marginTop: 12 }}>
         <Button
           variant="primary"
           disabled={disabled}

@@ -31,21 +31,21 @@ export function HideCaptureWarning({
           margin: "12px 0 0",
           paddingLeft: 18,
           fontSize: "0.82rem",
-          color: "var(--cb-ink-2)",
+          color: "var(--bf-ink-2)",
           lineHeight: 1.55,
         }}
       >
         <li>
-          <strong style={{ color: "var(--cb-ink)" }}>抓包软件</strong>
+          <strong style={{ color: "var(--bf-ink)" }}>抓包软件</strong>
           ：开了卸载模块 → 软件内常显示「根证书未安装」
         </li>
         <li>
-          <strong style={{ color: "var(--cb-ink)" }}>被抓包 App</strong>
+          <strong style={{ color: "var(--bf-ink)" }}>被抓包 App</strong>
           ：开了卸载模块 → TLS 看不到抓包 CA → 断网 / 证书错误
         </li>
         <li>
           仅对
-          <strong style={{ color: "var(--cb-ink)" }}>需要躲检测、且不参与本次抓包</strong>
+          <strong style={{ color: "var(--bf-ink)" }}>需要躲检测、且不参与本次抓包</strong>
           的应用开启隐藏；抓包链路相关包名一律关掉 umount
         </li>
       </ul>

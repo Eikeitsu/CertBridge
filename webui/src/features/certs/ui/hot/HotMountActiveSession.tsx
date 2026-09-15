@@ -18,7 +18,7 @@ export function HotMountActiveSession({
 }: HotMountActiveSessionProps) {
   return (
     <>
-      <p style={{ fontSize: "0.8rem", color: "var(--cb-ink-3)", margin: "8px 0" }}>
+      <p style={{ fontSize: "0.8rem", color: "var(--bf-ink-3)", margin: "8px 0" }}>
         {HOT_MOUNT_ACTIVE_META}
       </p>
       <MetricGrid
@@ -28,7 +28,7 @@ export function HotMountActiveSession({
           { label: "命名空间", value: status.hot_namespaces || "0" },
         ]}
       />
-      <div className="cb-btn-row" style={{ marginTop: 12 }}>
+      <div className="bf-btn-row" style={{ marginTop: 12 }}>
         {isPartial ? <Tag tone="warn">部分未覆盖</Tag> : null}
         <Button disabled={disabled} onClick={onUnmount}>
           无痕卸载

@@ -23,13 +23,13 @@ export function HideIntroCard({
         style={{
           margin: 0,
           fontSize: "0.85rem",
-          color: "var(--cb-ink-2)",
+          color: "var(--bf-ink-2)",
           lineHeight: 1.55,
         }}
       >
         {body}
       </p>
-      <div className="cb-btn-row" style={{ marginTop: 12 }}>
+      <div className="bf-btn-row" style={{ marginTop: 12 }}>
         <Button variant="ghost" onClick={() => void openUrl(`${LINKS.docs}guide/hide`)}>
           {docsCta}
         </Button>

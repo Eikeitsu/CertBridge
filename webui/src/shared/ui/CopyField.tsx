@@ -11,7 +11,7 @@ export function CopyField({ label, value, copy, mono }: CopyFieldProps) {
   return (
     <button
       type="button"
-      className={mono ? "cb-sheet__cell is-mono" : "cb-sheet__cell"}
+      className={mono ? "bf-sheet__cell is-mono" : "bf-sheet__cell"}
       onClick={() => void copyText(copy || value, `已复制${label}`)}
     >
       <span>{label}</span>

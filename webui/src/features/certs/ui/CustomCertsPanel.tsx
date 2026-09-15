@@ -54,7 +54,7 @@ export function CustomCertsPanel({
               title={cert.display || cert.name}
               desc={cert.name}
               extra={
-                <div className="cb-btn-row" style={{ gap: 8, margin: 0 }}>
+                <div className="bf-btn-row" style={{ gap: 8, margin: 0 }}>
                   <Button
                     variant="ghost"
                     disabled={isPending}
@@ -76,7 +76,7 @@ export function CustomCertsPanel({
             />
           ))
         ) : (
-          <div className="cb-empty">{emptyLabel}</div>
+          <div className="bf-empty">{emptyLabel}</div>
         )}
       </ListGroup>
       <div style={{ marginTop: 12 }}>
@@ -84,11 +84,11 @@ export function CustomCertsPanel({
       </div>
       {onImportPreset ? (
         <div style={{ marginTop: 14 }}>
-          <div className="cb-page-sub" style={{ marginBottom: 8 }}>
+          <div className="bf-page-sub" style={{ marginBottom: 8 }}>
             {presetsTitle}
             {presetsMeta ? ` · ${presetsMeta}` : ""}
           </div>
-          <div className="cb-btn-row" style={{ flexWrap: "wrap", gap: 8 }}>
+          <div className="bf-btn-row" style={{ flexWrap: "wrap", gap: 8 }}>
             {PRESET_BUTTONS.map((p) => (
               <Button
                 key={p.kind}
@@ -103,7 +103,7 @@ export function CustomCertsPanel({
         </div>
       ) : null}
       {onExportFingerprints ? (
-        <div className="cb-btn-row" style={{ marginTop: 12 }}>
+        <div className="bf-btn-row" style={{ marginTop: 12 }}>
           <Button variant="ghost" disabled={isPending} onClick={onExportFingerprints}>
             {exportFpsLabel}
           </Button>

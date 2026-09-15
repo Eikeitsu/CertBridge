@@ -12,7 +12,7 @@ export function AboutSection({ title = "关于证书桥", heroEmphasis }: AboutS
   if (heroEmphasis) {
     return (
       <>
-        <div className="cb-about-hero-block">
+        <div className="bf-about-hero-block">
           <AboutHero large />
         </div>
         <Card title={title}>

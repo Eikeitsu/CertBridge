@@ -14,10 +14,10 @@ export function AppTopbar({
   showDevice = true,
 }: AppTopbarProps) {
   return (
-    <header className="cb-topbar">
-      {showBrand ? <div className="cb-topbar__brand">{brand}</div> : <span />}
-      <div className="cb-topbar__title">{pageTitle}</div>
-      {showDevice ? <div className="cb-topbar__meta">{deviceLabel}</div> : <span />}
+    <header className="bf-topbar">
+      {showBrand ? <div className="bf-topbar__brand">{brand}</div> : <span />}
+      <div className="bf-topbar__title">{pageTitle}</div>
+      {showDevice ? <div className="bf-topbar__meta">{deviceLabel}</div> : <span />}
     </header>
   );
 }

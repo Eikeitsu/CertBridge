@@ -55,7 +55,7 @@ export function AppShell() {
   }, [hideSupported, activeTab, switchTab]);
 
   return (
-    <div className="cb-shell">
+    <div className="bf-shell">
       <AppProgressBar active={isRefreshing} />
       <AppTopbar
         brand={voice.brand}
@@ -64,7 +64,7 @@ export function AppShell() {
         showBrand={voice.topbar.showBrand}
         showDevice={voice.topbar.showDevice}
       />
-      <main className="cb-main">
+      <main className="bf-main">
         <AppTabPane tab={TabName.Home} activeTab={activeTab} seen={!!seen[TabName.Home]}>
           <OverviewPage />
         </AppTabPane>

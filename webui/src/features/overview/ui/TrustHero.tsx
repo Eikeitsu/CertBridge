@@ -30,17 +30,17 @@ export function TrustHero({
 
   const cls =
     variant === "canvas"
-      ? "cb-hero cb-hero--canvas"
+      ? "bf-hero bf-hero--canvas"
       : variant === "summary"
-        ? "cb-hero cb-hero--summary"
-        : "cb-hero";
+        ? "bf-hero bf-hero--summary"
+        : "bf-hero";
 
   return (
     <section className={cls}>
-      <p className="cb-hero__kicker">{kicker}</p>
-      <h1 className="cb-hero__title">{overview.trust.title}</h1>
-      <p className="cb-hero__desc">{desc}</p>
-      <div className="cb-btn-row" style={{ marginTop: 14 }}>
+      <p className="bf-hero__kicker">{kicker}</p>
+      <h1 className="bf-hero__title">{overview.trust.title}</h1>
+      <p className="bf-hero__desc">{desc}</p>
+      <div className="bf-btn-row" style={{ marginTop: 14 }}>
         <Tag tone={resolveToneTag(overview.trust.tone)}>{overview.shortDesc}</Tag>
         {overview.isHotMountActive ? <Tag tone="ok">HOT</Tag> : null}
       </div>

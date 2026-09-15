@@ -6,7 +6,7 @@ import { Button, Card } from "@/shared/ui/primitives";
 export function AboutLinksCard() {
   return (
     <Card title="链接">
-      <div className="cb-btn-row">
+      <div className="bf-btn-row">
         {ABOUT_LINKS.map((link) => (
           <Button key={link.id} variant="ghost" onClick={() => void openUrl(link.url)}>
             {link.label}
@@ -14,7 +14,7 @@ export function AboutLinksCard() {
         ))}
       </div>
       <div style={{ marginTop: 12 }}>
-        <p style={{ margin: "0 0 8px", fontSize: "0.78rem", color: "var(--cb-ink-3)" }}>
+        <p style={{ margin: "0 0 8px", fontSize: "0.78rem", color: "var(--bf-ink-3)" }}>
           {ABOUT_TIP.title}
         </p>
         <img
@@ -25,10 +25,10 @@ export function AboutLinksCard() {
           style={{
             display: "block",
             borderRadius: 12,
-            background: "var(--cb-surface-2)",
+            background: "var(--bf-surface-2)",
           }}
         />
-        <p style={{ margin: "8px 0 0", fontSize: "0.78rem", color: "var(--cb-ink-3)" }}>
+        <p style={{ margin: "8px 0 0", fontSize: "0.78rem", color: "var(--bf-ink-3)" }}>
           {ABOUT_TIP.body}
         </p>
       </div>

@@ -15,7 +15,7 @@ export function HideGuidePanel({
 }: HideGuidePanelProps) {
   return (
     <Card title={title} meta={meta}>
-      <div className={`cb-hide-guide${accordion ? " cb-hide-guide--accordion" : ""}`}>
+      <div className={`bf-hide-guide${accordion ? " bf-hide-guide--accordion" : ""}`}>
         {HIDE_GUIDE_SECTIONS.map((section) => (
           <HideGuideSection
             key={section.id}

@@ -45,10 +45,10 @@ export function LogPage() {
   }`;
 
   return (
-    <PageStack className="cb-stack--loose">
+    <PageStack className="bf-stack--loose">
       <div>
-        <h1 className="cb-page-title">{voice.log.title}</h1>
-        <p className="cb-page-sub">{meta}</p>
+        <h1 className="bf-page-title">{voice.log.title}</h1>
+        <p className="bf-page-sub">{meta}</p>
       </div>
       <Card>
         <LogToolbar

@@ -21,10 +21,10 @@ export function SettingsPage() {
   const { voice } = usePackVoice();
 
   return (
-    <PageStack className="cb-stack--loose">
+    <PageStack className="bf-stack--loose">
       <div>
-        <h1 className="cb-page-title">{voice.tabs.more}</h1>
-        <p className="cb-page-sub">{voice.more.appearanceMeta}</p>
+        <h1 className="bf-page-title">{voice.tabs.more}</h1>
+        <p className="bf-page-sub">{voice.more.appearanceMeta}</p>
       </div>
       <AppearancePanel
         title={voice.more.appearanceTitle}

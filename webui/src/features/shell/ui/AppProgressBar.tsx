@@ -3,5 +3,5 @@ type AppProgressBarProps = {
 };
 
 export function AppProgressBar({ active }: AppProgressBarProps) {
-  return <div className={`cb-progress${active ? " is-on" : ""}`} aria-hidden />;
+  return <div className={`bf-progress${active ? " is-on" : ""}`} aria-hidden />;
 }

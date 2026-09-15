@@ -8,7 +8,7 @@ type SheetSectionProps = {
 
 export function SheetSection({ title, extra, children }: SheetSectionProps) {
   return (
-    <section className="cb-sheet__section">
+    <section className="bf-sheet__section">
       <h4>{title}</h4>
       {extra}
       {children}

@@ -55,11 +55,11 @@ export function ZnWhitelistEditor({
 
   return (
     <Card title={title} meta={meta}>
-      <p className="cb-page-sub" style={{ marginBottom: 10 }}>
+      <p className="bf-page-sub" style={{ marginBottom: 10 }}>
         {hint}
       </p>
       <textarea
-        className="cb-textarea"
+        className="bf-textarea"
         rows={8}
         value={text}
         disabled={!loaded || isPending}
@@ -72,14 +72,14 @@ export function ZnWhitelistEditor({
           lineHeight: 1.45,
           padding: 10,
           borderRadius: 8,
-          border: "1px solid var(--cb-line)",
-          background: "var(--cb-surface-2, var(--cb-bg))",
-          color: "var(--cb-ink)",
+          border: "1px solid var(--bf-line)",
+          background: "var(--bf-surface-2, var(--bf-bg))",
+          color: "var(--bf-ink)",
           boxSizing: "border-box",
           resize: "vertical",
         }}
       />
-      <div className="cb-btn-row" style={{ marginTop: 12 }}>
+      <div className="bf-btn-row" style={{ marginTop: 12 }}>
         <Button variant="primary" disabled={!loaded || isPending} onClick={handleSave}>
           {saveLabel}
         </Button>

@@ -29,7 +29,7 @@ export function AppSnackbar() {
   return (
     <button
       type="button"
-      className={`cb-snackbar tone-${snack.tone}${visible ? " is-on" : ""}`}
+      className={`bf-snackbar tone-${snack.tone}${visible ? " is-on" : ""}`}
       onClick={() => {
         setVisible(false);
         window.setTimeout(() => dismissSnack(), EXIT_MS);

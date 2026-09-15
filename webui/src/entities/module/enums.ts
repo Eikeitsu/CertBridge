@@ -5,11 +5,10 @@ export enum ThemeMode {
   Dark = "dark",
 }
 
-/** 主题包枚举保留兼容；运行时已收敛为单一 Trust Signal */
+/** 壳层气质包：默认（正常）| 控制台（终端） */
 export enum ThemePack {
-  Settings = "settings",
+  Default = "default",
   Console = "console",
-  Studio = "studio",
 }
 
 /** 解析后的实际深浅色 */

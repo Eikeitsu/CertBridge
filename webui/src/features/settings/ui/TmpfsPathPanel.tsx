@@ -19,7 +19,7 @@ export function TmpfsPathPanel({
     <Card
       title="临时挂载路径"
       meta={TMPFS_HELP_FOOTNOTE}
-      className={dense ? "cb-card--dense" : undefined}
+      className={dense ? "bf-card--dense" : undefined}
     >
       <Segment
         value={tmpfsStyle}

@@ -1,11 +1,11 @@
 import { HashRouter, Route, Routes } from "react-router-dom";
-import { AppShell } from "@/features/shell/ui/AppShell";
+import { PackRoot } from "@/packs/PackRoot";
 
 export function AppRouter() {
   return (
     <HashRouter>
       <Routes>
-        <Route path="*" element={<AppShell />} />
+        <Route path="*" element={<PackRoot />} />
       </Routes>
     </HashRouter>
   );

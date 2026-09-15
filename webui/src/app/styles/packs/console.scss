@@ -1,1 +1,106 @@
-/* Theme packs removed — Trust Signal is the single visual system. */
+/* 控制台包：终端 / 运维紧凑 */
+html[data-pack="console"] {
+  --bf-topbar-h: 44px;
+  --bf-dock-h: 52px;
+  --bf-radius: 8px;
+  --bf-radius-sm: 6px;
+  --bf-radius-lg: 12px;
+  --bf-page-pad: 12px;
+  --bf-font-display: var(--bf-font-mono);
+  --bf-shadow: none;
+}
+
+html[data-pack="console"] .bf-topbar {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: var(--bf-surface-2);
+}
+
+html[data-pack="console"] .bf-topbar__brand {
+  font-family: var(--bf-font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+html[data-pack="console"] .bf-topbar__title {
+  justify-self: start;
+  font-family: var(--bf-font-mono);
+  font-size: 0.76rem;
+  font-weight: 500;
+  max-width: 100%;
+  color: var(--bf-ink-2);
+  grid-column: 1 / -1;
+}
+
+html[data-pack="console"] .bf-topbar {
+  grid-template-columns: 1fr;
+}
+
+html[data-pack="console"] .bf-topbar__brand,
+html[data-pack="console"] .bf-topbar__meta {
+  display: none;
+}
+
+html[data-pack="console"] .bf-dock {
+  background: var(--bf-surface-2);
+  border-top-color: var(--bf-stroke-strong);
+}
+
+html[data-pack="console"] .bf-dock__item {
+  font-family: var(--bf-font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+html[data-pack="console"] .bf-page-title {
+  font-family: var(--bf-font-mono);
+  font-size: 1.05rem;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+html[data-pack="console"] .bf-card,
+html[data-pack="console"] .bf-stage,
+html[data-pack="console"] .bf-list,
+html[data-pack="console"] .bf-metric {
+  box-shadow: none;
+  border-radius: var(--bf-radius);
+}
+
+html[data-pack="console"] .bf-stage__kicker,
+html[data-pack="console"] .bf-chip-row__label,
+html[data-pack="console"] .bf-list__label,
+html[data-pack="console"] .bf-env-grid dt {
+  font-family: var(--bf-font-mono);
+  letter-spacing: 0.08em;
+}
+
+html[data-pack="console"] .bf-log {
+  border-radius: 0;
+  margin-inline: calc(-1 * var(--bf-page-pad));
+  width: calc(100% + 2 * var(--bf-page-pad));
+  max-height: calc(100dvh - 200px);
+}
+
+html[data-pack="console"][data-theme="light"] {
+  --bf-bg: #dfe5ec;
+  --bf-surface: #f3f6f9;
+  --bf-surface-2: #e8eef4;
+  background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 23px,
+      rgba(15, 23, 42, 0.03) 24px
+    ),
+    var(--bf-bg);
+}
+
+html[data-pack="console"][data-theme="dark"] {
+  --bf-bg: #070b10;
+  --bf-surface: #0e151d;
+  --bf-surface-2: #121a24;
+  background: radial-gradient(80% 50% at 100% 0%, rgba(37, 99, 235, 0.12), transparent 50%),
+    var(--bf-bg);
+}

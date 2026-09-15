@@ -35,7 +35,7 @@ export function AboutHero({ large }: AboutHeroProps) {
       />
       <div>
         <strong style={{ fontSize: large ? "1.25rem" : undefined }}>CertBridge</strong>
-        <div style={{ fontSize: "0.78rem", color: "var(--cb-ink-3)" }}>
+        <div style={{ fontSize: "0.78rem", color: "var(--bf-ink-3)" }}>
           {status.version || EMPTY_PLACEHOLDER} · {androidLabel}
         </div>
       </div>

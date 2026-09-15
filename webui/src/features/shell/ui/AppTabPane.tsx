@@ -11,7 +11,7 @@ type AppTabPaneProps = {
 export function AppTabPane({ tab, activeTab, seen, children }: AppTabPaneProps) {
   return (
     <section
-      className={`cb-pane${activeTab === tab ? " is-on" : ""}`}
+      className={`bf-pane${activeTab === tab ? " is-on" : ""}`}
       aria-hidden={activeTab !== tab}
     >
       {seen ? children : null}

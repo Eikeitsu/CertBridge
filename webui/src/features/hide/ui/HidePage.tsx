@@ -24,15 +24,15 @@ export function HidePage() {
   const loaderWarn =
     zn.znHideSupported && !loaderOk ? (
       <Card title={h.loaderWarnTitle} meta={h.loaderWarnMeta}>
-        <p className="cb-page-sub">{h.loaderWarnBody}</p>
+        <p className="bf-page-sub">{h.loaderWarnBody}</p>
       </Card>
     ) : null;
 
   return (
-    <PageStack className="cb-stack--loose">
+    <PageStack className="bf-stack--loose">
       <div>
-        <h1 className="cb-page-title">{voice.tabs.hide}</h1>
-        <p className="cb-page-sub">{h.introBody}</p>
+        <h1 className="bf-page-title">{voice.tabs.hide}</h1>
+        <p className="bf-page-sub">{h.introBody}</p>
       </div>
       <HideCaptureWarning title={h.captureTitle} meta={h.captureMeta} />
       <CaptureChecklistCard
@@ -65,7 +65,7 @@ export function HidePage() {
         </Card>
       ) : (
         <Card title={h.znMissingTitle} meta={h.znMissingMeta}>
-          <p className="cb-page-sub">{h.znMissingBody}</p>
+          <p className="bf-page-sub">{h.znMissingBody}</p>
         </Card>
       )}
       {loaderWarn}

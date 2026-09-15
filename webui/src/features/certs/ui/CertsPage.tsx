@@ -41,10 +41,10 @@ export function CertsPage() {
   if (showBootSpin) return <Loader label={voice.loadingHint} />;
 
   return (
-    <PageStack className="cb-stack--loose">
+    <PageStack className="bf-stack--loose">
       <div>
-        <h1 className="cb-page-title">{voice.tabs.certs}</h1>
-        <p className="cb-page-sub">{voice.certs.builtinMeta}</p>
+        <h1 className="bf-page-title">{voice.tabs.certs}</h1>
+        <p className="bf-page-sub">{voice.certs.builtinMeta}</p>
       </div>
       <BuiltinCertsPanel
         certs={builtinCerts}

@@ -56,7 +56,7 @@ export function HotMountPanel({
           onMount={onMount}
         />
       ) : (
-        <p style={{ fontSize: "0.8rem", color: "var(--cb-ink-3)" }}>
+        <p style={{ fontSize: "0.8rem", color: "var(--bf-ink-3)" }}>
           请先开启「允许临时挂载」。
         </p>
       )}

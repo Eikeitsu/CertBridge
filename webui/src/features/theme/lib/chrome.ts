@@ -3,7 +3,7 @@ import { cssColorToHex, relativeLuminanceCss } from "@/shared/lib/color";
 import { FLAG_ON } from "@/shared/config/constants";
 import { parseEnum } from "@/shared/lib/enum";
 
-const CHROME_BG_VARS = ["--cb-chrome", "--cb-body-gradient-base", "--cb-paper"];
+const CHROME_BG_VARS = ["--bf-chrome", "--bf-body-gradient-base", "--bf-paper"];
 const FALLBACK_BG: Record<ResolvedTheme, string> = {
   [ResolvedTheme.Light]: "#EDEDED",
   [ResolvedTheme.Dark]: "#000000",
@@ -54,10 +54,10 @@ function readChromeBg(resolved: ResolvedTheme): string {
 export function restorePinnedInsets(): void {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
-  const pinnedTop = root.style.getPropertyValue("--cb-inset-top-pinned").trim();
-  const pinnedBottom = root.style.getPropertyValue("--cb-inset-bottom-pinned").trim();
-  if (pinnedTop) root.style.setProperty("--cb-inset-top", pinnedTop);
-  if (pinnedBottom) root.style.setProperty("--cb-inset-bottom", pinnedBottom);
+  const pinnedTop = root.style.getPropertyValue("--bf-inset-top-pinned").trim();
+  const pinnedBottom = root.style.getPropertyValue("--bf-inset-bottom-pinned").trim();
+  if (pinnedTop) root.style.setProperty("--bf-inset-top", pinnedTop);
+  if (pinnedBottom) root.style.setProperty("--bf-inset-bottom", pinnedBottom);
 }
 
 /**
@@ -68,8 +68,8 @@ export function pinSafeInsets(force = false): void {
   if (!document.body) return;
   const root = document.documentElement;
   if (force) {
-    root.style.removeProperty("--cb-inset-top-pinned");
-    root.style.removeProperty("--cb-inset-bottom-pinned");
+    root.style.removeProperty("--bf-inset-top-pinned");
+    root.style.removeProperty("--bf-inset-bottom-pinned");
   }
 
   const probe = document.createElement("div");
@@ -84,21 +84,21 @@ export function pinSafeInsets(force = false): void {
   const bottom = computed.paddingBottom;
   document.body.removeChild(probe);
 
-  const pinnedTop = root.style.getPropertyValue("--cb-inset-top-pinned").trim();
-  const pinnedBottom = root.style.getPropertyValue("--cb-inset-bottom-pinned").trim();
+  const pinnedTop = root.style.getPropertyValue("--bf-inset-top-pinned").trim();
+  const pinnedBottom = root.style.getPropertyValue("--bf-inset-bottom-pinned").trim();
 
   if (top && top !== "0px") {
-    root.style.setProperty("--cb-inset-top", top);
-    root.style.setProperty("--cb-inset-top-pinned", top);
+    root.style.setProperty("--bf-inset-top", top);
+    root.style.setProperty("--bf-inset-top-pinned", top);
   } else if (pinnedTop) {
-    root.style.setProperty("--cb-inset-top", pinnedTop);
+    root.style.setProperty("--bf-inset-top", pinnedTop);
   }
 
   if (bottom && bottom !== "0px") {
-    root.style.setProperty("--cb-inset-bottom", bottom);
-    root.style.setProperty("--cb-inset-bottom-pinned", bottom);
+    root.style.setProperty("--bf-inset-bottom", bottom);
+    root.style.setProperty("--bf-inset-bottom-pinned", bottom);
   } else if (pinnedBottom) {
-    root.style.setProperty("--cb-inset-bottom", pinnedBottom);
+    root.style.setProperty("--bf-inset-bottom", pinnedBottom);
   }
 }
 
@@ -125,7 +125,7 @@ function applyNativeBars(bg: string, lightContentIcons: boolean): void {
 
 /**
  * 状态栏 / 导航栏 / 小白条沉浸同步：
- * 与页面 `--cb-chrome` 同色，杜绝「半截颜色」。
+ * 与页面 `--bf-chrome` 同色，杜绝「半截颜色」。
  */
 export function syncChromeBars(resolved: ResolvedTheme, _barBlur: boolean) {
   pinSafeInsets(false);

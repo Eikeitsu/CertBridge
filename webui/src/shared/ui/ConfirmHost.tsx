@@ -13,10 +13,10 @@ export function ConfirmHost() {
   if (!request) return null;
 
   return (
-    <div className="nx-confirm" role="presentation">
+    <div className="bf-confirm" role="presentation">
       <button
         type="button"
-        className="nx-confirm__mask"
+        className="bf-confirm__mask"
         aria-label="关闭"
         onClick={() => {
           haptic("light");
@@ -24,20 +24,20 @@ export function ConfirmHost() {
         }}
       />
       <div
-        className={`nx-confirm__sheet${request.danger ? " is-danger" : ""}`}
+        className={`bf-confirm__sheet${request.danger ? " is-danger" : ""}`}
         role="dialog"
         aria-modal="true"
-        aria-labelledby={`nx-confirm-title-${request.id}`}
+        aria-labelledby={`bf-confirm-title-${request.id}`}
       >
-        <div className="nx-confirm__handle" aria-hidden />
-        <h2 id={`nx-confirm-title-${request.id}`} className="nx-confirm__title">
+        <div className="bf-confirm__handle" aria-hidden />
+        <h2 id={`bf-confirm-title-${request.id}`} className="bf-confirm__title">
           {request.title}
         </h2>
-        <p className="nx-confirm__body">{request.content}</p>
-        <div className="nx-confirm__actions">
+        <p className="bf-confirm__body">{request.content}</p>
+        <div className="bf-confirm__actions">
           <button
             type="button"
-            className="nx-confirm__btn is-ghost"
+            className="bf-confirm__btn is-ghost"
             onClick={() => {
               haptic("light");
               request.reject();
@@ -47,7 +47,7 @@ export function ConfirmHost() {
           </button>
           <button
             type="button"
-            className={`nx-confirm__btn is-solid${request.danger ? " is-danger" : ""}`}
+            className={`bf-confirm__btn is-solid${request.danger ? " is-danger" : ""}`}
             onClick={() => {
               haptic(request.danger ? "error" : "success");
               request.resolve();

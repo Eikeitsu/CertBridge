@@ -4,7 +4,7 @@ import { selectStatusBootstrapped } from "@/features/status/model/selectors";
 import { refreshStatus } from "@/features/status/model/statusSlice";
 import { useTrustOverview } from "@/features/overview/hooks/useTrustOverview";
 import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
-import { TrustTone } from "@/entities/module/enums";
+import { ThemePack, TrustTone } from "@/entities/module/enums";
 import { PageStack } from "@/shared/ui/layout";
 import { Loader, Tag } from "@/shared/ui/primitives";
 import { HelpCollapse } from "@/shared/ui/HelpCollapse";
@@ -17,7 +17,7 @@ export function OverviewPage() {
   const dispatch = useAppDispatch();
   const overview = useTrustOverview();
   const bootstrapped = useAppSelector(selectStatusBootstrapped);
-  const { voice } = usePackVoice();
+  const { pack, voice } = usePackVoice();
   const showBootSpin = overview.isLoading && !bootstrapped;
 
   const stabilizing =
@@ -61,7 +61,7 @@ export function OverviewPage() {
   if (showBootSpin) return <Loader label={voice.loadingHint} />;
 
   return (
-    <PageStack className="cb-stack--loose cb-home">
+    <PageStack className="bf-stack--loose bf-home">
       <OverviewAlerts overview={overview} />
       <StatusStage
         tone={overview.trust.tone}
@@ -84,9 +84,9 @@ export function OverviewPage() {
           />
         }
       />
-      <div className="cb-metrics cb-metrics--3">
+      <div className="bf-metrics bf-metrics--3">
         {metrics.map((item) => (
-          <div key={item.label} className="cb-metric">
+          <div key={item.label} className="bf-metric">
             <strong>{item.value}</strong>
             <span>{item.label}</span>
           </div>
@@ -97,8 +97,11 @@ export function OverviewPage() {
         title={voice.overview.pipelineTitle}
         compact
       />
-      <HelpCollapse title={voice.overview.runtimeTitle}>
-        <dl className="cb-env-grid">
+      <HelpCollapse
+        title={voice.overview.runtimeTitle}
+        defaultOpen={pack === ThemePack.Console}
+      >
+        <dl className="bf-env-grid">
           <div>
             <dt>设备</dt>
             <dd>{overview.deviceLabel}</dd>
@@ -124,7 +127,7 @@ export function OverviewPage() {
             <dd>{overview.versionLabel}</dd>
           </div>
         </dl>
-        <p className="cb-env-meta">上次刷新 {overview.lastRefreshedAt}</p>
+        <p className="bf-env-meta">上次刷新 {overview.lastRefreshedAt}</p>
       </HelpCollapse>
     </PageStack>
   );

@@ -5,7 +5,7 @@ type FieldLabelProps = {
 };
 
 export function FieldLabel({ children }: FieldLabelProps) {
-  return <div className="cb-field-label">{children}</div>;
+  return <div className="bf-field-label">{children}</div>;
 }
 
 type StackProps = {
@@ -13,5 +13,5 @@ type StackProps = {
 };
 
 export function Stack({ children }: StackProps) {
-  return <div className="cb-stack">{children}</div>;
+  return <div className="bf-stack">{children}</div>;
 }

@@ -25,32 +25,32 @@ export function StatusStage({
   footer,
 }: StatusStageProps) {
   return (
-    <section className={`cb-stage tone-${tone}`}>
-      <div className="cb-stage__glow" aria-hidden />
+    <section className={`bf-stage tone-${tone}`}>
+      <div className="bf-stage__glow" aria-hidden />
       {showHeroValue ? (
-        <div className="cb-stage__hero">
-          <div className="cb-stage__hero-num">{heroValue ?? "—"}</div>
-          <div className="cb-stage__hero-copy">
-            <p className="cb-stage__kicker">
-              <span className={`cb-stage__tone-dot tone-${tone}`} aria-hidden />
+        <div className="bf-stage__hero">
+          <div className="bf-stage__hero-num">{heroValue ?? "—"}</div>
+          <div className="bf-stage__hero-copy">
+            <p className="bf-stage__kicker">
+              <span className={`bf-stage__tone-dot tone-${tone}`} aria-hidden />
               {kicker}
             </p>
-            <h2 className="cb-stage__title">{title}</h2>
+            <h2 className="bf-stage__title">{title}</h2>
           </div>
         </div>
       ) : (
         <>
-          <p className="cb-stage__kicker">
-            <span className={`cb-stage__tone-dot tone-${tone}`} aria-hidden />
+          <p className="bf-stage__kicker">
+            <span className={`bf-stage__tone-dot tone-${tone}`} aria-hidden />
             {kicker}
           </p>
-          <h2 className="cb-stage__title">{title}</h2>
+          <h2 className="bf-stage__title">{title}</h2>
         </>
       )}
-      {description ? <p className="cb-stage__desc">{description}</p> : null}
+      {description ? <p className="bf-stage__desc">{description}</p> : null}
       {diagnosis}
-      {flags ? <div className="cb-stage__flags">{flags}</div> : null}
-      {footer ? <div className="cb-stage__foot">{footer}</div> : null}
+      {flags ? <div className="bf-stage__flags">{flags}</div> : null}
+      {footer ? <div className="bf-stage__foot">{footer}</div> : null}
     </section>
   );
 }

@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
-import { Collapse } from "antd-mobile";
+import * as Collapsible from "@radix-ui/react-collapsible";
+import { ChevronDown } from "lucide-react";
+import { useState } from "react";
 
 type HelpCollapseProps = {
   title: string;
   children: ReactNode;
   defaultOpen?: boolean;
-  /** 放在卡片内部时收成「内衬说明块」，不再自带卡片表面 */
   inset?: boolean;
 };
 
@@ -15,14 +16,21 @@ export function HelpCollapse({
   defaultOpen = false,
   inset = false,
 }: HelpCollapseProps) {
+  const [open, setOpen] = useState(defaultOpen);
+
   return (
-    <Collapse
-      className={inset ? "cb-inset" : undefined}
-      defaultActiveKey={defaultOpen ? ["help"] : []}
+    <Collapsible.Root
+      open={open}
+      onOpenChange={setOpen}
+      className={`bf-collapse${inset ? " is-inset" : ""}`}
     >
-      <Collapse.Panel key="help" title={title}>
-        {children}
-      </Collapse.Panel>
-    </Collapse>
+      <Collapsible.Trigger className="bf-collapse__trigger" data-state={open ? "open" : "closed"}>
+        <span>{title}</span>
+        <ChevronDown className="bf-collapse__chevron" size={18} aria-hidden />
+      </Collapsible.Trigger>
+      <Collapsible.Content className="bf-collapse__content">
+        <div className="bf-collapse__body">{children}</div>
+      </Collapsible.Content>
+    </Collapsible.Root>
   );
 }

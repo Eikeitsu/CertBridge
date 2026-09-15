@@ -19,10 +19,10 @@ export function OverviewActions({
   const isRefreshing = useAppSelector(selectStatusRefreshing);
 
   return (
-    <div className={`cb-btn-row${blockPrimary ? " cb-stack" : ""}`.trim()}>
+    <div className={`bf-btn-row${blockPrimary ? " bf-stack" : ""}`.trim()}>
       <Button
         variant="primary"
-        className={blockPrimary ? "cb-btn--block" : ""}
+        className={blockPrimary ? "bf-btn--block" : ""}
         disabled={isRefreshing}
         onClick={() => void dispatch(refreshStatus(true))}
       >
@@ -30,7 +30,7 @@ export function OverviewActions({
       </Button>
       <Button
         variant="ghost"
-        className={blockPrimary ? "cb-btn--block" : ""}
+        className={blockPrimary ? "bf-btn--block" : ""}
         onClick={() =>
           confirmAction({
             title: "确认重启设备？",

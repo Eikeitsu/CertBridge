@@ -7,7 +7,7 @@ type FlagProps = {
 };
 
 export function Flag({ children, tone = FlagTone.Warn }: FlagProps) {
-  return <span className={`cb-flag tone-${tone}`}>{children}</span>;
+  return <span className={`bf-flag tone-${tone}`}>{children}</span>;
 }
 
 type FlagListProps = {
@@ -16,5 +16,5 @@ type FlagListProps = {
 };
 
 export function FlagList({ children, className }: FlagListProps) {
-  return <div className={className || "cb-flag-list"}>{children}</div>;
+  return <div className={className || "bf-flag-list"}>{children}</div>;
 }

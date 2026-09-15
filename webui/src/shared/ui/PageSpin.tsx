@@ -9,10 +9,10 @@ type PageSpinProps = {
 
 export function PageSpin({ spinning, label, children }: PageSpinProps) {
   return (
-    <div className="cb-spin">
+    <div className="bf-spin">
       {children}
       {spinning ? (
-        <div className="cb-spin__mask">
+        <div className="bf-spin__mask">
           <Loader label={label} />
         </div>
       ) : null}

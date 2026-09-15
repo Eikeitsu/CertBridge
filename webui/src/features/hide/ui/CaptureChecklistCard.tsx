@@ -49,7 +49,7 @@ export function CaptureChecklistCard({
           margin: "12px 0 0",
           paddingLeft: 18,
           fontSize: "0.82rem",
-          color: "var(--cb-ink-2)",
+          color: "var(--bf-ink-2)",
           lineHeight: 1.55,
         }}
       >
@@ -59,7 +59,7 @@ export function CaptureChecklistCard({
           </li>
         ))}
       </ol>
-      <div className="cb-btn-row" style={{ marginTop: 12 }}>
+      <div className="bf-btn-row" style={{ marginTop: 12 }}>
         <Button onClick={handleDismiss}>{dismissLabel}</Button>
       </div>
     </Card>

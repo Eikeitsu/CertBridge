@@ -3,5 +3,5 @@ type SectionLabelProps = {
 };
 
 export function SectionLabel({ children }: SectionLabelProps) {
-  return <p className="cb-section-label">{children}</p>;
+  return <p className="bf-section-label">{children}</p>;
 }

@@ -28,7 +28,7 @@ export function LogToolbar({
         }))}
         onChange={onLevelChange}
       />
-      <div className="cb-btn-row" style={{ margin: "12px 0" }}>
+      <div className="bf-btn-row" style={{ margin: "12px 0" }}>
         <Button variant="primary" onClick={onRefresh}>
           {refreshLabel}
         </Button>

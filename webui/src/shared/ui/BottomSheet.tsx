@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Popup } from "antd-mobile";
+import * as Dialog from "@radix-ui/react-dialog";
 import { Loader } from "./Loader";
 
 type BottomSheetProps = {
@@ -20,45 +20,44 @@ export function BottomSheet({
   children,
 }: BottomSheetProps) {
   return (
-    <Popup
-      visible={open}
-      onClose={onClose}
-      onMaskClick={onClose}
-      position="bottom"
-      destroyOnClose
-      bodyClassName="cb-sheet"
-      bodyStyle={{
-        height,
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
-        borderTopLeftRadius: "var(--cb-radius-lg)",
-        borderTopRightRadius: "var(--cb-radius-lg)",
-        background: "var(--cb-chrome)",
-        padding: 0,
+    <Dialog.Root
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) onClose();
       }}
     >
-      <div className="cb-sheet__chrome">
-        <div className="cb-sheet__handle" aria-hidden />
-        <div className="cb-sheet__bar">
-          <span className="cb-sheet__bar-title">{title}</span>
-          <button
-            type="button"
-            className="cb-sheet__close"
-            onClick={onClose}
-            aria-label="关闭"
-          />
+      <Dialog.Portal>
+        <div className="bf-sheet-overlay">
+          <Dialog.Overlay asChild>
+            <button type="button" className="bf-sheet-overlay__mask" aria-label="关闭" />
+          </Dialog.Overlay>
+          <Dialog.Content
+            className="bf-sheet"
+            style={{ height }}
+            aria-describedby={undefined}
+            onOpenAutoFocus={(event) => event.preventDefault()}
+          >
+            <div className="bf-sheet__chrome">
+              <div className="bf-sheet__handle" aria-hidden />
+              <div className="bf-sheet__bar">
+                <Dialog.Title className="bf-sheet__bar-title">{title}</Dialog.Title>
+                <Dialog.Close asChild>
+                  <button type="button" className="bf-sheet__close" aria-label="关闭" />
+                </Dialog.Close>
+              </div>
+            </div>
+            <div className="bf-sheet__scroll">
+              {loading ? (
+                <div className="bf-spin__mask is-embedded">
+                  <Loader label="正在解析证书" />
+                </div>
+              ) : (
+                children
+              )}
+            </div>
+          </Dialog.Content>
         </div>
-      </div>
-      <div className="cb-sheet__scroll">
-        {loading ? (
-          <div className="cb-spin__mask is-embedded">
-            <Loader label="正在解析证书" />
-          </div>
-        ) : (
-          children
-        )}
-      </div>
-    </Popup>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }

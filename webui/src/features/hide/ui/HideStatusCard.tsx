@@ -50,7 +50,7 @@ export function HideStatusCard({
   if (variant === "table") {
     return (
       <Card title={title} meta={meta}>
-        <table className="cb-table">
+        <table className="bf-table">
           <tbody>
             {rows.map((row) => (
               <tr key={row.k}>

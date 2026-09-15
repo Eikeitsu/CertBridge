@@ -16,7 +16,7 @@ export function CertImportButton({
 
   return (
     <label
-      className={`cb-btn cb-btn--primary${disabled ? " is-disabled" : ""}`}
+      className={`bf-btn bf-btn--primary${disabled ? " is-disabled" : ""}`}
       style={{ display: "inline-block", opacity: disabled ? 0.5 : 1 }}
     >
       {label}

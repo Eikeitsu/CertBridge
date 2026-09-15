@@ -33,7 +33,7 @@ export function CertDetailSheet({
       {detail ? (
         <CertDetailBody detail={detail} brandKind={brandKind} />
       ) : (
-        <p className="cb-empty-text">
+        <p className="bf-empty-text">
           {fields?.error ||
             "未能解析该证书。请确认文件为 PEM/DER，且设备上的解析器可用。"}
         </p>

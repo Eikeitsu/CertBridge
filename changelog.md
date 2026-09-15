@@ -2,62 +2,39 @@
 
 ## Unreleased
 
-- **开机状态假阴性修复**：`service` 校验带退避重试；失败缓存可在约 45s 后延迟自愈；中间态「稳定中」
-- **CLI / WebUI 强制复核**：`cert_manager.sh status --live` 与 `verify`；短包装 `bin/cb`；首页刷新走 live 实测并写回缓存
-- **挂载 hardening**：模式切到兼容时清 staged；防御性清理模块内过期 `conscrypt@*`；DER 导入首字节快路径
-- **WebUI Trust Signal 重构**：取消三套布局主题包，统一视觉与文案；首页 Status Stage 优先；证书/日志/隐藏/更多单布局；外观仅保留深浅色与强调色
-- 工程拆分收尾：`apex_inject`→`inject/*`；`hot_*` / `status_*` / `generation_*` / `store_*` / `cert_*` / `cli_*` / `install_*` / `hide_*` / `inject_*` 按域拆文件；`profile_status` 从 `common.sh` 抽出
-- 工程拆分：`cert_manager.sh` → `cli_{status,certs,config,hot}.sh`；`cert_optional.sh` 从 `cert_sources` 拆出
-- 工程拆分：`status.sh` 拆为 `status_runtime` / `status_desc`；证书页导入 / 热挂载 toast 与确认框纳入 packVoice
-- 工程拆分：`hot_mount.sh` 实现迁至 `bin/lib/hot/`；`install_flow` 拆为 choose / import / apply（入口仍为 `install_flow.sh`）
-- Zygisk 过滤改为按行流式读取 mountinfo/maps，避免整文件吞入内存
-- 隐藏相关 toast / 确认框文案纳入 packVoice；控制台 / 工作室隐藏页补上文档入口
-- 自定义证书支持从常见路径一键导入：HttpCanary / ADGuard / Charles / mitmproxy / PCAPdroid；刷新与安装探测同步覆盖
-- WebUI / CLI 可导出已应用 CA 的 SHA-256 指纹列表（`list_applied_fps`）
-- Zygisk 底座探测：status / 隐藏页展示 ZygiskNext、ReZygisk、NeoZygisk 或 Magisk 内置 Zygisk；组件已装但底座未开时告警
-- Zygisk 抓包白名单可配置：`config/zn_whitelist.txt`，WebUI 隐藏页可编辑；修改后强停 App 生效
-- 隐藏页新增可关闭的「抓包检查清单」（首次打开）
-- WebUI「设置」主题隐藏页补上「挂载与隐藏实况」；未装 Zygisk 过滤时提示需自定义重刷；关于页展示安装组件档案
-- WebUI 刷新同步：除 Reqable / ProxyPin 外，检测到 HttpCanary / ADGuard 现场 CA 且指纹未见时自动导入为自定义证书
-- 文档对齐：隐藏页出现条件、Zygisk FAQ、功能表与 Lite 约 14KB 表述；隐藏说明文案含 maps/readlink 自藏
-- **Zygisk 挂载痕迹过滤**（可选）：自定义安装可勾选；主路径为经典 Zygisk API（`zygisk/*.so`），在 App 进程中过滤 `/proc/.../mountinfo`、`mounts`、`maps`/`smaps` 中本模块相关行，并对指向本模块路径的 `readlink` 返回不存在。ZN Module 辅路径源码已预留，无校准服务目标时**不打包**空 `zn_modules.txt`。默认安装不装；配置键 `zn_hide_allow`（与 `hide_allow` 独立）。需设备已启用 Zygisk（含 ZygiskNext / ReZygisk / NeoZygisk 等）。Reqable / ProxyPin 白名单不过滤。挂钩体不可 `dlclose`，Zygisk 底座与 PLT 异常仍可能被检出
-- 修复误报「Zygote 命名空间证书校验未通过」：状态只校验 TLS 主路径；整库精确匹配失败但绑定归属正确或 addon 已可见时视为成功（证书能用却报异常）
-- 恢复 WebUI 证书详情底栏：内置 / 自定义证书可打开分组详情（主体、颁发者、有效期、指纹等），点按可复制
-- 默认安装改为全量组件：安装挂载隐藏协助，但 `hide_allow` **默认关闭**；自定义安装勾选隐藏后 `hide_allow` **默认开启**
-- WebUI 三套主题全量重设计：设置 / 控制台 / 工作室在 **Shell、页面布局、文案语气** 上均可区分（非仅圆角配色）；默认强调色青绿 / 钢蓝 / 暖石
-- WebUI 全面重设计：三套主题「设置 / 控制台 / 工作室」，抛弃旧 classic/material/fluid 视觉
-- 概览新增「挂载与隐藏实况」：显示 Root 方案、挂载模式、临时层路径、检测到的隐藏助手、SuSFS try_umount 是否已注册（后迁至 WebUI **隐藏** 专页）
-- WebUI 底部新增 **隐藏** 页；文档站新增 [挂载隐藏说明](/guide/hide) 专页
-- 更多页曾含现代 Root 隐藏说明（Magisk 排除列表、Shamiko、ZygiskNext/ReZygisk/NeoZygisk、SuSFS、APatch 排除修改等），现集中于隐藏页
-- 临时层默认迁到 `/dev/.cb0` / `/dev/.cb1`（`tmpfs_style=dev`）；保留 short/legacy 可切换；卸载清理全部路径
-- SuSFS / ksud kernel umount：bind 成功后自动 `add_try_umount`
-- 挂载隐藏协助：默认安装会装上（`hide_allow=0`）；自定义安装可跳过，勾选则 `hide_allow=1`。未安装时删除 `hide_assist.sh`、不写 `hide-assist.conf`、WebUI 不显示「隐藏」页（若仅装 Zygisk 过滤仍会显示）
-- WebUI「隐藏」页提供 **启用开关**（`hide_allow`）；关闭时不登记 try_umount、不写隐藏状态文件
-- WebUI / 文档补充抓包注意：对 Reqable 与被抓包 App 开「卸载模块」会导致「根证书未安装」或断网，须关闭后再抓
-- 修复 Lite：`cbx509` 打包漏掉内部类导致安装导入 CA 时「无法计算系统库文件名」；D8 现打入全部 class，hash 失败时回退 `-certbridge_info`
-- 开机与 WebUI 刷新时，自动从已启用的 Reqable / ProxyPin 同步最新 CA；证书未变则跳过，读失败保留原文件
-- WebUI 下拉刷新会尝试同步 App 证书，有更新时提示重启后生效
-- 热挂载：可改存储卡证书目录，默认改为「文档」下的 `cacerts`（不再用储存卡根目录）；支持用户区 / 存储卡 / 合并挂载与无痕卸载
-- 临时挂载路径可选「短路径」或「传统路径」（更多页切换，重启后生效），减轻部分检测对挂载特征的识别；旧路径仍会一并清理
-- 注入失败时给出可读原因与建议（WebUI 概览 / Action / 模块简介）
-- WebUI 使用说明与界面示意图（文档站 [WebUI](/guide/webui) 专页）
-- WebUI：证书详情展示序列号、公钥与签名、密钥用法、SAN、SKI/AKI、SHA-1/SHA-256 等可解析字段，点按可复制
-- Lite `cbx509` 增加 `-certbridge_info` 一次导出完整证书详情（完整版 OpenSSL 从 `-text` 补全同等字段）
-- WebUI：机型/系统改为多厂商 getprop 兜底（小米 / 一加 / OPPO / vivo / 荣耀等），避免空属性只显示 Android 或内部型号
+- WebUI 改为 React 工程：首页 / 证书 / 日志 / 更多，打包产物进 `webroot`
+- 统一 Trust Signal 视觉与文案；外观保留深浅色、强调色与字号（去掉旧多套布局主题包）
+- 概览：状态舞台优先，下拉刷新走 `status --live` 实测并写回缓存；注入失败展示可读原因与建议
+- 证书页：开关、自定义导入与详情展开（指纹等可复制）；关证但未重启时提示「仍在生效」；支持热挂载入口
+- 更多页：挂载模式、临时挂载路径、**动态模块简介**开关（对接 `quiet_prop`），以及关于信息
+- 机型 / 系统信息多厂商 getprop 兜底，减少空白或只显示内部型号
+- 文档站新增 [WebUI 使用说明](/guide/webui) 与界面示意图；恢复 Vite / npm 文档与 Web 构建链路
+
+## v2.3.0
+
+- 开机注入更稳：状态校验失败会退避重试并延迟自愈；改过开关后按新配置重建证书集
+- 切换挂载模式时清理 staged 叠层；DER 证书导入走快路径，减少导入失败
+- 新增 `cb` / `status --live` / `verify` 等 CLI，便于终端核对注入与信任库状态
+- 模块脚本按域拆分到 `bin/lib/`，并为 Magisk 环境补齐 shebang，避免安装后无法执行
+- 降低注入层特征：默认临时路径 `/dev/.fs*`，注入后拆除临时挂载点；热挂载标记改为 `.sess`
+- 新增 `quiet_prop`（默认开）：管理器列表保持中性简介，不写 emoji 运行状态；需要时可用 `cb set_quiet_prop 0` 打开动态简介
+- CI / 文档：适配拆分后的 vanilla Web 构建与 FAQ 死链；同步打包脚本；补充开机状态假阴性说明
 
 ## v2.2.1
 
-- 修复软重启后仍可能注入已关闭证书的问题（例如关掉 ProxyPin 后日志仍报注入失败）
-- 开机注入更稳健：刷新失败会自动重试；改过开关后会按新配置重新生成证书
+
+- 修复软重启后仍可能继续注入已关闭证书的问题（如关掉 ProxyPin 后仍报注入失败 / 挂载残留）
 - WebUI：证书开关已关但旧证尚未卸掉时，会提示「仍在生效（重启后移除）」
-- Action：重新设计 Action 功能，由于 SukiSU 限制脚本超时 10s，去除部分音量键操作，保证脚本不会被提前终止
+- Action 改为只读仪表盘（适配 SukiSU 约 10s 脚本超时），去掉易被掐断的音量键长操作
 - CI：Release 拆为 build / publish / post；Web 构建与 `dist-web` 发布分离；共用 Node 安装 action
 
 ## v2.2.0
 
+
 - 修复 KernelSU 越狱模式软重启后状态不更新：软重启不换内核 `boot_id`，原先会跳过证书集重建并卡住「待重启」/旧缓存；现用 `boot-epoch` 区分用户态周期，并允许同 boot 重建待生效配置
 
 ## v2.1.0
+
 
 - 新增挂载模式：`compatible`（默认，完整兼容 / 运行时 bind）与 `magic`（轻量 Magic Mount，仅叠 addon）
 - 自定义安装增加音量键选择挂载模式；默认安装固定完整兼容
@@ -67,6 +44,7 @@
 - 发版约定见 `tooling/RELEASE.md`
 
 ## v2.0.0
+
 
 - 证书来源重构：不再内置 Reqable，优先从已安装 App 自动导入；ProxyPin 优先 App，未检测到且安装时选了 ProxyPin 则使用模块内置证书；检测到 HttpCanary、ADGuard 等依次询问是否导入为自定义证书
 - WebUI 证书名称从证书 subject（CN/O）自动解析，支持点击展开详情（主题、颁发者、有效期、指纹等）；自定义证书同样显示可读名称
@@ -82,6 +60,7 @@
 
 ## v1.2.0
 
+
 - 模块脚本按功能拆分到 `bin/lib/`，`common.sh` 仅作加载入口
 - Action 增加实用功能：音量上刷新状态，音量下进入菜单，可免重启挂载/卸载用户区与存储卡临时 CA；并优化音量键每轮独立计时，降低漏键与连按才响应
 - 为 APEX 与 system 信任库分别建立临时挂载层，按目标路径设置 SELinux 后再绑定到命名空间；放宽带 MCS 类别机型的上下文比对，避免误拒证书层准备
@@ -91,6 +70,7 @@
 
 ## v1.1.1
 
+
 - 修复 Android 14+ 仅注入 APEX、未覆盖 system 路径导致 Reqable 等检测「证书未安装」的问题；现同时运行时绑定 APEX 与 system
 - 开机后命名空间注入扩展到抓包 App 与已运行应用，避免 Settings 能看到证书但抓包 TLS 仍失败 / 断网（注：自 v1.2.0 起改为仅关键命名空间，不再扫全机应用）
 - 临时热挂载会合并已启用的永久 addon，且同样覆盖 APEX / system 双路径
@@ -98,6 +78,7 @@
 - 移除深色顶栏浅色状态栏条，改为依赖 `color-scheme` 与 theme-color 同步状态栏
 
 ## v1.1.0
+
 
 - 移除持久化系统 CA 基线与 `system/cacerts` 覆盖目录，改为每次开机从当前 system / Conscrypt APEX 信任库生成完整证书集
 - 生成阶段校验证书数量、复制结果、附加证书校验和及 SELinux 上下文；任一步失败都保留系统原始信任库
@@ -110,6 +91,7 @@
 
 ## v1.0.2
 
+
 - 紧急修复 KernelSU Magic Mount 将系统 CA 目录遮蔽为仅剩 Reqable、ProxyPin 两张证书的问题
 - 紧急修复运行时证书合并失败后系统信任库为空、导致 TLS 连接及抓包断网的问题
 - 恢复系统 CA 基线方案，始终以“完整系统基线 + 模块证书”生成挂载内容
@@ -118,6 +100,7 @@
 - 增加 PID 1、Zygote 与系统设置进程的注入日志
 
 ## v1.0.1
+
 
 - 项目更名为证书桥（CertBridge），模块显示名调整为「系统 CA 证书」
 - 移除持久化系统 CA 基线抓取，改为每次注入时现场读取并增量合并系统信任库
@@ -132,6 +115,7 @@
 - 更新日志与模块 ZIP 同步部署到 GitHub Pages，改善更新检查与下载体验
 
 ## v1.0.0
+
 
 - 首次发布系统 CA 证书模块与 KernelSU WebUI
 - 内置 Reqable / ProxyPin CA，支持独立开关与自定义证书

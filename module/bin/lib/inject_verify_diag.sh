@@ -2,7 +2,7 @@
 # 由 common runtime 加载
 # 校验失败诊断与 status 输出
 diagnose_verify_failure_reason() {
-  if is_magic_mount_mode; then
+  if needs_system_magic_overlay; then
     if ! verify_magic_overlay_live 2>/dev/null; then
       echo magic_overlay_missing
       return 0

@@ -1,6 +1,6 @@
 # 证书桥（CertBridge）
 
-将 **Reqable** / **ProxyPin** / 自定义 CA 合并进 Android **系统信任库**的 Magisk 模块，支持 KernelSU 等管理器 WebUI。Android 14+ 自动 APEX Conscrypt 注入。提供 **完整版**（内置 OpenSSL）与 **Lite**（约 14KB dex）双包。
+将 **Reqable** / **ProxyPin** / 自定义 CA 合并进 Android **系统信任库**的 Magisk 模块，支持 KernelSU 等管理器 WebUI。Android 14+ 自动 APEX Conscrypt 注入。提供 **完整版**（内置 OpenSSL）与 **Lite**（约 8KB dex）双包。
 
 - **仓库**：[Eikeitsu/CertBridge](https://github.com/Eikeitsu/CertBridge)
 - **文档**：[eikeitsu.github.io/CertBridge](https://eikeitsu.github.io/CertBridge/)
@@ -12,11 +12,11 @@
 
 |                        概览                         |                       证书                       |
 | :-------------------------------------------------: | :----------------------------------------------: |
-| ![概览](docs/public/screenshots/webui-overview.svg) | ![证书](docs/public/screenshots/webui-certs.svg) |
+| ![概览](docs/public/screenshots/webui-overview.png) | ![证书](docs/public/screenshots/webui-certs.png) |
 
 |                      日志                      |                      更多                       |
 | :--------------------------------------------: | :---------------------------------------------: |
-| ![日志](docs/public/screenshots/webui-log.svg) | ![更多](docs/public/screenshots/webui-more.svg) |
+| ![日志](docs/public/screenshots/webui-log.png) | ![更多](docs/public/screenshots/webui-more.png) |
 
 ## 功能概览
 
@@ -26,7 +26,7 @@
 - Android 7–16；Android 14+ APEX + system 双路径
 - 每次开机从实时系统信任库**完整合并**，不保存系统 CA 基线
 - 可选用户凭据区 / 存储卡证书免重启热挂载（合并永久 addon），可按会话无痕卸载
-- 可选 WebUI（React）：首页状态、证书管理与详情、注入诊断、日志；统一 Trust Signal 外观与挂载设置
+- 可选 WebUI：状态、证书管理与详情、日志；主题 / 莫奈 / 布局等
 - 生成或校验失败时不挂载，保留系统原始证书库
 
 ## 快速开始
@@ -40,20 +40,19 @@
 ## 仓库结构
 
 ```text
-webui/           # WebUI 源码（React + Redux Toolkit + antd；app / features / shared）
-module/          # 模块本体；webroot/ 为构建产物
-archives/        # 旧版原生 WebUI 归档
+module/          # Magisk 模块本体
+  webroot/       # WebUI 源码
 docs/            # VitePress 用户文档
+  public/screenshots/
 tooling/         # 构建脚本
-.github/         # CI（含 lint）
+.github/         # CI
 ```
 
 ## 本地开发
 
 ```bash
 npm install
-npm run dev:web               # Vite 开发
-npm run build:web             # 同步到 module/webroot
+npm run dev:web
 npm run build:module          # 默认同时打完整版 + Lite
 npm run build:cbx509          # 仅构建 Lite 用 dex
 npm run dev:docs
@@ -64,19 +63,6 @@ npm run dev:docs
 `PACKAGE_EDITIONS=full|lite|both`，`OPENSSL_ABIS=arm,arm64|all`。
 
 发版：Actions → **Release Module** → Run workflow，或推送 `v*` 标签。
-
-## 待合并发布顺序
-
-主干为 `master`（当前对齐 release `v2.2.1`）。功能分支按下列顺序合入并发版（勿跳步）：
-
-1. [ ] **`cli`** — 模块脚本拆分、`status --live` / `verify`、开机状态自愈  
-2. [ ] **`webui`** — Trust Signal WebUI 与文档截图  
-3. [ ] **`mount_hide`** — SuSFS try_umount、隐藏页、Zygisk 挂载过滤  
-4. [ ] **`zn_module`** — Zygisk / ZN 原生深化（可与 `mount_hide` 同 tip 起步）  
-5. [ ] **`hot-reload`** — 免更新（建议在 `mount_hide` 之后合入）
-
-备份分支勿删：`backup/pre-reorg-master`、`backup/pre-reorg-full`。  
-合并命令与日常开发约定见 [`tooling/BRANCHING.md`](tooling/BRANCHING.md)。
 
 ## 相关软件
 

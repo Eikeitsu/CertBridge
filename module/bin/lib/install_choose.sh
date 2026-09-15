@@ -50,6 +50,7 @@ certbridge_install_choose_mode() {
   # Zygisk 挂载痕迹过滤：默认不装；自定义可选。开关 zn_hide_allow 与 hide_allow 独立
   INSTALL_ZN_HIDE=0
   INSTALL_ZN_HIDE_ALLOW=0
+  # 默认完整兼容：不依赖 Magic Mount / 元模块；自定义可选轻量 Magic
   INSTALL_MOUNT_MODE="compatible"
 
   # WebUI / CLI 无人值守更新：见此文件则跳过音量键，走默认安装
@@ -67,7 +68,7 @@ certbridge_install_choose_mode() {
   ui_print "   并安装 WebUI、免重启热挂载与挂载隐藏协助"
   ui_print "   隐藏协助默认关闭（可在 WebUI「隐藏」页开启）"
   ui_print "   不含 Zygisk 挂载痕迹过滤（自定义可选）"
-  ui_print "   挂载：完整兼容模式（运行时 bind）"
+  ui_print "   挂载：完整兼容模式（运行时 bind，不依赖元模块）"
   ui_print " 音量下：自定义安装"
   ui_print "   逐项选择证书、附加功能与挂载模式"
   ui_print " 20 秒未选择将使用默认安装"
@@ -118,11 +119,12 @@ certbridge_install_choose_mode() {
       ui_print " 请选择挂载模式"
       ui_print " 音量上：完整兼容（推荐，默认方案）"
       ui_print "   运行时整库合并 + bind，不依赖 Magic Mount"
+      ui_print "   Android 7–13 bind system；14+ 同时 bind APEX 与 system"
       ui_print "   Magisk / KernelSU / APatch 均可，无需元模块"
       ui_print " 音量下：轻量 Magic Mount"
-      ui_print "   仅把启用的 addon 叠进 system/"
+      ui_print "   仅把启用的 addon 叠进 system/（依赖管理器叠层）"
       ui_print "   Magisk 一般自带；KernelSU 常需挂载元模块"
-      ui_print "   Android 14+ 仍会对 APEX 做脚本注入"
+      ui_print "   Android 7–13 无脚本 bind；14+ 仍对 APEX 做脚本注入"
       ui_print " 20 秒未选择将使用完整兼容"
       certbridge_volume_choice
       case "$?" in

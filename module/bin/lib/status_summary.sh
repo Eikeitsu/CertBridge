@@ -83,7 +83,7 @@ hot_mode_label() {
 #   emoji 后无空格；方括号内 | 两侧不加空格；括号外若用 | 则两侧加空格
 # 例：[✅运行正常|已挂载:2] 当前生效：Reqable、ProxyPin
 # 模块定位仅写入「首次尚未真正跑起来」时的括号外文案
-DESC_INTRO="让系统信任抓包 CA，支持 Reqable / ProxyPin / 自定义；兼容 Magisk、KernelSU、APatch，Android 7–16"
+DESC_INTRO="让系统信任抓包 CA，支持 Reqable / ProxyPin / 自定义；兼容 Magisk、KernelSU、APatch，Android 7–17"
 
 # $1=大状态  $2=括号内子状态（可空）  $3=括号外说明（必填）
 format_module_description() {

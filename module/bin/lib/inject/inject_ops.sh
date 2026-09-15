@@ -80,7 +80,8 @@ inject_boot_namespaces() {
     return 0
   }
 
-  if is_magic_mount_mode && [ "$(get_api)" -lt 34 ]; then
+  # Android 7–13 + magic：无 APEX、system 走 Magic Mount → 无需脚本 bind
+  if [ "$(get_api)" -lt 34 ] && is_magic_mount_mode; then
     log_debug "inject: magic mode on API $(get_api), skip bind (Magic Mount)"
     return 0
   fi
@@ -111,7 +112,8 @@ inject_app_namespaces() {
   }
   [ -s "$APPLIED_MAP" ] || return 0
 
-  if is_magic_mount_mode && [ "$(get_api)" -lt 34 ]; then
+  # Android 7–13 + magic：无脚本 bind 目标
+  if [ "$(get_api)" -lt 34 ] && is_magic_mount_mode; then
     log_debug "inject: magic mode on API $(get_api), skip namespace bind"
     return 0
   fi

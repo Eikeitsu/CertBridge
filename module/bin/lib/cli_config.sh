@@ -8,11 +8,8 @@ cmd_set_mount_mode() {
     *) echo "error=invalid_mount_mode"; return 1 ;;
   esac
   write_conf mount_mode "$mode" || { echo "error=write_failed"; return 1; }
-  # 立刻按新模式清理 / 同步 staged，避免下次开机前脏 overlay 仍被 Magic Mount
-  if [ "$mode" = "compatible" ]; then
-    clear_magic_overlay "$MODDIR" 2>/dev/null || true
-    clear_stale_module_apex_trees "$MODDIR" 2>/dev/null || true
-  fi
+  # 立刻按新模式清理 / 同步 staged，避免下次开机前脏 overlay
+  prepare_mount_mode_overlay "$MODDIR" 2>/dev/null || true
   pending_line=$(note_conf_dirty)
   log_info "config: mount_mode=$mode (reboot required)"
   echo "ok=1"
@@ -33,6 +30,29 @@ cmd_set_tmpfs_style() {
   log_info "config: tmpfs_style=$style (reboot required)"
   echo "ok=1"
   echo "tmpfs_style=$style"
+  echo "pending_reboot=1"
+  echo "$pending_line"
+}
+
+cmd_set_experimental_14_system() {
+  mode="$1"
+  case "$mode" in
+    auto|skip) ;;
+    off|default|follow) mode=auto ;;
+    none|apex_only) mode=skip ;;
+    overlay|apex_overlay)
+      echo "error=overlay_deprecated_use_magic_or_skip"
+      echo "hint=需要 system 叠 addon 请设 mount_mode=magic；需要跳过 system 请设 skip"
+      return 1
+      ;;
+    *) echo "error=invalid_experimental_14_system"; return 1 ;;
+  esac
+  write_conf experimental_14_system "$mode" || { echo "error=write_failed"; return 1; }
+  prepare_mount_mode_overlay "$MODDIR" 2>/dev/null || true
+  pending_line=$(note_conf_dirty)
+  log_info "config: experimental_14_system=$mode (reboot required; API34+ both mount modes)"
+  echo "ok=1"
+  echo "experimental_14_system=$mode"
   echo "pending_reboot=1"
   echo "$pending_line"
 }

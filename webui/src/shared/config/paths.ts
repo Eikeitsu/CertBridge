@@ -32,6 +32,7 @@ export const STORAGE_KEYS = {
   hotSdPath: "cb_hot_sd_path",
   logLevelFilter: "cb_log_level_filter",
   captureChecklistDismissed: "cb_capture_checklist_dismissed",
+  updateChannel: "cb_update_channel",
 } as const;
 
 export { LINKS } from "./brand";

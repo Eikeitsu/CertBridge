@@ -5,6 +5,7 @@ import { AppearancePanel } from "@/features/settings/ui/appearance/AppearancePan
 import { MountModePanel } from "@/features/settings/ui/MountModePanel";
 import { QuietPropPanel } from "@/features/settings/ui/QuietPropPanel";
 import { TmpfsPathPanel } from "@/features/settings/ui/TmpfsPathPanel";
+import { UpdateChannelPanel } from "@/features/settings/ui/UpdateChannelPanel";
 import { AboutSection } from "@/features/about/ui/AboutSection";
 import { CONSOLE_VOICE } from "../voice";
 
@@ -37,6 +38,7 @@ export function ConsoleMorePage() {
         onChange={(on) => void quiet.handleChange(on)}
         dense
       />
+      <UpdateChannelPanel dense />
       <AboutSection title={v.about} />
     </div>
   );

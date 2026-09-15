@@ -52,6 +52,13 @@ certbridge_install_choose_mode() {
   INSTALL_ZN_HIDE_ALLOW=0
   INSTALL_MOUNT_MODE="compatible"
 
+  # WebUI / CLI 无人值守更新：见此文件则跳过音量键，走默认安装
+  if [ -f /data/adb/certbridge/install_auto ]; then
+    ui_print "- 检测到无人值守标记：使用默认安装"
+    rm -f /data/adb/certbridge/install_auto 2>/dev/null
+    return 0
+  fi
+
   ui_print "--------------------------------"
   ui_print " 请选择安装方式"
   ui_print " 音量上：默认安装（推荐）"

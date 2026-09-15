@@ -7,6 +7,7 @@ import { AppearancePanel } from "./appearance/AppearancePanel";
 import { MountModePanel } from "./MountModePanel";
 import { QuietPropPanel } from "./QuietPropPanel";
 import { TmpfsPathPanel } from "./TmpfsPathPanel";
+import { UpdateChannelPanel } from "./UpdateChannelPanel";
 import { AboutSection } from "@/features/about/ui/AboutSection";
 
 export function SettingsPage() {
@@ -52,6 +53,7 @@ export function SettingsPage() {
         pending={isQuietPending}
         onChange={(on) => void handleQuietChange(on)}
       />
+      <UpdateChannelPanel />
       <AboutSection title={voice.more.aboutTitle} />
     </PageStack>
   );

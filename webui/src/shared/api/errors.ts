@@ -36,6 +36,7 @@ export function friendlyError(code?: string): string {
     hot_mount_failed: "临时挂载未完成，请稍后重试",
     nsenter_unavailable: "当前环境无法完成临时挂载",
     invalid_tmpfs_style: "无效的临时路径风格",
+    invalid_quiet_prop: "无效的动态简介开关",
     invalid_mount_mode: "无效的挂载模式",
     invalid_preset: "不支持的导入预设",
     preset_cert_not_found: "未找到该软件的证书文件，请先导出到下载目录",

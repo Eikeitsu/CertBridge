@@ -74,6 +74,10 @@ export async function setTmpfsStyle(style: TmpfsStyle) {
   return cli(`set_tmpfs_style ${style}`);
 }
 
+export async function setQuietProp(value: 0 | 1) {
+  return cli(`set_quiet_prop ${value}`);
+}
+
 export async function installCustom(payload: string) {
   return cli(`install_custom '${payload}'`, CLI_TIMEOUT_MS.IMPORT);
 }

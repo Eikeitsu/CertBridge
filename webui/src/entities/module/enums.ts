@@ -37,6 +37,7 @@ export enum MountMode {
 
 export enum TmpfsStyle {
   Dev = "dev",
+  Mnt = "mnt",
   Short = "short",
   Legacy = "legacy",
 }

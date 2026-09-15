@@ -36,9 +36,16 @@ export const TMPFS_STYLES = {
   [TmpfsStyle.Dev]: {
     value: TmpfsStyle.Dev,
     label: "Dev 路径",
-    meta: "默认：/dev/.cb*，避开 local/tmp 关键词扫描",
+    meta: "默认：/dev/.fs*，避开 local/tmp 关键词",
     helpTitle: "Dev 路径（默认）",
-    paths: ["/dev/.cb0", "/dev/.cb1"],
+    paths: ["/dev/.fs0", "/dev/.fs1"],
+  },
+  [TmpfsStyle.Mnt]: {
+    value: TmpfsStyle.Mnt,
+    label: "Mnt 路径",
+    meta: "/mnt 下短名临时层",
+    helpTitle: "Mnt 路径",
+    paths: ["/mnt/.ca0", "/mnt/.ca1"],
   },
   [TmpfsStyle.Short]: {
     value: TmpfsStyle.Short,
@@ -58,6 +65,7 @@ export const TMPFS_STYLES = {
 
 export const TMPFS_STYLE_OPTIONS = [
   TMPFS_STYLES[TmpfsStyle.Dev],
+  TMPFS_STYLES[TmpfsStyle.Mnt],
   TMPFS_STYLES[TmpfsStyle.Short],
   TMPFS_STYLES[TmpfsStyle.Legacy],
 ];

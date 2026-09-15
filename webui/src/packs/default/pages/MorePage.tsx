@@ -1,7 +1,9 @@
 import { useMountMode } from "@/features/settings/hooks/useMountMode";
 import { useTmpfsStyle } from "@/features/settings/hooks/useTmpfsStyle";
+import { useQuietProp } from "@/features/settings/hooks/useQuietProp";
 import { AppearancePanel } from "@/features/settings/ui/appearance/AppearancePanel";
 import { MountModePanel } from "@/features/settings/ui/MountModePanel";
+import { QuietPropPanel } from "@/features/settings/ui/QuietPropPanel";
 import { TmpfsPathPanel } from "@/features/settings/ui/TmpfsPathPanel";
 import { AboutSection } from "@/features/about/ui/AboutSection";
 import { DEFAULT_VOICE } from "../voice";
@@ -9,6 +11,7 @@ import { DEFAULT_VOICE } from "../voice";
 export function DefaultMorePage() {
   const mount = useMountMode();
   const tmpfs = useTmpfsStyle();
+  const quiet = useQuietProp();
   const v = DEFAULT_VOICE.more;
 
   return (
@@ -27,6 +30,11 @@ export function DefaultMorePage() {
         tmpfsStyle={tmpfs.tmpfsStyle}
         pending={tmpfs.isPending}
         onChange={(style) => void tmpfs.handleChange(style)}
+      />
+      <QuietPropPanel
+        dynamicOn={quiet.dynamicOn}
+        pending={quiet.isPending}
+        onChange={(on) => void quiet.handleChange(on)}
       />
       <AboutSection title={v.about} heroEmphasis />
     </div>

@@ -1,7 +1,9 @@
 import { useMountMode } from "@/features/settings/hooks/useMountMode";
 import { useTmpfsStyle } from "@/features/settings/hooks/useTmpfsStyle";
+import { useQuietProp } from "@/features/settings/hooks/useQuietProp";
 import { AppearancePanel } from "@/features/settings/ui/appearance/AppearancePanel";
 import { MountModePanel } from "@/features/settings/ui/MountModePanel";
+import { QuietPropPanel } from "@/features/settings/ui/QuietPropPanel";
 import { TmpfsPathPanel } from "@/features/settings/ui/TmpfsPathPanel";
 import { AboutSection } from "@/features/about/ui/AboutSection";
 import { CONSOLE_VOICE } from "../voice";
@@ -9,6 +11,7 @@ import { CONSOLE_VOICE } from "../voice";
 export function ConsoleMorePage() {
   const mount = useMountMode();
   const tmpfs = useTmpfsStyle();
+  const quiet = useQuietProp();
   const v = CONSOLE_VOICE.more;
 
   return (
@@ -26,6 +29,12 @@ export function ConsoleMorePage() {
         tmpfsStyle={tmpfs.tmpfsStyle}
         pending={tmpfs.isPending}
         onChange={(style) => void tmpfs.handleChange(style)}
+        dense
+      />
+      <QuietPropPanel
+        dynamicOn={quiet.dynamicOn}
+        pending={quiet.isPending}
+        onChange={(on) => void quiet.handleChange(on)}
         dense
       />
       <AboutSection title={v.about} />

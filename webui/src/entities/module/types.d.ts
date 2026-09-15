@@ -67,6 +67,7 @@ export type ModuleStatus = {
   profile_install_mode?: string;
   mount_mode?: string;
   tmpfs_style?: string;
+  quiet_prop?: string;
   stage_root?: string;
   hide_provider?: string;
   hide_provider_label?: string;

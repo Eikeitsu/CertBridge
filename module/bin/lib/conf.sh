@@ -13,7 +13,7 @@ read_conf() {
 write_conf() {
   key="$1"
   value="$2"
-  case "$key" in reqable|proxypin|schema_version|mount_mode|tmpfs_style|hot_allow|hide_allow|zn_hide_allow) ;; *) return 1 ;; esac
+  case "$key" in reqable|proxypin|schema_version|mount_mode|tmpfs_style|quiet_prop|hot_allow|hide_allow|zn_hide_allow) ;; *) return 1 ;; esac
   mkdir -p "$CONFDIR" 2>/dev/null || return 1
   tmp="$CONFDIR/.write.$$.$key"
   if [ -f "$CONF" ]; then
@@ -63,7 +63,8 @@ is_magic_mount_mode() {
   [ "$(get_mount_mode)" = "magic" ]
 }
 
-# dev    = /dev/.cb0 | .cb1（默认，避开 local/tmp 关键词扫描）
+# mnt    = /mnt/.ca0 | .ca1（/mnt 下短名临时层）
+# dev    = /dev/.fs0 | .fs1（默认；避开 local/tmp 关键词，且无品牌路径前缀）
 # short  = /data/local/tmp/.fs0 | .fs1
 # legacy = /data/local/tmp/sys-ca-merge | sys-ca-merge-hot（可读旧路径）
 get_tmpfs_style() {
@@ -71,6 +72,7 @@ get_tmpfs_style() {
   case "$style" in
     legacy|classic|verbose|long) echo legacy ;;
     short|tmp) echo short ;;
+    mnt) echo mnt ;;
     *) echo dev ;;
   esac
 }
@@ -85,9 +87,20 @@ apply_tmpfs_style() {
       RUNTIME_MOUNT_ROOT="/data/local/tmp/.fs0"
       HOT_RUNTIME_ROOT="/data/local/tmp/.fs1"
       ;;
-    *)
-      RUNTIME_MOUNT_ROOT="/dev/.cb0"
-      HOT_RUNTIME_ROOT="/dev/.cb1"
+    mnt)
+      RUNTIME_MOUNT_ROOT="/mnt/.ca0"
+      HOT_RUNTIME_ROOT="/mnt/.ca1"
       ;;
+    *)
+      RUNTIME_MOUNT_ROOT="/dev/.fs0"
+      HOT_RUNTIME_ROOT="/dev/.fs1"
+      ;;
+  esac
+}
+
+is_quiet_prop() {
+  case "$(read_conf quiet_prop 1 | tr 'A-Z' 'a-z')" in
+    0|false|no|off) return 1 ;;
+    *) return 0 ;;
   esac
 }

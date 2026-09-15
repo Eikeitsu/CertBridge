@@ -24,7 +24,7 @@ cmd_set_mount_mode() {
 cmd_set_tmpfs_style() {
   style="$1"
   case "$style" in
-    dev|short|legacy) ;;
+    dev|short|legacy|mnt) ;;
     *) echo "error=invalid_tmpfs_style"; return 1 ;;
   esac
   write_conf tmpfs_style "$style" || { echo "error=write_failed"; return 1; }
@@ -35,6 +35,20 @@ cmd_set_tmpfs_style() {
   echo "tmpfs_style=$style"
   echo "pending_reboot=1"
   echo "$pending_line"
+}
+
+cmd_set_quiet_prop() {
+  val="$1"
+  case "$val" in
+    0|1) ;;
+    *) echo "error=invalid_quiet_prop"; return 1 ;;
+  esac
+  write_conf quiet_prop "$val" || { echo "error=write_failed"; return 1; }
+  # 立刻刷新简介，无需重启
+  update_module_description 2>/dev/null || true
+  log_info "config: quiet_prop=$val"
+  echo "ok=1"
+  echo "quiet_prop=$val"
 }
 
 cmd_set_hot_allow() {

@@ -59,6 +59,10 @@ hot_prepare_bind_stage() {
   [ -f "$HOT_CERTS/$HOT_MARKER" ] || return 1
   [ -f "$HOT_BIND_ROOT/$HOT_MARKER" ] || \
     cp -f "$HOT_CERTS/$HOT_MARKER" "$HOT_BIND_ROOT/$HOT_MARKER" 2>/dev/null || return 1
+  # 去掉旧品牌标记，避免 cacerts 目录里残留可检索文件名
+  if [ -n "$HOT_MARKER_LEGACY" ]; then
+    rm -f "$HOT_BIND_ROOT/$HOT_MARKER_LEGACY" "$HOT_CERTS/$HOT_MARKER_LEGACY" 2>/dev/null
+  fi
   chown -R 0:0 "$HOT_BIND_ROOT" 2>/dev/null
   chmod 0755 "$HOT_BIND_ROOT" 2>/dev/null
   chmod 0644 "$HOT_BIND_ROOT"/* 2>/dev/null
@@ -88,8 +92,13 @@ hot_source_for_pid() {
 hot_marker_for_pid() {
   HOT_PID="$1"
   HOT_TARGET="$2"
-  nsenter --mount=/proc/"$HOT_PID"/ns/mnt -- \
-    sh -c "cat '$HOT_TARGET/$HOT_MARKER' 2>/dev/null" 2>/dev/null | tr -d '\r\n'
+  HOT_VAL=$(nsenter --mount=/proc/"$HOT_PID"/ns/mnt -- \
+    sh -c "cat '$HOT_TARGET/$HOT_MARKER' 2>/dev/null" 2>/dev/null | tr -d '\r\n')
+  if [ -z "$HOT_VAL" ] && [ -n "$HOT_MARKER_LEGACY" ]; then
+    HOT_VAL=$(nsenter --mount=/proc/"$HOT_PID"/ns/mnt -- \
+      sh -c "cat '$HOT_TARGET/$HOT_MARKER_LEGACY' 2>/dev/null" 2>/dev/null | tr -d '\r\n')
+  fi
+  echo "$HOT_VAL"
 }
 
 hot_path_identity_for_pid() {

@@ -30,25 +30,92 @@ target_stage_dir() {
   esac
 }
 
-# 当前命名空间里，target 是否仍绑着本模块 runtime tmpfs（软重启残留）
-is_certbridge_runtime_bind() {
+# mountinfo 是否仍暴露本模块 staging 路径（含历史 .cb* / sys-ca-merge）
+mountinfo_has_stage_path() {
   target="$1"
   mountinfo="${2:-/proc/self/mountinfo}"
   [ -n "$target" ] && [ -f "$mountinfo" ] || return 1
-  awk -v target="$target" -v root="${RUNTIME_MOUNT_ROOT:-/dev/.cb0}" '
+  awk -v target="$target" -v root="${RUNTIME_MOUNT_ROOT:-/dev/.fs0}" '
     $5 == target && (
       index($0, root) > 0 ||
+      index($0, "/dev/.fs0") > 0 ||
+      index($0, "/dev/.fs1") > 0 ||
       index($0, "/dev/.cb0") > 0 ||
       index($0, "/dev/.cb1") > 0 ||
       index($0, "/data/local/tmp/.fs0") > 0 ||
       index($0, "/data/local/tmp/.fs1") > 0 ||
-      index($0, "/data/local/tmp/sys-ca-merge") > 0
+      index($0, "/data/local/tmp/sys-ca-merge") > 0 ||
+      index($0, "/mnt/.ca0") > 0 ||
+      index($0, "/mnt/.ca1") > 0
     ) { found=1 }
     END { exit found ? 0 : 1 }
   ' "$mountinfo" 2>/dev/null
 }
 
-# 卸掉信任库路径上残留的 CertBridge runtime bind，露出真实系统 CA。
+# 注入成功后 stage 挂载点会被拆除；用「目标是挂载点 + tmpfs/overlay」识别残留
+is_tmpfs_cacert_overlay() {
+  target="$1"
+  mountinfo="${2:-/proc/self/mountinfo}"
+  [ -n "$target" ] && [ -d "$target" ] && [ -f "$mountinfo" ] || return 1
+  awk -v target="$target" '
+    $5 == target {
+      # mountinfo: ... - fstype source ...
+      for (i = 1; i <= NF; i++) if ($i == "-") {
+        if ($(i + 1) == "tmpfs" || $(i + 1) == "overlay") found = 1
+        break
+      }
+    }
+    END { exit found ? 0 : 1 }
+  ' "$mountinfo" 2>/dev/null
+}
+
+# 当前命名空间里，target 是否仍绑着本模块 runtime 层（含已拆除挂载点后的 tmpfs）
+is_certbridge_runtime_bind() {
+  target="$1"
+  mountinfo="${2:-/proc/self/mountinfo}"
+  [ -n "$target" ] || return 1
+  mountinfo_has_stage_path "$target" "$mountinfo" && return 0
+  # APEX 上的 tmpfs overlay 几乎一定是 CA 模块注入（Magisk 无法 Magic Mount /apex）
+  case "$target" in
+    /apex/*/cacerts|/apex/*/cacerts/)
+      is_tmpfs_cacert_overlay "$target" "$mountinfo" && return 0
+      ;;
+  esac
+  # compatible：system 路径上的 tmpfs 也视为本模块（或同类）残留
+  if ! is_magic_mount_mode; then
+    case "$target" in
+      "$SYSTEM_CACERTS"|"$SYSTEM_CACERTS"/)
+        is_tmpfs_cacert_overlay "$target" "$mountinfo" && return 0
+        ;;
+    esac
+  fi
+  return 1
+}
+
+# bind 成功后卸掉 staging 挂载点，mountinfo 不再暴露临时路径。
+# 目标上的 bind 仍保留（同一 tmpfs 引用）。
+orphan_tmpfs_stage() {
+  stage="$1"
+  [ -n "$stage" ] || return 0
+  if command -v nsenter >/dev/null 2>&1; then
+    for process in zygote zygote64; do
+      for pid in $(pidof "$process" 2>/dev/null) $(pgrep -x "$process" 2>/dev/null); do
+        [ -d "/proc/$pid/ns/mnt" ] || continue
+        nsenter --mount=/proc/"$pid"/ns/mnt -- umount "$stage" 2>/dev/null || \
+          nsenter --mount=/proc/"$pid"/ns/mnt -- umount -l "$stage" 2>/dev/null || true
+      done
+    done
+    if [ -d /proc/1/ns/mnt ]; then
+      nsenter --mount=/proc/1/ns/mnt -- umount "$stage" 2>/dev/null || \
+        nsenter --mount=/proc/1/ns/mnt -- umount -l "$stage" 2>/dev/null || true
+    fi
+  fi
+  umount "$stage" 2>/dev/null || umount -l "$stage" 2>/dev/null || true
+  rmdir "$stage" 2>/dev/null || true
+  return 0
+}
+
+# 卸掉信任库路径上残留的 runtime bind，露出真实系统 CA。
 # 软重启不换 mount 时，若不先卸掉，build_boot_generation 会把旧 addon
 #（如已关闭的 ProxyPin 243f0bfb.0）当成「系统基线」再次拷进 generation。
 detach_runtime_cacert_binds() {
@@ -69,6 +136,12 @@ detach_runtime_cacert_binds() {
 
   detached=0
   for target in $targets; do
+    # magic 模式：勿拆 Magisk 对 system 的 Magic Mount 叠层
+    if is_magic_mount_mode; then
+      case "$target" in
+        "$SYSTEM_CACERTS"|"$SYSTEM_CACERTS"/) continue ;;
+      esac
+    fi
     tries=0
     while [ "$tries" -lt 6 ] && is_certbridge_runtime_bind "$target"; do
       umount "$target" 2>/dev/null || umount -l "$target" 2>/dev/null || break
@@ -77,35 +150,38 @@ detach_runtime_cacert_binds() {
     done
     if command -v nsenter >/dev/null 2>&1 && [ -d /proc/1/ns/mnt ]; then
       tries=0
+      mi_tmp="$STATEDIR/.detach-mi.$$"
       while [ "$tries" -lt 6 ]; do
-        nsenter --mount=/proc/1/ns/mnt -- \
-          awk -v target="$target" -v root="${RUNTIME_MOUNT_ROOT:-/dev/.cb0}" '
-            $5 == target && (
-              index($0, root) > 0 ||
-              index($0, "/dev/.cb0") > 0 ||
-              index($0, "/dev/.cb1") > 0 ||
-              index($0, "/data/local/tmp/.fs0") > 0 ||
-              index($0, "/data/local/tmp/.fs1") > 0 ||
-              index($0, "/data/local/tmp/sys-ca-merge") > 0
-            ) { found=1 }
-            END { exit found ? 0 : 1 }
-          ' /proc/self/mountinfo 2>/dev/null || break
+        nsenter --mount=/proc/1/ns/mnt -- cat /proc/self/mountinfo >"$mi_tmp" 2>/dev/null || break
+        is_certbridge_runtime_bind "$target" "$mi_tmp" || break
         nsenter --mount=/proc/1/ns/mnt -- umount "$target" 2>/dev/null || \
           nsenter --mount=/proc/1/ns/mnt -- umount -l "$target" 2>/dev/null || break
         detached=$((detached + 1))
         tries=$((tries + 1))
       done
+      rm -f "$mi_tmp"
     fi
   done
 
-  if [ -d "$RUNTIME_MOUNT_ROOT" ]; then
-    for stage in "$RUNTIME_MOUNT_ROOT"/*; do
+  # 清理仍挂着的 staging（含历史路径）
+  for root in \
+    "$RUNTIME_MOUNT_ROOT" \
+    /dev/.fs0 /dev/.fs1 /dev/.cb0 /dev/.cb1 \
+    /data/local/tmp/.fs0 /data/local/tmp/.fs1 \
+    /data/local/tmp/sys-ca-merge /data/local/tmp/sys-ca-merge-hot \
+    /mnt/.ca0 /mnt/.ca1
+  do
+    [ -n "$root" ] && [ -d "$root" ] || continue
+    if mountpoint -q "$root" 2>/dev/null; then
+      orphan_tmpfs_stage "$root"
+    fi
+    for stage in "$root"/*; do
       [ -d "$stage" ] || continue
       if mountpoint -q "$stage" 2>/dev/null; then
-        umount "$stage" 2>/dev/null || umount -l "$stage" 2>/dev/null || true
+        orphan_tmpfs_stage "$stage"
       fi
     done
-  fi
+  done
   [ "$detached" -gt 0 ] && \
     log_info "store: detached $detached leftover runtime cacert bind(s)"
   return 0

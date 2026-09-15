@@ -127,6 +127,7 @@ hot_unmount_internal() {
   HOT_STATE_BOOT=$(hot_read_state boot_id)
   HOT_STATE_EPOCH=$(hot_read_state boot_epoch)
   [ -n "$HOT_SESSION" ] || HOT_SESSION=$(cat "$HOT_CERTS/$HOT_MARKER" 2>/dev/null | tr -d '\r\n')
+  [ -n "$HOT_SESSION" ] || HOT_SESSION=$(cat "$HOT_CERTS/$HOT_MARKER_LEGACY" 2>/dev/null | tr -d '\r\n')
   [ -n "$HOT_TARGET" ] || HOT_TARGET=$(get_target_store)
   [ -n "$HOT_SESSION" ] && [ -n "$HOT_TARGET" ] || {
     [ -d "$HOT_CURRENT" ] && return 1

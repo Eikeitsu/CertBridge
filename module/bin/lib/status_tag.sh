@@ -80,7 +80,11 @@ update_module_description() {
   # 可选：启动中 | 注入中
   prop="$MODDIR/module.prop"
   [ -f "$prop" ] || return 0
-  desc=$(compose_module_description)
+  if is_quiet_prop 2>/dev/null; then
+    desc="$DESC_INTRO"
+  else
+    desc=$(compose_module_description)
+  fi
   tmp="$prop.tmp.$$"
   awk -F= -v desc="$desc" '
     BEGIN { done=0 }
@@ -109,13 +113,16 @@ refresh_module_description_light() {
   else
     tag="✨已更新"
   fi
-  # 复用 update_module_description 需要 compute 结果；直接写 pending 友好短签
   prop="$MODDIR/module.prop"
   [ -f "$prop" ] || {
     echo "$tag"
     return 0
   }
-  desc=$(compose_module_prop_description_light "$tag" 2>/dev/null || echo "$tag")
+  if is_quiet_prop 2>/dev/null; then
+    desc="$DESC_INTRO"
+  else
+    desc=$(compose_module_prop_description_light "$tag" 2>/dev/null || echo "$tag")
+  fi
   tmp="$prop.tmp.$$"
   awk -F= -v desc="$desc" '
     BEGIN { done=0 }

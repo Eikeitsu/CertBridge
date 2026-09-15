@@ -10,12 +10,15 @@ certbridge_install_write_config() {
     echo "mount_mode=$INSTALL_MOUNT_MODE" >>"$MODPATH/config/certs.conf"
   fi
   if grep -q '^schema_version=' "$MODPATH/config/certs.conf" 2>/dev/null; then
-    sed -i "s/^schema_version=.*/schema_version=3/" "$MODPATH/config/certs.conf"
+    sed -i "s/^schema_version=.*/schema_version=4/" "$MODPATH/config/certs.conf"
   else
-    echo "schema_version=3" >>"$MODPATH/config/certs.conf"
+    echo "schema_version=4" >>"$MODPATH/config/certs.conf"
   fi
   if ! grep -q '^tmpfs_style=' "$MODPATH/config/certs.conf" 2>/dev/null; then
     echo "tmpfs_style=dev" >>"$MODPATH/config/certs.conf"
+  fi
+  if ! grep -q '^quiet_prop=' "$MODPATH/config/certs.conf" 2>/dev/null; then
+    echo "quiet_prop=1" >>"$MODPATH/config/certs.conf"
   fi
   if [ "$INSTALL_HOT" = "1" ]; then
     if grep -q '^hot_allow=' "$MODPATH/config/certs.conf" 2>/dev/null; then

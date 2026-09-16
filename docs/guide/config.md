@@ -9,7 +9,7 @@ schema_version=4
 reqable=1
 proxypin=1
 mount_mode=compatible
-experimental_14_system=auto
+experimental_14_system=skip
 tmpfs_style=dev
 quiet_prop=1
 ```
@@ -20,7 +20,7 @@ quiet_prop=1
 | `reqable`                | 启用 Reqable（App 导入）CA                                   | `1`          |
 | `proxypin`               | 启用 ProxyPin CA（App 或内置兜底）                           | `1`          |
 | `mount_mode`             | 挂载模式：`compatible` 或 `magic`                            | `compatible` |
-| `experimental_14_system` | Android 14+（两种挂载模式均生效）：`auto` / `skip`（见下文） | `auto`       |
+| `experimental_14_system` | Android 14+（两种挂载模式均生效）：`auto` / `skip`（见下文） | `skip`       |
 | `tmpfs_style`            | 临时挂载路径：`dev` / `mnt` / `short` / `legacy`             | `dev`        |
 | `quiet_prop`             | `1`=管理器列表中性简介；`0`=动态写入运行状态                 | `1`          |
 
@@ -28,27 +28,27 @@ quiet_prop=1
 
 证书桥提供两种把 CA 送进系统信任库的方式，可在 **自定义安装** 用音量键选择，或在 WebUI「更多 → 挂载模式」切换（均需**重启**生效）。默认安装固定为完整兼容。两种模式覆盖 **Android 7–17**，并按 API 分两支处理：
 
-|                           | Android 7–13（API &lt; 34）            | Android 14+（API ≥ 34）                     |
-| ------------------------- | -------------------------------------- | ------------------------------------------- |
-| **完整兼容** `compatible` | 脚本整库 bind `system` cacerts         | 脚本 bind **APEX + system**                 |
-| **轻量 Magic** `magic`    | 仅 Magic Mount 叠 addon（无脚本 bind） | Magic Mount 叠 system；**APEX 仍脚本 bind** |
+|                           | Android 7–13（API &lt; 34）            | Android 14+（API ≥ 34，默认 `experimental_14_system=skip`）               |
+| ------------------------- | -------------------------------------- | ------------------------------------------------------------------------- |
+| **完整兼容** `compatible` | 脚本整库 bind `system` cacerts         | 脚本 bind **APEX**；默认**跳过** system（`auto` 时再 bind system）        |
+| **轻量 Magic** `magic`    | 仅 Magic Mount 叠 addon（无脚本 bind） | 脚本 bind **APEX**；默认**跳过** system（`auto` 时 Magic Mount 叠 addon） |
 
 #### 完整兼容（`compatible`，默认）
 
-| 项目           | 行为                                                                                             |
-| -------------- | ------------------------------------------------------------------------------------------------ |
-| 原理           | 开机从当前系统 / Conscrypt 信任库做**完整合并**，加上启用的 addon，经 tmpfs 后 `bind` 到目标路径 |
-| 模块 `system/` | **不写**叠层目录（避免错误叠层导致系统 CA 被遮蔽）                                               |
-| Android 7–13   | bind `/system/etc/security/cacerts`                                                              |
-| Android 14+    | bind APEX Conscrypt 与 system 双路径（供 Flutter 等读 system 库的客户端）                        |
-| 临时目录       | 默认 `/dev/.fs0`（热挂载 `/dev/.fs1`）；可选 `mnt` / `short` / `legacy`                          |
-| 注入后         | 目标 bind 保留，临时 staging 挂载点立即拆除，降低 mountinfo 路径指纹                             |
-| 元模块         | **不需要**。Magisk / KernelSU / APatch 只要能跑 `post-fs-data` / `service` 即可                  |
-| 特点           | 兼容面宽；不依赖管理器 Magic Mount 实现                                                          |
+| 项目           | 行为                                                                                                        |
+| -------------- | ----------------------------------------------------------------------------------------------------------- |
+| 原理           | 开机从当前系统 / Conscrypt 信任库做**完整合并**，加上启用的 addon，经 tmpfs 后 `bind` 到目标路径            |
+| 模块 `system/` | **不写**叠层目录（避免错误叠层导致系统 CA 被遮蔽）                                                          |
+| Android 7–13   | bind `/system/etc/security/cacerts`                                                                         |
+| Android 14+    | 默认只 bind APEX（`experimental_14_system=skip`）；设为 `auto` 时再 bind system（供仍读 system 库的客户端） |
+| 临时目录       | 默认 `/dev/.fs0`（热挂载 `/dev/.fs1`）；可选 `mnt` / `short` / `legacy`                                     |
+| 注入后         | 目标 bind 保留，临时 staging 挂载点立即拆除，降低 mountinfo 路径指纹                                        |
+| 元模块         | **不需要**。Magisk / KernelSU / APatch 只要能跑 `post-fs-data` / `service` 即可                             |
+| 特点           | 兼容面宽；不依赖管理器 Magic Mount 实现                                                                     |
 
 适合：大多数用户、KernelSU 未确认挂载叠层是否正确、需要多 CA / 热挂载 / 与完整校验一致的场景。
 
-> 注意：完整兼容会在 `/system/etc/security/cacerts` 上留下整库 bind。若环境会检测该路径上的叠层/挂载，请改用 **轻量 Magic**（system 侧不脚本 bind），不要改写完整兼容「不依赖元模块」的语义。
+> 注意：完整兼容在 `experimental_14_system=auto` 时会在 `/system/etc/security/cacerts` 上留下整库 bind。默认 `skip` 已跳过 system；若仍需 system 侧证书且不想整库 bind，可改用 **轻量 Magic** 并设 `auto`。
 
 #### 轻量 Magic Mount（`magic`）
 
@@ -57,7 +57,7 @@ quiet_prop=1
 | 原理           | 只把**当前启用的 addon**（Reqable / ProxyPin / 自定义等）写成 `hash.N`，放入模块的 `system/etc/security/cacerts/`，交给管理器的 **Magic Mount** 叠进系统目录 |
 | 模块 `system/` | **仅 addon 文件**；无证书时会删掉空目录，避免空目录整库遮蔽                                                                                                  |
 | Android 7–13   | 主要依赖 Magic Mount，开机脚本不对 system 做整库 bind                                                                                                        |
-| Android 14+    | system 仍靠 Magic Mount；**APEX 仍由脚本 bind**（管理器通常无法 Magic Mount `/apex`）                                                                        |
+| Android 14+    | **APEX 仍由脚本 bind**；默认 `skip` 时不叠 system，设 `auto` 时才 Magic Mount 叠 addon                                                                       |
 | 元模块         | 见下表                                                                                                                                                       |
 | 特点           | system 侧痕迹更接近「多几张系统 CA」；依赖管理器叠层实现正确                                                                                                 |
 
@@ -83,23 +83,23 @@ quiet_prop=1
 与 `mount_mode` **正交**：在 **Android 14+** 上对 **完整兼容与轻量 Magic 均生效**；Android 7–13 忽略（无 APEX 时仍必须处理 system）。当前仅 `certs.conf` / CLI（WebUI 暂未提供）：
 
 ```text
-experimental_14_system=auto
+experimental_14_system=skip
 ```
 
-| 值                 | 14+ APEX      | 14+ system                                                                | 说明                                      |
-| ------------------ | ------------- | ------------------------------------------------------------------------- | ----------------------------------------- |
-| **`auto`（默认）** | 脚本整库 bind | **自动**按 `mount_mode`：compatible 脚本 bind；magic Magic Mount 叠 addon | 正式双模式语义                            |
-| **`skip`**         | 脚本整库 bind | **跳过**：不 bind、不叠层                                                 | 只保 APEX；仍读 system 库的客户端可能缺证 |
+| 值                 | 14+ APEX      | 14+ system                                                                | 说明                                                 |
+| ------------------ | ------------- | ------------------------------------------------------------------------- | ---------------------------------------------------- |
+| **`skip`（默认）** | 脚本整库 bind | **跳过**：不 bind、不叠层                                                 | 缩小 system 路径痕迹；仍读 system 库的客户端可能缺证 |
+| **`auto`**         | 脚本整库 bind | **自动**按 `mount_mode`：compatible 脚本 bind；magic Magic Mount 叠 addon | 需要 system 路径上也有证书时选用                     |
 
-需要「APEX 脚本注入 + system 只叠 addon」时，请用正式模式 **`magic`**（保持 `auto`）。
+需要「APEX 脚本注入 + system 只叠 addon」时，请用正式模式 **`magic`**，并设 `experimental_14_system=auto`。
 
 改后需**重启**。也可用：
 
 ```text
-cb set_experimental_14_system skip
+cb set_experimental_14_system auto
 ```
 
-不确定请保持 `auto`。
+默认即为 `skip`；若抓包软件提示系统区无证书，再改为 `auto` 或改用 `magic`（并设 `auto`）。
 
 ### 动态模块简介（`quiet_prop`）
 

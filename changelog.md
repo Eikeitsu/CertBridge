@@ -2,8 +2,8 @@
 
 ## Unreleased
 
-- 实验配置 `experimental_14_system`（`auto` / `skip`，默认 `auto`）：Android 14+ 下对**两种挂载模式均生效**；`auto` 按挂载模式处理 system，`skip` 则只脚本注入 APEX、跳过 system。需要 system 叠 addon 请用正式模式 `magic`。改 `certs.conf` 或 `cb set_experimental_14_system` 后需重启
-- 挂载模式文档补充 Android 7–13 / 14+ 行为对照；说明默认完整兼容会在 `/system/etc/security/cacerts` 留下整库 bind，可改用轻量 Magic 或上述实验项
+- 实验配置 `experimental_14_system`（`auto` / `skip`，**默认 `skip`**）：Android 14+ 下对**两种挂载模式均生效**；默认跳过 system、只脚本注入 APEX；设为 `auto` 则按挂载模式处理 system。需要 system 叠 addon 请用正式模式 `magic` 并设 `auto`。改 `certs.conf` 或 `cb set_experimental_14_system` 后需重启
+- 挂载模式文档补充 Android 7–13 / 14+ 行为对照；说明完整兼容在 `auto` 时会在 `/system/etc/security/cacerts` 留下整库 bind，可改用轻量 Magic 或保持默认 `skip`
 - 挂载策略由 `mount_mode` 与实验项正交组合；模块简介兼容范围更新为 Android 7–17
 
 ## v2.3.0

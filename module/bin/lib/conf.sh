@@ -68,36 +68,28 @@ is_magic_mount_mode() {
 }
 
 # 实验项：Android 14+ 是否跳过 system（compatible / magic 均生效；7–13 忽略——无 APEX 时仍须动 system）
-#   auto = 默认：按 mount_mode 处理 system（compatible 脚本 bind；magic Magic Mount 叠 addon）
-#   skip = 跳过 system：仅脚本 bind APEX（不 bind、不叠层）
+#   auto = 按 mount_mode 处理 system（compatible 脚本 bind；magic Magic Mount 叠 addon）
+#   skip = 默认：跳过 system，仅脚本 bind APEX（不 bind、不叠层）
 get_experimental_14_system() {
   val=$(read_conf experimental_14_system "" | tr 'A-Z' 'a-z')
   if [ -z "$val" ]; then
-    case "$(read_conf experimental_14_apex_only 0 | tr 'A-Z' 'a-z')" in
-      1|true|yes|on) echo skip; return 0 ;;
-    esac
-    echo auto
+    echo skip
     return 0
   fi
   case "$val" in
     skip|none|off_system|apex_only) echo skip ;;
-    # 旧值：off/overlay → 按挂载模式处理 system
     auto|off|default|follow|overlay|apex_overlay) echo auto ;;
-    *) echo auto ;;
+    *) echo skip ;;
   esac
 }
 
-# 启动时迁旧键、统一为 auto|skip
+# 启动时迁旧键、统一为 auto|skip（缺省写 skip）
 migrate_experimental_14_system_conf() {
   [ -f "$CONF" ] || return 0
   if ! grep -q '^experimental_14_system=' "$CONF" 2>/dev/null; then
-    mig=auto
-    case "$(read_conf experimental_14_apex_only 0 | tr 'A-Z' 'a-z')" in
-      1|true|yes|on) mig=skip ;;
-    esac
-    write_conf experimental_14_system "$mig" 2>/dev/null || true
+    write_conf experimental_14_system skip 2>/dev/null || true
   else
-    case "$(read_conf experimental_14_system auto | tr 'A-Z' 'a-z')" in
+    case "$(read_conf experimental_14_system skip | tr 'A-Z' 'a-z')" in
       off|default|follow|overlay|apex_overlay)
         write_conf experimental_14_system auto 2>/dev/null || true
         ;;

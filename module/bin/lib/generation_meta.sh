@@ -71,10 +71,10 @@ config_matches_applied() {
     mnt) app_tf=mnt ;;
     *) app_tf=dev ;;
   esac
-  app_e14=$(read_applied_conf experimental_14_system auto | tr 'A-Z' 'a-z')
+  app_e14=$(read_applied_conf experimental_14_system skip | tr 'A-Z' 'a-z')
   case "$app_e14" in
-    skip|none|off_system|apex_only) app_e14=skip ;;
-    *) app_e14=auto ;;
+    auto|off|default|follow|overlay|apex_overlay) app_e14=auto ;;
+    *) app_e14=skip ;;
   esac
 
   [ "$cur_req" = "$app_req" ] || return 1

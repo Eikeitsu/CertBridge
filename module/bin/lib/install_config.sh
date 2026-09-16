@@ -25,7 +25,7 @@ certbridge_install_write_config() {
       ! grep -q '^experimental_14_system=' "$MODPATH/config/certs.conf" 2>/dev/null; then
     case "$(awk -F= '$1=="experimental_14_apex_only"{print $2; exit}' "$MODPATH/config/certs.conf" | tr 'A-Z' 'a-z')" in
       1|true|yes|on) echo "experimental_14_system=skip" >>"$MODPATH/config/certs.conf" ;;
-      *) echo "experimental_14_system=auto" >>"$MODPATH/config/certs.conf" ;;
+      *) echo "experimental_14_system=skip" >>"$MODPATH/config/certs.conf" ;;
     esac
   fi
   # 旧值归一
@@ -36,7 +36,7 @@ certbridge_install_write_config() {
     sed -i 's/^experimental_14_system=.*/experimental_14_system=skip/' "$MODPATH/config/certs.conf"
   fi
   if ! grep -q '^experimental_14_system=' "$MODPATH/config/certs.conf" 2>/dev/null; then
-    echo "experimental_14_system=auto" >>"$MODPATH/config/certs.conf"
+    echo "experimental_14_system=skip" >>"$MODPATH/config/certs.conf"
   fi
   if grep -q '^experimental_14_apex_only=' "$MODPATH/config/certs.conf" 2>/dev/null; then
     tmp_cfg="$MODPATH/config/.certs.conf.mig.$$"

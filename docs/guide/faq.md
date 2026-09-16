@@ -111,7 +111,7 @@
 - **正确的轻量叠层**：`system/etc/security/cacerts/` 里**只有要追加的** `hash.0`。管理器把这些文件**叠进**真实系统目录 → 原有大量系统 CA 还在，只是多了几张。证书桥的「轻量 Magic」模式就是这样写目录的。
 - **错误 / 不兼容的挂载实现**：把模块里的 `cacerts` **整目录替换**到系统路径。目录里只有几张证时，系统信任库就只剩这几张，TLS 会大面积失败。
 
-因此默认「完整兼容」模式**不依赖** Magic Mount、也不长期放整库到 `system/`。若启用轻量模式后证书总数骤降，请改回完整兼容并重启；KernelSU 用户请确认挂载/元模块提供的是文件叠层而非整目录替换。Android 14+ 若希望 **跳过 system**（只保留 APEX 脚本注入），可设 `experimental_14_system=skip`（对两种挂载模式均生效，见 [配置说明](/guide/config#实验android-14-是否跳过-systemexperimental_14_system)）；若只要 system 叠 addon、不要整库 bind，请改用 **`magic`**（并保持 `auto`）。
+因此默认「完整兼容」模式**不依赖** Magic Mount、也不长期放整库到 `system/`。若启用轻量模式后证书总数骤降，请改回完整兼容并重启；KernelSU 用户请确认挂载/元模块提供的是文件叠层而非整目录替换。Android 14+ 默认 `experimental_14_system=skip`（跳过 system，只脚本注入 APEX，对两种挂载模式均生效，见 [配置说明](/guide/config#实验android-14-是否跳过-systemexperimental_14_system)）；若仍需 system 路径有证书，改为 `auto`，或改用 **`magic`**（并设 `auto`）。
 
 ## 轻量 Magic 模式一定要装元模块吗？
 

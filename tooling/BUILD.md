@@ -30,24 +30,24 @@ docs/                   # VitePress 用户文档
 
 按入口加载；括号内为拆出的实现文件。
 
-| 入口 / 目录 | 职责 |
-| --- | --- |
-| `log.sh` / `keys.sh` / `conf.sh` / `lock.sh` | 日志、音量键、配置、写锁 |
-| `store.sh`（`store_target` / `store_magic`） | 目标信任库、Magic Mount、SELinux、路径身份 |
-| `certs.sh` / `openssl.sh` / `app_detect.sh` | 证书合并、OpenSSL 定位、抓包 App 路径 |
-| `cert_parse.sh`（`cert_info` / `cert_import`） | 显示名、详情、规范化导入 |
-| `cert_sources.sh`（`cert_source_sync` / `cert_source_stash`） | Reqable/ProxyPin 源同步与快照 |
-| `cert_optional.sh` | 可选 App/路径预设与已应用指纹 |
-| `install_flow.sh`（`choose` / `import` / `apply`→`config`+`finish`） | 刷入安装编排 |
-| `generation.sh`（`generation_build` / `generation_meta`） | 开机证书集合与 applied 元数据 |
-| `status.sh`（`runtime` / `summary` / `describe` / `tag`） | 模块状态与简介 |
-| `profile_status.sh` | Zygisk 过滤组件、安装档案、底座探测 |
-| `inject_diag.sh`（`inject_error` / `inject_verify_diag`） | 注入失败诊断 |
-| `inject/*.sh` | `apex_inject.sh` 实现（stage / bind / ops） |
-| `cli_*.sh` | `cert_manager.sh` 命令实现 |
-| `hot/*.sh` | `hot_mount.sh` 实现；不装热挂载时整目录删除 |
-| `hide_assist.sh`（`hide_actions` / `hide_status`） | 可选 SuSFS try_umount；不装时删除三者 |
-| `verify.sh` | 注入结果校验 |
+| 入口 / 目录                                                          | 职责                                        |
+| -------------------------------------------------------------------- | ------------------------------------------- |
+| `log.sh` / `keys.sh` / `conf.sh` / `lock.sh`                         | 日志、音量键、配置、写锁                    |
+| `store.sh`（`store_target` / `store_magic`）                         | 目标信任库、Magic Mount、SELinux、路径身份  |
+| `certs.sh` / `openssl.sh` / `app_detect.sh`                          | 证书合并、OpenSSL 定位、抓包 App 路径       |
+| `cert_parse.sh`（`cert_info` / `cert_import`）                       | 显示名、详情、规范化导入                    |
+| `cert_sources.sh`（`cert_source_sync` / `cert_source_stash`）        | Reqable/ProxyPin 源同步与快照               |
+| `cert_optional.sh`                                                   | 可选 App/路径预设与已应用指纹               |
+| `install_flow.sh`（`choose` / `import` / `apply`→`config`+`finish`） | 刷入安装编排                                |
+| `generation.sh`（`generation_build` / `generation_meta`）            | 开机证书集合与 applied 元数据               |
+| `status.sh`（`runtime` / `summary` / `describe` / `tag`）            | 模块状态与简介                              |
+| `profile_status.sh`                                                  | Zygisk 过滤组件、安装档案、底座探测         |
+| `inject_diag.sh`（`inject_error` / `inject_verify_diag`）            | 注入失败诊断                                |
+| `inject/*.sh`                                                        | `apex_inject.sh` 实现（stage / bind / ops） |
+| `cli_*.sh`                                                           | `cert_manager.sh` 命令实现                  |
+| `hot/*.sh`                                                           | `hot_mount.sh` 实现；不装热挂载时整目录删除 |
+| `hide_assist.sh`（`hide_actions` / `hide_status`）                   | 可选 SuSFS try_umount；不装时删除三者       |
+| `verify.sh`                                                          | 注入结果校验                                |
 
 `common.sh` 按 `CERTBRIDGE_PROFILE` 加载：`install` 仅装入安装所需库；默认 `runtime` 装入开机 / WebUI / Action 所需库。
 

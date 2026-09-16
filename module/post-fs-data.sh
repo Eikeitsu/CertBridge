@@ -50,8 +50,8 @@ if ! build_boot_generation; then
   finalize_runtime_status post-fs-data >/dev/null
   exit 1
 fi
-# generation 后再次同步 magic 叠层，确保与本轮 applied 一致
-if is_magic_mount_mode; then
+# generation 后再次同步 magic 叠层，确保与本轮 applied 一致（skip 时不叠 system）
+if needs_system_magic_overlay; then
   sync_magic_overlay "$MODDIR" >/dev/null || \
     log_msg "post-fs-data: magic overlay resync soft-fail"
 fi

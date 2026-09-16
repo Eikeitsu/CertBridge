@@ -59,6 +59,7 @@ config_matches_applied() {
   cur_pp=$(read_conf proxypin 1)
   cur_mm=$(get_mount_mode)
   cur_tf=$(get_tmpfs_style)
+  cur_e14=$(get_experimental_14_system)
   app_req=$(read_applied_conf reqable 1)
   app_pp=$(read_applied_conf proxypin 1)
   app_mm=$(read_applied_conf mount_mode compatible | tr 'A-Z' 'a-z')
@@ -67,13 +68,20 @@ config_matches_applied() {
   case "$app_tf" in
     legacy|classic|verbose|long) app_tf=legacy ;;
     short|tmp) app_tf=short ;;
+    mnt) app_tf=mnt ;;
     *) app_tf=dev ;;
+  esac
+  app_e14=$(read_applied_conf experimental_14_system skip | tr 'A-Z' 'a-z')
+  case "$app_e14" in
+    auto|off|default|follow|overlay|apex_overlay) app_e14=auto ;;
+    *) app_e14=skip ;;
   esac
 
   [ "$cur_req" = "$app_req" ] || return 1
   [ "$cur_pp" = "$app_pp" ] || return 1
   [ "$cur_mm" = "$app_mm" ] || return 1
   [ "$cur_tf" = "$app_tf" ] || return 1
+  [ "$cur_e14" = "$app_e14" ] || return 1
 
   cur_custom=$(custom_certs_fingerprint)
   app_custom=$(applied_custom_fingerprint)

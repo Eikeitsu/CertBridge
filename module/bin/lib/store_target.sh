@@ -81,8 +81,8 @@ is_certbridge_runtime_bind() {
       is_tmpfs_cacert_overlay "$target" "$mountinfo" && return 0
       ;;
   esac
-  # compatible：system 路径上的 tmpfs 也视为本模块（或同类）残留
-  if ! is_magic_mount_mode; then
+  # compatible：system 路径上的 tmpfs 也视为本模块（或其它脚本注入）残留
+  if binds_system_cacerts 2>/dev/null; then
     case "$target" in
       "$SYSTEM_CACERTS"|"$SYSTEM_CACERTS"/)
         is_tmpfs_cacert_overlay "$target" "$mountinfo" && return 0
@@ -136,8 +136,8 @@ detach_runtime_cacert_binds() {
 
   detached=0
   for target in $targets; do
-    # magic 模式：勿拆 Magisk 对 system 的 Magic Mount 叠层
-    if is_magic_mount_mode; then
+    # magic：勿拆 Magisk/管理器对 system 的 Magic Mount 叠层
+    if ! binds_system_cacerts; then
       case "$target" in
         "$SYSTEM_CACERTS"|"$SYSTEM_CACERTS"/) continue ;;
       esac
@@ -187,8 +187,12 @@ detach_runtime_cacert_binds() {
   return 0
 }
 
-# compatible：APEX（34+）+ system，全程运行时 bind。
-# magic：system 交给 Magic Mount（模块内仅 addon）；34+ 仍对 APEX 做运行时 bind。
+# 目标信任库（按 API 分两支 + 按挂载模式）：
+# - API >= 34（Android 14+）：APEX 始终脚本 bind（管理器无法 Magic Mount /apex）
+# - API < 34（Android 7–13）：无 APEX 信任库路径
+# - compatible：再 bind /system/etc/security/cacerts（整库，不依赖元模块）
+# - magic：system 不 bind，交给模块 system/ 的 Magic Mount 叠层
+# - experimental_14_system=skip（仅 API>=34）：两种模式都跳过 system
 list_target_stores() {
   seen="|"
   if [ "$(get_api)" -ge 34 ]; then
@@ -203,8 +207,8 @@ list_target_stores() {
       seen="$seen$apex_dir|"
     done
   fi
-  # 轻量 Magic：system 路径不 bind，避免盖掉 Magic Mount 叠层
-  if is_magic_mount_mode; then
+  # magic：system 留给 Magic Mount，避免盖掉叠层
+  if ! binds_system_cacerts; then
     return 0
   fi
   if [ -d "$SYSTEM_CACERTS" ]; then

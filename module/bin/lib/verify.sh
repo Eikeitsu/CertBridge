@@ -1,6 +1,6 @@
 #!/system/bin/sh
 # 注入结果校验
-# 状态判定与注入侧 soft-fail 对齐：TLS 主路径上 addon 可见即可视为成功；
+# 状态判定与注入侧 soft-fail 一致：TLS 主路径上 addon 可见即可视为成功；
 # 整库精确匹配失败只记日志，避免「证书能用却报 Zygote 校验失败」。
 
 # 与 count_certs 相同规则，在目标命名空间内计数 hash.N
@@ -108,8 +108,8 @@ list_status_verify_targets() {
 check_store_injected() {
   [ -s "$APPLIED_MAP" ] || { echo 2; return 0; }
 
-  # 轻量 Magic：系统路径应能看到叠上去的 addon（Magic Mount / 管理器叠层）
-  if is_magic_mount_mode; then
+  # magic：系统路径应能看到叠上去的 addon（Magic Mount）
+  if needs_system_magic_overlay; then
     if ! verify_magic_overlay_live; then
       log_error "verify: magic overlay missing under $SYSTEM_CACERTS"
       echo 0
@@ -129,9 +129,9 @@ check_store_injected() {
     done
   done
 
-  # magic + Android <14：无 bind 目标，叠层校验已通过
+  # 无 bind 目标（magic+<14，或 14+ skip 且无 APEX）：叠层校验已通过则视为就绪
   if [ "$has_bind_target" = "0" ]; then
-    if is_magic_mount_mode; then
+    if ! binds_system_cacerts; then
       echo 2
       return 0
     fi

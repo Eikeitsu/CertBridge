@@ -20,6 +20,30 @@ certbridge_install_write_config() {
   if ! grep -q '^quiet_prop=' "$MODPATH/config/certs.conf" 2>/dev/null; then
     echo "quiet_prop=1" >>"$MODPATH/config/certs.conf"
   fi
+  # 旧键迁移 / 缺省实验项
+  if grep -q '^experimental_14_apex_only=' "$MODPATH/config/certs.conf" 2>/dev/null && \
+      ! grep -q '^experimental_14_system=' "$MODPATH/config/certs.conf" 2>/dev/null; then
+    case "$(awk -F= '$1=="experimental_14_apex_only"{print $2; exit}' "$MODPATH/config/certs.conf" | tr 'A-Z' 'a-z')" in
+      1|true|yes|on) echo "experimental_14_system=skip" >>"$MODPATH/config/certs.conf" ;;
+      *) echo "experimental_14_system=auto" >>"$MODPATH/config/certs.conf" ;;
+    esac
+  fi
+  # 旧值归一
+  if grep -qE '^experimental_14_system=(off|overlay|default|follow)' "$MODPATH/config/certs.conf" 2>/dev/null; then
+    sed -i 's/^experimental_14_system=.*/experimental_14_system=auto/' "$MODPATH/config/certs.conf"
+  fi
+  if grep -qE '^experimental_14_system=(none|apex_only)' "$MODPATH/config/certs.conf" 2>/dev/null; then
+    sed -i 's/^experimental_14_system=.*/experimental_14_system=skip/' "$MODPATH/config/certs.conf"
+  fi
+  if ! grep -q '^experimental_14_system=' "$MODPATH/config/certs.conf" 2>/dev/null; then
+    echo "experimental_14_system=auto" >>"$MODPATH/config/certs.conf"
+  fi
+  if grep -q '^experimental_14_apex_only=' "$MODPATH/config/certs.conf" 2>/dev/null; then
+    tmp_cfg="$MODPATH/config/.certs.conf.mig.$$"
+    awk -F= '$1 != "experimental_14_apex_only" { print }' "$MODPATH/config/certs.conf" >"$tmp_cfg" 2>/dev/null && \
+      cat "$tmp_cfg" >"$MODPATH/config/certs.conf"
+    rm -f "$tmp_cfg"
+  fi
   if [ "$INSTALL_HOT" = "1" ]; then
     if grep -q '^hot_allow=' "$MODPATH/config/certs.conf" 2>/dev/null; then
       sed -i "s/^hot_allow=.*/hot_allow=1/" "$MODPATH/config/certs.conf"
@@ -72,11 +96,8 @@ EOF
   GEN_CERTS="$CERT_POOL/generation/current/cacerts"
   APPLIED_MAP="$STATEDIR/applied-certs.list"
   mkdir -p "$STATEDIR"
-  if [ "$INSTALL_MOUNT_MODE" = "magic" ]; then
-    sync_magic_overlay "$MODPATH" >/dev/null 2>&1 || true
-  else
-    clear_magic_overlay "$MODPATH" >/dev/null 2>&1 || true
-  fi
+  # 按最终 conf（含 experimental_14_system）准备 system 叠层
+  prepare_mount_mode_overlay "$MODPATH" >/dev/null 2>&1 || true
 }
 
 certbridge_install_trim_components() {

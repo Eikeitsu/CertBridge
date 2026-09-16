@@ -128,7 +128,7 @@ cmd_install_custom() {
   printf 'display_name=%s\n' "$display" >"$CUSTOM_DIR/$name.meta"
   chmod 0600 "$CUSTOM_DIR/$name.meta" 2>/dev/null
   pending_line=$(note_conf_dirty)
-  if is_magic_mount_mode; then
+  if needs_system_magic_overlay; then
     sync_magic_overlay "$MODDIR" >/dev/null 2>&1 || true
   fi
   release_write_lock
@@ -156,7 +156,7 @@ cmd_remove_custom() {
     return 1
   }
   pending_line=$(note_conf_dirty)
-  if is_magic_mount_mode; then
+  if needs_system_magic_overlay; then
     sync_magic_overlay "$MODDIR" >/dev/null 2>&1 || true
   fi
   release_write_lock

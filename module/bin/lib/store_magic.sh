@@ -95,11 +95,13 @@ clear_stale_module_apex_trees() {
   return 0
 }
 
-# 开机前按模式准备叠层：magic 同步 addon；compatible 清掉 system/ 叠层
+# 开机前按模式准备叠层：
+# - needs_system_magic_overlay → 同步 addon 到 system/
+# - 否则清空 system/（双 bind，或 experimental none）
 prepare_mount_mode_overlay() {
   root="${1:-$MODDIR}"
   clear_stale_module_apex_trees "$root"
-  if is_magic_mount_mode; then
+  if needs_system_magic_overlay; then
     sync_magic_overlay "$root" >/dev/null
   else
     clear_magic_overlay "$root"

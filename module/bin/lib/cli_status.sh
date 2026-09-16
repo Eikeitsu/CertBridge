@@ -98,6 +98,7 @@ hot_failed=0"
     echo "proxypin_display=ProxyPin"
   fi
   echo "mount_mode=$(get_mount_mode)"
+  echo "experimental_14_system=$(get_experimental_14_system)"
   echo "tmpfs_style=$(get_tmpfs_style)"
   if is_quiet_prop 2>/dev/null; then
     echo "quiet_prop=1"

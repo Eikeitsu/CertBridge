@@ -16,8 +16,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # PR commitlint 需要完整历史；push 浅克隆即可
-          fetch-depth: ${{ github.event_name == 'pull_request' && 0 || 1 }}
+          # 注意：不可写 `&& 0 || 1`——Actions 里 0 为假，PR 会错误变成浅克隆
+          # commitlint 需要 base..head 两端都在本地，统一全量历史
+          fetch-depth: 0
 
       - uses: ./.github/actions/setup-node-npm
 
@@ -37,4 +38,12 @@ jobs:
 
       - name: Commitlint (PR range)
         if: github.event_name == 'pull_request'
-        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+        run: |
+          # PR checkout 默认是 merge ref；显式确保 base/head 可达
+          git fetch --no-tags origin \
+            "${{ github.event.pull_request.base.sha }}" \
+            "${{ github.event.pull_request.head.sha }}"
+          npx commitlint \
+            --from "${{ github.event.pull_request.base.sha }}" \
+            --to "${{ github.event.pull_request.head.sha }}" \
+            --verbose

@@ -7,7 +7,7 @@ import {
   syncAppSources,
 } from "@/shared/api/cli";
 import { friendlyError } from "@/shared/api/errors";
-import { toast } from "@/shared/api/ksu";
+import { hasBridge, toast } from "@/shared/api/ksu";
 import type { CustomCertificate, ModuleStatus } from "@/entities/module/types";
 import { restoreChromeInsets } from "@/features/theme/lib/chrome";
 import { formatClockTime } from "@/shared/lib/clock";
@@ -74,6 +74,13 @@ const initialState: StatusState = {
 };
 
 export const bootstrapStatus = createAsyncThunk("status/bootstrap", async () => {
+  // 部分管理器（SukiSU 等）注入 ksu 略晚于首屏 JS
+  if (!hasBridge()) {
+    await new Promise((r) => window.setTimeout(r, 120));
+  }
+  if (!hasBridge()) {
+    await new Promise((r) => window.setTimeout(r, 280));
+  }
   const [deviceLabel, status, customCertificates] = await Promise.all([
     fetchDeviceLabel().catch(() => "本机"),
     fetchStatus(),

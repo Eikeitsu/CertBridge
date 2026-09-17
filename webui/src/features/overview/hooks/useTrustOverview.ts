@@ -42,10 +42,13 @@ export function useTrustOverview() {
 
   const trust = useMemo(() => {
     if (statusError) {
+      const isBridge = /桥接|KernelSU|WebUI|no_bridge|无法执行 shell/i.test(statusError);
       return {
         tone: TrustTone.Idle,
         title: statusError,
-        hint: "当前环境无法执行 shell",
+        hint: isBridge
+          ? "请用 SukiSU / KernelSU / MMRL 等管理器打开本模块 WebUI"
+          : "可点「刷新复核」重试；若反复失败请查看日志",
       };
     }
     const statusReady =

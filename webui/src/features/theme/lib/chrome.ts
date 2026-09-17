@@ -24,13 +24,15 @@ function readChromeHost(): ChromeHost | undefined {
   const win = window as unknown as Window & Record<string, ChromeHost | undefined>;
   if (win.$CertBridge) return win.$CertBridge;
   if (win.mmrl) return win.mmrl;
+  if (win.ksu) return win.ksu;
   for (const key of Object.keys(win)) {
     if (key.charAt(0) !== "$") continue;
     const api = win[key];
     if (
       api &&
       (typeof api.setStatusBarColor === "function" ||
-        typeof api.setLightStatusBars === "function")
+        typeof api.setLightStatusBars === "function" ||
+        typeof api.setInsets === "function")
     ) {
       return api;
     }
@@ -113,6 +115,11 @@ function scheduleInsetRestore(): void {
 function applyNativeBars(bg: string, lightContentIcons: boolean): void {
   const host = readChromeHost();
   try {
+    // WebUI-X：请求内容延伸到系统栏；CSS 侧再用 inset 变量垫开顶/底栏
+    host?.setInsets?.(
+      "padding-top:var(--window-inset-top, env(safe-area-inset-top, 0px));" +
+        "padding-bottom:var(--window-inset-bottom, env(safe-area-inset-bottom, 0px));",
+    );
     // light=true → 深色图标（浅底）；light=false → 浅色图标（深底）
     host?.setStatusBarColor?.(bg, lightContentIcons);
     host?.setNavigationBarColor?.(bg, lightContentIcons);

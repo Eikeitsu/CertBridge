@@ -267,7 +267,6 @@ function validateSources() {
     "bin/cert_manager.sh",
     "config/certs.conf",
     "webroot/index.html",
-    "webroot/assets/tip.png",
     "webroot/assets/tip-wechat.png",
     "webroot/assets/tip-alipay.jpg",
   ];

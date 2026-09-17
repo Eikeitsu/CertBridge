@@ -3,8 +3,38 @@ import { CLI_TIMEOUT_MS } from "@/shared/config/constants";
 import { haptic, type HapticKind } from "@/shared/lib/haptic";
 import { showSnack, type SnackTone } from "@/shared/lib/snack";
 
+type KsuBridge = {
+  exec: (cmd: string, optsOrCb: string | object, cb?: string) => void;
+  toast?: (msg: string) => void;
+};
+
+/**
+ * SukiSU / KernelSU / MMRL 可能把桥挂在全局绑定或 window.* 上；
+ * IIFE 里只写 `ksu` 在部分 WebView 会读不到，必须同时查 window。
+ */
+export function getBridge(): KsuBridge | undefined {
+  const win = window as unknown as Window & Record<string, unknown>;
+  const candidates: unknown[] = [
+    typeof ksu !== "undefined" ? ksu : undefined,
+    win.ksu,
+    win.$ksu,
+    win.$CertBridge,
+    win.mmrl,
+  ];
+  for (const key of Object.keys(win)) {
+    if (key.charAt(0) !== "$") continue;
+    candidates.push(win[key]);
+  }
+  for (const api of candidates) {
+    if (api && typeof (api as KsuBridge).exec === "function") {
+      return api as KsuBridge;
+    }
+  }
+  return undefined;
+}
+
 export function hasBridge(): boolean {
-  return typeof ksu !== "undefined" && typeof ksu?.exec === "function";
+  return Boolean(getBridge());
 }
 
 export function exec(
@@ -23,17 +53,12 @@ export function exec(
       finish({ errno: -2, stdout: "", stderr: "timeout" });
     }, timeoutMs);
 
-    if (!hasBridge() || typeof ksu?.exec !== "function") {
+    const bridge = getBridge();
+    if (!bridge) {
       clearTimeout(timer);
       finish({ errno: -1, stdout: "", stderr: "no_bridge" });
       return;
     }
-
-    const execFn = ksu.exec as (
-      cmd: string,
-      optsOrCb: string | object,
-      cb?: string,
-    ) => void;
 
     const cb = `cb_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
     const win = window as unknown as Window & Record<string, unknown>;
@@ -48,10 +73,10 @@ export function exec(
     };
 
     try {
-      execFn(cmd, "{}", cb);
+      bridge.exec(cmd, "{}", cb);
     } catch (error) {
       try {
-        execFn(cmd, cb as unknown as string);
+        bridge.exec(cmd, cb as unknown as string);
       } catch (error2) {
         clearTimeout(timer);
         delete win[cb];

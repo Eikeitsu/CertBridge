@@ -14,6 +14,7 @@ declare const ksu: CertBridgeChromeHost | undefined;
 
 interface Window {
   $CertBridge?: CertBridgeChromeHost;
+  $ksu?: CertBridgeChromeHost;
   mmrl?: CertBridgeChromeHost;
   ksu?: CertBridgeChromeHost;
 }

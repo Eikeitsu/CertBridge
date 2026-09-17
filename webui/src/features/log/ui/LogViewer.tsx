@@ -21,13 +21,18 @@ export function LogViewer({
   if (loading) return <Loader label="读取日志…" />;
 
   if (!entries.length) {
-    return <div className="bf-empty">{levelFilter ? emptyFiltered : emptyAll}</div>;
+    return (
+      <div className="bf-empty">{levelFilter ? emptyFiltered : emptyAll}</div>
+    );
   }
 
   return (
     <div className={`bf-log${terminal ? " bf-log--terminal" : ""}`}>
       {entries.map((entry, index) => (
-        <div key={`${index}-${entry.raw}`} className={`bf-log-line lv-${entry.level}`}>
+        <div
+          key={`${index}-${entry.raw}`}
+          className={`bf-log-line lv-${entry.level}`}
+        >
           [{entry.level.toUpperCase()}] {entry.body}
         </div>
       ))}

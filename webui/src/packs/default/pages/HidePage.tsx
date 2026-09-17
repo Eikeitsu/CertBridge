@@ -66,7 +66,9 @@ export function DefaultHidePage() {
               large
             />
           </div>
-          {h.znSwitchMeta ? <p className="pk-def-muted">{h.znSwitchMeta}</p> : null}
+          {h.znSwitchMeta ? (
+            <p className="pk-def-muted">{h.znSwitchMeta}</p>
+          ) : null}
         </section>
       ) : (
         <section className="pk-def-section">

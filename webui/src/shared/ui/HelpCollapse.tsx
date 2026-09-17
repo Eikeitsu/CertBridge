@@ -24,7 +24,10 @@ export function HelpCollapse({
       onOpenChange={setOpen}
       className={`bf-collapse${inset ? " is-inset" : ""}`}
     >
-      <Collapsible.Trigger className="bf-collapse__trigger" data-state={open ? "open" : "closed"}>
+      <Collapsible.Trigger
+        className="bf-collapse__trigger"
+        data-state={open ? "open" : "closed"}
+      >
         <span>{title}</span>
         <ChevronDown className="bf-collapse__chevron" size={18} aria-hidden />
       </Collapsible.Trigger>

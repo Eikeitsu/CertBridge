@@ -25,11 +25,7 @@ export function QuietPropPanel({
       <Row
         title="在管理器列表显示运行状态"
         extra={
-          <Switch
-            checked={dynamicOn}
-            disabled={pending}
-            onChange={onChange}
-          />
+          <Switch checked={dynamicOn} disabled={pending} onChange={onChange} />
         }
       />
     </Card>

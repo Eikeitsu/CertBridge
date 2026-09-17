@@ -6,7 +6,10 @@ type RuntimeInfoCardProps = {
   title?: string;
 };
 
-export function RuntimeInfoCard({ overview, title = "运行信息" }: RuntimeInfoCardProps) {
+export function RuntimeInfoCard({
+  overview,
+  title = "运行信息",
+}: RuntimeInfoCardProps) {
   return (
     <Card title={title} meta={`上次刷新 ${overview.lastRefreshedAt}`}>
       <ListGroup>

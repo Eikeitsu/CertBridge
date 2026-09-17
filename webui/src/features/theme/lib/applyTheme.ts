@@ -8,7 +8,8 @@ import type { ThemeState } from "../model/themeSlice";
 /** 旧包名迁移到 default | ops | console */
 export function migratePack(stored: string | null): ThemePack {
   if (stored === ThemePack.Ops || stored === "dense") return ThemePack.Ops;
-  if (stored === ThemePack.Console || stored === "material") return ThemePack.Console;
+  if (stored === ThemePack.Console || stored === "material")
+    return ThemePack.Console;
   return ThemePack.Default;
 }
 
@@ -21,7 +22,10 @@ export function resolveThemeMode(mode: ThemeMode): ResolvedTheme {
 }
 
 export function applyThemeToDom(
-  state: Pick<ThemeState, "resolved" | "pack" | "compact" | "fontScale" | "accentId">,
+  state: Pick<
+    ThemeState,
+    "resolved" | "pack" | "compact" | "fontScale" | "accentId"
+  >,
 ) {
   const root = document.documentElement;
   root.dataset.theme = state.resolved;
@@ -29,7 +33,8 @@ export function applyThemeToDom(
   root.dataset.compact = state.compact ? FLAG_ON : FLAG_OFF;
   root.style.setProperty("--bf-font-scale", String(state.fontScale));
 
-  const accent = ACCENTS.find((item) => item.id === state.accentId) || ACCENTS[0];
+  const accent =
+    ACCENTS.find((item) => item.id === state.accentId) || ACCENTS[0];
   root.style.setProperty("--bf-accent-pick", accent.color);
   root.style.setProperty("--bf-accent-pair", accent.pair);
   root.style.setProperty("--bf-primary", accent.color);

@@ -8,7 +8,12 @@ type AppTabPaneProps = {
   children: ReactNode;
 };
 
-export function AppTabPane({ tab, activeTab, seen, children }: AppTabPaneProps) {
+export function AppTabPane({
+  tab,
+  activeTab,
+  seen,
+  children,
+}: AppTabPaneProps) {
   return (
     <section
       className={`bf-pane${activeTab === tab ? " is-on" : ""}`}

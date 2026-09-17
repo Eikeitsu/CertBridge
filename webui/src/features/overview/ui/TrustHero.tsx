@@ -41,7 +41,9 @@ export function TrustHero({
       <h1 className="bf-hero__title">{overview.trust.title}</h1>
       <p className="bf-hero__desc">{desc}</p>
       <div className="bf-btn-row" style={{ marginTop: 14 }}>
-        <Tag tone={resolveToneTag(overview.trust.tone)}>{overview.shortDesc}</Tag>
+        <Tag tone={resolveToneTag(overview.trust.tone)}>
+          {overview.shortDesc}
+        </Tag>
         {overview.isHotMountActive ? <Tag tone="ok">HOT</Tag> : null}
       </div>
     </section>

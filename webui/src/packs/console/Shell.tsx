@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { SquareTerminal, Binary, FileCode2, Ghost, SlidersHorizontal } from "lucide-react";
+import {
+  SquareTerminal,
+  Binary,
+  FileCode2,
+  Ghost,
+  SlidersHorizontal,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useAppSelector } from "@/app/store/hooks";
 import { useActiveTab } from "@/features/shell/hooks/useActiveTab";
@@ -37,7 +43,10 @@ function Pane({
   children: React.ReactNode;
 }) {
   return (
-    <section className={`pk-con-pane${active === tab ? " is-on" : ""}`} aria-hidden={active !== tab}>
+    <section
+      className={`pk-con-pane${active === tab ? " is-on" : ""}`}
+      aria-hidden={active !== tab}
+    >
       {seen ? children : null}
     </section>
   );
@@ -56,7 +65,9 @@ export function ConsoleShell() {
   useImmersiveChrome(resolved, false, undefined, "/");
 
   useEffect(() => {
-    setSeen((prev) => (prev[activeTab] ? prev : { ...prev, [activeTab]: true }));
+    setSeen((prev) =>
+      prev[activeTab] ? prev : { ...prev, [activeTab]: true },
+    );
   }, [activeTab]);
 
   useEffect(() => {
@@ -70,7 +81,10 @@ export function ConsoleShell() {
 
   return (
     <div className="pk-con-shell">
-      <div className={`pk-con-progress${refreshing ? " is-on" : ""}`} aria-hidden />
+      <div
+        className={`pk-con-progress${refreshing ? " is-on" : ""}`}
+        aria-hidden
+      />
       <header className="pk-con-topbar">
         <code className="pk-con-topbar__path">
           ~/{v.brand}/{v.tabs[activeTab]}
@@ -83,14 +97,22 @@ export function ConsoleShell() {
         <Pane tab={TabName.Home} active={activeTab} seen={!!seen[TabName.Home]}>
           <ConsoleHomePage />
         </Pane>
-        <Pane tab={TabName.Certs} active={activeTab} seen={!!seen[TabName.Certs]}>
+        <Pane
+          tab={TabName.Certs}
+          active={activeTab}
+          seen={!!seen[TabName.Certs]}
+        >
           <ConsoleCertsPage />
         </Pane>
         <Pane tab={TabName.Log} active={activeTab} seen={!!seen[TabName.Log]}>
           <ConsoleLogPage />
         </Pane>
         {hideSupported ? (
-          <Pane tab={TabName.Hide} active={activeTab} seen={!!seen[TabName.Hide]}>
+          <Pane
+            tab={TabName.Hide}
+            active={activeTab}
+            seen={!!seen[TabName.Hide]}
+          >
             <ConsoleHidePage />
           </Pane>
         ) : null}
@@ -98,7 +120,10 @@ export function ConsoleShell() {
           <ConsoleMorePage />
         </Pane>
       </main>
-      <nav className="pk-con-dock" style={{ gridTemplateColumns: `repeat(${dockTabs.length}, 1fr)` }}>
+      <nav
+        className="pk-con-dock"
+        style={{ gridTemplateColumns: `repeat(${dockTabs.length}, 1fr)` }}
+      >
         {dockTabs.map((tab) => {
           const Icon = ICONS[tab.key];
           return (

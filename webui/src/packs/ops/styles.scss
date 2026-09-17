@@ -10,11 +10,16 @@
   --pk-panel: #121a24;
   --pk-ink: #e2e8f0;
   --pk-muted: #94a3b8;
+
   min-height: 100dvh;
-  padding: calc(var(--bf-inset-top) + var(--pk-top) + var(--pk-below-top)) var(--pk-pad)
-    calc(var(--bf-inset-bottom) + 64px);
+  padding: calc(var(--bf-inset-top) + var(--pk-top) + var(--pk-below-top))
+    var(--pk-pad) calc(var(--bf-inset-bottom) + 64px);
   background:
-    radial-gradient(80% 40% at 100% 0%, rgba(45, 212, 191, 0.08), transparent 55%),
+    radial-gradient(
+      80% 40% at 100% 0%,
+      rgba(45, 212, 191, 0.08),
+      transparent 55%
+    ),
     #0b1118;
   color: var(--pk-ink);
   font-family: var(--bf-font-body);
@@ -26,8 +31,13 @@ html[data-theme="light"] .pk-ops-shell {
   --pk-panel: #f4f7fa;
   --pk-ink: #0f172a;
   --pk-muted: #64748b;
+
   background:
-    radial-gradient(80% 40% at 100% 0%, rgba(15, 118, 110, 0.08), transparent 55%),
+    radial-gradient(
+      80% 40% at 100% 0%,
+      rgba(15, 118, 110, 0.08),
+      transparent 55%
+    ),
     #dbe3ec;
 }
 
@@ -110,6 +120,7 @@ html[data-theme="light"] .pk-ops-topbar {
   from {
     transform: translateX(-120%);
   }
+
   to {
     transform: translateX(320%);
   }
@@ -486,7 +497,9 @@ html[data-theme="light"] .pk-ops-btn {
 
 /* log: large viewport with page padding + rounded panel */
 .pk-ops-page--log {
-  min-height: calc(100dvh - var(--bf-inset-top) - var(--bf-inset-bottom) - 130px);
+  min-height: calc(
+    100dvh - var(--bf-inset-top) - var(--bf-inset-bottom) - 130px
+  );
 }
 
 .pk-ops-term {
@@ -620,6 +633,7 @@ html[data-pack="ops"] {
   --bf-radius: 12px;
   --bf-radius-sm: 8px;
   --bf-radius-lg: 14px;
+
   background: #0b1118;
 }
 
@@ -633,5 +647,6 @@ html[data-pack="ops"][data-theme="light"] {
   --bf-ink-3: #64748b;
   --bf-stroke: rgba(15, 23, 42, 0.1);
   --bf-stroke-strong: rgba(15, 23, 42, 0.18);
+
   background: #dbe3ec;
 }

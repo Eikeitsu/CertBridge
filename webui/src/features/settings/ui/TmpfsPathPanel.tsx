@@ -1,5 +1,8 @@
 import type { TmpfsStyle } from "@/entities/module/enums";
-import { TMPFS_HELP_FOOTNOTE, TMPFS_STYLE_OPTIONS } from "@/shared/config/mount";
+import {
+  TMPFS_HELP_FOOTNOTE,
+  TMPFS_STYLE_OPTIONS,
+} from "@/shared/config/mount";
 import { Card, Segment } from "@/shared/ui/primitives";
 
 type TmpfsPathPanelProps = {

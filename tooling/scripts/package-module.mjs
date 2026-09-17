@@ -181,7 +181,9 @@ function extractZip(zipPath, extractDir) {
 async function ensureOpensslBinaries() {
   const dest = join(moduleRoot, "bin", "openssl");
   mkdirSync(dest, { recursive: true });
-  const missing = OPENSSL_BINARIES.filter((name) => !existsSync(join(dest, name)));
+  const missing = OPENSSL_BINARIES.filter(
+    (name) => !existsSync(join(dest, name)),
+  );
   if (!missing.length) {
     log("bundled openssl binaries present");
     return;
@@ -244,9 +246,13 @@ function listBuiltinCertFiles(kind) {
   if (!existsSync(dir)) {
     throw new Error(`missing builtin cert directory: certs/builtin/${kind}`);
   }
-  const files = readdirSync(dir).filter((name) => /^[0-9a-fA-F]{8}\.\d+$/.test(name));
+  const files = readdirSync(dir).filter((name) =>
+    /^[0-9a-fA-F]{8}\.\d+$/.test(name),
+  );
   if (files.length < 1) {
-    throw new Error(`missing builtin hash.N certificate under certs/builtin/${kind}/`);
+    throw new Error(
+      `missing builtin hash.N certificate under certs/builtin/${kind}/`,
+    );
   }
   return files.map((name) => join("certs", "builtin", kind, name));
 }
@@ -282,7 +288,9 @@ function validateSources() {
   for (const relPath of ["system", "certs/system_base", "certs/active"]) {
     const legacyPath = join(moduleRoot, relPath);
     if (existsSync(legacyPath) && directoryHasFiles(legacyPath)) {
-      throw new Error(`legacy certificate overlay must not be packaged: ${relPath}`);
+      throw new Error(
+        `legacy certificate overlay must not be packaged: ${relPath}`,
+      );
     }
   }
 
@@ -303,12 +311,16 @@ function validateSources() {
 
   for (const relPath of builtinCerts) {
     const content = readFileSync(join(moduleRoot, relPath));
-    const isPem = content.subarray(0, 27).toString("ascii").includes("BEGIN CERTIFICATE");
+    const isPem = content
+      .subarray(0, 27)
+      .toString("ascii")
+      .includes("BEGIN CERTIFICATE");
     const isDer = content[0] === 0x30;
     if (!isPem && !isDer)
       throw new Error(`invalid built-in certificate encoding: ${relPath}`);
     const certificate = new X509Certificate(content);
-    if (!certificate.ca) throw new Error(`built-in certificate is not a CA: ${relPath}`);
+    if (!certificate.ca)
+      throw new Error(`built-in certificate is not a CA: ${relPath}`);
     if (Date.parse(certificate.validTo) <= Date.now())
       throw new Error(`built-in certificate expired: ${relPath}`);
   }
@@ -331,7 +343,9 @@ function validateCbx509() {
   const wrapper = join(moduleRoot, "bin", "cbx509.sh");
   if (!existsSync(wrapper)) throw new Error("missing bin/cbx509.sh");
   if (!existsSync(dex) || statSync(dex).size < 200) {
-    throw new Error("missing bin/cbx509/classes.dex — run npm run build:cbx509");
+    throw new Error(
+      "missing bin/cbx509/classes.dex — run npm run build:cbx509",
+    );
   }
 }
 
@@ -403,7 +417,9 @@ function applyEdition(edition) {
 
 async function packageOne(edition, version) {
   const zipName =
-    edition === "lite" ? `CertBridge_${version}_lite.zip` : `CertBridge_${version}.zip`;
+    edition === "lite"
+      ? `CertBridge_${version}_lite.zip`
+      : `CertBridge_${version}.zip`;
   const zipPath = join(releaseDir, zipName);
 
   rmSync(staging, { recursive: true, force: true });
@@ -438,7 +454,9 @@ async function packageOne(edition, version) {
       copyFromModule("libcb_zn_hide.so");
       log("packaged ZN module track (zn_modules.txt + libcb_zn_hide.so)");
     } else {
-      log("PACK_ZN_MODULE=1 but missing non-empty zn_modules.txt or libcb_zn_hide.so — skipped");
+      log(
+        "PACK_ZN_MODULE=1 but missing non-empty zn_modules.txt or libcb_zn_hide.so — skipped",
+      );
     }
   }
   applyEdition(edition);

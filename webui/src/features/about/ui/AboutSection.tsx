@@ -18,8 +18,7 @@ export function AboutSection({
   heroEmphasis,
   surface = "card",
 }: AboutSectionProps) {
-  const resolved =
-    layout ?? (heroEmphasis ? "dashboard" : "dashboard");
+  const resolved = layout ?? (heroEmphasis ? "dashboard" : "dashboard");
 
   if (resolved === "terminal") {
     return (

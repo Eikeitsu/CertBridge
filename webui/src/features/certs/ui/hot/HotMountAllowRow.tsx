@@ -6,12 +6,18 @@ type HotMountAllowRowProps = {
   onChange: (checked: boolean) => void;
 };
 
-export function HotMountAllowRow({ checked, disabled, onChange }: HotMountAllowRowProps) {
+export function HotMountAllowRow({
+  checked,
+  disabled,
+  onChange,
+}: HotMountAllowRowProps) {
   return (
     <Row
       title="允许临时挂载"
       desc="关闭后无法新建临时会话"
-      extra={<Switch checked={checked} disabled={disabled} onChange={onChange} />}
+      extra={
+        <Switch checked={checked} disabled={disabled} onChange={onChange} />
+      }
     />
   );
 }

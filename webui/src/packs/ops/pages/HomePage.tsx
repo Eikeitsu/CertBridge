@@ -24,7 +24,9 @@ export function OpsHomePage() {
     if (!bootstrapped || !stabilizing) return;
     const timers = [2500, 8000].map((ms) =>
       window.setTimeout(() => {
-        void dispatch(refreshStatus({ toast: false, syncApps: false, live: true }));
+        void dispatch(
+          refreshStatus({ toast: false, syncApps: false, live: true }),
+        );
       }, ms),
     );
     return () => timers.forEach((id) => window.clearTimeout(id));
@@ -90,7 +92,10 @@ export function OpsHomePage() {
         <h2 className="pk-ops-panel__title">{v.pipeline}</h2>
         <div className="pk-ops-list">
           {overview.builtinPipeline.map((row) => (
-            <div key={row.kind} className={`pk-ops-list__row${row.active ? " is-on" : ""}`}>
+            <div
+              key={row.kind}
+              className={`pk-ops-list__row${row.active ? " is-on" : ""}`}
+            >
               <div>
                 <strong>{row.title}</strong>
                 <span>{row.stateLabel}</span>

@@ -3,7 +3,9 @@
   flex-direction: column;
   min-height: 100dvh;
   padding-top: calc(var(--bf-inset-top) + var(--bf-topbar-h));
-  padding-bottom: calc(var(--bf-inset-bottom) + var(--bf-dock-h) + var(--bf-dock-pad));
+  padding-bottom: calc(
+    var(--bf-inset-bottom) + var(--bf-dock-h) + var(--bf-dock-pad)
+  );
   background: var(--bf-bg);
 }
 
@@ -81,7 +83,9 @@
   min-height: 44px;
   font-size: 0.62rem;
   cursor: pointer;
-  transition: color var(--bf-ease), transform var(--bf-ease);
+  transition:
+    color var(--bf-ease),
+    transform var(--bf-ease);
 }
 
 .bf-dock__item.is-on {
@@ -178,6 +182,7 @@
   0% {
     transform: translateX(-120%);
   }
+
   100% {
     transform: translateX(320%);
   }
@@ -188,6 +193,7 @@
     opacity: 0;
     transform: translateY(6px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

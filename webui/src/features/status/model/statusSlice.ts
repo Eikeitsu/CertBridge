@@ -1,4 +1,8 @@
-import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import {
+  createAsyncThunk,
+  createSlice,
+  type PayloadAction,
+} from "@reduxjs/toolkit";
 import {
   fetchDeviceLabel,
   fetchStatus,
@@ -52,7 +56,13 @@ export function normalizeCliStatusPatch(
 ): Record<string, string> {
   const patch: Record<string, string> = {};
   for (const [key, value] of Object.entries(kv)) {
-    if (!key || key === "ok" || key === "error" || key === "hint" || key === "filename")
+    if (
+      !key ||
+      key === "ok" ||
+      key === "error" ||
+      key === "hint" ||
+      key === "filename"
+    )
       continue;
     if (key === "reboot_required") {
       patch.pending_reboot = value === FLAG_ON || value === "1" ? "1" : "0";
@@ -73,14 +83,17 @@ const initialState: StatusState = {
   lastRefreshedAt: "--",
 };
 
-export const bootstrapStatus = createAsyncThunk("status/bootstrap", async () => {
-  const [deviceLabel, status, customCertificates] = await Promise.all([
-    fetchDeviceLabel().catch(() => "本机"),
-    fetchStatus(),
-    listCustom().catch(() => [] as CustomCertificate[]),
-  ]);
-  return { deviceLabel, status, customCertificates };
-});
+export const bootstrapStatus = createAsyncThunk(
+  "status/bootstrap",
+  async () => {
+    const [deviceLabel, status, customCertificates] = await Promise.all([
+      fetchDeviceLabel().catch(() => "本机"),
+      fetchStatus(),
+      listCustom().catch(() => [] as CustomCertificate[]),
+    ]);
+    return { deviceLabel, status, customCertificates };
+  },
+);
 
 function formatSyncToast(sync: {
   updated: number;

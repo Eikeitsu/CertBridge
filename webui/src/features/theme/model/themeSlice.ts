@@ -1,11 +1,23 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { STORAGE_KEYS } from "@/shared/config/paths";
-import { ACCENTS, PACK_CHROME_DEFAULTS, THEME_DEFAULTS } from "@/shared/config/theme";
+import {
+  ACCENTS,
+  PACK_CHROME_DEFAULTS,
+  THEME_DEFAULTS,
+} from "@/shared/config/theme";
 import { FLAG_OFF, FLAG_ON, FONT_SCALE } from "@/shared/config/constants";
-import { ThemeMode, ThemePack, type ResolvedTheme } from "@/entities/module/enums";
+import {
+  ThemeMode,
+  ThemePack,
+  type ResolvedTheme,
+} from "@/entities/module/enums";
 import { parseEnum } from "@/shared/lib/enum";
 import { readStorage, writeStorage } from "@/shared/lib/storage";
-import { applyThemeToDom, migratePack, resolveThemeMode } from "../lib/applyTheme";
+import {
+  applyThemeToDom,
+  migratePack,
+  resolveThemeMode,
+} from "../lib/applyTheme";
 import { syncChromeBars } from "../lib/chrome";
 
 export type ThemeState = {

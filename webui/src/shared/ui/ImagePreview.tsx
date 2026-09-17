@@ -9,7 +9,13 @@ type ImagePreviewProps = {
   alt?: string;
 };
 
-export function ImagePreview({ open, onClose, src, title, alt }: ImagePreviewProps) {
+export function ImagePreview({
+  open,
+  onClose,
+  src,
+  title,
+  alt,
+}: ImagePreviewProps) {
   useEffect(() => {
     if (!open) return;
     const onKey = (event: KeyboardEvent) => {
@@ -42,15 +48,25 @@ export function ImagePreview({ open, onClose, src, title, alt }: ImagePreviewPro
             onOpenAutoFocus={(event) => event.preventDefault()}
           >
             <div className="bf-img-preview__bar">
-              <Dialog.Title className="bf-img-preview__title">{title}</Dialog.Title>
+              <Dialog.Title className="bf-img-preview__title">
+                {title}
+              </Dialog.Title>
               <Dialog.Close asChild>
-                <button type="button" className="bf-img-preview__close" aria-label="关闭">
+                <button
+                  type="button"
+                  className="bf-img-preview__close"
+                  aria-label="关闭"
+                >
                   关闭
                 </button>
               </Dialog.Close>
             </div>
             <div className="bf-img-preview__body">
-              <img src={src} alt={alt || title} className="bf-img-preview__img" />
+              <img
+                src={src}
+                alt={alt || title}
+                className="bf-img-preview__img"
+              />
             </div>
           </Dialog.Content>
         </div>

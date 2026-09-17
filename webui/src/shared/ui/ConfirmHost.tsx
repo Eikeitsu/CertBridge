@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
-import { bindConfirmHost, type ConfirmRequest } from "@/shared/lib/confirmAction";
+import {
+  bindConfirmHost,
+  type ConfirmRequest,
+} from "@/shared/lib/confirmAction";
 import { haptic } from "@/shared/lib/haptic";
 
 export function ConfirmHost() {

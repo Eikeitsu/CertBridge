@@ -50,7 +50,9 @@ export function CertFingerprintList({ fields }: { fields: DetailField[] }) {
           key={item.label}
           type="button"
           className="nx-detail-fp"
-          onClick={() => void copyText(item.copy || item.value, `已复制 ${item.label}`)}
+          onClick={() =>
+            void copyText(item.copy || item.value, `已复制 ${item.label}`)
+          }
         >
           <span className="nx-detail-fp__label">{item.label}</span>
           <code>{item.value}</code>
@@ -74,7 +76,11 @@ export function CertValidityStrip({
   daysLeft?: number;
   progress?: number;
 }) {
-  const tone = expired ? "bad" : daysLeft != null && daysLeft <= 30 ? "warn" : "ok";
+  const tone = expired
+    ? "bad"
+    : daysLeft != null && daysLeft <= 30
+      ? "warn"
+      : "ok";
 
   return (
     <div className={`nx-detail-validity tone-${tone}`}>

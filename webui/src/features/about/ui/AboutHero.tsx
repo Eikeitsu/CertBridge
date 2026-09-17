@@ -22,7 +22,11 @@ export function AboutHero({ large, className }: AboutHeroProps) {
   return (
     <div className={`bf-about-hero${className ? ` ${className}` : ""}`}>
       {imgFailed ? (
-        <span className="bf-about-hero__fallback" style={{ width: size, height: size }} aria-hidden>
+        <span
+          className="bf-about-hero__fallback"
+          style={{ width: size, height: size }}
+          aria-hidden
+        >
           CB
         </span>
       ) : (
@@ -37,7 +41,10 @@ export function AboutHero({ large, className }: AboutHeroProps) {
         />
       )}
       <div>
-        <strong className="bf-about-hero__name" style={{ fontSize: large ? "1.25rem" : undefined }}>
+        <strong
+          className="bf-about-hero__name"
+          style={{ fontSize: large ? "1.25rem" : undefined }}
+        >
           CertBridge
         </strong>
         <div className="bf-about-hero__meta">

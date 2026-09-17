@@ -40,7 +40,10 @@ function Pane({
   children: React.ReactNode;
 }) {
   return (
-    <section className={`pk-ops-pane${active === tab ? " is-on" : ""}`} aria-hidden={active !== tab}>
+    <section
+      className={`pk-ops-pane${active === tab ? " is-on" : ""}`}
+      aria-hidden={active !== tab}
+    >
       {seen ? children : null}
     </section>
   );
@@ -60,7 +63,9 @@ export function OpsShell() {
   useImmersiveChrome(resolved, false, undefined, "/");
 
   useEffect(() => {
-    setSeen((prev) => (prev[activeTab] ? prev : { ...prev, [activeTab]: true }));
+    setSeen((prev) =>
+      prev[activeTab] ? prev : { ...prev, [activeTab]: true },
+    );
   }, [activeTab]);
 
   useEffect(() => {
@@ -74,7 +79,10 @@ export function OpsShell() {
 
   return (
     <div className="pk-ops-shell">
-      <div className={`pk-ops-progress${refreshing ? " is-on" : ""}`} aria-hidden />
+      <div
+        className={`pk-ops-progress${refreshing ? " is-on" : ""}`}
+        aria-hidden
+      />
       <header className="pk-ops-topbar">
         <div className="pk-ops-topbar__brand">
           <span className="pk-ops-topbar__mark" aria-hidden />
@@ -87,14 +95,22 @@ export function OpsShell() {
         <Pane tab={TabName.Home} active={activeTab} seen={!!seen[TabName.Home]}>
           <OpsHomePage />
         </Pane>
-        <Pane tab={TabName.Certs} active={activeTab} seen={!!seen[TabName.Certs]}>
+        <Pane
+          tab={TabName.Certs}
+          active={activeTab}
+          seen={!!seen[TabName.Certs]}
+        >
           <OpsCertsPage />
         </Pane>
         <Pane tab={TabName.Log} active={activeTab} seen={!!seen[TabName.Log]}>
           <OpsLogPage />
         </Pane>
         {hideSupported ? (
-          <Pane tab={TabName.Hide} active={activeTab} seen={!!seen[TabName.Hide]}>
+          <Pane
+            tab={TabName.Hide}
+            active={activeTab}
+            seen={!!seen[TabName.Hide]}
+          >
             <OpsHidePage />
           </Pane>
         ) : null}
@@ -102,7 +118,10 @@ export function OpsShell() {
           <OpsMorePage />
         </Pane>
       </main>
-      <nav className="pk-ops-dock" style={{ gridTemplateColumns: `repeat(${dockTabs.length}, 1fr)` }}>
+      <nav
+        className="pk-ops-dock"
+        style={{ gridTemplateColumns: `repeat(${dockTabs.length}, 1fr)` }}
+      >
         {dockTabs.map((tab) => {
           const Icon = ICONS[tab.key];
           return (

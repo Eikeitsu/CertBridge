@@ -45,7 +45,9 @@ export function AppShell() {
   );
 
   useEffect(() => {
-    setSeen((prev) => (prev[activeTab] ? prev : { ...prev, [activeTab]: true }));
+    setSeen((prev) =>
+      prev[activeTab] ? prev : { ...prev, [activeTab]: true },
+    );
   }, [activeTab]);
 
   useEffect(() => {
@@ -65,7 +67,11 @@ export function AppShell() {
         showDevice={voice.topbar.showDevice}
       />
       <main className="bf-main">
-        <AppTabPane tab={TabName.Home} activeTab={activeTab} seen={!!seen[TabName.Home]}>
+        <AppTabPane
+          tab={TabName.Home}
+          activeTab={activeTab}
+          seen={!!seen[TabName.Home]}
+        >
           <OverviewPage />
         </AppTabPane>
         <AppTabPane
@@ -75,7 +81,11 @@ export function AppShell() {
         >
           <CertsPage />
         </AppTabPane>
-        <AppTabPane tab={TabName.Log} activeTab={activeTab} seen={!!seen[TabName.Log]}>
+        <AppTabPane
+          tab={TabName.Log}
+          activeTab={activeTab}
+          seen={!!seen[TabName.Log]}
+        >
           <LogPage />
         </AppTabPane>
         {hideSupported ? (
@@ -87,7 +97,11 @@ export function AppShell() {
             <HidePage />
           </AppTabPane>
         ) : null}
-        <AppTabPane tab={TabName.More} activeTab={activeTab} seen={!!seen[TabName.More]}>
+        <AppTabPane
+          tab={TabName.More}
+          activeTab={activeTab}
+          seen={!!seen[TabName.More]}
+        >
           <SettingsPage />
         </AppTabPane>
       </main>

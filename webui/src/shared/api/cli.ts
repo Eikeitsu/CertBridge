@@ -23,12 +23,18 @@ import { DEVICE_INFO_SHELL, formatDeviceLabel } from "@/shared/lib/device";
 
 const CUSTOM_LIST_PREFIX = "custom|";
 
-export async function cli(args: string, timeoutMs?: number): Promise<ExecResult> {
+export async function cli(
+  args: string,
+  timeoutMs?: number,
+): Promise<ExecResult> {
   return exec(`sh '${PATHS.CLI}' ${args}`, timeoutMs);
 }
 
 export async function fetchStatus(live = false): Promise<ModuleStatus> {
-  const result = await cli(live ? "status --live" : "status", live ? CLI_TIMEOUT_MS.IMPORT : undefined);
+  const result = await cli(
+    live ? "status --live" : "status",
+    live ? CLI_TIMEOUT_MS.IMPORT : undefined,
+  );
   if (result.errno !== 0 && !result.stdout) {
     throw new Error(result.stderr || "status_failed");
   }
@@ -42,7 +48,10 @@ export async function listCustom(): Promise<CustomCertificate[]> {
     if (!line.startsWith(CUSTOM_LIST_PREFIX)) continue;
     const parts = line.split("|");
     if (parts.length < 3) continue;
-    rows.push({ name: parts[1], display: parts.slice(2).join("|") || parts[1] });
+    rows.push({
+      name: parts[1],
+      display: parts.slice(2).join("|") || parts[1],
+    });
   }
   return rows;
 }
@@ -88,11 +97,7 @@ export async function installCustom(payload: string) {
 }
 
 export type AppPresetKind =
-  | "httpcanary"
-  | "adguard"
-  | "charles"
-  | "mitmproxy"
-  | "pcapdroid";
+  "httpcanary" | "adguard" | "charles" | "mitmproxy" | "pcapdroid";
 
 export async function importAppPreset(kind: AppPresetKind) {
   return cli(`import_app_preset ${kind}`, CLI_TIMEOUT_MS.IMPORT);
@@ -145,7 +150,8 @@ export async function setZnHideAllow(value: FlagValue) {
 function textToBase64(text: string): string {
   const bytes = new TextEncoder().encode(text);
   let binary = "";
-  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]!);
+  for (let i = 0; i < bytes.length; i++)
+    binary += String.fromCharCode(bytes[i]!);
   return btoa(binary);
 }
 
@@ -185,7 +191,8 @@ export async function readLog(
   );
   const rawOutput = result.stdout || "";
   const separatorIndex = rawOutput.indexOf("---");
-  const byteHead = separatorIndex >= 0 ? rawOutput.slice(0, separatorIndex) : "";
+  const byteHead =
+    separatorIndex >= 0 ? rawOutput.slice(0, separatorIndex) : "";
   const text =
     separatorIndex >= 0
       ? rawOutput.slice(separatorIndex + 3).replace(/^\r?\n/, "")
@@ -204,7 +211,10 @@ export async function rebootDevice() {
 
 export async function fetchDeviceLabel(): Promise<string> {
   const result = await exec(DEVICE_INFO_SHELL);
-  if (result.errno === -1 && /no_bridge|no_ksu_bridge/.test(result.stderr || "")) {
+  if (
+    result.errno === -1 &&
+    /no_bridge|no_ksu_bridge/.test(result.stderr || "")
+  ) {
     return "未检测到 WebUI 桥接";
   }
   return formatDeviceLabel(result.stdout);

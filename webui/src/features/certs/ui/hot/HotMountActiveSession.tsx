@@ -18,7 +18,13 @@ export function HotMountActiveSession({
 }: HotMountActiveSessionProps) {
   return (
     <>
-      <p style={{ fontSize: "0.8rem", color: "var(--bf-ink-3)", margin: "8px 0" }}>
+      <p
+        style={{
+          fontSize: "0.8rem",
+          color: "var(--bf-ink-3)",
+          margin: "8px 0",
+        }}
+      >
         {HOT_MOUNT_ACTIVE_META}
       </p>
       <MetricGrid

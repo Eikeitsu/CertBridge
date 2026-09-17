@@ -35,7 +35,9 @@ export function HideAllowRow({
     <Row
       title={title}
       desc={checked ? descOn : descOff}
-      extra={<Switch checked={checked} disabled={disabled} onChange={onChange} />}
+      extra={
+        <Switch checked={checked} disabled={disabled} onChange={onChange} />
+      }
     />
   );
 }

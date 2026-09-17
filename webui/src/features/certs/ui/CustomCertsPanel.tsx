@@ -59,7 +59,10 @@ export function CustomCertsPanel({
                     variant="ghost"
                     disabled={isPending}
                     onClick={() =>
-                      onOpenDetail(`custom:${cert.name}`, cert.display || cert.name)
+                      onOpenDetail(
+                        `custom:${cert.name}`,
+                        cert.display || cert.name,
+                      )
                     }
                   >
                     {detailLabel}
@@ -80,7 +83,11 @@ export function CustomCertsPanel({
         )}
       </ListGroup>
       <div style={{ marginTop: 12 }}>
-        <CertImportButton disabled={isPending} onImport={onImport} label={importLabel} />
+        <CertImportButton
+          disabled={isPending}
+          onImport={onImport}
+          label={importLabel}
+        />
       </div>
       {onImportPreset ? (
         <div style={{ marginTop: 14 }}>
@@ -104,7 +111,11 @@ export function CustomCertsPanel({
       ) : null}
       {onExportFingerprints ? (
         <div className="bf-btn-row" style={{ marginTop: 12 }}>
-          <Button variant="ghost" disabled={isPending} onClick={onExportFingerprints}>
+          <Button
+            variant="ghost"
+            disabled={isPending}
+            onClick={onExportFingerprints}
+          >
             {exportFpsLabel}
           </Button>
         </div>

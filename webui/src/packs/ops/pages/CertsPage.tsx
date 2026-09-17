@@ -67,7 +67,10 @@ export function OpsCertsPage() {
         <h2 className="pk-ops-panel__title">{v.builtin}</h2>
         <div className="pk-ops-list">
           {builtins.map((cert) => (
-            <div key={cert.kind} className={`pk-ops-list__row${cert.isActive ? " is-on" : ""}`}>
+            <div
+              key={cert.kind}
+              className={`pk-ops-list__row${cert.isActive ? " is-on" : ""}`}
+            >
               <div>
                 <strong>{cert.title}</strong>
                 <span>{stateOf(cert)}</span>
@@ -125,7 +128,10 @@ export function OpsCertsPage() {
                     type="button"
                     className="pk-ops-link"
                     onClick={() =>
-                      void detail.openDetail(`custom:${c.name}`, c.display || c.name)
+                      void detail.openDetail(
+                        `custom:${c.name}`,
+                        c.display || c.name,
+                      )
                     }
                   >
                     详情

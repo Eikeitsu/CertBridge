@@ -21,7 +21,10 @@ type UpdateChannelPanelProps = {
   surface?: "card" | "plain";
 };
 
-export function UpdateChannelPanel({ dense, surface = "card" }: UpdateChannelPanelProps) {
+export function UpdateChannelPanel({
+  dense,
+  surface = "card",
+}: UpdateChannelPanelProps) {
   const [channel, setChannel] = useState<UpdateChannel>("stable");
   const [preferCdn, setPreferCdnState] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -85,12 +88,7 @@ export function UpdateChannelPanel({ dense, surface = "card" }: UpdateChannelPan
         toast(r.error || "安装失败", "bad");
         return;
       }
-      toast(
-        r.mode === "cli"
-          ? "已刷入模块"
-          : "已打开管理器，请确认安装",
-        "ok",
-      );
+      toast(r.mode === "cli" ? "已刷入模块" : "已打开管理器，请确认安装", "ok");
       void runCheck(true);
     } finally {
       setInstalling(false);
@@ -98,7 +96,11 @@ export function UpdateChannelPanel({ dense, surface = "card" }: UpdateChannelPan
   };
 
   const remote = result?.remote;
-  const canInstall = !!(result && remote && (result.hasUpdate || result.canSwitch));
+  const canInstall = !!(
+    result &&
+    remote &&
+    (result.hasUpdate || result.canSwitch)
+  );
 
   return (
     <Card
@@ -153,7 +155,10 @@ export function UpdateChannelPanel({ dense, surface = "card" }: UpdateChannelPan
         ) : null}
       </div>
       <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
-        <Button disabled={busy || installing} onClick={() => void runCheck(false)}>
+        <Button
+          disabled={busy || installing}
+          onClick={() => void runCheck(false)}
+        >
           检查更新
         </Button>
         <Button
@@ -161,7 +166,11 @@ export function UpdateChannelPanel({ dense, surface = "card" }: UpdateChannelPan
           disabled={!canInstall || busy || installing}
           onClick={() => void onInstall()}
         >
-          {installing ? "安装中…" : result?.hasUpdate ? "下载并安装" : "切换安装"}
+          {installing
+            ? "安装中…"
+            : result?.hasUpdate
+              ? "下载并安装"
+              : "切换安装"}
         </Button>
       </div>
     </Card>

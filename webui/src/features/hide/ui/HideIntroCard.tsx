@@ -30,7 +30,10 @@ export function HideIntroCard({
         {body}
       </p>
       <div className="bf-btn-row" style={{ marginTop: 12 }}>
-        <Button variant="ghost" onClick={() => void openUrl(`${LINKS.docs}guide/hide`)}>
+        <Button
+          variant="ghost"
+          onClick={() => void openUrl(`${LINKS.docs}guide/hide`)}
+        >
           {docsCta}
         </Button>
       </div>

@@ -7,7 +7,10 @@ type ThemeModePickerRowProps = {
   onChange: (value: ThemeMode) => void;
 };
 
-export function ThemeModePickerRow({ value, onChange }: ThemeModePickerRowProps) {
+export function ThemeModePickerRow({
+  value,
+  onChange,
+}: ThemeModePickerRowProps) {
   return (
     <div className="bf-appearance__row">
       <Segment

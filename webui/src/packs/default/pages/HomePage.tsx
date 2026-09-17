@@ -24,7 +24,9 @@ export function DefaultHomePage() {
     if (!bootstrapped || !stabilizing) return;
     const timers = [2500, 8000].map((ms) =>
       window.setTimeout(() => {
-        void dispatch(refreshStatus({ toast: false, syncApps: false, live: true }));
+        void dispatch(
+          refreshStatus({ toast: false, syncApps: false, live: true }),
+        );
       }, ms),
     );
     return () => timers.forEach((id) => window.clearTimeout(id));
@@ -48,9 +50,13 @@ export function DefaultHomePage() {
   if (showBoot) return <Loader label={DEFAULT_VOICE.loading} />;
 
   return (
-    <div className={`pk-def-page pk-def-page--home tone-${overview.trust.tone}`}>
+    <div
+      className={`pk-def-page pk-def-page--home tone-${overview.trust.tone}`}
+    >
       {overview.isDisabled ? (
-        <div className="pk-def-banner is-warn">模块已停用，证书注入不会执行。</div>
+        <div className="pk-def-banner is-warn">
+          模块已停用，证书注入不会执行。
+        </div>
       ) : null}
       {overview.isPendingReboot ? (
         <div className="pk-def-banner is-warn">有永久变更等待重启后生效。</div>
@@ -58,7 +64,9 @@ export function DefaultHomePage() {
       {overview.injectDiagnosis?.message ? (
         <div className="pk-def-banner is-bad">
           {overview.injectDiagnosis.message}
-          {overview.injectDiagnosis.hint ? ` · ${overview.injectDiagnosis.hint}` : ""}
+          {overview.injectDiagnosis.hint
+            ? ` · ${overview.injectDiagnosis.hint}`
+            : ""}
         </div>
       ) : null}
 
@@ -101,9 +109,11 @@ export function DefaultHomePage() {
       <p className="pk-def-inline-stats" aria-label="指标">
         {metrics.map((m, i) => (
           <span key={m.label}>
-            {i > 0 ? <span className="pk-def-inline-stats__sep" aria-hidden>
-              ·
-            </span> : null}
+            {i > 0 ? (
+              <span className="pk-def-inline-stats__sep" aria-hidden>
+                ·
+              </span>
+            ) : null}
             <strong>{m.value}</strong> {m.label}
           </span>
         ))}
@@ -121,7 +131,10 @@ export function DefaultHomePage() {
                 <strong>{row.title}</strong>
                 <span>{row.stateLabel}</span>
               </div>
-              <span className={`pk-def-dot${row.active ? " is-on" : ""}`} aria-hidden />
+              <span
+                className={`pk-def-dot${row.active ? " is-on" : ""}`}
+                aria-hidden
+              />
             </div>
           ))}
         </div>

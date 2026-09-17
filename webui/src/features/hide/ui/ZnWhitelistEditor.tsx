@@ -67,7 +67,8 @@ export function ZnWhitelistEditor({
         spellCheck={false}
         style={{
           width: "100%",
-          fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+          fontFamily:
+            "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
           fontSize: "0.78rem",
           lineHeight: 1.45,
           padding: 10,
@@ -80,7 +81,11 @@ export function ZnWhitelistEditor({
         }}
       />
       <div className="bf-btn-row" style={{ marginTop: 12 }}>
-        <Button variant="primary" disabled={!loaded || isPending} onClick={handleSave}>
+        <Button
+          variant="primary"
+          disabled={!loaded || isPending}
+          onClick={handleSave}
+        >
           {saveLabel}
         </Button>
       </div>

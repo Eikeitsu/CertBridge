@@ -1,4 +1,8 @@
-import { MountMode, Experimental14System, TmpfsStyle } from "@/entities/module/enums";
+import {
+  MountMode,
+  Experimental14System,
+  TmpfsStyle,
+} from "@/entities/module/enums";
 
 export const MOUNT_MODES = {
   [MountMode.Compatible]: {
@@ -7,7 +11,8 @@ export const MOUNT_MODES = {
     shortLabel: "兼容",
     meta: "运行时整库 bind，适用 Magisk / KernelSU / APatch",
     helpTitle: "完整兼容（默认）",
-    helpBody: "运行时整库合并后绑定，不写 system 叠层。不依赖 Magic Mount 元模块。",
+    helpBody:
+      "运行时整库合并后绑定，不写 system 叠层。不依赖 Magic Mount 元模块。",
   },
   [MountMode.Magic]: {
     value: MountMode.Magic,
@@ -25,8 +30,14 @@ export const MOUNT_MODE_OPTIONS = [
 ];
 
 export const MOUNT_ROOT_NOTES = [
-  { name: "Magisk", note: "自带 Magic Mount；隐藏需配合排除列表 + Zygisk 助手" },
-  { name: "KernelSU", note: "建议 SuSFS 或 ZygiskNext/ReZygisk umount；需 path_umount" },
+  {
+    name: "Magisk",
+    note: "自带 Magic Mount；隐藏需配合排除列表 + Zygisk 助手",
+  },
+  {
+    name: "KernelSU",
+    note: "建议 SuSFS 或 ZygiskNext/ReZygisk umount；需 path_umount",
+  },
   { name: "APatch", note: "对目标 App 开「排除修改」+ Zygisk 助手" },
 ] as const;
 

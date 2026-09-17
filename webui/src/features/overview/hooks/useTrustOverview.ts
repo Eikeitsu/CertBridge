@@ -67,7 +67,9 @@ export function useTrustOverview() {
   }, [status, statusError, isLoading]);
 
   const activeCount = Number(status.active_count || 0);
-  const customCount = Number(status.custom_count || customCertificates.length || 0);
+  const customCount = Number(
+    status.custom_count || customCertificates.length || 0,
+  );
   const isPendingReboot = isFlagOn(status.pending_reboot);
   const isHotMountActive = isFlagOn(status.hot_active);
   const isHotMountSupported = isFlagOn(status.hot_supported);
@@ -81,7 +83,9 @@ export function useTrustOverview() {
     for (const cert of BUILTIN_CERTS) {
       const keys = builtinStatusKeys(cert.kind);
       if (!isFlagOn(status[keys.active])) continue;
-      names.push(status[keys.title] || status[keys.display] || cert.fallbackTitle);
+      names.push(
+        status[keys.title] || status[keys.display] || cert.fallbackTitle,
+      );
     }
     for (const cert of customCertificates) {
       names.push(cert.display || cert.name);
@@ -128,7 +132,11 @@ export function useTrustOverview() {
     activeCount,
   ]);
 
-  const mountMode = parseEnum(MountMode, status.mount_mode, MountMode.Compatible);
+  const mountMode = parseEnum(
+    MountMode,
+    status.mount_mode,
+    MountMode.Compatible,
+  );
   const tmpfsStyle = parseEnum(TmpfsStyle, status.tmpfs_style, TmpfsStyle.Dev);
 
   return {

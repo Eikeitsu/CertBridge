@@ -29,7 +29,12 @@ export function CertDetailSheet({
   );
 
   return (
-    <BottomSheet open={open} onClose={onClose} loading={loading} title="证书详情">
+    <BottomSheet
+      open={open}
+      onClose={onClose}
+      loading={loading}
+      title="证书详情"
+    >
       {detail ? (
         <CertDetailBody detail={detail} brandKind={brandKind} />
       ) : (
@@ -39,7 +44,11 @@ export function CertDetailSheet({
         </p>
       )}
       {!detail && fields?.error ? (
-        <Button variant="ghost" onClick={onClose} style={{ width: "100%", marginTop: 8 }}>
+        <Button
+          variant="ghost"
+          onClick={onClose}
+          style={{ width: "100%", marginTop: 8 }}
+        >
           关闭
         </Button>
       ) : null}

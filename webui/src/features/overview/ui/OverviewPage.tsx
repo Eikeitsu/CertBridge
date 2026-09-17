@@ -28,7 +28,9 @@ export function OverviewPage() {
     if (!bootstrapped || !stabilizing) return;
     const timers = [2500, 8000].map((ms) =>
       window.setTimeout(() => {
-        void dispatch(refreshStatus({ toast: false, syncApps: false, live: true }));
+        void dispatch(
+          refreshStatus({ toast: false, syncApps: false, live: true }),
+        );
       }, ms),
     );
     return () => timers.forEach((id) => window.clearTimeout(id));
@@ -38,7 +40,9 @@ export function OverviewPage() {
     overview.injectDiagnosis?.hint ||
     (overview.activeNames.length
       ? overview.activeNames.join(" · ")
-      : overview.trust.hint || overview.description || voice.overview.emptyActive);
+      : overview.trust.hint ||
+        overview.description ||
+        voice.overview.emptyActive);
 
   const metrics = useMemo(
     () => [

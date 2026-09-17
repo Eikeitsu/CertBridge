@@ -12,7 +12,9 @@ export function useVisibleTabs() {
     isFlagOn(status.hide_supported) || isFlagOn(status.zn_hide_supported);
 
   const tabs = useMemo(() => {
-    return hideSupported ? TABS : TABS.filter((tab) => tab.key !== TabName.Hide);
+    return hideSupported
+      ? TABS
+      : TABS.filter((tab) => tab.key !== TabName.Hide);
   }, [hideSupported]);
 
   return { tabs, hideSupported };

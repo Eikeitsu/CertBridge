@@ -24,7 +24,9 @@ export function ConsoleHomePage() {
     if (!bootstrapped || !stabilizing) return;
     const timers = [2500, 8000].map((ms) =>
       window.setTimeout(() => {
-        void dispatch(refreshStatus({ toast: false, syncApps: false, live: true }));
+        void dispatch(
+          refreshStatus({ toast: false, syncApps: false, live: true }),
+        );
       }, ms),
     );
     return () => timers.forEach((id) => window.clearTimeout(id));

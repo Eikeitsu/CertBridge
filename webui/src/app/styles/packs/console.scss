@@ -14,6 +14,7 @@ html[data-pack="console"] .bf-topbar {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   background: var(--bf-surface-2);
+  grid-template-columns: 1fr;
 }
 
 html[data-pack="console"] .bf-topbar__brand {
@@ -31,10 +32,6 @@ html[data-pack="console"] .bf-topbar__title {
   max-width: 100%;
   color: var(--bf-ink-2);
   grid-column: 1 / -1;
-}
-
-html[data-pack="console"] .bf-topbar {
-  grid-template-columns: 1fr;
 }
 
 html[data-pack="console"] .bf-topbar__brand,
@@ -88,7 +85,9 @@ html[data-pack="console"][data-theme="light"] {
   --bf-bg: #dfe5ec;
   --bf-surface: #f3f6f9;
   --bf-surface-2: #e8eef4;
-  background: repeating-linear-gradient(
+
+  background:
+    repeating-linear-gradient(
       0deg,
       transparent,
       transparent 23px,
@@ -101,6 +100,12 @@ html[data-pack="console"][data-theme="dark"] {
   --bf-bg: #070b10;
   --bf-surface: #0e151d;
   --bf-surface-2: #121a24;
-  background: radial-gradient(80% 50% at 100% 0%, rgba(37, 99, 235, 0.12), transparent 50%),
+
+  background:
+    radial-gradient(
+      80% 50% at 100% 0%,
+      rgba(37, 99, 235, 0.12),
+      transparent 50%
+    ),
     var(--bf-bg);
 }

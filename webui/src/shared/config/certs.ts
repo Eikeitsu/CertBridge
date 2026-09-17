@@ -1,9 +1,19 @@
-import { BuiltinCertKind, HotMountMode, ResolvedTheme } from "@/entities/module/enums";
+import {
+  BuiltinCertKind,
+  HotMountMode,
+  ResolvedTheme,
+} from "@/entities/module/enums";
 
 export type DnAttributeKey =
   "cn" | "o" | "ou" | "l" | "st" | "c" | "email" | "dc" | "uid";
 
-export const CERT_IMPORT_ACCEPT = [".pem", ".crt", ".cer", ".der", ".0"] as const;
+export const CERT_IMPORT_ACCEPT = [
+  ".pem",
+  ".crt",
+  ".cer",
+  ".der",
+  ".0",
+] as const;
 
 export const CERT_EXPIRY_WARN_DAYS = 30;
 export const MS_PER_DAY = 86_400_000;

@@ -39,7 +39,8 @@ export function friendlyError(code?: string): string {
     invalid_quiet_prop: "无效的动态简介开关",
     invalid_mount_mode: "无效的挂载模式",
     invalid_experimental_14_system: "无效的 system 挂载选项",
-    overlay_deprecated_use_magic_or_skip: "该选项已废弃，请改用轻量 Magic 或跳过 system",
+    overlay_deprecated_use_magic_or_skip:
+      "该选项已废弃，请改用轻量 Magic 或跳过 system",
     invalid_preset: "不支持的导入预设",
     preset_cert_not_found: "未找到该软件的证书文件，请先导出到下载目录",
     import_failed: "导入失败，请检查证书是否有效",

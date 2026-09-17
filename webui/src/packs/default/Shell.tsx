@@ -41,7 +41,10 @@ function Pane({
   children: React.ReactNode;
 }) {
   return (
-    <section className={`pk-def-pane${active === tab ? " is-on" : ""}`} aria-hidden={active !== tab}>
+    <section
+      className={`pk-def-pane${active === tab ? " is-on" : ""}`}
+      aria-hidden={active !== tab}
+    >
       {seen ? children : null}
     </section>
   );
@@ -61,7 +64,9 @@ export function DefaultShell() {
   useImmersiveChrome(resolved, false, undefined, "/");
 
   useEffect(() => {
-    setSeen((prev) => (prev[activeTab] ? prev : { ...prev, [activeTab]: true }));
+    setSeen((prev) =>
+      prev[activeTab] ? prev : { ...prev, [activeTab]: true },
+    );
   }, [activeTab]);
 
   useEffect(() => {
@@ -75,7 +80,10 @@ export function DefaultShell() {
 
   return (
     <div className="pk-def-shell">
-      <div className={`pk-def-progress${refreshing ? " is-on" : ""}`} aria-hidden />
+      <div
+        className={`pk-def-progress${refreshing ? " is-on" : ""}`}
+        aria-hidden
+      />
       <header className="pk-def-topbar">
         <div className="pk-def-topbar__brand">
           <img
@@ -93,14 +101,22 @@ export function DefaultShell() {
         <Pane tab={TabName.Home} active={activeTab} seen={!!seen[TabName.Home]}>
           <DefaultHomePage />
         </Pane>
-        <Pane tab={TabName.Certs} active={activeTab} seen={!!seen[TabName.Certs]}>
+        <Pane
+          tab={TabName.Certs}
+          active={activeTab}
+          seen={!!seen[TabName.Certs]}
+        >
           <DefaultCertsPage />
         </Pane>
         <Pane tab={TabName.Log} active={activeTab} seen={!!seen[TabName.Log]}>
           <DefaultLogPage />
         </Pane>
         {hideSupported ? (
-          <Pane tab={TabName.Hide} active={activeTab} seen={!!seen[TabName.Hide]}>
+          <Pane
+            tab={TabName.Hide}
+            active={activeTab}
+            seen={!!seen[TabName.Hide]}
+          >
             <DefaultHidePage />
           </Pane>
         ) : null}
@@ -108,7 +124,10 @@ export function DefaultShell() {
           <DefaultMorePage />
         </Pane>
       </main>
-      <nav className="pk-def-dock" style={{ gridTemplateColumns: `repeat(${dockTabs.length}, 1fr)` }}>
+      <nav
+        className="pk-def-dock"
+        style={{ gridTemplateColumns: `repeat(${dockTabs.length}, 1fr)` }}
+      >
         {dockTabs.map((tab) => {
           const Icon = ICONS[tab.key];
           return (

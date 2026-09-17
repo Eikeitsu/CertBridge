@@ -2,15 +2,12 @@
 
 ## v2.3.1
 
-
 - 增强对 Android 14+ 的隐藏能力，消除更多挂载痕迹，默认不再挂载 `/system/etc/security/cacerts`
 - 实验配置 `experimental_14_system`（`auto` / `skip`，**默认 `skip`**）：Android 14+ 下对**两种挂载模式均生效**；默认跳过 system、只脚本注入 APEX；设为 `auto` 则按挂载模式处理 system。需要 system 叠 addon 请用正式模式 `magic` 并设 `auto`。改 `certs.conf` 或 `cb set_experimental_14_system` 后需重启
 - 挂载模式文档补充 Android 7–13 / 14+ 行为对照；说明完整兼容在 `auto` 时会在 `/system/etc/security/cacerts` 留下整库 bind，可改用轻量 Magic 或保持默认 `skip`
 - 挂载策略由 `mount_mode` 与实验项正交组合；模块简介兼容范围更新为 Android 7–17
 
 ## v2.3.0
-
-
 
 - 开机注入更稳：状态校验失败会退避重试并延迟自愈；改过开关后按新配置重建证书集
 - 切换挂载模式时清理 staged 叠层；DER 证书导入走快路径，减少导入失败
@@ -22,8 +19,6 @@
 
 ## v2.2.1
 
-
-
 - 修复软重启后仍可能继续注入已关闭证书的问题（如关掉 ProxyPin 后仍报注入失败 / 挂载残留）
 - WebUI：证书开关已关但旧证尚未卸掉时，会提示「仍在生效（重启后移除）」
 - Action 改为只读仪表盘（适配 SukiSU 约 10s 脚本超时），去掉易被掐断的音量键长操作
@@ -31,13 +26,9 @@
 
 ## v2.2.0
 
-
-
 - 修复 KernelSU 越狱模式软重启后状态不更新：软重启不换内核 `boot_id`，原先会跳过证书集重建并卡住「待重启」/旧缓存；现用 `boot-epoch` 区分用户态周期，并允许同 boot 重建待生效配置
 
 ## v2.1.0
-
-
 
 - 新增挂载模式：`compatible`（默认，完整兼容 / 运行时 bind）与 `magic`（轻量 Magic Mount，仅叠 addon）
 - 自定义安装增加音量键选择挂载模式；默认安装固定完整兼容
@@ -47,8 +38,6 @@
 - 发版约定见 `tooling/RELEASE.md`
 
 ## v2.0.0
-
-
 
 - 证书来源重构：不再内置 Reqable，优先从已安装 App 自动导入；ProxyPin 优先 App，未检测到且安装时选了 ProxyPin 则使用模块内置证书；检测到 HttpCanary、ADGuard 等依次询问是否导入为自定义证书
 - WebUI 证书名称从证书 subject（CN/O）自动解析，支持点击展开详情（主题、颁发者、有效期、指纹等）；自定义证书同样显示可读名称
@@ -64,8 +53,6 @@
 
 ## v1.2.0
 
-
-
 - 模块脚本按功能拆分到 `bin/lib/`，`common.sh` 仅作加载入口
 - Action 增加实用功能：音量上刷新状态，音量下进入菜单，可免重启挂载/卸载用户区与存储卡临时 CA；并优化音量键每轮独立计时，降低漏键与连按才响应
 - 为 APEX 与 system 信任库分别建立临时挂载层，按目标路径设置 SELinux 后再绑定到命名空间；放宽带 MCS 类别机型的上下文比对，避免误拒证书层准备
@@ -75,8 +62,6 @@
 
 ## v1.1.1
 
-
-
 - 修复 Android 14+ 仅注入 APEX、未覆盖 system 路径导致 Reqable 等检测「证书未安装」的问题；现同时运行时绑定 APEX 与 system
 - 开机后命名空间注入扩展到抓包 App 与已运行应用，避免 Settings 能看到证书但抓包 TLS 仍失败 / 断网（注：自 v1.2.0 起改为仅关键命名空间，不再扫全机应用）
 - 临时热挂载会合并已启用的永久 addon，且同样覆盖 APEX / system 双路径
@@ -84,8 +69,6 @@
 - 移除深色顶栏浅色状态栏条，改为依赖 `color-scheme` 与 theme-color 同步状态栏
 
 ## v1.1.0
-
-
 
 - 移除持久化系统 CA 基线与 `system/cacerts` 覆盖目录，改为每次开机从当前 system / Conscrypt APEX 信任库生成完整证书集
 - 生成阶段校验证书数量、复制结果、附加证书校验和及 SELinux 上下文；任一步失败都保留系统原始信任库
@@ -98,8 +81,6 @@
 
 ## v1.0.2
 
-
-
 - 紧急修复 KernelSU Magic Mount 将系统 CA 目录遮蔽为仅剩 Reqable、ProxyPin 两张证书的问题
 - 紧急修复运行时证书合并失败后系统信任库为空、导致 TLS 连接及抓包断网的问题
 - 恢复系统 CA 基线方案，始终以“完整系统基线 + 模块证书”生成挂载内容
@@ -108,8 +89,6 @@
 - 增加 PID 1、Zygote 与系统设置进程的注入日志
 
 ## v1.0.1
-
-
 
 - 项目更名为证书桥（CertBridge），模块显示名调整为「系统 CA 证书」
 - 移除持久化系统 CA 基线抓取，改为每次注入时现场读取并增量合并系统信任库
@@ -124,8 +103,6 @@
 - 更新日志与模块 ZIP 同步部署到 GitHub Pages，改善更新检查与下载体验
 
 ## v1.0.0
-
-
 
 - 首次发布系统 CA 证书模块与 KernelSU WebUI
 - 内置 Reqable / ProxyPin CA，支持独立开关与自定义证书

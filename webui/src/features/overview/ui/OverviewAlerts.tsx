@@ -17,7 +17,9 @@ export function OverviewAlerts({ overview }: OverviewAlertsProps) {
       {overview.injectDiagnosis?.message ? (
         <Notice tone="error">
           {overview.injectDiagnosis.message}
-          {overview.injectDiagnosis.hint ? ` · ${overview.injectDiagnosis.hint}` : ""}
+          {overview.injectDiagnosis.hint
+            ? ` · ${overview.injectDiagnosis.hint}`
+            : ""}
         </Notice>
       ) : null}
     </>

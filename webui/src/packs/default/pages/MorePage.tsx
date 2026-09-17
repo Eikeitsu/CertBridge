@@ -60,7 +60,7 @@ export function DefaultMorePage() {
         <UpdateChannelPanel />
       </section>
       <section className="pk-def-section">
-      <AboutSection title={v.about} layout="dashboard" />
+        <AboutSection title={v.about} layout="dashboard" />
       </section>
     </div>
   );

@@ -20,7 +20,11 @@ export function useMountMode() {
   const dispatch = useAppDispatch();
   const status = useAppSelector(selectModuleStatus);
   const { isPending, runExclusive } = useAsyncLock();
-  const statusMode = parseEnum(MountMode, status.mount_mode, MountMode.Compatible);
+  const statusMode = parseEnum(
+    MountMode,
+    status.mount_mode,
+    MountMode.Compatible,
+  );
   const [draft, setDraft] = useState<MountMode | null>(null);
   const mountMode = draft ?? statusMode;
 

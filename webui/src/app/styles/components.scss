@@ -133,7 +133,10 @@
   font-size: 0.86rem;
   font-weight: 650;
   cursor: pointer;
-  transition: background var(--bf-ease), border-color var(--bf-ease), transform var(--bf-ease);
+  transition:
+    background var(--bf-ease),
+    border-color var(--bf-ease),
+    transform var(--bf-ease);
 }
 
 .bf-btn:active:not(:disabled) {
@@ -265,7 +268,9 @@
   cursor: pointer;
   min-height: 48px;
   color: inherit;
-  transition: border-color var(--bf-ease), background var(--bf-ease);
+  transition:
+    border-color var(--bf-ease),
+    background var(--bf-ease);
 }
 
 .bf-segment__option.is-on {
@@ -735,6 +740,7 @@
 .bf-appearance {
   /* Keep appearance controls dimensionally stable across packs (esp. console mono). */
   font-family: var(--bf-font-body);
+
   --bf-radius: 12px;
   --bf-radius-sm: 10px;
   --bf-radius-lg: 16px;
@@ -851,7 +857,11 @@
 
 .bf-pack-preview[data-pack="ops"] {
   background:
-    radial-gradient(80% 50% at 100% 0%, rgba(45, 212, 191, 0.25), transparent 55%),
+    radial-gradient(
+      80% 50% at 100% 0%,
+      rgba(45, 212, 191, 0.25),
+      transparent 55%
+    ),
     #0b1118;
 }
 
@@ -985,7 +995,9 @@
 .bf-snackbar {
   position: fixed;
   left: 50%;
-  bottom: calc(var(--bf-inset-bottom) + var(--bf-dock-h) + var(--bf-dock-pad) + 14px);
+  bottom: calc(
+    var(--bf-inset-bottom) + var(--bf-dock-h) + var(--bf-dock-pad) + 14px
+  );
   transform: translateX(-50%) translateY(12px);
   z-index: 50;
   padding: 11px 18px;
@@ -1374,7 +1386,11 @@
   border: 1px solid var(--pk-line, var(--bf-stroke));
   border-radius: 10px;
   overflow: hidden;
-  background: color-mix(in srgb, var(--pk-panel, var(--bf-surface)) 88%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--pk-panel, var(--bf-surface)) 88%,
+    transparent
+  );
 }
 
 .bf-about-links__menu-item {
@@ -1400,7 +1416,11 @@
 }
 
 .bf-about-links__menu-item:active {
-  background: color-mix(in srgb, var(--pk-accent, var(--bf-primary)) 8%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--pk-accent, var(--bf-primary)) 8%,
+    transparent
+  );
 }
 
 .bf-about-links__menu-label {

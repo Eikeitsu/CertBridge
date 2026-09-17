@@ -22,7 +22,15 @@ export function BuiltinPipelineCard({
             className={`bf-chip${row.active ? " is-on" : row.enabled ? " is-pend" : ""}`}
           >
             {row.title}
-            <em>{row.active ? "生效" : row.enabled ? "待重启" : row.available ? "可用" : "缺失"}</em>
+            <em>
+              {row.active
+                ? "生效"
+                : row.enabled
+                  ? "待重启"
+                  : row.available
+                    ? "可用"
+                    : "缺失"}
+            </em>
           </span>
         ))}
       </div>

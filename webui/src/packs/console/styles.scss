@@ -15,11 +15,10 @@
   --pk-accent: #7dd3a0;
   --pk-term-bg: #05080c;
   --pk-term-ink: #9fe6b8;
+
   min-height: 100dvh;
-  padding:
-    calc(var(--bf-inset-top) + var(--pk-top) + var(--pk-below-top))
-    var(--pk-pad)
-    calc(var(--bf-inset-bottom) + var(--pk-dock) + 8px);
+  padding: calc(var(--bf-inset-top) + var(--pk-top) + var(--pk-below-top))
+    var(--pk-pad) calc(var(--bf-inset-bottom) + var(--pk-dock) + 8px);
   background: #070b10;
   color: var(--pk-ink);
   font-family: var(--bf-font-mono);
@@ -36,6 +35,7 @@ html[data-theme="light"] .pk-con-shell {
   --pk-accent: #0f766e;
   --pk-term-bg: #e8edf3;
   --pk-term-ink: #0f3d36;
+
   background: #d7dde5;
   color: var(--pk-ink);
 }
@@ -97,6 +97,7 @@ html[data-theme="light"] .pk-con-topbar {
   from {
     background-position: 0 0;
   }
+
   to {
     background-position: 16px 0;
   }
@@ -418,7 +419,9 @@ html[data-theme="light"] .pk-con-dock {
   border-top-color: var(--pk-line);
 }
 
-.pk-con-shell .bf-card-plain:not(.bf-appearance) > *:not(.bf-card-plain__title):not(.bf-card-plain__meta) {
+.pk-con-shell
+  .bf-card-plain:not(.bf-appearance)
+  > *:not(.bf-card-plain__title, .bf-card-plain__meta) {
   padding: 10px 12px 12px;
 }
 
@@ -496,6 +499,7 @@ html[data-pack="console"] {
   --bf-radius-sm: 2px;
   --bf-radius-lg: 4px;
   --bf-font-display: var(--bf-font-mono);
+
   background: #070b10;
 }
 
@@ -509,5 +513,6 @@ html[data-pack="console"][data-theme="light"] {
   --bf-ink-3: #64748b;
   --bf-stroke: #b8c2ce;
   --bf-stroke-strong: #94a3b8;
+
   background: #d7dde5;
 }

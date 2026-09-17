@@ -46,7 +46,9 @@ export const ABOUT_TIP_CHANNELS = [
 ] as const;
 
 export function brandMarkSrc(theme: ResolvedTheme): string {
-  return assetUrl(theme === ResolvedTheme.Dark ? ASSETS.markLight : ASSETS.mark);
+  return assetUrl(
+    theme === ResolvedTheme.Dark ? ASSETS.markLight : ASSETS.mark,
+  );
 }
 
 /** Magisk / KernelSU 模块图标（带底色的小图标） */

@@ -57,11 +57,14 @@ export function exec(
 
 export function openUrl(url: string): Promise<ExecResult> {
   const safe = String(url || "").replace(/'/g, "");
-  return exec(`am start -a android.intent.action.VIEW -d '${safe}' >/dev/null 2>&1`);
+  return exec(
+    `am start -a android.intent.action.VIEW -d '${safe}' >/dev/null 2>&1`,
+  );
 }
 
 export function toast(message: string, tone: SnackTone = "info") {
-  const kind: HapticKind = tone === "bad" ? "error" : tone === "ok" ? "success" : "light";
+  const kind: HapticKind =
+    tone === "bad" ? "error" : tone === "ok" ? "success" : "light";
   haptic(kind);
   showSnack(message, tone);
 }

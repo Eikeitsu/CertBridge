@@ -1,6 +1,9 @@
 import { EMPTY_PLACEHOLDER } from "@/shared/config/constants";
 import { useAppSelector } from "@/app/store/hooks";
-import { selectDeviceLabel, selectModuleStatus } from "@/features/status/model/selectors";
+import {
+  selectDeviceLabel,
+  selectModuleStatus,
+} from "@/features/status/model/selectors";
 import { isFlagOn } from "@/shared/lib/flag";
 import { parseEnum } from "@/shared/lib/enum";
 import { Experimental14System } from "@/entities/module/enums";
@@ -8,7 +11,8 @@ import { EXPERIMENTAL_14_SYSTEM } from "@/shared/config/mount";
 
 function yesNo(flag: string | undefined, fallbackInstalled?: boolean) {
   if (flag === "1" || flag === "0") return flag === "1" ? "已安装" : "未安装";
-  if (fallbackInstalled !== undefined) return fallbackInstalled ? "已安装" : "未安装";
+  if (fallbackInstalled !== undefined)
+    return fallbackInstalled ? "已安装" : "未安装";
   return EMPTY_PLACEHOLDER;
 }
 
@@ -40,18 +44,43 @@ export function useAboutModuleRows(): AboutRow[] {
   );
 
   return [
-    { key: "version", label: "版本", value: status.version || EMPTY_PLACEHOLDER, group: "env" },
-    { key: "device", label: "设备", value: deviceLabel || EMPTY_PLACEHOLDER, group: "env" },
+    {
+      key: "version",
+      label: "版本",
+      value: status.version || EMPTY_PLACEHOLDER,
+      group: "env",
+    },
+    {
+      key: "device",
+      label: "设备",
+      value: deviceLabel || EMPTY_PLACEHOLDER,
+      group: "env",
+    },
     { key: "system", label: "系统", value: androidLabel, group: "env" },
-    { key: "root", label: "Root", value: status.root || EMPTY_PLACEHOLDER, group: "env" },
-    { key: "mount", label: "挂载模式", value: status.mount_mode || EMPTY_PLACEHOLDER, group: "config" },
+    {
+      key: "root",
+      label: "Root",
+      value: status.root || EMPTY_PLACEHOLDER,
+      group: "env",
+    },
+    {
+      key: "mount",
+      label: "挂载模式",
+      value: status.mount_mode || EMPTY_PLACEHOLDER,
+      group: "config",
+    },
     {
       key: "e14",
       label: "14+ system",
       value: EXPERIMENTAL_14_SYSTEM[e14].label,
       group: "config",
     },
-    { key: "tmpfs", label: "临时路径", value: status.tmpfs_style || EMPTY_PLACEHOLDER, group: "config" },
+    {
+      key: "tmpfs",
+      label: "临时路径",
+      value: status.tmpfs_style || EMPTY_PLACEHOLDER,
+      group: "config",
+    },
     { key: "mode", label: "安装方案", value: modeLabel, group: "config" },
     {
       key: "webui",
@@ -98,7 +127,13 @@ type AboutModuleInfoProps = {
 export function AboutModuleInfo({ variant = "tiles" }: AboutModuleInfoProps) {
   const rows = useAboutModuleRows();
   const resolved =
-    variant === "list" ? "tiles" : variant === "kv" ? "rail" : variant === "table" ? "shell" : variant;
+    variant === "list"
+      ? "tiles"
+      : variant === "kv"
+        ? "rail"
+        : variant === "table"
+          ? "shell"
+          : variant;
 
   if (resolved === "shell") {
     const lines = [
@@ -119,7 +154,11 @@ export function AboutModuleInfo({ variant = "tiles" }: AboutModuleInfoProps) {
           [
             { id: "env", title: "环境", items: groupRows(rows, "env") },
             { id: "config", title: "配置", items: groupRows(rows, "config") },
-            { id: "component", title: "组件", items: groupRows(rows, "component") },
+            {
+              id: "component",
+              title: "组件",
+              items: groupRows(rows, "component"),
+            },
           ] as const
         ).map((section) => (
           <section key={section.id} className="bf-about-rail__section">
@@ -128,7 +167,10 @@ export function AboutModuleInfo({ variant = "tiles" }: AboutModuleInfoProps) {
               {section.items.map((row) => {
                 const tone = toneOf(row.value);
                 return (
-                  <div key={row.key} className={`bf-about-rail__cell is-${tone}`}>
+                  <div
+                    key={row.key}
+                    className={`bf-about-rail__cell is-${tone}`}
+                  >
                     <span className="bf-about-rail__key">{row.label}</span>
                     <strong className="bf-about-rail__val">{row.value}</strong>
                   </div>

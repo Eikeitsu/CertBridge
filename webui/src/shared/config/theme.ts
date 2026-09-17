@@ -40,10 +40,7 @@ export const THEME_MODE_OPTIONS = [
 ] as const;
 
 /** 切换主题包时的壳层默认 */
-export const PACK_CHROME_DEFAULTS: Record<
-  ThemePack,
-  { compact: boolean }
-> = {
+export const PACK_CHROME_DEFAULTS: Record<ThemePack, { compact: boolean }> = {
   [ThemePack.Default]: { compact: false },
   [ThemePack.Ops]: { compact: true },
   [ThemePack.Console]: { compact: true },

@@ -80,7 +80,10 @@ export function CertsPage() {
         onMount={handleHotMount}
         onUnmount={handleHotUnmount}
       />
-      <Button variant="ghost" onClick={() => void dispatch(refreshStatus(true))}>
+      <Button
+        variant="ghost"
+        onClick={() => void dispatch(refreshStatus(true))}
+      >
         {voice.certs.refresh}
       </Button>
       <CertDetailSheet

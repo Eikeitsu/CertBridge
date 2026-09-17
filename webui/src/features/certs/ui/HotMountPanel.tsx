@@ -45,7 +45,11 @@ export function HotMountPanel({
       meta={isHotActive ? sessionLabel : HOT_MOUNT_META}
       surface={surface}
     >
-      <HotMountAllowRow checked={isHotAllow} disabled={busy} onChange={onSetHotAllow} />
+      <HotMountAllowRow
+        checked={isHotAllow}
+        disabled={busy}
+        onChange={onSetHotAllow}
+      />
 
       {isHotActive ? (
         <HotMountActiveSession

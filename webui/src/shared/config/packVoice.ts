@@ -7,7 +7,12 @@ export type PackVoice = {
   overview: {
     kicker: string;
     emptyActive: string;
-    metrics: { active: string; custom: string; baseline: string; store: string };
+    metrics: {
+      active: string;
+      custom: string;
+      baseline: string;
+      store: string;
+    };
     pipelineTitle: string;
     runtimeTitle: string;
     refresh: string;
@@ -208,7 +213,12 @@ const DEFAULT_VOICE: PackVoice = {
   overview: {
     kicker: "信任状态",
     emptyActive: "尚未启用附加证书",
-    metrics: { active: "已启用", custom: "自定义", baseline: "基线", store: "库内" },
+    metrics: {
+      active: "已启用",
+      custom: "自定义",
+      baseline: "基线",
+      store: "库内",
+    },
     pipelineTitle: "内置证书",
     runtimeTitle: "环境详情",
     refresh: "刷新复核",
@@ -246,7 +256,12 @@ const CONSOLE_VOICE: PackVoice = {
   overview: {
     kicker: "TRUST",
     emptyActive: "no active addon CA",
-    metrics: { active: "ACTIVE", custom: "CUSTOM", baseline: "BASE", store: "STORE" },
+    metrics: {
+      active: "ACTIVE",
+      custom: "CUSTOM",
+      baseline: "BASE",
+      store: "STORE",
+    },
     pipelineTitle: "BUILTIN",
     runtimeTitle: "ENV",
     refresh: "REFRESH",

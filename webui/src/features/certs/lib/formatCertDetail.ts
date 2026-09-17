@@ -1,5 +1,9 @@
 import { FLAG_OFF, FLAG_ON } from "@/shared/config/constants";
-import { CERT_EXPIRY_WARN_DAYS, CERT_INFO_KEYS, MS_PER_DAY } from "@/shared/config/certs";
+import {
+  CERT_EXPIRY_WARN_DAYS,
+  CERT_INFO_KEYS,
+  MS_PER_DAY,
+} from "@/shared/config/certs";
 import type { DetailField, FormattedCertDetail } from "./types";
 import { parseRfc2253 } from "./parseDn";
 import { formatDateLabel, parseOpenSslDate } from "./parseOpenSslDate";
@@ -82,7 +86,8 @@ export function formatCertDetail(
     }));
 
   return {
-    displayName: fields.display_name || subject.cn || fallbackTitle || "CA 证书",
+    displayName:
+      fields.display_name || subject.cn || fallbackTitle || "CA 证书",
     filename: fields.filename || "",
     subject,
     issuer,
@@ -103,7 +108,9 @@ export function formatCertDetail(
       field("起始", formatDateLabel(fields.not_before || ""), {
         copy: fields.not_before,
       }),
-      field("截止", formatDateLabel(fields.not_after || ""), { copy: fields.not_after }),
+      field("截止", formatDateLabel(fields.not_after || ""), {
+        copy: fields.not_after,
+      }),
       field(
         "剩余",
         isExpired ? "已过期" : daysLeft != null ? `${daysLeft} 天` : undefined,

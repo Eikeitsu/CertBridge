@@ -11,8 +11,7 @@ import { spawnSync } from "node:child_process";
 import { readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const requireShell =
-  process.env.CI === "true" || process.env.REQUIRE_SHELLCHECK === "1";
+const requireShell = process.env.CI === "true" || process.env.REQUIRE_SHELLCHECK === "1";
 
 function whichShellcheck() {
   const cmd = process.platform === "win32" ? "where" : "which";
@@ -34,12 +33,7 @@ function stripUtf8Bom(files) {
   const fixed = [];
   for (const f of files) {
     const buf = readFileSync(f);
-    if (
-      buf.length >= 3 &&
-      buf[0] === 0xef &&
-      buf[1] === 0xbb &&
-      buf[2] === 0xbf
-    ) {
+    if (buf.length >= 3 && buf[0] === 0xef && buf[1] === 0xbb && buf[2] === 0xbf) {
       writeFileSync(f, buf.subarray(3));
       fixed.push(f);
       console.warn(`[lint:shell] stripped UTF-8 BOM: ${f}`);

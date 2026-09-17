@@ -13,7 +13,7 @@ on:
         type: string
         default: ""
       prerelease:
-        description: "标记为预发布"
+        description: "GitHub Release 标记为预发布（不影响正式更新通道）"
         required: false
         type: boolean
         default: false

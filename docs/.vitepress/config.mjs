@@ -1,8 +1,7 @@
 import { defineConfig } from "vitepress";
 
 const repoName =
-  process.env.VITEPRESS_BASE?.replace(/^\//, "").replace(/\/$/, "") ||
-  "CertBridge";
+  process.env.VITEPRESS_BASE?.replace(/^\//, "").replace(/\/$/, "") || "CertBridge";
 
 export default defineConfig({
   title: "证书桥",
@@ -37,6 +36,7 @@ export default defineConfig({
           { text: "功能介绍", link: "/guide/features" },
           { text: "安装与升级", link: "/guide/install" },
           { text: "配置说明", link: "/guide/config" },
+          { text: "挂载隐藏说明", link: "/guide/hide" },
           { text: "更新日志", link: "/guide/changelog" },
           { text: "常见问题", link: "/guide/faq" },
           { text: "相关软件", link: "/guide/related" },

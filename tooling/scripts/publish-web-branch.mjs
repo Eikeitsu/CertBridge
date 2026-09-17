@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// Deprecated: CI updates now publish to ci-dist (update.json + zip). Build Web no longer pushes dist-web.
 import { execSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
@@ -17,9 +18,7 @@ if (!existsSync(builtWeb)) {
 const repo = process.env.GITHUB_REPOSITORY;
 const token = process.env.GITHUB_TOKEN;
 if (!repo || !token) {
-  console.log(
-    "[publish-web-branch] skip push (GITHUB_REPOSITORY/GITHUB_TOKEN not set)",
-  );
+  console.log("[publish-web-branch] skip push (GITHUB_REPOSITORY/GITHUB_TOKEN not set)");
   process.exit(0);
 }
 

@@ -1,0 +1,58 @@
+:root {
+  --bf-inset-top: var(--window-inset-top, env(safe-area-inset-top, 0px));
+  --bf-inset-bottom: var(--window-inset-bottom, env(safe-area-inset-bottom, 0px));
+  --bf-topbar-h: 52px;
+  --bf-dock-h: 58px;
+  --bf-dock-pad: 0px;
+  --bf-font-scale: 1;
+  --bf-font-display:
+    "Segoe UI Variable", "Segoe UI", "PingFang SC", "HarmonyOS Sans SC",
+    "Microsoft YaHei", sans-serif;
+  --bf-font-body:
+    "Segoe UI", "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", sans-serif;
+  --bf-font-mono:
+    "Cascadia Code", "Sarasa Mono SC", "IBM Plex Mono", ui-monospace, monospace;
+  --bf-radius: 14px;
+  --bf-radius-sm: 10px;
+  --bf-radius-lg: 20px;
+  --bf-space-xs: 8px;
+  --bf-space-sm: 12px;
+  --bf-space-md: 16px;
+  --bf-space-lg: 22px;
+  --bf-page-pad: 16px;
+  --bf-accent-pick: #0f766e;
+  --bf-accent-pair: #115e59;
+  --bf-primary: var(--bf-accent-pick);
+  --bf-ok: #059669;
+  --bf-warn: #d97706;
+  --bf-bad: #dc2626;
+  --bf-ok-soft: color-mix(in srgb, var(--bf-ok) 12%, var(--bf-surface));
+  --bf-warn-soft: color-mix(in srgb, var(--bf-warn) 14%, var(--bf-surface));
+  --bf-bad-soft: color-mix(in srgb, var(--bf-bad) 12%, var(--bf-surface));
+  --bf-ink: #0f172a;
+  --bf-ink-2: #475569;
+  --bf-ink-3: #94a3b8;
+  --bf-bg: #eef2f6;
+  --bf-chrome: var(--bf-bg);
+  --bf-surface: #fff;
+  --bf-surface-2: #f4f7fa;
+  --bf-card-inset-bg: color-mix(in srgb, var(--bf-ink) 4%, var(--bf-surface));
+  --bf-stroke: rgba(15, 23, 42, 0.08);
+  --bf-stroke-strong: rgba(15, 23, 42, 0.14);
+  --bf-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.04);
+  --bf-ease: 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html[data-theme="dark"] {
+  --bf-ink: #e8eef6;
+  --bf-ink-2: #9aa8bc;
+  --bf-ink-3: #6b7c93;
+  --bf-bg: #0b1118;
+  --bf-chrome: var(--bf-bg);
+  --bf-surface: #141c27;
+  --bf-surface-2: #1a2431;
+  --bf-card-inset-bg: color-mix(in srgb, var(--bf-ink) 8%, var(--bf-surface));
+  --bf-stroke: rgba(232, 238, 246, 0.08);
+  --bf-stroke-strong: rgba(232, 238, 246, 0.14);
+  --bf-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+}

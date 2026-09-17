@@ -1,0 +1,49 @@
+name: Lint
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # 注意：不可写 `&& 0 || 1`——Actions 里 0 为假，PR 会错误变成浅克隆
+          # commitlint 需要 base..head 两端都在本地，统一全量历史
+          fetch-depth: 0
+
+      - uses: ./.github/actions/setup-node-npm
+
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: ESLint / Stylelint / Markdown / Shell
+        run: npm run lint
+        env:
+          REQUIRE_SHELLCHECK: "1"
+
+      - name: Typecheck WebUI
+        run: npm run typecheck:web
+
+      - name: Prettier check
+        run: npm run format:check
+
+      - name: Commitlint (PR range)
+        if: github.event_name == 'pull_request'
+        run: |
+          # PR checkout 默认是 merge ref；显式确保 base/head 可达
+          git fetch --no-tags origin \
+            "${{ github.event.pull_request.base.sha }}" \
+            "${{ github.event.pull_request.head.sha }}"
+          npx commitlint \
+            --from "${{ github.event.pull_request.base.sha }}" \
+            --to "${{ github.event.pull_request.head.sha }}" \
+            --verbose

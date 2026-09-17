@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="780" viewBox="0 0 360 780" role="img" aria-label="WebUI Log">
+  <rect width="360" height="780" rx="28" fill="#f4f6f8"/>
+  <rect x="16" y="52" width="328" height="640" rx="20" fill="#ffffff" stroke="#e2e8f0"/>
+  <text x="180" y="88" text-anchor="middle" font-family="system-ui,sans-serif" font-size="16" font-weight="600" fill="#0f172a">Log</text>
+  <rect x="32" y="108" width="296" height="36" rx="8" fill="#f8fafc" stroke="#e2e8f0"/>
+  <text x="48" y="131" font-family="ui-monospace,monospace" font-size="11" fill="#64748b">Filter: all levels</text>
+  <rect x="32" y="156" width="296" height="480" rx="12" fill="#0f172a"/>
+  <text x="44" y="182" font-family="ui-monospace,monospace" font-size="10" fill="#94a3b8">08:12:01 [INFO] status refresh</text>
+  <text x="44" y="204" font-family="ui-monospace,monospace" font-size="10" fill="#6ee7b7">08:12:01 [OK] inject apex + system</text>
+  <text x="44" y="226" font-family="ui-monospace,monospace" font-size="10" fill="#94a3b8">08:12:02 [INFO] sync reqable cert</text>
+  <text x="44" y="248" font-family="ui-monospace,monospace" font-size="10" fill="#6ee7b7">08:12:02 [OK] fingerprint match</text>
+  <text x="44" y="270" font-family="ui-monospace,monospace" font-size="10" fill="#94a3b8">08:12:03 [INFO] sync proxypin cert</text>
+  <text x="44" y="292" font-family="ui-monospace,monospace" font-size="10" fill="#fcd34d">08:12:03 [WARN] source unchanged</text>
+  <text x="44" y="314" font-family="ui-monospace,monospace" font-size="10" fill="#94a3b8">08:12:05 [INFO] mount tmpfs bind</text>
+  <text x="44" y="336" font-family="ui-monospace,monospace" font-size="10" fill="#6ee7b7">08:12:05 [OK] 142 certs merged</text>
+  <rect x="32" y="652" width="140" height="32" rx="8" fill="#e2e8f0"/>
+  <text x="102" y="673" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" fill="#475569">Clear log</text>
+  <rect x="188" y="652" width="140" height="32" rx="8" fill="#0f766e"/>
+  <text x="258" y="673" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" fill="#fff">Export</text>
+  <rect x="0" y="708" width="360" height="72" fill="#ffffff" stroke="#e2e8f0"/>
+  <text x="45" y="752" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#94a3b8">Overview</text>
+  <text x="135" y="752" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#94a3b8">Certs</text>
+  <text x="225" y="752" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#0f766e">Log</text>
+  <text x="315" y="752" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#94a3b8">More</text>
+</svg>

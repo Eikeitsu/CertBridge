@@ -16,8 +16,7 @@ function unixMode(rel) {
   const name = rel.split("/").pop() || "";
   if (name === "update-binary") return 0o100755;
   if (rel.endsWith(".sh")) return 0o100755;
-  if (rel.startsWith("bin/openssl/") && name.startsWith("openssl-"))
-    return 0o100755;
+  if (rel.startsWith("bin/openssl/") && name.startsWith("openssl-")) return 0o100755;
   return 0o100644;
 }
 

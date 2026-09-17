@@ -100,21 +100,34 @@ Lite 依赖设备上的 `app_process`/`dalvikvm`（Magisk 应用内刷入通常�
 
 共用 composite：`.github/actions/setup-node-npm`（Node 24 + `npm ci`）。
 
-| 工作流           | 触发                | 职责                                                                 |
-| ---------------- | ------------------- | -------------------------------------------------------------------- |
-| `Build Web`      | `module/webroot/**` | 压缩 Web → Artifact；push/手动再发布 `dist-web`（独立 job）          |
-| `Build Docs`     | `docs/**`           | 构建并部署 GitHub Pages                                              |
-| `Package Module` | `module/**`         | 仅构建 zip Artifact（不发 Release）                                  |
-| `Release Module` | 手动 / `v*` 标签    | `build` 打包 → `publish` 发 Release → `post` 回写主分支 / 触发文档站 |
+| 工作流           | 触发                                      | 职责                                                                                     |
+| ---------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `Build Web`      | `webui/**`、`module/webroot/**`           | 构建 Web → Artifact；由 Package 串联重打模块                                             |
+| `Build Docs`     | `docs/**`                                 | 构建并部署 GitHub Pages                                                                  |
+| `Package Module` | `module/**` / `webui/**` / Build Web 成功 | 打 zip Artifact；push 时 stamp CI 版本并发布 **`ci-dist`**（`update.json` + zip 同分支） |
+| `Release Module` | 手动 / `v*` 标签                          | 正式通道：Release + Pages `update.json` / zip；回写主分支                                |
 
-发版脚本：`resolve-release-version.py`、`post-release-update.sh`（见 [`RELEASE.md`](./RELEASE.md)）。
+### 更新通道
+
+| 通道     | 检测                               | 下载                                     |
+| -------- | ---------------------------------- | ---------------------------------------- |
+| **正式** | Pages `update.json`                | Pages `releases/*.zip`                   |
+| **CI**   | `ci-dist` 分支根目录 `update.json` | 同分支 `CertBridge.zip`（可选 jsDelivr） |
+
+管理器自带更新始终跟正式通道（`module.prop` → Pages）。WebUI「更多」可切换正式 / CI。
+
+`ci-dist` 布局：`update.json`、`CertBridge.zip`、`CertBridge_lite.zip`、`changelog.md`、`SOURCE_SHA`。
+
+CI 显示版本形如 `2.3.0.ci.N`，`versionCode` 在已发布 code 之上单调递增。
+
+发版脚本：`resolve-release-version.py`、`post-release-update.sh`、`publish-ci-dist.sh`（见 [`RELEASE.md`](./RELEASE.md)）。
 
 ### 手动发版
 
 1. 开发中把用户可见改动写在根目录 `changelog.md` → `## Unreleased`（详见 [`RELEASE.md`](./RELEASE.md)）
 2. Actions → **Release Module** → Run workflow
 3. 填写版本：`1.0.0` 或 `v1.0.0`
-4. 可选：预发布 / 草稿
+4. 可选：GitHub Release「预发布」标记（**不影响**正式更新通道）
 5. 工作流会：提升 Unreleased → 版本号；文档站两份 changelog **不含 Unreleased**；Release 正文优先取版本节（否则回退 Unreleased）+ GitHub Full Changelog
 
 也可本地打标签推送：

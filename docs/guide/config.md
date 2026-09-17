@@ -80,7 +80,7 @@ quiet_prop=1
 
 #### 实验：Android 14+ 是否跳过 system（`experimental_14_system`）
 
-与 `mount_mode` **正交**：在 **Android 14+** 上对 **完整兼容与轻量 Magic 均生效**；Android 7–13 忽略（无 APEX 时仍必须处理 system）。当前仅 `certs.conf` / CLI（WebUI 暂未提供）：
+与 `mount_mode` **正交**：在 **Android 14+** 上对 **完整兼容与轻量 Magic 均生效**；Android 7–13 忽略（无 APEX 时仍必须处理 system）。可在 WebUI「更多」页或 CLI 修改：
 
 ```text
 experimental_14_system=skip

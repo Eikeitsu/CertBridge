@@ -114,6 +114,5 @@ hot_failed=0"
 }
 
 cmd_verify() {
-  live_finalize_runtime_status live >/dev/null 2>&1 || true
-  cmd_status
+  cmd_status --live
 }

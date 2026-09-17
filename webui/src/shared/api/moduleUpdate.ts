@@ -44,23 +44,16 @@ function shellQuote(s: string): string {
   return `'${String(s).replace(/'/g, `'\\''`)}'`;
 }
 
-async function writeBinaryFile(
-  dest: string,
-  data: ArrayBuffer,
-): Promise<boolean> {
+async function writeBinaryFile(dest: string, data: ArrayBuffer): Promise<boolean> {
   const bytes = new Uint8Array(data);
   const dir = dest.replace(/\/[^/]+$/, "");
-  const init = await exec(
-    `mkdir -p '${dir}' && : > '${dest}' && echo ok`,
-    10_000,
-  );
+  const init = await exec(`mkdir -p '${dir}' && : > '${dest}' && echo ok`, 10_000);
   if (!(init.stdout || "").includes("ok")) return false;
   const chunk = 18 * 1024;
   for (let i = 0; i < bytes.length; i += chunk) {
     const slice = bytes.subarray(i, Math.min(i + chunk, bytes.length));
     let bin = "";
-    for (let j = 0; j < slice.length; j++)
-      bin += String.fromCharCode(slice[j]!);
+    for (let j = 0; j < slice.length; j++) bin += String.fromCharCode(slice[j]!);
     const b64 = btoa(bin);
     const r = await exec(`echo '${b64}' | base64 -d >> '${dest}'`, 60_000);
     if (r.errno === -1) return false;
@@ -108,9 +101,7 @@ async function downloadZip(
   return { ok: true, detail: out };
 }
 
-async function installModuleCli(
-  zip: string,
-): Promise<{ ok: boolean; detail: string }> {
+async function installModuleCli(zip: string): Promise<{ ok: boolean; detail: string }> {
   const path = zip.replace(/'/g, "");
   const attempts = [
     `magisk --install-module '${path}'`,
@@ -139,9 +130,7 @@ async function installModuleCli(
   return { ok: false, detail: logs.join("\n") };
 }
 
-async function openZipInManager(
-  zip: string,
-): Promise<{ ok: boolean; detail: string }> {
+async function openZipInManager(zip: string): Promise<{ ok: boolean; detail: string }> {
   const z = shellQuote(zip);
   const pkgs = MANAGER_PACKAGES.map((p) => shellQuote(p)).join(" ");
   const script = [

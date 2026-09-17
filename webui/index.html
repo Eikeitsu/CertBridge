@@ -34,22 +34,14 @@
             !!window.matchMedia &&
             window.matchMedia("(prefers-color-scheme: dark)").matches;
           root.dataset.theme =
-            mode === "dark" || (mode !== "light" && prefersDark)
-              ? "dark"
-              : "light";
+            mode === "dark" || (mode !== "light" && prefersDark) ? "dark" : "light";
           root.dataset.pack = pack;
           root.dataset.compact =
-            read(
-              "cb_compact",
-              pack === "console" || pack === "ops" ? "1" : "0",
-            ) === "1"
+            read("cb_compact", pack === "console" || pack === "ops" ? "1" : "0") === "1"
               ? "1"
               : "0";
           var scale = parseFloat(read("cb_font_scale", "1"));
-          root.style.setProperty(
-            "--bf-font-scale",
-            String(scale > 0 ? scale : 1),
-          );
+          root.style.setProperty("--bf-font-scale", String(scale > 0 ? scale : 1));
           var hex = /^#[0-9a-fA-F]{3,8}$/;
           var pick = read("cb_accent_color", "");
           var pair = read("cb_accent_pair", "");

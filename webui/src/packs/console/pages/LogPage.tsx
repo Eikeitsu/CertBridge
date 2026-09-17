@@ -1,9 +1,6 @@
 import { useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
-import {
-  clearActivityLog,
-  fetchActivityLog,
-} from "@/features/log/model/logSlice";
+import { clearActivityLog, fetchActivityLog } from "@/features/log/model/logSlice";
 import { selectActivityLog } from "@/features/log/model/selectors";
 import { useLogLevelFilter } from "@/features/log/hooks/useLogLevelFilter";
 import { formatByteSize } from "@/features/log/lib/formatByteSize";
@@ -14,13 +11,7 @@ import { LogLevel } from "@/entities/module/enums";
 import { Loader } from "@/shared/ui/Loader";
 import { CONSOLE_VOICE } from "../voice";
 
-const LEVELS = [
-  "",
-  LogLevel.Info,
-  LogLevel.Warn,
-  LogLevel.Error,
-  LogLevel.Debug,
-];
+const LEVELS = ["", LogLevel.Info, LogLevel.Warn, LogLevel.Error, LogLevel.Debug];
 
 export function ConsoleLogPage() {
   const dispatch = useAppDispatch();
@@ -56,8 +47,7 @@ export function ConsoleLogPage() {
           className="pk-con-btn is-primary"
           onClick={async () => {
             const action = await dispatch(fetchActivityLog());
-            if (fetchActivityLog.fulfilled.match(action))
-              toast(v.refresh, "ok");
+            if (fetchActivityLog.fulfilled.match(action)) toast(v.refresh, "ok");
           }}
         >
           {v.refresh}
@@ -82,9 +72,7 @@ export function ConsoleLogPage() {
         <Loader label="reading…" />
       ) : (
         <section className="pk-con-termframe">
-          <div className="pk-con-termframe__bar">
-            journal · {filtered.length} lines
-          </div>
+          <div className="pk-con-termframe__bar">journal · {filtered.length} lines</div>
           <pre className="pk-con-term">
             {filtered.length
               ? filtered.map((l) => `[${l.level}] ${l.body}`).join("\n")

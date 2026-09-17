@@ -1,8 +1,7 @@
 import { defineConfig } from "vitepress";
 
 const repoName =
-  process.env.VITEPRESS_BASE?.replace(/^\//, "").replace(/\/$/, "") ||
-  "CertBridge";
+  process.env.VITEPRESS_BASE?.replace(/^\//, "").replace(/\/$/, "") || "CertBridge";
 
 export default defineConfig({
   title: "证书桥",

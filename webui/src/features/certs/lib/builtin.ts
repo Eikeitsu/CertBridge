@@ -17,8 +17,7 @@ export type BuiltinCertFlag = {
 export function resolveBuiltinSubtitle(item: BuiltinCertItem): string {
   if (!item.isAvailable && !item.isActive) {
     return (
-      BUILTIN_CERTS.find((cert) => cert.kind === item.kind)?.missingHint ||
-      "未检测到证书"
+      BUILTIN_CERTS.find((cert) => cert.kind === item.kind)?.missingHint || "未检测到证书"
     );
   }
   if (!item.isEnabled && item.isActive) return "重启后才会从系统撤下";

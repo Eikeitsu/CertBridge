@@ -49,8 +49,7 @@ function pruneEmptyDirs(dir) {
 export function pruneUnusedWebImages(webroot, log = console.log) {
   const files = walk(webroot);
   const hasBundle = files.some(
-    (rel) =>
-      rel === "index.html" || rel.endsWith(".js") || rel.endsWith(".css"),
+    (rel) => rel === "index.html" || rel.endsWith(".js") || rel.endsWith(".css"),
   );
   if (!hasBundle) {
     log("skip image prune: webroot has no html/js/css");

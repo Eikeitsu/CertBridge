@@ -1,9 +1,6 @@
 import { useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
-import {
-  clearActivityLog,
-  fetchActivityLog,
-} from "@/features/log/model/logSlice";
+import { clearActivityLog, fetchActivityLog } from "@/features/log/model/logSlice";
 import { selectActivityLog } from "@/features/log/model/selectors";
 import { useLogLevelFilter } from "@/features/log/hooks/useLogLevelFilter";
 import { formatByteSize } from "@/features/log/lib/formatByteSize";
@@ -64,8 +61,7 @@ export function DefaultLogPage() {
           className="pk-def-btn is-primary"
           onClick={async () => {
             const action = await dispatch(fetchActivityLog());
-            if (fetchActivityLog.fulfilled.match(action))
-              toast(v.refresh, "ok");
+            if (fetchActivityLog.fulfilled.match(action)) toast(v.refresh, "ok");
           }}
         >
           {v.refresh}
@@ -92,18 +88,13 @@ export function DefaultLogPage() {
       ) : filtered.length ? (
         <div className="pk-def-log">
           {filtered.map((line, i) => (
-            <div
-              key={`${i}-${line.raw}`}
-              className={`pk-def-log__line lv-${line.level}`}
-            >
+            <div key={`${i}-${line.raw}`} className={`pk-def-log__line lv-${line.level}`}>
               [{line.level.toUpperCase()}] {line.body}
             </div>
           ))}
         </div>
       ) : (
-        <p className="pk-def-empty">
-          {levelFilter ? "没有该等级的日志" : v.empty}
-        </p>
+        <p className="pk-def-empty">{levelFilter ? "没有该等级的日志" : v.empty}</p>
       )}
     </div>
   );

@@ -78,11 +78,7 @@ export function HidePage() {
         />
       ) : null}
       <HideStatusCard />
-      <HideIntroCard
-        title={h.introTitle}
-        body={h.introBody}
-        docsCta={h.docsCta}
-      />
+      <HideIntroCard title={h.introTitle} body={h.introBody} docsCta={h.docsCta} />
       <HideGuidePanel title={h.guideTitle} meta={h.guideMeta} />
     </PageStack>
   );

@@ -28,9 +28,7 @@ export function resolveTrustLabel(status: {
       tone: TrustTone.Warn,
       title:
         shortLabel ||
-        (isFlagOn(status.hot_active)
-          ? "热挂载 · 永久配置待重启"
-          : "待重启生效"),
+        (isFlagOn(status.hot_active) ? "热挂载 · 永久配置待重启" : "待重启生效"),
       hint: cleanStatusBody(status.desc_body) || hint,
     };
   }
@@ -47,10 +45,7 @@ export function resolveTrustLabel(status: {
     return {
       tone: TrustTone.Bad,
       title: shortLabel || "注入异常",
-      hint:
-        injectHint ||
-        cleanStatusBody(status.desc_body) ||
-        "请查看日志或重启后再试",
+      hint: injectHint || cleanStatusBody(status.desc_body) || "请查看日志或重启后再试",
     };
   }
 
@@ -80,9 +75,7 @@ export function resolveTrustLabel(status: {
 }
 
 function stripStatusEmoji(text: string): string {
-  return text
-    .replace(/^(?:✅|⚠️|⚠|❌|⏳|🔥|💤|✨|🔎|⛔|\uFE0F|\s)+/u, "")
-    .trim();
+  return text.replace(/^(?:✅|⚠️|⚠|❌|⏳|🔥|💤|✨|🔎|⛔|\uFE0F|\s)+/u, "").trim();
 }
 
 function cleanStatusBody(body?: string): string {

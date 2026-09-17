@@ -12,14 +12,10 @@
   --pk-muted: #94a3b8;
 
   min-height: 100dvh;
-  padding: calc(var(--bf-inset-top) + var(--pk-top) + var(--pk-below-top))
-    var(--pk-pad) calc(var(--bf-inset-bottom) + 64px);
+  padding: calc(var(--bf-inset-top) + var(--pk-top) + var(--pk-below-top)) var(--pk-pad)
+    calc(var(--bf-inset-bottom) + 64px);
   background:
-    radial-gradient(
-      80% 40% at 100% 0%,
-      rgba(45, 212, 191, 0.08),
-      transparent 55%
-    ),
+    radial-gradient(80% 40% at 100% 0%, rgba(45, 212, 191, 0.08), transparent 55%),
     #0b1118;
   color: var(--pk-ink);
   font-family: var(--bf-font-body);
@@ -33,11 +29,7 @@ html[data-theme="light"] .pk-ops-shell {
   --pk-muted: #64748b;
 
   background:
-    radial-gradient(
-      80% 40% at 100% 0%,
-      rgba(15, 118, 110, 0.08),
-      transparent 55%
-    ),
+    radial-gradient(80% 40% at 100% 0%, rgba(15, 118, 110, 0.08), transparent 55%),
     #dbe3ec;
 }
 
@@ -497,9 +489,7 @@ html[data-theme="light"] .pk-ops-btn {
 
 /* log: large viewport with page padding + rounded panel */
 .pk-ops-page--log {
-  min-height: calc(
-    100dvh - var(--bf-inset-top) - var(--bf-inset-bottom) - 130px
-  );
+  min-height: calc(100dvh - var(--bf-inset-top) - var(--bf-inset-bottom) - 130px);
 }
 
 .pk-ops-term {

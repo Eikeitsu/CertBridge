@@ -17,8 +17,8 @@
   --pk-term-ink: #9fe6b8;
 
   min-height: 100dvh;
-  padding: calc(var(--bf-inset-top) + var(--pk-top) + var(--pk-below-top))
-    var(--pk-pad) calc(var(--bf-inset-bottom) + var(--pk-dock) + 8px);
+  padding: calc(var(--bf-inset-top) + var(--pk-top) + var(--pk-below-top)) var(--pk-pad)
+    calc(var(--bf-inset-bottom) + var(--pk-dock) + 8px);
   background: #070b10;
   color: var(--pk-ink);
   font-family: var(--bf-font-mono);

@@ -3,9 +3,7 @@
   flex-direction: column;
   min-height: 100dvh;
   padding-top: calc(var(--bf-inset-top) + var(--bf-topbar-h));
-  padding-bottom: calc(
-    var(--bf-inset-bottom) + var(--bf-dock-h) + var(--bf-dock-pad)
-  );
+  padding-bottom: calc(var(--bf-inset-bottom) + var(--bf-dock-h) + var(--bf-dock-pad));
   background: var(--bf-bg);
 }
 

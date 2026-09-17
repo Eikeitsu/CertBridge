@@ -23,11 +23,7 @@ const PRESET_KINDS: AppPresetKind[] = [
   "pcapdroid",
 ];
 
-function stateOf(cert: {
-  isActive: boolean;
-  isEnabled: boolean;
-  isAvailable: boolean;
-}) {
+function stateOf(cert: { isActive: boolean; isEnabled: boolean; isAvailable: boolean }) {
   if (cert.isActive) return "active";
   if (cert.isEnabled) return "pending";
   if (cert.isAvailable) return "ready";
@@ -83,9 +79,7 @@ export function ConsoleCertsPage() {
                     type="button"
                     className="pk-con-link"
                     disabled={!(cert.isAvailable || cert.isActive)}
-                    onClick={() =>
-                      void detail.openDetail(cert.kind, cert.title)
-                    }
+                    onClick={() => void detail.openDetail(cert.kind, cert.title)}
                   >
                     i
                   </button>
@@ -94,9 +88,7 @@ export function ConsoleCertsPage() {
                   <Switch
                     checked={cert.isEnabled}
                     disabled={isPending && pendingKind === cert.kind}
-                    onChange={(next) =>
-                      void handleToggleBuiltin(cert.kind, next)
-                    }
+                    onChange={(next) => void handleToggleBuiltin(cert.kind, next)}
                   />
                 </td>
               </tr>
@@ -144,10 +136,7 @@ export function ConsoleCertsPage() {
                       type="button"
                       className="pk-con-link"
                       onClick={() =>
-                        void detail.openDetail(
-                          `custom:${c.name}`,
-                          c.display || c.name,
-                        )
+                        void detail.openDetail(`custom:${c.name}`, c.display || c.name)
                       }
                     >
                       i

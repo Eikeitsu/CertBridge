@@ -29,11 +29,7 @@ export function BottomSheet({
       <Dialog.Portal>
         <div className="bf-sheet-overlay">
           <Dialog.Overlay asChild>
-            <button
-              type="button"
-              className="bf-sheet-overlay__mask"
-              aria-label="关闭"
-            />
+            <button type="button" className="bf-sheet-overlay__mask" aria-label="关闭" />
           </Dialog.Overlay>
           <Dialog.Content
             className="bf-sheet"
@@ -44,15 +40,9 @@ export function BottomSheet({
             <div className="bf-sheet__chrome">
               <div className="bf-sheet__handle" aria-hidden />
               <div className="bf-sheet__bar">
-                <Dialog.Title className="bf-sheet__bar-title">
-                  {title}
-                </Dialog.Title>
+                <Dialog.Title className="bf-sheet__bar-title">{title}</Dialog.Title>
                 <Dialog.Close asChild>
-                  <button
-                    type="button"
-                    className="bf-sheet__close"
-                    aria-label="关闭"
-                  />
+                  <button type="button" className="bf-sheet__close" aria-label="关闭" />
                 </Dialog.Close>
               </div>
             </div>

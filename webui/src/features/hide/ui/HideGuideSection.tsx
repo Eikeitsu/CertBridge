@@ -7,12 +7,8 @@ type HideGuideSectionProps = {
   defaultOpen?: boolean;
 };
 
-export function HideGuideSection({
-  section,
-  defaultOpen,
-}: HideGuideSectionProps) {
-  const open =
-    defaultOpen ?? (section.id === "capture" || section.id === "limits");
+export function HideGuideSection({ section, defaultOpen }: HideGuideSectionProps) {
+  const open = defaultOpen ?? (section.id === "capture" || section.id === "limits");
   return (
     <details open={open}>
       <summary>{section.title}</summary>

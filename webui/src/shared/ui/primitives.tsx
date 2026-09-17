@@ -31,10 +31,7 @@ export function Card({
   );
 }
 
-export function ListGroup({
-  label,
-  children,
-}: PropsWithChildren<{ label?: string }>) {
+export function ListGroup({ label, children }: PropsWithChildren<{ label?: string }>) {
   return (
     <div>
       {label ? <div className="bf-list__label">{label}</div> : null}
@@ -62,9 +59,7 @@ export function Row({
       className="bf-row"
       onClick={onClick}
       style={
-        onClick
-          ? { width: "100%", textAlign: "left", cursor: "pointer" }
-          : undefined
+        onClick ? { width: "100%", textAlign: "left", cursor: "pointer" } : undefined
       }
     >
       <div className="bf-row__main">
@@ -139,8 +134,7 @@ export function Segment({
   /** stack=?????chips=??????????? hint ?? chips */
   layout?: "stack" | "chips";
 }) {
-  const mode =
-    layout ?? (options.every((option) => !option.hint) ? "chips" : "stack");
+  const mode = layout ?? (options.every((option) => !option.hint) ? "chips" : "stack");
   return (
     <div className={`bf-segment bf-segment--${mode}`}>
       {options.map((option) => (
@@ -152,9 +146,7 @@ export function Segment({
           onClick={() => onChange(option.value)}
         >
           <div className="bf-segment__label">{option.label}</div>
-          {option.hint ? (
-            <div className="bf-segment__hint">{option.hint}</div>
-          ) : null}
+          {option.hint ? <div className="bf-segment__hint">{option.hint}</div> : null}
         </button>
       ))}
     </div>

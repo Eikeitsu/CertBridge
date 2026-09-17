@@ -43,9 +43,7 @@ export function CaptureChecklistCard({
 
   return (
     <Card title={title} meta={meta}>
-      <Notice tone="alert">
-        证书要生效，抓包链路相关 App 必须能看见 cacerts 挂载。
-      </Notice>
+      <Notice tone="alert">证书要生效，抓包链路相关 App 必须能看见 cacerts 挂载。</Notice>
       <ol
         className="bf-bullet-list"
         data-style="decimal"

@@ -1,11 +1,7 @@
 import { useAppSelector } from "@/app/store/hooks";
 import { selectModuleStatus } from "@/features/status/model/selectors";
 import { isFlagOn } from "@/shared/lib/flag";
-import {
-  HIDE_PROVIDER_LABELS,
-  MOUNT_MODES,
-  TMPFS_STYLES,
-} from "@/shared/config/mount";
+import { HIDE_PROVIDER_LABELS, MOUNT_MODES, TMPFS_STYLES } from "@/shared/config/mount";
 import { parseEnum } from "@/shared/lib/enum";
 import { MountMode, TmpfsStyle } from "@/entities/module/enums";
 import { Card, ListGroup, Row, Tag } from "@/shared/ui/primitives";
@@ -20,11 +16,7 @@ export function HideStatusCard({
   title = "挂载与隐藏实况",
 }: HideStatusCardProps) {
   const status = useAppSelector(selectModuleStatus);
-  const mountMode = parseEnum(
-    MountMode,
-    status.mount_mode,
-    MountMode.Compatible,
-  );
+  const mountMode = parseEnum(MountMode, status.mount_mode, MountMode.Compatible);
   const tmpfsStyle = parseEnum(TmpfsStyle, status.tmpfs_style, TmpfsStyle.Dev);
   const provider =
     status.hide_provider_label ||
@@ -33,9 +25,7 @@ export function HideStatusCard({
   const hideApplied = isFlagOn(status.hide_applied);
   const znSupported = isFlagOn(status.zn_hide_supported);
   const znAllow = isFlagOn(status.zn_hide_allow);
-  const metaParts = [status.hide_summary, status.zn_hide_summary].filter(
-    Boolean,
-  );
+  const metaParts = [status.hide_summary, status.zn_hide_summary].filter(Boolean);
   const meta = metaParts.length ? metaParts.join(" · ") : "基于当前设备探测";
 
   const rows = [
@@ -89,9 +79,7 @@ export function HideStatusCard({
           extra={
             <Tag
               tone={
-                status.hide_provider && status.hide_provider !== "none"
-                  ? "ok"
-                  : "warn"
+                status.hide_provider && status.hide_provider !== "none" ? "ok" : "warn"
               }
             >
               {provider}
@@ -110,9 +98,7 @@ export function HideStatusCard({
           <Row
             title="Zygisk 挂载过滤"
             extra={
-              <Tag tone={znAllow ? "ok" : "default"}>
-                {znAllow ? "已开启" : "已关闭"}
-              </Tag>
+              <Tag tone={znAllow ? "ok" : "default"}>{znAllow ? "已开启" : "已关闭"}</Tag>
             }
           />
         ) : null}

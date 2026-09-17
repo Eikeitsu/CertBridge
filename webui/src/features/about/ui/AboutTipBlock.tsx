@@ -9,8 +9,7 @@ type AboutTipBlockProps = {
 
 export function AboutTipBlock({ variant = "dashboard" }: AboutTipBlockProps) {
   const [previewId, setPreviewId] = useState<string | null>(null);
-  const active =
-    ABOUT_TIP_CHANNELS.find((item) => item.id === previewId) ?? null;
+  const active = ABOUT_TIP_CHANNELS.find((item) => item.id === previewId) ?? null;
 
   return (
     <div className={`bf-about-tip bf-about-tip--${variant}`}>

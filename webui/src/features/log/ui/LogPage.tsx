@@ -1,9 +1,6 @@
 import { useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
-import {
-  clearActivityLog,
-  fetchActivityLog,
-} from "@/features/log/model/logSlice";
+import { clearActivityLog, fetchActivityLog } from "@/features/log/model/logSlice";
 import { selectActivityLog } from "@/features/log/model/selectors";
 import { useLogLevelFilter } from "@/features/log/hooks/useLogLevelFilter";
 import { formatByteSize } from "@/features/log/lib/formatByteSize";
@@ -30,8 +27,7 @@ export function LogPage() {
 
   const handleRefresh = async () => {
     const action = await dispatch(fetchActivityLog());
-    if (fetchActivityLog.fulfilled.match(action))
-      toast(voice.log.refresh, "ok");
+    if (fetchActivityLog.fulfilled.match(action)) toast(voice.log.refresh, "ok");
   };
 
   const handleClear = () => {

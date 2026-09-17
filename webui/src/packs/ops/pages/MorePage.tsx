@@ -23,11 +23,7 @@ export function OpsMorePage() {
       <header className="pk-ops-pagehead pk-ops-pagehead--meta">
         <p>{v.appearanceMeta}</p>
       </header>
-      <AppearancePanel
-        title={v.appearance}
-        meta={v.appearanceMeta}
-        surface="plain"
-      />
+      <AppearancePanel title={v.appearance} meta={v.appearanceMeta} surface="plain" />
       <MountModePanel
         mountMode={mount.mountMode}
         pending={mount.isPending}

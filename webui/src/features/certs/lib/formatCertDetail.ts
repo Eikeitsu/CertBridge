@@ -1,9 +1,5 @@
 import { FLAG_OFF, FLAG_ON } from "@/shared/config/constants";
-import {
-  CERT_EXPIRY_WARN_DAYS,
-  CERT_INFO_KEYS,
-  MS_PER_DAY,
-} from "@/shared/config/certs";
+import { CERT_EXPIRY_WARN_DAYS, CERT_INFO_KEYS, MS_PER_DAY } from "@/shared/config/certs";
 import type { DetailField, FormattedCertDetail } from "./types";
 import { parseRfc2253 } from "./parseDn";
 import { formatDateLabel, parseOpenSslDate } from "./parseOpenSslDate";
@@ -86,8 +82,7 @@ export function formatCertDetail(
     }));
 
   return {
-    displayName:
-      fields.display_name || subject.cn || fallbackTitle || "CA 证书",
+    displayName: fields.display_name || subject.cn || fallbackTitle || "CA 证书",
     filename: fields.filename || "",
     subject,
     issuer,

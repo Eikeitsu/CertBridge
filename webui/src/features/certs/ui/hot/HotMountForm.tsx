@@ -20,9 +20,7 @@ export function HotMountForm({
   onSdPathChange,
   onMount,
 }: HotMountFormProps) {
-  const selectedMode = HOT_MOUNT_MODE_OPTIONS.find(
-    (option) => option.value === mode,
-  );
+  const selectedMode = HOT_MOUNT_MODE_OPTIONS.find((option) => option.value === mode);
   const needsSdPath = selectedMode?.needsSdPath ?? false;
 
   return (

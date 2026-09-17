@@ -22,11 +22,7 @@ export function ConsoleMorePage() {
     <div className="pk-con-page">
       <pre className="pk-con-banner">{`# ${v.title}
 # ${v.appearanceMeta}`}</pre>
-      <AppearancePanel
-        title={v.appearance}
-        meta={v.appearanceMeta}
-        surface="plain"
-      />
+      <AppearancePanel title={v.appearance} meta={v.appearanceMeta} surface="plain" />
       <MountModePanel
         mountMode={mount.mountMode}
         pending={mount.isPending}

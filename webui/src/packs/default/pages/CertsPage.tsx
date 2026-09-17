@@ -68,10 +68,7 @@ export function DefaultCertsPage() {
         <h2 className="pk-def-section__title">{v.builtin}</h2>
         <div className="pk-def-group">
           {builtins.map((cert) => (
-            <div
-              key={cert.kind}
-              className={`pk-def-row${cert.isActive ? " is-on" : ""}`}
-            >
+            <div key={cert.kind} className={`pk-def-row${cert.isActive ? " is-on" : ""}`}>
               <div className="pk-def-row__main">
                 <strong>{cert.title}</strong>
                 <span>{statusLabel(cert)}</span>
@@ -129,10 +126,7 @@ export function DefaultCertsPage() {
                     type="button"
                     className="pk-def-link"
                     onClick={() =>
-                      void detail.openDetail(
-                        `custom:${c.name}`,
-                        c.display || c.name,
-                      )
+                      void detail.openDetail(`custom:${c.name}`, c.display || c.name)
                     }
                   >
                     详情

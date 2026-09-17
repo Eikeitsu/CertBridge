@@ -14,8 +14,8 @@ export function HideCaptureWarning({
   if (banner) {
     return (
       <Notice tone="alert">
-        <strong>{title}</strong>：对 Reqable / ProxyPin 或被抓包目标开「卸载模块
-        / Umount」会卸掉 cacerts 挂载，抓包软件常报「根证书未安装」。
+        <strong>{title}</strong>：对 Reqable / ProxyPin 或被抓包目标开「卸载模块 /
+        Umount」会卸掉 cacerts 挂载，抓包软件常报「根证书未安装」。
       </Notice>
     );
   }
@@ -24,8 +24,7 @@ export function HideCaptureWarning({
     <Card title={title} meta={meta}>
       <Notice tone="alert">
         对 Reqable / ProxyPin，或被抓包的目标 App 开启「卸载模块 /
-        Umount」、DenyList+umount、APatch 「排除修改」等，会卸掉 cacerts
-        上的证书挂载。
+        Umount」、DenyList+umount、APatch 「排除修改」等，会卸掉 cacerts 上的证书挂载。
       </Notice>
       <ul
         className="bf-bullet-list"
@@ -41,9 +40,7 @@ export function HideCaptureWarning({
         </li>
         <li>
           仅对
-          <strong style={{ color: "var(--bf-ink)" }}>
-            需要躲检测、且不参与本次抓包
-          </strong>
+          <strong style={{ color: "var(--bf-ink)" }}>需要躲检测、且不参与本次抓包</strong>
           的应用开启隐藏；抓包链路相关包名一律关掉 umount
         </li>
       </ul>

@@ -23,11 +23,7 @@ const PRESET_KINDS: AppPresetKind[] = [
   "pcapdroid",
 ];
 
-function stateOf(cert: {
-  isActive: boolean;
-  isEnabled: boolean;
-  isAvailable: boolean;
-}) {
+function stateOf(cert: { isActive: boolean; isEnabled: boolean; isAvailable: boolean }) {
   if (cert.isActive) return "已生效";
   if (cert.isEnabled) return "待重启";
   if (cert.isAvailable) return "可用";
@@ -128,10 +124,7 @@ export function OpsCertsPage() {
                     type="button"
                     className="pk-ops-link"
                     onClick={() =>
-                      void detail.openDetail(
-                        `custom:${c.name}`,
-                        c.display || c.name,
-                      )
+                      void detail.openDetail(`custom:${c.name}`, c.display || c.name)
                     }
                   >
                     详情

@@ -102,10 +102,6 @@ html[data-pack="console"][data-theme="dark"] {
   --bf-surface-2: #121a24;
 
   background:
-    radial-gradient(
-      80% 50% at 100% 0%,
-      rgba(37, 99, 235, 0.12),
-      transparent 50%
-    ),
+    radial-gradient(80% 50% at 100% 0%, rgba(37, 99, 235, 0.12), transparent 50%),
     var(--bf-bg);
 }

@@ -1,9 +1,6 @@
 :root {
   --bf-inset-top: var(--window-inset-top, env(safe-area-inset-top, 0px));
-  --bf-inset-bottom: var(
-    --window-inset-bottom,
-    env(safe-area-inset-bottom, 0px)
-  );
+  --bf-inset-bottom: var(--window-inset-bottom, env(safe-area-inset-bottom, 0px));
   --bf-topbar-h: 52px;
   --bf-dock-h: 58px;
   --bf-dock-pad: 0px;
@@ -12,8 +9,7 @@
     "Segoe UI Variable", "Segoe UI", "PingFang SC", "HarmonyOS Sans SC",
     "Microsoft YaHei", sans-serif;
   --bf-font-body:
-    "Segoe UI", "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei",
-    sans-serif;
+    "Segoe UI", "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", sans-serif;
   --bf-font-mono:
     "Cascadia Code", "Sarasa Mono SC", "IBM Plex Mono", ui-monospace, monospace;
   --bf-radius: 14px;
@@ -43,8 +39,7 @@
   --bf-card-inset-bg: color-mix(in srgb, var(--bf-ink) 4%, var(--bf-surface));
   --bf-stroke: rgba(15, 23, 42, 0.08);
   --bf-stroke-strong: rgba(15, 23, 42, 0.14);
-  --bf-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.04);
+  --bf-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.04);
   --bf-ease: 0.22s cubic-bezier(0.22, 1, 0.36, 1);
 }
 

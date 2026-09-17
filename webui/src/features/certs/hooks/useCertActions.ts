@@ -43,14 +43,9 @@ export function useCertActions() {
     async (kind: BuiltinCertKind, checked: boolean) => {
       await runExclusive(async () => {
         setPendingKind(kind);
-        dispatch(
-          patchStatus({ [`${kind}_enabled`]: checked ? FLAG_ON : FLAG_OFF }),
-        );
+        dispatch(patchStatus({ [`${kind}_enabled`]: checked ? FLAG_ON : FLAG_OFF }));
         try {
-          const result = await toggleBuiltin(
-            kind,
-            checked ? FLAG_ON : FLAG_OFF,
-          );
+          const result = await toggleBuiltin(kind, checked ? FLAG_ON : FLAG_OFF);
           if (isCliFailure(result)) {
             toast(errorFromResult(result.stdout, result.stderr), "bad");
             void dispatch(refreshStatus(SILENT_REFRESH));
@@ -144,11 +139,7 @@ export function useCertActions() {
           }
           const kv = parseKv(result.stdout || "");
           dispatch(mergeStatus(kv));
-          toastByRebootFlag(
-            kv,
-            "已移除，重启后生效",
-            "已移除（与当前生效一致）",
-          );
+          toastByRebootFlag(kv, "已移除，重启后生效", "已移除（与当前生效一致）");
           void dispatch(refreshStatus(SILENT_REFRESH));
         },
       });

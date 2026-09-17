@@ -12,12 +12,7 @@ type MetricGridProps = {
   style?: CSSProperties;
 };
 
-export function MetricGrid({
-  items,
-  columns,
-  className,
-  style,
-}: MetricGridProps) {
+export function MetricGrid({ items, columns, className, style }: MetricGridProps) {
   const gridStyle: CSSProperties = {
     ...(columns ? { gridTemplateColumns: `repeat(${columns}, 1fr)` } : {}),
     ...style,

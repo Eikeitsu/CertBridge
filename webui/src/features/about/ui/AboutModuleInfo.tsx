@@ -1,9 +1,6 @@
 import { EMPTY_PLACEHOLDER } from "@/shared/config/constants";
 import { useAppSelector } from "@/app/store/hooks";
-import {
-  selectDeviceLabel,
-  selectModuleStatus,
-} from "@/features/status/model/selectors";
+import { selectDeviceLabel, selectModuleStatus } from "@/features/status/model/selectors";
 import { isFlagOn } from "@/shared/lib/flag";
 import { parseEnum } from "@/shared/lib/enum";
 import { Experimental14System } from "@/entities/module/enums";
@@ -11,8 +8,7 @@ import { EXPERIMENTAL_14_SYSTEM } from "@/shared/config/mount";
 
 function yesNo(flag: string | undefined, fallbackInstalled?: boolean) {
   if (flag === "1" || flag === "0") return flag === "1" ? "已安装" : "未安装";
-  if (fallbackInstalled !== undefined)
-    return fallbackInstalled ? "已安装" : "未安装";
+  if (fallbackInstalled !== undefined) return fallbackInstalled ? "已安装" : "未安装";
   return EMPTY_PLACEHOLDER;
 }
 
@@ -167,10 +163,7 @@ export function AboutModuleInfo({ variant = "tiles" }: AboutModuleInfoProps) {
               {section.items.map((row) => {
                 const tone = toneOf(row.value);
                 return (
-                  <div
-                    key={row.key}
-                    className={`bf-about-rail__cell is-${tone}`}
-                  >
+                  <div key={row.key} className={`bf-about-rail__cell is-${tone}`}>
                     <span className="bf-about-rail__key">{row.label}</span>
                     <strong className="bf-about-rail__val">{row.value}</strong>
                   </div>

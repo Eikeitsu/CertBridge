@@ -19,15 +19,12 @@ export const UPDATE_CHANNEL_HINT: Record<UpdateChannel, string> = {
 };
 
 const PAGES_UPDATE = "https://eikeitsu.github.io/CertBridge/update.json";
-const CI_RAW_BASE =
-  "https://raw.githubusercontent.com/Eikeitsu/CertBridge/ci-dist";
+const CI_RAW_BASE = "https://raw.githubusercontent.com/Eikeitsu/CertBridge/ci-dist";
 const CI_CDN_BASE = "https://cdn.jsdelivr.net/gh/Eikeitsu/CertBridge@ci-dist";
 
 const PREFER_CDN_KEY = "cb_update_prefer_cdn";
 
-export function parseUpdateChannel(
-  raw: string | null | undefined,
-): UpdateChannel {
+export function parseUpdateChannel(raw: string | null | undefined): UpdateChannel {
   return raw === "ci" ? "ci" : "stable";
 }
 
@@ -44,18 +41,13 @@ export function channelUpdateJsonUrl(
   preferCdn = isPreferCdn(),
 ): string {
   if (channel === "ci") {
-    return preferCdn
-      ? `${CI_CDN_BASE}/update.json`
-      : `${CI_RAW_BASE}/update.json`;
+    return preferCdn ? `${CI_CDN_BASE}/update.json` : `${CI_RAW_BASE}/update.json`;
   }
   return PAGES_UPDATE;
 }
 
 /** Rewrite raw.githubusercontent.com/.../ci-dist/... → jsDelivr when preferCdn */
-export function toChannelAssetUrl(
-  url: string,
-  preferCdn = isPreferCdn(),
-): string {
+export function toChannelAssetUrl(url: string, preferCdn = isPreferCdn()): string {
   const u = String(url || "").trim();
   if (!preferCdn || !u) return u;
   const m = u.match(
@@ -84,10 +76,7 @@ export interface ChannelCheckResult {
   error: string | null;
 }
 
-export function versionLine(
-  local?: string | null,
-  remote?: string | null,
-): string {
+export function versionLine(local?: string | null, remote?: string | null): string {
   const l = (local || "").trim() || "未知";
   const r = (remote || "").trim() || "--";
   return l === r ? l : `${l} → ${r}`;
@@ -117,9 +106,7 @@ function parseJsonUpdate(text: string, preferCdn: boolean): RemoteUpdateInfo {
   return {
     version: String(obj.version ?? ""),
     versionCode: Number(obj.versionCode ?? 0),
-    zipUrl: obj.zipUrl
-      ? toChannelAssetUrl(String(obj.zipUrl), preferCdn)
-      : undefined,
+    zipUrl: obj.zipUrl ? toChannelAssetUrl(String(obj.zipUrl), preferCdn) : undefined,
     changelog: obj.changelog ? String(obj.changelog) : undefined,
   };
 }
@@ -146,17 +133,11 @@ export async function checkUpdateChannel(
   let remote: RemoteUpdateInfo | null = null;
   let error: string | null = null;
   try {
-    remote = await fetchJsonUpdate(
-      channelUpdateJsonUrl(channel, preferCdn),
-      preferCdn,
-    );
+    remote = await fetchJsonUpdate(channelUpdateJsonUrl(channel, preferCdn), preferCdn);
   } catch (e) {
     if (channel === "ci" && preferCdn) {
       try {
-        remote = await fetchJsonUpdate(
-          channelUpdateJsonUrl(channel, false),
-          false,
-        );
+        remote = await fetchJsonUpdate(channelUpdateJsonUrl(channel, false), false);
       } catch (e2) {
         error = e2 instanceof Error ? e2.message : String(e2);
       }
@@ -168,10 +149,7 @@ export async function checkUpdateChannel(
   let stableNewer: RemoteUpdateInfo | null = null;
   if (channel !== "stable") {
     try {
-      const stable = await fetchJsonUpdate(
-        channelUpdateJsonUrl("stable", false),
-        false,
-      );
+      const stable = await fetchJsonUpdate(channelUpdateJsonUrl("stable", false), false);
       if (stable.versionCode > local.versionCode) stableNewer = stable;
     } catch {
       /* ignore */
@@ -201,10 +179,7 @@ export async function persistChannel(channel: UpdateChannel): Promise<void> {
 
 export async function loadPersistedChannel(): Promise<UpdateChannel> {
   const fromLs = parseUpdateChannel(readStorage(STORAGE_KEYS.updateChannel));
-  const r = await exec(
-    `cat '${PATHS.MODDIR}/data/update_channel' 2>/dev/null`,
-    5_000,
-  );
+  const r = await exec(`cat '${PATHS.MODDIR}/data/update_channel' 2>/dev/null`, 5_000);
   const fromFile = parseUpdateChannel((r.stdout || "").trim());
   if (fromFile === "ci" || fromFile === "stable") {
     writeStorage(STORAGE_KEYS.updateChannel, fromFile);

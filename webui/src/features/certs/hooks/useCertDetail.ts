@@ -11,24 +11,21 @@ export function useCertDetail() {
   const [sourceId, setSourceId] = useState("");
   const [fields, setFields] = useState<Record<string, string>>({});
 
-  const openDetail = useCallback(
-    async (target: string, detailTitle: string) => {
-      setTitle(detailTitle);
-      setSourceId(target);
-      setFields({});
-      setIsOpen(true);
-      setLoading(true);
-      const result = await certInfo(target);
-      setLoading(false);
-      if (result.errno !== 0 && !result.stdout) {
-        toast(friendlyError(result.stderr), "bad");
-        setIsOpen(false);
-        return;
-      }
-      setFields(parseKv(result.stdout));
-    },
-    [],
-  );
+  const openDetail = useCallback(async (target: string, detailTitle: string) => {
+    setTitle(detailTitle);
+    setSourceId(target);
+    setFields({});
+    setIsOpen(true);
+    setLoading(true);
+    const result = await certInfo(target);
+    setLoading(false);
+    if (result.errno !== 0 && !result.stdout) {
+      toast(friendlyError(result.stderr), "bad");
+      setIsOpen(false);
+      return;
+    }
+    setFields(parseKv(result.stdout));
+  }, []);
 
   const closeDetail = useCallback(() => {
     setIsOpen(false);

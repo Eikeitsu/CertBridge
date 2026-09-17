@@ -21,8 +21,7 @@ type ChromeHost = {
 };
 
 function readChromeHost(): ChromeHost | undefined {
-  const win = window as unknown as Window &
-    Record<string, ChromeHost | undefined>;
+  const win = window as unknown as Window & Record<string, ChromeHost | undefined>;
   if (win.$CertBridge) return win.$CertBridge;
   if (win.mmrl) return win.mmrl;
   for (const key of Object.keys(win)) {
@@ -56,9 +55,7 @@ export function restorePinnedInsets(): void {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
   const pinnedTop = root.style.getPropertyValue("--bf-inset-top-pinned").trim();
-  const pinnedBottom = root.style
-    .getPropertyValue("--bf-inset-bottom-pinned")
-    .trim();
+  const pinnedBottom = root.style.getPropertyValue("--bf-inset-bottom-pinned").trim();
   if (pinnedTop) root.style.setProperty("--bf-inset-top", pinnedTop);
   if (pinnedBottom) root.style.setProperty("--bf-inset-bottom", pinnedBottom);
 }
@@ -88,9 +85,7 @@ export function pinSafeInsets(force = false): void {
   document.body.removeChild(probe);
 
   const pinnedTop = root.style.getPropertyValue("--bf-inset-top-pinned").trim();
-  const pinnedBottom = root.style
-    .getPropertyValue("--bf-inset-bottom-pinned")
-    .trim();
+  const pinnedBottom = root.style.getPropertyValue("--bf-inset-bottom-pinned").trim();
 
   if (top && top !== "0px") {
     root.style.setProperty("--bf-inset-top", top);

@@ -58,11 +58,7 @@ export function CertDetailBody({ detail, brandKind }: CertDetailBodyProps) {
               {detail.flags.map((flag) => (
                 <Tag
                   key={flag}
-                  tone={
-                    flag === "已过期" || flag === "即将到期"
-                      ? "warn"
-                      : "default"
-                  }
+                  tone={flag === "已过期" || flag === "即将到期" ? "warn" : "default"}
                 >
                   {flag}
                 </Tag>
@@ -86,9 +82,7 @@ export function CertDetailBody({ detail, brandKind }: CertDetailBodyProps) {
       <DetailSection
         title="颁发者"
         extra={
-          detail.isSelfSigned ? (
-            <span className="nx-detail-self">自签发</span>
-          ) : null
+          detail.isSelfSigned ? <span className="nx-detail-self">自签发</span> : null
         }
       >
         <CertDnBlock embedded dn={detail.issuer} />

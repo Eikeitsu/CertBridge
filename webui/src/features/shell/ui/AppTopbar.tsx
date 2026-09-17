@@ -17,11 +17,7 @@ export function AppTopbar({
     <header className="bf-topbar">
       {showBrand ? <div className="bf-topbar__brand">{brand}</div> : <span />}
       <div className="bf-topbar__title">{pageTitle}</div>
-      {showDevice ? (
-        <div className="bf-topbar__meta">{deviceLabel}</div>
-      ) : (
-        <span />
-      )}
+      {showDevice ? <div className="bf-topbar__meta">{deviceLabel}</div> : <span />}
     </header>
   );
 }

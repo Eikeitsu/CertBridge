@@ -857,11 +857,7 @@
 
 .bf-pack-preview[data-pack="ops"] {
   background:
-    radial-gradient(
-      80% 50% at 100% 0%,
-      rgba(45, 212, 191, 0.25),
-      transparent 55%
-    ),
+    radial-gradient(80% 50% at 100% 0%, rgba(45, 212, 191, 0.25), transparent 55%),
     #0b1118;
 }
 
@@ -909,11 +905,7 @@
   right: 6px;
   top: 14px;
   bottom: 6px;
-  background: repeating-linear-gradient(
-    180deg,
-    #1e293b 0 2px,
-    transparent 2px 7px
-  );
+  background: repeating-linear-gradient(180deg, #1e293b 0 2px, transparent 2px 7px);
   opacity: 0.9;
 }
 
@@ -995,9 +987,7 @@
 .bf-snackbar {
   position: fixed;
   left: 50%;
-  bottom: calc(
-    var(--bf-inset-bottom) + var(--bf-dock-h) + var(--bf-dock-pad) + 14px
-  );
+  bottom: calc(var(--bf-inset-bottom) + var(--bf-dock-h) + var(--bf-dock-pad) + 14px);
   transform: translateX(-50%) translateY(12px);
   z-index: 50;
   padding: 11px 18px;
@@ -1386,11 +1376,7 @@
   border: 1px solid var(--pk-line, var(--bf-stroke));
   border-radius: 10px;
   overflow: hidden;
-  background: color-mix(
-    in srgb,
-    var(--pk-panel, var(--bf-surface)) 88%,
-    transparent
-  );
+  background: color-mix(in srgb, var(--pk-panel, var(--bf-surface)) 88%, transparent);
 }
 
 .bf-about-links__menu-item {
@@ -1416,11 +1402,7 @@
 }
 
 .bf-about-links__menu-item:active {
-  background: color-mix(
-    in srgb,
-    var(--pk-accent, var(--bf-primary)) 8%,
-    transparent
-  );
+  background: color-mix(in srgb, var(--pk-accent, var(--bf-primary)) 8%, transparent);
 }
 
 .bf-about-links__menu-label {

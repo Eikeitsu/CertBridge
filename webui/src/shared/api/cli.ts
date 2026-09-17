@@ -23,10 +23,7 @@ import { DEVICE_INFO_SHELL, formatDeviceLabel } from "@/shared/lib/device";
 
 const CUSTOM_LIST_PREFIX = "custom|";
 
-export async function cli(
-  args: string,
-  timeoutMs?: number,
-): Promise<ExecResult> {
+export async function cli(args: string, timeoutMs?: number): Promise<ExecResult> {
   return exec(`sh '${PATHS.CLI}' ${args}`, timeoutMs);
 }
 
@@ -150,8 +147,7 @@ export async function setZnHideAllow(value: FlagValue) {
 function textToBase64(text: string): string {
   const bytes = new TextEncoder().encode(text);
   let binary = "";
-  for (let i = 0; i < bytes.length; i++)
-    binary += String.fromCharCode(bytes[i]!);
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]!);
   return btoa(binary);
 }
 
@@ -191,8 +187,7 @@ export async function readLog(
   );
   const rawOutput = result.stdout || "";
   const separatorIndex = rawOutput.indexOf("---");
-  const byteHead =
-    separatorIndex >= 0 ? rawOutput.slice(0, separatorIndex) : "";
+  const byteHead = separatorIndex >= 0 ? rawOutput.slice(0, separatorIndex) : "";
   const text =
     separatorIndex >= 0
       ? rawOutput.slice(separatorIndex + 3).replace(/^\r?\n/, "")
@@ -211,10 +206,7 @@ export async function rebootDevice() {
 
 export async function fetchDeviceLabel(): Promise<string> {
   const result = await exec(DEVICE_INFO_SHELL);
-  if (
-    result.errno === -1 &&
-    /no_bridge|no_ksu_bridge/.test(result.stderr || "")
-  ) {
+  if (result.errno === -1 && /no_bridge|no_ksu_bridge/.test(result.stderr || "")) {
     return "未检测到 WebUI 桥接";
   }
   return formatDeviceLabel(result.stdout);

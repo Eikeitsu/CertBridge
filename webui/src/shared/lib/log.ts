@@ -18,9 +18,7 @@ function inferLogLevel(line: string): LogLevel {
   }
 
   const lower = line.toLowerCase();
-  if (
-    /failed|refuse|invalid|timeout|missing|cannot|unavailable|error/.test(lower)
-  ) {
+  if (/failed|refuse|invalid|timeout|missing|cannot|unavailable|error/.test(lower)) {
     return LogLevel.Error;
   }
   if (/soft-fail|skipped|skip |warn|stale/.test(lower)) {
@@ -54,10 +52,7 @@ export function parseLogText(text: string): LogEntry[] {
     }));
 }
 
-export function filterLogEntries(
-  entries: LogEntry[],
-  level: string,
-): LogEntry[] {
+export function filterLogEntries(entries: LogEntry[], level: string): LogEntry[] {
   if (!level) return entries;
   return entries.filter((entry) => entry.level === level);
 }

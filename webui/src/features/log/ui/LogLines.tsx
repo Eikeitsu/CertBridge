@@ -9,9 +9,7 @@ export function LogLines({ entries, filtered }: LogLinesProps) {
   if (!entries.length) {
     return (
       <p className="bf-log-empty">
-        {filtered
-          ? "没有该等级的日志"
-          : "暂无日志（安装 / 注入 / 配置变更后才会写入）"}
+        {filtered ? "没有该等级的日志" : "暂无日志（安装 / 注入 / 配置变更后才会写入）"}
       </p>
     );
   }
@@ -19,13 +17,8 @@ export function LogLines({ entries, filtered }: LogLinesProps) {
   return (
     <div className="bf-log-lines">
       {entries.map((entry, index) => (
-        <span
-          key={`${index}-${entry.raw}`}
-          className={`bf-log-line lv-${entry.level}`}
-        >
-          <span className="bf-log-line__tag">
-            [{entry.level.toUpperCase()}]
-          </span>
+        <span key={`${index}-${entry.raw}`} className={`bf-log-line lv-${entry.level}`}>
+          <span className="bf-log-line__tag">[{entry.level.toUpperCase()}]</span>
           <span className="bf-log-line__body">{entry.body}</span>
         </span>
       ))}

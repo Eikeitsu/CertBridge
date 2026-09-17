@@ -26,9 +26,7 @@ export function cssColorToHex(color: string, fallback: string): string {
   const raw = String(color || "").trim();
   if (!raw) return normalizeHex(fallback);
   if (raw.startsWith("#")) return normalizeHex(raw, fallback);
-  const match = raw.match(
-    /rgba?\(\s*([\d.]+)\s*,?\s*([\d.]+)\s*,?\s*([\d.]+)/i,
-  );
+  const match = raw.match(/rgba?\(\s*([\d.]+)\s*,?\s*([\d.]+)\s*,?\s*([\d.]+)/i);
   if (!match) return normalizeHex(fallback);
   const toHex = (v: string) =>
     Math.max(0, Math.min(255, Math.round(Number(v))))

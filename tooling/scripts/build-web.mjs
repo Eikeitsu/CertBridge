@@ -42,8 +42,7 @@ function removePathResilient(target) {
       return;
     } catch (err) {
       const code = err && err.code;
-      if (code !== "EPERM" && code !== "ENOTEMPTY" && code !== "EBUSY")
-        throw err;
+      if (code !== "EPERM" && code !== "ENOTEMPTY" && code !== "EBUSY") throw err;
       sleep(120 * (i + 1));
     }
   }
@@ -54,9 +53,7 @@ function removePathResilient(target) {
     try {
       rmSync(quarantine, { recursive: true, force: true });
     } catch {
-      log(
-        `left quarantine in place (still locked): ${relative(repoRoot, quarantine)}`,
-      );
+      log(`left quarantine in place (still locked): ${relative(repoRoot, quarantine)}`);
     }
   } catch (err) {
     // 整目录改名也失败：逐文件覆盖同步前，至少清出可写目标
@@ -71,9 +68,7 @@ function walkFiles(dir, prefix = "", out = []) {
   try {
     entries = readdirSync(dir, { withFileTypes: true });
   } catch (err) {
-    log(
-      `warn: cannot read ${relative(repoRoot, dir)} (${err.code || err.message})`,
-    );
+    log(`warn: cannot read ${relative(repoRoot, dir)} (${err.code || err.message})`);
     return out;
   }
   for (const entry of entries) {
@@ -99,8 +94,7 @@ function copyFileResilient(from, to, rel) {
     cpSync(from, to, { force: true });
     return;
   } catch (err) {
-    if (err.code !== "EPERM" && err.code !== "EBUSY" && err.code !== "EACCES")
-      throw err;
+    if (err.code !== "EPERM" && err.code !== "EBUSY" && err.code !== "EACCES") throw err;
   }
   // Windows 锁文件：改用读写；仍失败则跳过（常见于 tip.png 被预览占用）
   try {

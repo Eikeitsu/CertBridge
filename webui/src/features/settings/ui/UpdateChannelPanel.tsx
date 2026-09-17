@@ -21,10 +21,7 @@ type UpdateChannelPanelProps = {
   surface?: "card" | "plain";
 };
 
-export function UpdateChannelPanel({
-  dense,
-  surface = "card",
-}: UpdateChannelPanelProps) {
+export function UpdateChannelPanel({ dense, surface = "card" }: UpdateChannelPanelProps) {
   const [channel, setChannel] = useState<UpdateChannel>("stable");
   const [preferCdn, setPreferCdnState] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -96,11 +93,7 @@ export function UpdateChannelPanel({
   };
 
   const remote = result?.remote;
-  const canInstall = !!(
-    result &&
-    remote &&
-    (result.hasUpdate || result.canSwitch)
-  );
+  const canInstall = !!(result && remote && (result.hasUpdate || result.canSwitch));
 
   return (
     <Card
@@ -139,9 +132,7 @@ export function UpdateChannelPanel({
             ? `（${result?.localCode ?? "?"} → ${remote?.versionCode ?? "--"}）`
             : ""}
         </div>
-        {result?.hasUpdate ? (
-          <div className="bf-row__desc">有新版本可安装</div>
-        ) : null}
+        {result?.hasUpdate ? <div className="bf-row__desc">有新版本可安装</div> : null}
         {result?.canSwitch && !result.hasUpdate ? (
           <div className="bf-row__desc">可切换安装当前通道版本</div>
         ) : null}
@@ -150,15 +141,10 @@ export function UpdateChannelPanel({
             旁路提示：正式通道已有更新 {result.stableNewer.version}
           </div>
         ) : null}
-        {result?.error ? (
-          <div className="bf-row__desc">{result.error}</div>
-        ) : null}
+        {result?.error ? <div className="bf-row__desc">{result.error}</div> : null}
       </div>
       <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
-        <Button
-          disabled={busy || installing}
-          onClick={() => void runCheck(false)}
-        >
+        <Button disabled={busy || installing} onClick={() => void runCheck(false)}>
           检查更新
         </Button>
         <Button
@@ -166,11 +152,7 @@ export function UpdateChannelPanel({
           disabled={!canInstall || busy || installing}
           onClick={() => void onInstall()}
         >
-          {installing
-            ? "安装中…"
-            : result?.hasUpdate
-              ? "下载并安装"
-              : "切换安装"}
+          {installing ? "安装中…" : result?.hasUpdate ? "下载并安装" : "切换安装"}
         </Button>
       </div>
     </Card>

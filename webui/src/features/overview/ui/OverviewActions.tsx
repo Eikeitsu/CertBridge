@@ -1,8 +1,5 @@
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
-import {
-  refreshStatus,
-  requestReboot,
-} from "@/features/status/model/statusSlice";
+import { refreshStatus, requestReboot } from "@/features/status/model/statusSlice";
 import { selectStatusRefreshing } from "@/features/status/model/selectors";
 import { confirmAction } from "@/shared/lib/confirmAction";
 import { Button } from "@/shared/ui/primitives";

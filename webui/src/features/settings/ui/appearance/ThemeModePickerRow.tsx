@@ -9,7 +9,7 @@ type ThemeModePickerRowProps = {
 
 export function ThemeModePickerRow({ value, onChange }: ThemeModePickerRowProps) {
   return (
-    <div style={{ marginTop: 12 }}>
+    <div className="bf-appearance__row">
       <Segment
         value={value}
         options={THEME_MODE_OPTIONS.map((option) => ({

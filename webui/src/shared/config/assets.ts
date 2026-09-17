@@ -3,6 +3,8 @@ export const ASSETS = {
   mark: "img/icon-mark.png",
   markLight: "img/icon-mark-light.png",
   tipQr: "assets/tip.png",
+  tipWechat: "assets/tip-wechat.png",
+  tipAlipay: "assets/tip-alipay.jpg",
 } as const;
 
 export function assetUrl(path: string): string {

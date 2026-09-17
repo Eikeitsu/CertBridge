@@ -271,5 +271,6 @@ const CONSOLE_VOICE: PackVoice = {
 export const APP_VOICE = DEFAULT_VOICE;
 
 export function getPackVoice(pack?: ThemePack | null): PackVoice {
-  return pack === ThemePack.Console ? CONSOLE_VOICE : DEFAULT_VOICE;
+  if (pack === ThemePack.Console) return CONSOLE_VOICE;
+  return DEFAULT_VOICE;
 }

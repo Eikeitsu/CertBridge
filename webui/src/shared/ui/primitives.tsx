@@ -5,7 +5,23 @@ export function Card({
   meta,
   children,
   className = "",
-}: PropsWithChildren<{ title?: string; meta?: string; className?: string }>) {
+  surface = "card",
+}: PropsWithChildren<{
+  title?: string;
+  meta?: string;
+  className?: string;
+  /** card=??????plain=????? pack ???? */
+  surface?: "card" | "plain";
+}>) {
+  if (surface === "plain") {
+    return (
+      <div className={`bf-card-plain ${className}`.trim()}>
+        {title ? <h3 className="bf-card-plain__title">{title}</h3> : null}
+        {meta ? <p className="bf-card-plain__meta">{meta}</p> : null}
+        {children}
+      </div>
+    );
+  }
   return (
     <section className={`bf-card ${className}`.trim()}>
       {title ? <h3 className="bf-card__title">{title}</h3> : null}
@@ -109,14 +125,18 @@ export function Segment({
   value,
   disabled,
   onChange,
+  layout,
 }: {
   options: { value: string; label: string; hint?: string }[];
   value: string;
   disabled?: boolean;
   onChange: (value: string) => void;
+  /** stack=?????chips=??????????? hint ?? chips */
+  layout?: "stack" | "chips";
 }) {
+  const mode = layout ?? (options.every((option) => !option.hint) ? "chips" : "stack");
   return (
-    <div className="bf-segment">
+    <div className={`bf-segment bf-segment--${mode}`}>
       {options.map((option) => (
         <button
           key={option.value}
@@ -146,7 +166,7 @@ export function Notice({
   );
 }
 
-export function Loader({ label = "???…" }: { label?: string }) {
+export function Loader({ label = "???" }: { label?: string }) {
   return (
     <div className="bf-loader">
       <div className="bf-loader__spin" aria-hidden />

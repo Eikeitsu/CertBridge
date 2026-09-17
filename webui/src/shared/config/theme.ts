@@ -12,12 +12,17 @@ export const THEME_PACKS = [
   {
     id: ThemePack.Default,
     label: "默认",
-    hint: "干净清晰，适合日常查看与开关证书",
+    hint: "大状态区，证书与环境按组排列",
+  },
+  {
+    id: ThemePack.Ops,
+    label: "精简",
+    hint: "紧凑面板，状态与列表更集中",
   },
   {
     id: ThemePack.Console,
-    label: "控制台",
-    hint: "紧凑终端风，适合盯日志与运维状态",
+    label: "终端",
+    hint: "等宽字体，路径顶栏与贴边表格",
   },
 ] as const;
 
@@ -40,5 +45,6 @@ export const PACK_CHROME_DEFAULTS: Record<
   { compact: boolean }
 > = {
   [ThemePack.Default]: { compact: false },
+  [ThemePack.Ops]: { compact: true },
   [ThemePack.Console]: { compact: true },
 };

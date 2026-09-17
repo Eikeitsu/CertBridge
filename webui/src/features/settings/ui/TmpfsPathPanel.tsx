@@ -7,6 +7,7 @@ type TmpfsPathPanelProps = {
   pending?: boolean;
   onChange: (style: TmpfsStyle) => void;
   dense?: boolean;
+  surface?: "card" | "plain";
 };
 
 export function TmpfsPathPanel({
@@ -14,11 +15,13 @@ export function TmpfsPathPanel({
   pending,
   onChange,
   dense,
+  surface = "card",
 }: TmpfsPathPanelProps) {
   return (
     <Card
       title="临时挂载路径"
       meta={TMPFS_HELP_FOOTNOTE}
+      surface={surface}
       className={dense ? "bf-card--dense" : undefined}
     >
       <Segment

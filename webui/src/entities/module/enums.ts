@@ -5,9 +5,10 @@ export enum ThemeMode {
   Dark = "dark",
 }
 
-/** 壳层气质包：默认（正常）| 控制台（终端） */
+/** 壳层气质包：默认 | 精简 | 终端 */
 export enum ThemePack {
   Default = "default",
+  Ops = "ops",
   Console = "console",
 }
 

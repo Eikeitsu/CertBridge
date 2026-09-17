@@ -26,15 +26,7 @@ export function HideCaptureWarning({
         对 Reqable / ProxyPin，或被抓包的目标 App 开启「卸载模块 /
         Umount」、DenyList+umount、APatch 「排除修改」等，会卸掉 cacerts 上的证书挂载。
       </Notice>
-      <ul
-        style={{
-          margin: "12px 0 0",
-          paddingLeft: 18,
-          fontSize: "0.82rem",
-          color: "var(--bf-ink-2)",
-          lineHeight: 1.55,
-        }}
-      >
+      <ul className="bf-bullet-list" style={{ color: "var(--bf-ink-2)", fontSize: "0.82rem" }}>
         <li>
           <strong style={{ color: "var(--bf-ink)" }}>抓包软件</strong>
           ：开了卸载模块 → 软件内常显示「根证书未安装」

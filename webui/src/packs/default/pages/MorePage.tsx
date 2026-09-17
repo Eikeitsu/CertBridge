@@ -21,24 +21,37 @@ export function DefaultMorePage() {
         <h1>{v.title}</h1>
         <p>{v.appearanceMeta}</p>
       </header>
-      <AppearancePanel title={v.appearance} meta={v.appearanceMeta} />
-      <MountModePanel
-        mountMode={mount.mountMode}
-        pending={mount.isPending}
-        onChange={(mode) => void mount.handleChange(mode)}
-      />
-      <TmpfsPathPanel
-        tmpfsStyle={tmpfs.tmpfsStyle}
-        pending={tmpfs.isPending}
-        onChange={(style) => void tmpfs.handleChange(style)}
-      />
-      <QuietPropPanel
-        dynamicOn={quiet.dynamicOn}
-        pending={quiet.isPending}
-        onChange={(on) => void quiet.handleChange(on)}
-      />
-      <UpdateChannelPanel />
-      <AboutSection title={v.about} heroEmphasis />
+
+      <section className="pk-def-section">
+        <AppearancePanel title={v.appearance} meta={v.appearanceMeta} />
+      </section>
+      <section className="pk-def-section">
+        <MountModePanel
+          mountMode={mount.mountMode}
+          pending={mount.isPending}
+          onChange={(mode) => void mount.handleChange(mode)}
+        />
+      </section>
+      <section className="pk-def-section">
+        <TmpfsPathPanel
+          tmpfsStyle={tmpfs.tmpfsStyle}
+          pending={tmpfs.isPending}
+          onChange={(style) => void tmpfs.handleChange(style)}
+        />
+      </section>
+      <section className="pk-def-section">
+        <QuietPropPanel
+          dynamicOn={quiet.dynamicOn}
+          pending={quiet.isPending}
+          onChange={(on) => void quiet.handleChange(on)}
+        />
+      </section>
+      <section className="pk-def-section">
+        <UpdateChannelPanel />
+      </section>
+      <section className="pk-def-section">
+      <AboutSection title={v.about} layout="dashboard" />
+      </section>
     </div>
   );
 }

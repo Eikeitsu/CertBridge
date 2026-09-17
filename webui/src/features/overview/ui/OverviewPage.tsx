@@ -99,7 +99,7 @@ export function OverviewPage() {
       />
       <HelpCollapse
         title={voice.overview.runtimeTitle}
-        defaultOpen={pack === ThemePack.Console}
+        defaultOpen={pack === ThemePack.Console || pack === ThemePack.Ops}
       >
         <dl className="bf-env-grid">
           <div>

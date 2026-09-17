@@ -7,18 +7,19 @@ import { QuietPropPanel } from "@/features/settings/ui/QuietPropPanel";
 import { TmpfsPathPanel } from "@/features/settings/ui/TmpfsPathPanel";
 import { UpdateChannelPanel } from "@/features/settings/ui/UpdateChannelPanel";
 import { AboutSection } from "@/features/about/ui/AboutSection";
-import { CONSOLE_VOICE } from "../voice";
+import { OPS_VOICE } from "../voice";
 
-export function ConsoleMorePage() {
+export function OpsMorePage() {
   const mount = useMountMode();
   const tmpfs = useTmpfsStyle();
   const quiet = useQuietProp();
-  const v = CONSOLE_VOICE.more;
+  const v = OPS_VOICE.more;
 
   return (
-    <div className="pk-con-page">
-      <pre className="pk-con-banner">{`# ${v.title}
-# ${v.appearanceMeta}`}</pre>
+    <div className="pk-ops-page pk-ops-page--more">
+      <header className="pk-ops-pagehead pk-ops-pagehead--meta">
+        <p>{v.appearanceMeta}</p>
+      </header>
       <AppearancePanel title={v.appearance} meta={v.appearanceMeta} surface="plain" />
       <MountModePanel
         mountMode={mount.mountMode}
@@ -42,7 +43,7 @@ export function ConsoleMorePage() {
         surface="plain"
       />
       <UpdateChannelPanel dense surface="plain" />
-      <AboutSection title={v.about} layout="terminal" />
+      <AboutSection title={v.about} layout="ops" />
     </div>
   );
 }

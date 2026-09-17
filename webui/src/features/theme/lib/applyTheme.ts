@@ -5,8 +5,9 @@ import { ResolvedTheme, ThemeMode, ThemePack } from "@/entities/module/enums";
 import { writeStorage } from "@/shared/lib/storage";
 import type { ThemeState } from "../model/themeSlice";
 
-/** 旧包名迁移到 default | console */
+/** 旧包名迁移到 default | ops | console */
 export function migratePack(stored: string | null): ThemePack {
+  if (stored === ThemePack.Ops || stored === "dense") return ThemePack.Ops;
   if (stored === ThemePack.Console || stored === "material") return ThemePack.Console;
   return ThemePack.Default;
 }

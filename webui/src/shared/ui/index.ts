@@ -1,5 +1,6 @@
 export { HelpCollapse } from "./HelpCollapse";
 export { BottomSheet } from "./BottomSheet";
+export { ImagePreview } from "./ImagePreview";
 export { Loader } from "./Loader";
 export { AppSnackbar } from "./AppSnackbar";
 export { ConfirmHost } from "./ConfirmHost";

@@ -1,4 +1,3 @@
-import { Card } from "@/shared/ui/primitives";
 import { useAppSelector } from "@/app/store/hooks";
 import { selectModuleStatus } from "@/features/status/model/selectors";
 import { isFlagOn } from "@/shared/lib/flag";
@@ -27,47 +26,62 @@ export function DefaultHidePage() {
         <h1>{DEFAULT_VOICE.hide.title}</h1>
         <p>{DEFAULT_VOICE.hide.sub}</p>
       </header>
+
       <HideCaptureWarning title={h.captureTitle} meta={h.captureMeta} />
       <CaptureChecklistCard
         title={h.checklistTitle}
         meta={h.checklistMeta}
         dismissLabel={h.checklistDismiss}
       />
+
       {hide.hideSupported ? (
-        <Card title={h.switchTitle} meta={h.switchMeta}>
-          <HideAllowRow
-            checked={hide.hideAllow}
-            disabled={hide.isPending}
-            onChange={hide.handleChange}
-            title={h.allowTitle}
-            descOn={h.allowOn}
-            descOff={h.allowOff}
-            large
-          />
-        </Card>
+        <section className="pk-def-section">
+          <h2 className="pk-def-section__title">{h.switchTitle}</h2>
+          <div className="pk-def-group">
+            <HideAllowRow
+              checked={hide.hideAllow}
+              disabled={hide.isPending}
+              onChange={hide.handleChange}
+              title={h.allowTitle}
+              descOn={h.allowOn}
+              descOff={h.allowOff}
+              large
+            />
+          </div>
+          {h.switchMeta ? <p className="pk-def-muted">{h.switchMeta}</p> : null}
+        </section>
       ) : null}
+
       {zn.znHideSupported ? (
-        <Card title={h.znSwitchTitle} meta={h.znSwitchMeta}>
-          <HideAllowRow
-            checked={zn.znHideAllow}
-            disabled={zn.isPending}
-            onChange={zn.handleChange}
-            title={h.znAllowTitle}
-            descOn={h.znAllowOn}
-            descOff={h.znAllowOff}
-            large
-          />
-        </Card>
+        <section className="pk-def-section">
+          <h2 className="pk-def-section__title">{h.znSwitchTitle}</h2>
+          <div className="pk-def-group">
+            <HideAllowRow
+              checked={zn.znHideAllow}
+              disabled={zn.isPending}
+              onChange={zn.handleChange}
+              title={h.znAllowTitle}
+              descOn={h.znAllowOn}
+              descOff={h.znAllowOff}
+              large
+            />
+          </div>
+          {h.znSwitchMeta ? <p className="pk-def-muted">{h.znSwitchMeta}</p> : null}
+        </section>
       ) : (
-        <Card title={h.znMissingTitle} meta={h.znMissingMeta}>
+        <section className="pk-def-section">
+          <h2 className="pk-def-section__title">{h.znMissingTitle}</h2>
           <p className="pk-def-muted">{h.znMissingBody}</p>
-        </Card>
+        </section>
       )}
+
       {zn.znHideSupported && !loaderOk ? (
-        <Card title={h.loaderWarnTitle} meta={h.loaderWarnMeta}>
-          <p className="pk-def-muted">{h.loaderWarnBody}</p>
-        </Card>
+        <div className="pk-def-banner is-warn">
+          <strong>{h.loaderWarnTitle}</strong>
+          <div>{h.loaderWarnBody}</div>
+        </div>
       ) : null}
+
       {zn.znHideSupported ? (
         <ZnWhitelistEditor
           title={h.whitelistTitle}
@@ -76,8 +90,14 @@ export function DefaultHidePage() {
           saveLabel={h.whitelistSave}
         />
       ) : null}
+
       <HideStatusCard />
-      <HideGuidePanel title={h.guideTitle} meta={h.guideMeta} />
+      <details className="pk-def-fold">
+        <summary>{h.guideTitle}</summary>
+        <div style={{ marginTop: 8 }}>
+          <HideGuidePanel title={h.guideTitle} meta={h.guideMeta} />
+        </div>
+      </details>
     </div>
   );
 }

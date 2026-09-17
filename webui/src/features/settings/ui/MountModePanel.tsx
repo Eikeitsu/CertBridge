@@ -11,6 +11,7 @@ type MountModePanelProps = {
   pending?: boolean;
   onChange: (mode: MountMode) => void;
   dense?: boolean;
+  surface?: "card" | "plain";
 };
 
 export function MountModePanel({
@@ -18,11 +19,13 @@ export function MountModePanel({
   pending,
   onChange,
   dense,
+  surface = "card",
 }: MountModePanelProps) {
   return (
     <Card
       title="证书挂载模式"
       meta={MOUNT_HELP_FOOTNOTE}
+      surface={surface}
       className={dense ? "bf-card--dense" : undefined}
     >
       <Segment
@@ -35,14 +38,7 @@ export function MountModePanel({
         }))}
         onChange={(value) => onChange(value as MountMode)}
       />
-      <ul
-        style={{
-          margin: "12px 0 0",
-          paddingLeft: "1.2em",
-          fontSize: "0.78rem",
-          color: "var(--bf-ink-3)",
-        }}
-      >
+      <ul className="bf-bullet-list">
         {MOUNT_ROOT_NOTES.map((note) => (
           <li key={note.name}>
             <strong>{note.name}</strong>：{note.note}

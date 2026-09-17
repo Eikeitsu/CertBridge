@@ -71,11 +71,14 @@ export function ConsoleLogPage() {
       {loading ? (
         <Loader label="reading…" />
       ) : (
-        <pre className="pk-con-term">
-          {filtered.length
-            ? filtered.map((l) => `[${l.level}] ${l.body}`).join("\n")
-            : v.empty}
-        </pre>
+        <section className="pk-con-termframe">
+          <div className="pk-con-termframe__bar">journal · {filtered.length} lines</div>
+          <pre className="pk-con-term">
+            {filtered.length
+              ? filtered.map((l) => `[${l.level}] ${l.body}`).join("\n")
+              : v.empty}
+          </pre>
+        </section>
       )}
     </div>
   );

@@ -35,10 +35,11 @@ function magiskWebUiHtml(): Plugin {
   };
 }
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   root,
   base: "./",
-  plugins: [react(), magiskWebUiHtml()],
+  // Magisk WebView 需要去 module/crossorigin；本地 Vite 开发必须保留 type=module
+  plugins: [react(), ...(command === "build" ? [magiskWebUiHtml()] : [])],
   resolve: {
     alias: {
       "@": resolve(root, "src"),
@@ -68,4 +69,4 @@ export default defineConfig({
     port: 5174,
     host: true,
   },
-});
+}));

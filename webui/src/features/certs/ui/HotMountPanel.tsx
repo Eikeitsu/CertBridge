@@ -16,6 +16,8 @@ type HotMountPanelProps = {
   onMount: (mode: HotMountMode, sdPath?: string) => void;
   onUnmount: () => void;
   title?: string;
+  surface?: "card" | "plain";
+  hideTitle?: boolean;
 };
 
 export function HotMountPanel({
@@ -24,6 +26,8 @@ export function HotMountPanel({
   onMount,
   onUnmount,
   title = "临时挂载",
+  surface = "card",
+  hideTitle = false,
 }: HotMountPanelProps) {
   const status = useAppSelector(selectModuleStatus);
   const { mode, setMode, sdPath, setSdPath } = useHotMountPanel();
@@ -36,7 +40,11 @@ export function HotMountPanel({
   const sessionLabel = resolveHotSessionLabel(status);
 
   return (
-    <Card title={title} meta={isHotActive ? sessionLabel : HOT_MOUNT_META}>
+    <Card
+      title={hideTitle ? undefined : title}
+      meta={isHotActive ? sessionLabel : HOT_MOUNT_META}
+      surface={surface}
+    >
       <HotMountAllowRow checked={isHotAllow} disabled={busy} onChange={onSetHotAllow} />
 
       {isHotActive ? (

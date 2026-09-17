@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Home, Shield, ScrollText, EyeOff, Ellipsis } from "lucide-react";
+import { Activity, Shield, ScrollText, EyeOff, Ellipsis } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useAppSelector } from "@/app/store/hooks";
 import { useActiveTab } from "@/features/shell/hooks/useActiveTab";
@@ -11,18 +11,17 @@ import {
   selectStatusRefreshing,
 } from "@/features/status/model/selectors";
 import { TabName } from "@/entities/module/enums";
-import { brandModuleIconSrc } from "@/shared/config/brand";
 import { AppSnackbar } from "@/shared/ui/AppSnackbar";
 import { ConfirmHost } from "@/shared/ui/ConfirmHost";
-import { DEFAULT_VOICE } from "./voice";
-import { DefaultHomePage } from "./pages/HomePage";
-import { DefaultCertsPage } from "./pages/CertsPage";
-import { DefaultLogPage } from "./pages/LogPage";
-import { DefaultHidePage } from "./pages/HidePage";
-import { DefaultMorePage } from "./pages/MorePage";
+import { OPS_VOICE } from "./voice";
+import { OpsHomePage } from "./pages/HomePage";
+import { OpsCertsPage } from "./pages/CertsPage";
+import { OpsLogPage } from "./pages/LogPage";
+import { OpsHidePage } from "./pages/HidePage";
+import { OpsMorePage } from "./pages/MorePage";
 
 const ICONS: Record<TabName, LucideIcon> = {
-  [TabName.Home]: Home,
+  [TabName.Home]: Activity,
   [TabName.Certs]: Shield,
   [TabName.Log]: ScrollText,
   [TabName.Hide]: EyeOff,
@@ -41,19 +40,19 @@ function Pane({
   children: React.ReactNode;
 }) {
   return (
-    <section className={`pk-def-pane${active === tab ? " is-on" : ""}`} aria-hidden={active !== tab}>
+    <section className={`pk-ops-pane${active === tab ? " is-on" : ""}`} aria-hidden={active !== tab}>
       {seen ? children : null}
     </section>
   );
 }
 
-export function DefaultShell() {
+export function OpsShell() {
   const deviceLabel = useAppSelector(selectDeviceLabel);
   const refreshing = useAppSelector(selectStatusRefreshing);
   const resolved = useAppSelector(selectResolvedTheme);
   const { activeTab, switchTab } = useActiveTab();
   const { tabs, hideSupported } = useVisibleTabs();
-  const v = DEFAULT_VOICE;
+  const v = OPS_VOICE;
   const [seen, setSeen] = useState<Partial<Record<TabName, boolean>>>(() => ({
     [activeTab]: true,
   }));
@@ -74,53 +73,46 @@ export function DefaultShell() {
   );
 
   return (
-    <div className="pk-def-shell">
-      <div className={`pk-def-progress${refreshing ? " is-on" : ""}`} aria-hidden />
-      <header className="pk-def-topbar">
-        <div className="pk-def-topbar__brand">
-          <img
-            className="pk-def-topbar__mark"
-            src={brandModuleIconSrc()}
-            alt=""
-            width={22}
-            height={22}
-          />
+    <div className="pk-ops-shell">
+      <div className={`pk-ops-progress${refreshing ? " is-on" : ""}`} aria-hidden />
+      <header className="pk-ops-topbar">
+        <div className="pk-ops-topbar__brand">
+          <span className="pk-ops-topbar__mark" aria-hidden />
           <strong>{v.brand}</strong>
         </div>
-        <div className="pk-def-topbar__device">{deviceLabel}</div>
+        <div className="pk-ops-topbar__title">{v.tabs[activeTab]}</div>
+        <div className="pk-ops-topbar__meta">{deviceLabel}</div>
       </header>
-      <main className="pk-def-main">
+      <main className="pk-ops-main">
         <Pane tab={TabName.Home} active={activeTab} seen={!!seen[TabName.Home]}>
-          <DefaultHomePage />
+          <OpsHomePage />
         </Pane>
         <Pane tab={TabName.Certs} active={activeTab} seen={!!seen[TabName.Certs]}>
-          <DefaultCertsPage />
+          <OpsCertsPage />
         </Pane>
         <Pane tab={TabName.Log} active={activeTab} seen={!!seen[TabName.Log]}>
-          <DefaultLogPage />
+          <OpsLogPage />
         </Pane>
         {hideSupported ? (
           <Pane tab={TabName.Hide} active={activeTab} seen={!!seen[TabName.Hide]}>
-            <DefaultHidePage />
+            <OpsHidePage />
           </Pane>
         ) : null}
         <Pane tab={TabName.More} active={activeTab} seen={!!seen[TabName.More]}>
-          <DefaultMorePage />
+          <OpsMorePage />
         </Pane>
       </main>
-      <nav className="pk-def-dock" style={{ gridTemplateColumns: `repeat(${dockTabs.length}, 1fr)` }}>
+      <nav className="pk-ops-dock" style={{ gridTemplateColumns: `repeat(${dockTabs.length}, 1fr)` }}>
         {dockTabs.map((tab) => {
           const Icon = ICONS[tab.key];
           return (
             <button
               key={tab.key}
               type="button"
-              className={`pk-def-dock__item${activeTab === tab.key ? " is-on" : ""}`}
+              className={`pk-ops-dock__item${activeTab === tab.key ? " is-on" : ""}`}
               onClick={() => switchTab(tab.key)}
             >
-              <span className="pk-def-dock__icon">
-                <Icon strokeWidth={activeTab === tab.key ? 2.4 : 1.8} />
-              </span>
+              <Icon size={18} strokeWidth={activeTab === tab.key ? 2.2 : 1.7} />
               <span>{tab.label}</span>
             </button>
           );

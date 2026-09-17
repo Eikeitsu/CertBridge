@@ -44,19 +44,9 @@ export function CaptureChecklistCard({
   return (
     <Card title={title} meta={meta}>
       <Notice tone="alert">证书要生效，抓包链路相关 App 必须能看见 cacerts 挂载。</Notice>
-      <ol
-        style={{
-          margin: "12px 0 0",
-          paddingLeft: 18,
-          fontSize: "0.82rem",
-          color: "var(--bf-ink-2)",
-          lineHeight: 1.55,
-        }}
-      >
+      <ol className="bf-bullet-list" data-style="decimal" style={{ color: "var(--bf-ink-2)", fontSize: "0.82rem" }}>
         {CHECKLIST.map((item) => (
-          <li key={item} style={{ marginBottom: 6 }}>
-            {item}
-          </li>
+          <li key={item}>{item}</li>
         ))}
       </ol>
       <div className="bf-btn-row" style={{ marginTop: 12 }}>

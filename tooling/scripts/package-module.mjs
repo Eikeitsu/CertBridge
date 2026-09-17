@@ -262,6 +262,8 @@ function validateSources() {
     "config/certs.conf",
     "webroot/index.html",
     "webroot/assets/tip.png",
+    "webroot/assets/tip-wechat.png",
+    "webroot/assets/tip-alipay.jpg",
   ];
   for (const relPath of required) {
     if (!existsSync(join(moduleRoot, relPath))) {

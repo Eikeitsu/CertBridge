@@ -15,17 +15,19 @@ import { Card } from "@/shared/ui/primitives";
 type AppearancePanelProps = {
   title?: string;
   meta?: string;
+  surface?: "card" | "plain";
 };
 
 export function AppearancePanel({
   title = "外观",
   meta = "主题包、浅深色与强调色",
+  surface = "card",
 }: AppearancePanelProps) {
   const dispatch = useAppDispatch();
   const theme = useAppSelector(selectThemeState);
 
   return (
-    <Card title={title} meta={meta}>
+    <Card title={title} meta={meta} surface={surface} className="bf-appearance">
       <div className="bf-pack-grid">
         {THEME_PACKS.map((pack) => (
           <button
@@ -35,8 +37,10 @@ export function AppearancePanel({
             onClick={() => dispatch(setThemePack(pack.id))}
           >
             <div className="bf-pack-preview" data-pack={pack.id} aria-hidden />
-            <strong>{pack.label}</strong>
-            <span>{pack.hint}</span>
+            <span className="bf-pack-card__body">
+              <strong>{pack.label}</strong>
+              <span className="bf-pack-card__hint">{pack.hint}</span>
+            </span>
           </button>
         ))}
       </div>

@@ -8,7 +8,7 @@ type AccentPickerRowProps = {
 
 export function AccentPickerRow({ value, onChange }: AccentPickerRowProps) {
   return (
-    <div style={{ marginTop: 12 }}>
+    <div className="bf-appearance__row">
       <Segment
         value={value}
         options={ACCENTS.map((accent) => ({

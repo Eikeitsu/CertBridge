@@ -13,7 +13,7 @@ import { Switch } from "@/shared/ui/primitives";
 import { Loader } from "@/shared/ui/Loader";
 import { CertDetailSheet } from "@/features/certs/ui/CertDetailSheet";
 import { HotMountPanel } from "@/features/certs/ui/HotMountPanel";
-import { DEFAULT_VOICE } from "../voice";
+import { OPS_VOICE } from "../voice";
 
 const PRESET_KINDS: AppPresetKind[] = [
   "httpcanary",
@@ -23,7 +23,7 @@ const PRESET_KINDS: AppPresetKind[] = [
   "pcapdroid",
 ];
 
-function statusLabel(cert: {
+function stateOf(cert: {
   isActive: boolean;
   isEnabled: boolean;
   isAvailable: boolean;
@@ -34,14 +34,14 @@ function statusLabel(cert: {
   return "未检测到";
 }
 
-export function DefaultCertsPage() {
+export function OpsCertsPage() {
   const dispatch = useAppDispatch();
   const loading = useAppSelector(selectStatusLoading);
   const bootstrapped = useAppSelector(selectStatusBootstrapped);
   const customs = useAppSelector(selectCustomCertificates);
   const builtins = useBuiltinCerts();
   const detail = useCertDetail();
-  const v = DEFAULT_VOICE.certs;
+  const v = OPS_VOICE.certs;
   const {
     isPending,
     pendingKind,
@@ -55,28 +55,27 @@ export function DefaultCertsPage() {
     handleHotUnmount,
   } = useCertActions();
 
-  if (loading && !bootstrapped) return <Loader label={DEFAULT_VOICE.loading} />;
+  if (loading && !bootstrapped) return <Loader label={OPS_VOICE.loading} />;
 
   return (
-    <div className="pk-def-page">
-      <header className="pk-def-pagehead">
-        <h1>{v.title}</h1>
+    <div className="pk-ops-page pk-ops-page--certs">
+      <header className="pk-ops-pagehead pk-ops-pagehead--meta">
         <p>{v.sub}</p>
       </header>
 
-      <section className="pk-def-section">
-        <h2 className="pk-def-section__title">{v.builtin}</h2>
-        <div className="pk-def-group">
+      <section className="pk-ops-panel">
+        <h2 className="pk-ops-panel__title">{v.builtin}</h2>
+        <div className="pk-ops-list">
           {builtins.map((cert) => (
-            <div key={cert.kind} className={`pk-def-row${cert.isActive ? " is-on" : ""}`}>
-              <div className="pk-def-row__main">
+            <div key={cert.kind} className={`pk-ops-list__row${cert.isActive ? " is-on" : ""}`}>
+              <div>
                 <strong>{cert.title}</strong>
-                <span>{statusLabel(cert)}</span>
+                <span>{stateOf(cert)}</span>
               </div>
-              <div className="pk-def-row__ops">
+              <div className="pk-ops-list__ops">
                 <button
                   type="button"
-                  className="pk-def-link"
+                  className="pk-ops-link"
                   disabled={!(cert.isAvailable || cert.isActive)}
                   onClick={() => void detail.openDetail(cert.kind, cert.title)}
                 >
@@ -93,12 +92,12 @@ export function DefaultCertsPage() {
         </div>
       </section>
 
-      <section className="pk-def-section">
-        <div className="pk-def-section__bar">
-          <h2 className="pk-def-section__title">
+      <section className="pk-ops-panel">
+        <div className="pk-ops-panel__bar">
+          <h2 className="pk-ops-panel__title">
             {v.custom} · {customs.length}
           </h2>
-          <label className="pk-def-btn is-primary pk-def-file">
+          <label className="pk-ops-btn is-primary pk-ops-file">
             {v.import}
             <input
               type="file"
@@ -113,25 +112,27 @@ export function DefaultCertsPage() {
             />
           </label>
         </div>
-        <div className="pk-def-group">
+        <div className="pk-ops-list">
           {customs.length ? (
             customs.map((c) => (
-              <div key={c.name} className="pk-def-row">
-                <div className="pk-def-row__main">
+              <div key={c.name} className="pk-ops-list__row">
+                <div>
                   <strong>{c.display || c.name}</strong>
                   <span>{c.name}</span>
                 </div>
-                <div className="pk-def-row__ops">
+                <div className="pk-ops-list__ops">
                   <button
                     type="button"
-                    className="pk-def-link"
-                    onClick={() => void detail.openDetail(`custom:${c.name}`, c.display || c.name)}
+                    className="pk-ops-link"
+                    onClick={() =>
+                      void detail.openDetail(`custom:${c.name}`, c.display || c.name)
+                    }
                   >
                     详情
                   </button>
                   <button
                     type="button"
-                    className="pk-def-link is-danger"
+                    className="pk-ops-link is-danger"
                     disabled={isPending}
                     onClick={() => handleRemoveCustom(c.name)}
                   >
@@ -141,15 +142,15 @@ export function DefaultCertsPage() {
               </div>
             ))
           ) : (
-            <p className="pk-def-empty">{v.empty}</p>
+            <p className="pk-ops-empty">{v.empty}</p>
           )}
         </div>
-        <div className="pk-def-presets">
+        <div className="pk-ops-chips">
           {PRESET_KINDS.map((kind) => (
             <button
               key={kind}
               type="button"
-              className="pk-def-chip"
+              className="pk-ops-chip"
               disabled={isPending}
               onClick={() => handleImportPreset(kind)}
             >
@@ -158,7 +159,7 @@ export function DefaultCertsPage() {
           ))}
           <button
             type="button"
-            className="pk-def-chip"
+            className="pk-ops-chip"
             disabled={isPending}
             onClick={() => void handleExportFingerprints()}
           >
@@ -167,9 +168,9 @@ export function DefaultCertsPage() {
         </div>
       </section>
 
-      <details className="pk-def-fold">
+      <details className="pk-ops-fold">
         <summary>{v.hot}</summary>
-        <div style={{ marginTop: 8 }}>
+        <div className="pk-ops-fold__body">
           <HotMountPanel
             busy={isPending}
             title={v.hot}
@@ -184,7 +185,7 @@ export function DefaultCertsPage() {
 
       <button
         type="button"
-        className="pk-def-btn is-ghost"
+        className="pk-ops-btn"
         onClick={() => void dispatch(refreshStatus(true))}
       >
         {v.refresh}

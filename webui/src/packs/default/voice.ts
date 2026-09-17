@@ -42,7 +42,7 @@ export const DEFAULT_VOICE = {
   more: {
     title: "更多",
     appearance: "外观与主题",
-    appearanceMeta: "两套主题是完全不同的界面",
+    appearanceMeta: "三套主题各自一套版式，不只是换皮",
     about: "关于",
   },
 } as const;

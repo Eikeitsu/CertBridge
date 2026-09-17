@@ -18,9 +18,10 @@ import {
 
 type UpdateChannelPanelProps = {
   dense?: boolean;
+  surface?: "card" | "plain";
 };
 
-export function UpdateChannelPanel({ dense }: UpdateChannelPanelProps) {
+export function UpdateChannelPanel({ dense, surface = "card" }: UpdateChannelPanelProps) {
   const [channel, setChannel] = useState<UpdateChannel>("stable");
   const [preferCdn, setPreferCdnState] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -103,6 +104,7 @@ export function UpdateChannelPanel({ dense }: UpdateChannelPanelProps) {
     <Card
       title="更新通道"
       meta="正式走 Pages；CI 的清单与 zip 同在 ci-dist 分支。管理器自带更新始终跟正式通道。"
+      surface={surface}
       className={dense ? "bf-card--dense" : undefined}
     >
       <Segment

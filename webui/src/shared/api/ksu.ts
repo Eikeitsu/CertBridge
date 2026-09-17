@@ -23,11 +23,17 @@ export function exec(
       finish({ errno: -2, stdout: "", stderr: "timeout" });
     }, timeoutMs);
 
-    if (!hasBridge() || !ksu) {
+    if (!hasBridge() || typeof ksu?.exec !== "function") {
       clearTimeout(timer);
       finish({ errno: -1, stdout: "", stderr: "no_bridge" });
       return;
     }
+
+    const execFn = ksu.exec as (
+      cmd: string,
+      optsOrCb: string | object,
+      cb?: string,
+    ) => void;
 
     const cb = `cb_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
     const win = window as unknown as Window & Record<string, unknown>;
@@ -42,10 +48,10 @@ export function exec(
     };
 
     try {
-      ksu.exec(cmd, "{}", cb);
+      execFn(cmd, "{}", cb);
     } catch (error) {
       try {
-        ksu.exec(cmd, cb as unknown as string);
+        execFn(cmd, cb as unknown as string);
       } catch (error2) {
         clearTimeout(timer);
         delete win[cb];

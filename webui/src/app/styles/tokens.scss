@@ -1,3 +1,6 @@
+/* WebUI-X / KernelSU：注入 --window-inset-top/bottom，状态栏与底部小白条才能沉浸 */
+@import "https://mui.kernelsu.org/internal/insets.css";
+
 :root {
   --bf-inset-top: var(--window-inset-top, env(safe-area-inset-top, 0px));
   --bf-inset-bottom: var(--window-inset-bottom, env(safe-area-inset-bottom, 0px));

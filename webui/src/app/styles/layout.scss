@@ -19,7 +19,7 @@
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 8px;
-  background: color-mix(in srgb, var(--bf-bg) 88%, transparent);
+  background: color-mix(in srgb, var(--bf-chrome) 92%, transparent);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--bf-stroke);
@@ -65,8 +65,11 @@
   padding-bottom: var(--bf-inset-bottom);
   display: grid;
   align-items: stretch;
-  background: var(--bf-surface);
+  background: var(--bf-chrome);
   border-top: 1px solid var(--bf-stroke);
+
+  /* 把底栏颜色延伸进系统手势条区域，避免露白 */
+  box-shadow: 0 calc(var(--bf-inset-bottom)) 0 0 var(--bf-chrome);
 }
 
 .bf-dock__item {

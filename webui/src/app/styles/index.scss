@@ -21,8 +21,12 @@ body,
 
 html {
   font-size: calc(16px * var(--bf-font-scale));
-  background: var(--bf-bg);
+  background: var(--bf-chrome);
   background-attachment: fixed;
+
+  /* 禁止整页橡胶回弹：回弹时 safe-area 常短暂报 0，顶/底栏会塌 */
+  overscroll-behavior: none;
+  height: 100%;
 }
 
 body {
@@ -31,6 +35,15 @@ body {
   background: transparent;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior: none;
+  height: 100%;
+  overflow: hidden;
+}
+
+#root {
+  height: 100%;
+  overflow: auto;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 button,

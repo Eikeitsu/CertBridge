@@ -2,6 +2,9 @@ import { EMPTY_PLACEHOLDER } from "@/shared/config/constants";
 import { useAppSelector } from "@/app/store/hooks";
 import { selectDeviceLabel, selectModuleStatus } from "@/features/status/model/selectors";
 import { isFlagOn } from "@/shared/lib/flag";
+import { parseEnum } from "@/shared/lib/enum";
+import { Experimental14System } from "@/entities/module/enums";
+import { EXPERIMENTAL_14_SYSTEM } from "@/shared/config/mount";
 
 function yesNo(flag: string | undefined, fallbackInstalled?: boolean) {
   if (flag === "1" || flag === "0") return flag === "1" ? "已安装" : "未安装";
@@ -30,12 +33,24 @@ export function useAboutModuleRows(): AboutRow[] {
         ? "自定义安装"
         : status.profile_install_mode || EMPTY_PLACEHOLDER;
 
+  const e14 = parseEnum(
+    Experimental14System,
+    status.experimental_14_system,
+    Experimental14System.Skip,
+  );
+
   return [
     { key: "version", label: "版本", value: status.version || EMPTY_PLACEHOLDER, group: "env" },
     { key: "device", label: "设备", value: deviceLabel || EMPTY_PLACEHOLDER, group: "env" },
     { key: "system", label: "系统", value: androidLabel, group: "env" },
     { key: "root", label: "Root", value: status.root || EMPTY_PLACEHOLDER, group: "env" },
     { key: "mount", label: "挂载模式", value: status.mount_mode || EMPTY_PLACEHOLDER, group: "config" },
+    {
+      key: "e14",
+      label: "14+ system",
+      value: EXPERIMENTAL_14_SYSTEM[e14].label,
+      group: "config",
+    },
     { key: "tmpfs", label: "临时路径", value: status.tmpfs_style || EMPTY_PLACEHOLDER, group: "config" },
     { key: "mode", label: "安装方案", value: modeLabel, group: "config" },
     {

@@ -5,6 +5,7 @@ export type {
   TabName,
   BuiltinCertKind,
   MountMode,
+  Experimental14System,
   TmpfsStyle,
   HotMountMode,
   TrustTone,
@@ -66,6 +67,7 @@ export type ModuleStatus = {
   profile_zn_hide?: string;
   profile_install_mode?: string;
   mount_mode?: string;
+  experimental_14_system?: string;
   tmpfs_style?: string;
   quiet_prop?: string;
   stage_root?: string;

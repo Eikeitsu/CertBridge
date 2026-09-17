@@ -1,10 +1,12 @@
 import { useMountMode } from "@/features/settings/hooks/useMountMode";
+import { useExperimental14System } from "@/features/settings/hooks/useExperimental14System";
 import { useTmpfsStyle } from "@/features/settings/hooks/useTmpfsStyle";
 import { useQuietProp } from "@/features/settings/hooks/useQuietProp";
 import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
 import { PageStack } from "@/shared/ui/layout";
 import { AppearancePanel } from "./appearance/AppearancePanel";
 import { MountModePanel } from "./MountModePanel";
+import { Experimental14SystemPanel } from "./Experimental14SystemPanel";
 import { QuietPropPanel } from "./QuietPropPanel";
 import { TmpfsPathPanel } from "./TmpfsPathPanel";
 import { UpdateChannelPanel } from "./UpdateChannelPanel";
@@ -16,6 +18,11 @@ export function SettingsPage() {
     isPending: isMountPending,
     handleChange: handleMountChange,
   } = useMountMode();
+  const {
+    mode: experimental14Mode,
+    isPending: isExperimental14Pending,
+    handleChange: handleExperimental14Change,
+  } = useExperimental14System();
   const {
     tmpfsStyle,
     isPending: isTmpfsPending,
@@ -42,6 +49,11 @@ export function SettingsPage() {
         mountMode={mountMode}
         pending={isMountPending}
         onChange={(mode) => void handleMountChange(mode)}
+      />
+      <Experimental14SystemPanel
+        mode={experimental14Mode}
+        pending={isExperimental14Pending}
+        onChange={(mode) => void handleExperimental14Change(mode)}
       />
       <TmpfsPathPanel
         tmpfsStyle={tmpfsStyle}

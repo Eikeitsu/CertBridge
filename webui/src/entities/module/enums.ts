@@ -36,6 +36,12 @@ export enum MountMode {
   Magic = "magic",
 }
 
+/** Android 14+：是否跳过 system 证书路径（与 mount_mode 正交） */
+export enum Experimental14System {
+  Skip = "skip",
+  Auto = "auto",
+}
+
 export enum TmpfsStyle {
   Dev = "dev",
   Mnt = "mnt",

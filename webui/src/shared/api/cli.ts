@@ -13,6 +13,7 @@ import type {
   BuiltinCertKind,
   CustomCertificate,
   ExecResult,
+  Experimental14System,
   HotMountMode,
   MountMode,
   ModuleStatus,
@@ -68,6 +69,10 @@ export async function syncAppSources(): Promise<{
 
 export async function setMountMode(mode: MountMode) {
   return cli(`set_mount_mode ${mode}`);
+}
+
+export async function setExperimental14System(mode: Experimental14System) {
+  return cli(`set_experimental_14_system ${mode}`);
 }
 
 export async function setTmpfsStyle(style: TmpfsStyle) {

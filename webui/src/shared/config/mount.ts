@@ -1,4 +1,4 @@
-import { MountMode, TmpfsStyle } from "@/entities/module/enums";
+import { MountMode, Experimental14System, TmpfsStyle } from "@/entities/module/enums";
 
 export const MOUNT_MODES = {
   [MountMode.Compatible]: {
@@ -31,6 +31,27 @@ export const MOUNT_ROOT_NOTES = [
 ] as const;
 
 export const MOUNT_HELP_FOOTNOTE = "切换后需重启生效。";
+
+export const EXPERIMENTAL_14_SYSTEM = {
+  [Experimental14System.Skip]: {
+    value: Experimental14System.Skip,
+    label: "跳过 system",
+    meta: "默认：Android 14+ 不挂载 /system 证书路径，只脚本注入 APEX",
+  },
+  [Experimental14System.Auto]: {
+    value: Experimental14System.Auto,
+    label: "挂载 system",
+    meta: "按上方挂载模式处理 system（兼容 bind / Magic 叠层）",
+  },
+} as const;
+
+export const EXPERIMENTAL_14_SYSTEM_OPTIONS = [
+  EXPERIMENTAL_14_SYSTEM[Experimental14System.Skip],
+  EXPERIMENTAL_14_SYSTEM[Experimental14System.Auto],
+];
+
+export const EXPERIMENTAL_14_SYSTEM_FOOTNOTE =
+  "仅 Android 14+ 生效，与挂载模式正交；7–13 忽略。切换后需重启。";
 
 export const TMPFS_STYLES = {
   [TmpfsStyle.Dev]: {

@@ -138,7 +138,9 @@ hot_mount_points_to_source() {
     awk -v target="$HOT_TARGET" -v id="$HOT_MOUNT_ID" \
       '$1 == id && $5 == target { print; exit }' /proc/self/mountinfo 2>/dev/null)
   case "$HOT_MOUNT_LINE" in
-    *"$HOT_BIND_ROOT"*|*"$HOT_CERTS"*|*"/dev/.cb1"*|*"/data/local/tmp/.fs1"*|*"/data/local/tmp/sys-ca-merge-hot"*|\
+    *"$HOT_BIND_ROOT"*|*"$HOT_CERTS"*|\
+    *"/dev/.fs1"*|*"/dev/.cb1"*|*"/mnt/.ca1"*|\
+    *"/data/local/tmp/.fs1"*|*"/data/local/tmp/sys-ca-merge-hot"*|\
     *"/adb/modules/CertBridge/certs/hot/current/cacerts"*|*"/CertBridge/certs/hot/current/cacerts"*)
       return 0
       ;;

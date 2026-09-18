@@ -23,10 +23,17 @@ export function HideStatusCard({
     HIDE_PROVIDER_LABELS[status.hide_provider || "none"] ||
     "未检测到";
   const hideApplied = isFlagOn(status.hide_applied);
+  const hideSusfs = isFlagOn(status.hide_susfs);
+  const hideKsud = isFlagOn(status.hide_ksud_umount);
   const znSupported = isFlagOn(status.zn_hide_supported);
   const znAllow = isFlagOn(status.zn_hide_allow);
   const metaParts = [status.hide_summary, status.zn_hide_summary].filter(Boolean);
   const meta = metaParts.length ? metaParts.join(" · ") : "基于当前设备探测";
+  const tryUmountLabel = hideApplied
+    ? "已注册"
+    : hideSusfs || hideKsud
+      ? "未登记"
+      : "无 SuSFS/ksud";
 
   const rows = [
     { k: "Root", v: status.root || "—" },
@@ -34,7 +41,8 @@ export function HideStatusCard({
     { k: "STAGE", v: status.stage_root || TMPFS_STYLES[tmpfsStyle].paths[0] },
     { k: "路径", v: TMPFS_STYLES[tmpfsStyle].label },
     { k: "助手", v: provider },
-    { k: "try_umount", v: hideApplied ? "已注册" : "未注册" },
+    { k: "SuSFS", v: hideSusfs ? "TRY_UMOUNT 可用" : "未检测到" },
+    { k: "try_umount", v: tryUmountLabel },
   ];
   if (znSupported) {
     rows.push({ k: "Zygisk过滤", v: znAllow ? "已开启" : "已关闭" });
@@ -87,10 +95,16 @@ export function HideStatusCard({
           }
         />
         <Row
+          title="SuSFS TRY_UMOUNT"
+          extra={
+            <Tag tone={hideSusfs ? "ok" : "warn"}>{hideSusfs ? "可用" : "未检测到"}</Tag>
+          }
+        />
+        <Row
           title="本模块 try_umount"
           extra={
-            <Tag tone={hideApplied ? "ok" : "default"}>
-              {hideApplied ? "已注册" : "未注册 / 无 SuSFS"}
+            <Tag tone={hideApplied ? "ok" : hideSusfs || hideKsud ? "warn" : "default"}>
+              {tryUmountLabel}
             </Tag>
           }
         />

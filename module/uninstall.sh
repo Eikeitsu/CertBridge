@@ -8,15 +8,18 @@ if [ -x "$MODDIR/bin/hot_mount.sh" ]; then
     echo "uninstall: temporary session could not be fully removed; reboot required" >>"$LOG_FILE"
 fi
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] uninstall: module removed; reboot required to clear mounts" >>"$LOG_FILE" 2>/dev/null
-for _cb_mnt in /dev/.cb0 /dev/.cb1 \
-    /dev/.cb0/apex /dev/.cb0/system \
+for _cb_mnt in \
+    /dev/.fs0 /dev/.fs1 /dev/.fs0/apex /dev/.fs0/system \
+    /dev/.cb0 /dev/.cb1 /dev/.cb0/apex /dev/.cb0/system \
+    /mnt/.ca0 /mnt/.ca1 /mnt/.ca0/apex /mnt/.ca0/system \
     /data/local/tmp/.fs0 /data/local/tmp/.fs1 \
     /data/local/tmp/.fs0/apex /data/local/tmp/.fs0/system \
     /data/local/tmp/sys-ca-merge /data/local/tmp/sys-ca-merge-hot \
     /data/local/tmp/sys-ca-merge/apex /data/local/tmp/sys-ca-merge/system; do
   umount "$_cb_mnt" 2>/dev/null
 done
-rm -rf /dev/.cb0 /dev/.cb1 \
+rm -rf /dev/.fs0 /dev/.fs1 /dev/.cb0 /dev/.cb1 \
+  /mnt/.ca0 /mnt/.ca1 \
   /data/local/tmp/.fs0 /data/local/tmp/.fs1 \
   /data/local/tmp/sys-ca-merge /data/local/tmp/sys-ca-merge-hot \
   /data/local/tmp/certbridge-* 2>/dev/null

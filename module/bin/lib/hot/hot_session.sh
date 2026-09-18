@@ -84,8 +84,10 @@ hot_start() {
     echo "error=hot_mount_failed"
     return 1
   fi
-  HOT_TARGET=$(hot_read_state target)
-  [ -n "$HOT_TARGET" ] && hide_assist_for_target "$HOT_TARGET"
+  # 与 boot 注入一致：对所有目标登记 try_umount（不仅是主 target）
+  for HOT_HIDE_TARGET in $(list_target_stores); do
+    hide_assist_for_target "$HOT_HIDE_TARGET"
+  done
   hot_unlock
   refresh_module_description >/dev/null
   echo "ok=1"

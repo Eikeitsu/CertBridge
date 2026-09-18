@@ -98,6 +98,8 @@ certbridge_load_libs_runtime() {
       echo "hide_supported=0"
       echo "hide_allow=0"
       echo "stage_root=$RUNTIME_MOUNT_ROOT"
+      echo "hide_susfs=0"
+      echo "hide_ksud_umount=0"
       echo "hide_provider=none"
       echo "hide_provider_label=未安装隐藏组件"
       echo "hide_applied=0"

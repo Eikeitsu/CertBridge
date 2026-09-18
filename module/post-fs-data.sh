@@ -47,6 +47,16 @@ detach_runtime_cacert_binds || \
 if ! build_boot_generation; then
   write_inject_error generation_failed
   log_msg "post-fs-data: live generation failed, original store preserved"
+  # 热更新已先 detach：若旧 generation 仍在，立刻挂回，缩短无模块 CA 的窗口
+  if [ "${CERTBRIDGE_HOT_UPDATE:-0}" = "1" ] && [ -f "$GEN_CURRENT/complete" ]; then
+    log_msg "post-fs-data: hotupdate recover — reinject previous generation"
+    if sh "$MODDIR/bin/apex_inject.sh" boot; then
+      clear_inject_error
+      log_msg "post-fs-data: hotupdate recover inject ok"
+    else
+      log_msg "post-fs-data: hotupdate recover inject failed"
+    fi
+  fi
   finalize_runtime_status post-fs-data >/dev/null
   exit 1
 fi

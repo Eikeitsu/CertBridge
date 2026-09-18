@@ -26,6 +26,10 @@ if type update_module_description >/dev/null 2>&1; then
 	update_module_description >/dev/null 2>&1 || true
 fi
 
+# 标记热更新路径：post-fs-data 在 rebuild 失败时会尝试把旧 generation 重新挂回去，
+# 避免「已卸绑定但新集合未建好」的空窗长期残留。
+export CERTBRIDGE_HOT_UPDATE=1
+
 # 永久注入依赖 post-fs-data 生成 + service 加固命名空间
 if [ -f "$MODDIR/post-fs-data.sh" ]; then
 	sh "$MODDIR/post-fs-data.sh" >/dev/null 2>&1 || true

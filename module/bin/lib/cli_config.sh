@@ -171,6 +171,26 @@ cmd_set_force_bind_capture() {
   fi
 }
 
+cmd_set_late_inject() {
+  val="$1"
+  case "$val" in
+    0|1) ;;
+    *) echo "error=invalid_late_inject"; return 1 ;;
+  esac
+  write_conf late_inject "$val" || { echo "error=write_failed"; return 1; }
+  log_info "config: late_inject=$val"
+  echo "ok=1"
+  echo "late_inject=$val"
+  if [ "$val" = "1" ]; then
+    (
+      sh "$BINDIR/apex_inject.sh" namespaces 2>/dev/null || true
+    ) >>"$LOG_FILE" 2>&1 &
+    echo "hint=已开启晚注入；后台尝试补一次应用命名空间，之后每次开机 service 都会注入"
+  else
+    echo "hint=已关闭；下次开机 service 不再 namespaces 注入（当前挂载仍在，重启后仅靠 boot 注入）"
+  fi
+}
+
 ZN_WHITELIST_FILE="$CONFDIR/zn_whitelist.txt"
 
 cmd_get_zn_whitelist() {

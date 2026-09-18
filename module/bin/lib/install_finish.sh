@@ -80,8 +80,56 @@ certbridge_install_print_summary() {
   fi
   ui_print " Android 14+ 自动注入 APEX"
   ui_print "--------------------------------"
-  ui_print " 安装后必须重启设备 "
-  ui_print "********************************"
+}
+
+# 升级时保留用户证书与关键状态；conf 中部分键在不冲突时回填
+certbridge_install_preserve_user() {
+  OLD_MOD="/data/adb/modules/CertBridge"
+  [ -d "$OLD_MOD" ] || return 0
+  if [ -f "$LIBDIR/hot_update.sh" ]; then
+    # shellcheck disable=SC1090
+    . "$LIBDIR/hot_update.sh"
+    hot_update_preserve_paths "$OLD_MOD" "$MODPATH" \
+      certs/custom \
+      data/state/applied-certs.list \
+      data/state/applied.conf \
+      data/state/hide-assist.conf \
+      data/state/source.meta
+  fi
+  # 用户改过的 conf 键：在新模板上覆盖同名项（安装向导写的 reqable/proxypin/mount 仍优先）
+  if [ -f "$OLD_MOD/config/certs.conf" ] && [ -f "$MODPATH/config/certs.conf" ]; then
+    for _k in tmpfs_style hot_allow hide_allow zn_hide_allow experimental_14_system quiet_prop; do
+      _v=$(sed -n "s/^${_k}=//p" "$OLD_MOD/config/certs.conf" 2>/dev/null | head -n1 | tr -d '\r')
+      [ -n "$_v" ] || continue
+      # 本次安装若明确写入 hide/hot/zn，不回滚
+      case "$_k" in
+        hot_allow) [ "$INSTALL_HOT" = "1" ] && continue ;;
+        hide_allow) [ "$INSTALL_HIDE" = "1" ] && continue ;;
+        zn_hide_allow) [ "$INSTALL_ZN_HIDE" = "1" ] && continue ;;
+      esac
+      if grep -q "^${_k}=" "$MODPATH/config/certs.conf" 2>/dev/null; then
+        sed -i "s|^${_k}=.*|${_k}=${_v}|" "$MODPATH/config/certs.conf"
+      else
+        echo "${_k}=${_v}" >>"$MODPATH/config/certs.conf"
+      fi
+    done
+  fi
+}
+
+certbridge_install_try_hot_update() {
+  if [ ! -f "$LIBDIR/hot_update.sh" ]; then
+    ui_print " 安装完成，请重启设备 "
+    return 1
+  fi
+  # shellcheck disable=SC1090
+  . "$LIBDIR/hot_update.sh"
+  HOT_UPDATE_DESC="[♻️热更新中 | 重新注入证书] 本次更新无需重启；完成后自动显示实际状态"
+  # system/（Magic 叠层）、sepolicy、zygisk 变更需重启；其余可热更并重跑 post-fs-data
+  if hot_update_try CertBridge system sepolicy.rule zygisk; then
+    ui_print " 热更新将重新执行证书注入 "
+    return 0
+  fi
+  return 1
 }
 
 # Magisk customize 主流程（权限设置仍由 customize.sh 完成）
@@ -117,9 +165,12 @@ certbridge_run_install() {
   certbridge_install_ask_optional_apps
   certbridge_install_write_config
   certbridge_install_trim_components
+  certbridge_install_preserve_user
   MODDIR="$MODPATH"
   tr -d '\r\n' </proc/sys/kernel/random/boot_id >"$INSTALL_BOOT_FILE" 2>/dev/null
   certbridge_install_dump_tree
   certbridge_install_print_summary
+  certbridge_install_try_hot_update
+  ui_print "********************************"
   log_info "install: ==== CertBridge install end ===="
 }

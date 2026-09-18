@@ -14,33 +14,21 @@
 
 发布 / 合入 `master` 的顺序：
 
-1. **`cli`** — 模块脚本拆分、`status --live` / `verify`、`bin/cb`、开机状态退避与自愈、挂载 staged hardening
-2. **`webui`** — Trust Signal WebUI 源码与 `module/webroot`、相关文档与截图（已合入）
-3. **`hot-reload`** — **免重启模块热更新**（`hot_update.sh` / `hotinstall.sh`）；基于当前 `master` 重切，可先于 `mount_hide` 合入
-4. **`mount_hide`** — SuSFS try_umount、隐藏页后端、白名单、Zygisk 挂载过滤 so 与安装组件
-5. **`zn_module`** — 在 `mount_hide` 之上的 Zygisk/ZN 深化（可与 `mount_hide` 同 tip 起步，后续只在此分支迭代原生）
+1. **`cli`** / **`webui`** / **`hot-reload`** — 已合入或可按原计划合入
+2. **`umount_hide`** — SuSFS / KernelSU **try_umount**、挂载隐藏协助、临时层路径与隐藏文档（当前开发）
+3. **Zygisk / ZN 过滤** — 另开分支（经典 Zygisk so / ZN Module）；在 `umount_hide` 合入 `master` 之后再合
 
-> 重组前 tip 已备份为 `backup/hot-reload`；日常开发以 `hot-reload` 为准。
+> 旧分支 `mount_hide`、`zn_module` 仅作参考，功能迁完后可删除。
 
 ## 合并示例
 
 ```bash
 git checkout master && git pull
 
-git merge --no-ff cli -m "merge: cli 与状态复核"
+git merge --no-ff umount_hide -m "merge: umount_hide 挂载 umount 隐藏"
 # tag / Release
 
-git merge --no-ff webui -m "merge: webui Trust Signal"
-# tag / Release
-
-git merge --no-ff hot-reload -m "merge: hot-reload 免重启热更新"
-# 仅 webroot 等非开机路径变化时可免重启；system/zygisk/注入核心仍需重启
-
-git merge --no-ff mount_hide -m "merge: mount_hide 挂载隐藏"
-# tag / Release
-
-git merge --no-ff zn_module -m "merge: zn_module Zygisk 深化"
-# tag / Release
+# 再合 Zygisk/ZN 过滤功能分支
 ```
 
 ## 更新通道与产物分支
@@ -53,9 +41,6 @@ git merge --no-ff zn_module -m "merge: zn_module Zygisk 深化"
 
 ## 日常开发
 
-- 只改 CLI / 开机状态 → 基于最新 `cli`（若已合入 master 则基于 `master`）
-- 只改 UI → 基于 `master`（原 `webui` 已合入）
-- 只改免重启热更新 → 基于 `hot-reload`（或已合入后的 `master`）
-- 只改隐藏 → 基于 `mount_hide`
-- 只改 Zygisk 原生 → 基于 `zn_module`
+- 只改 SuSFS / try_umount / 隐藏协助 → 基于 `umount_hide`
+- 只改 Zygisk / ZN 原生过滤 → 基于对应 Zygisk 分支（先同步已合入的 `umount_hide` / `master`）
 - 功能分支定期向下同步已合入的 `master`；**禁止**未备份时删除 `backup/*`

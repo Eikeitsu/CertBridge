@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v4.0.0
+
 - **挂载隐藏协助组件**：安装时可带上隐藏协助脚本；WebUI「隐藏」页用已有开关控制是否在注入 / 热挂载成功后登记 umount 路径（`hide_allow`）
 - **不强制 SuSFS**：有 SuSFS / KernelSU umount 时自动配合登记；没有也能正常用证书。Magisk 等可继续搭配 Shamiko、ZygiskNext 等做进程侧卸载隐藏
 - **登记时机更完整**：开机注入成功会登记；轻量 Magic 挂载、热挂载的多个证书目标也会登记；仅成功绑定的目标才写入，避免误报「已登记」

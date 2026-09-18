@@ -21,7 +21,7 @@ export function DefaultHidePage() {
   const loaderOk = isFlagOn(status.zygisk_loader_ok);
 
   return (
-    <div className="pk-def-page">
+    <div className="pk-def-page pk-def-page--hide">
       <header className="pk-def-pagehead">
         <h1>{DEFAULT_VOICE.hide.title}</h1>
         <p>{DEFAULT_VOICE.hide.sub}</p>
@@ -48,7 +48,6 @@ export function DefaultHidePage() {
               large
             />
           </div>
-          {h.switchMeta ? <p className="pk-def-muted">{h.switchMeta}</p> : null}
         </section>
       ) : null}
 
@@ -66,7 +65,9 @@ export function DefaultHidePage() {
               large
             />
           </div>
-          {h.znSwitchMeta ? <p className="pk-def-muted">{h.znSwitchMeta}</p> : null}
+          {h.znSwitchMeta ? (
+            <p className="pk-def-muted pk-def-muted--tight">{h.znSwitchMeta}</p>
+          ) : null}
         </section>
       ) : (
         <section className="pk-def-section">
@@ -88,13 +89,14 @@ export function DefaultHidePage() {
           meta={h.whitelistMeta}
           hint={h.whitelistHint}
           saveLabel={h.whitelistSave}
+          rows={5}
         />
       ) : null}
 
       <HideStatusCard />
       <details className="pk-def-fold">
         <summary>{h.guideTitle}</summary>
-        <div style={{ marginTop: 8 }}>
+        <div className="pk-def-fold__body">
           <HideGuidePanel title={h.guideTitle} meta={h.guideMeta} />
         </div>
       </details>

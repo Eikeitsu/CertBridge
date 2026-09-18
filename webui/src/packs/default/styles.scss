@@ -9,7 +9,7 @@
 
   min-height: 100dvh;
   padding: calc(var(--bf-inset-top) + var(--pk-top) + var(--pk-below-top)) var(--pk-pad)
-    calc(var(--bf-inset-bottom) + 78px);
+    calc(var(--bf-inset-bottom) + 92px);
   background:
     radial-gradient(
       100% 55% at 10% -5%,
@@ -165,6 +165,10 @@
   display: flex;
   flex-direction: column;
   gap: var(--pk-gap);
+}
+
+.pk-def-page--hide {
+  gap: 18px;
 }
 
 .pk-def-page--home {
@@ -365,7 +369,38 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--bf-ink-3);
+  color: var(--bf-ink-2);
+}
+
+.pk-def-muted {
+  margin: 12px 0 0;
+  color: var(--bf-ink-2);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.pk-def-muted--tight {
+  margin: 6px 0 0;
+  padding: 0 4px;
+}
+
+.pk-def-fold {
+  border: 0;
+  background: transparent;
+  padding: 0 4px;
+}
+
+.pk-def-fold__body {
+  margin-top: 8px;
+}
+
+.pk-def-fold > summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--bf-ink-2);
+  padding: 8px 0;
+  list-style: none;
 }
 
 .pk-def-section__bar {
@@ -445,26 +480,11 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--bf-ok) 22%, transparent);
 }
 
-.pk-def-fold {
-  border: 0;
-  background: transparent;
-  padding: 0 4px;
-}
-
-.pk-def-fold summary {
-  cursor: pointer;
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: var(--bf-ink-2);
-  padding: 8px 0;
-  list-style: none;
-}
-
-.pk-def-fold summary::-webkit-details-marker {
+.pk-def-fold > summary::-webkit-details-marker {
   display: none;
 }
 
-.pk-def-fold summary::after {
+.pk-def-fold > summary::after {
   content: "›";
   display: inline-block;
   margin-left: 6px;
@@ -472,7 +492,7 @@
   color: var(--bf-ink-3);
 }
 
-.pk-def-fold[open] summary::after {
+.pk-def-fold[open] > summary::after {
   transform: rotate(90deg);
 }
 
@@ -494,12 +514,6 @@
   margin: 2px 0 0;
   font-weight: 650;
   font-size: 0.88rem;
-}
-
-.pk-def-muted {
-  margin: 12px 0 0;
-  color: var(--bf-ink-3);
-  font-size: 0.75rem;
 }
 
 .pk-def-banner {
@@ -612,6 +626,22 @@
   margin-inline: 8px;
   width: auto;
   box-sizing: border-box;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.pk-def-log.is-nowrap {
+  white-space: pre;
+  word-break: normal;
+  overflow-x: auto;
+}
+
+.pk-def-log.is-nowrap .pk-def-log__line {
+  white-space: pre;
+}
+
+.pk-def-log-wrap {
+  margin-inline: 0;
 }
 
 .pk-def-log__line.lv-error {
@@ -657,6 +687,13 @@
   box-sizing: border-box;
 }
 
+/* textarea 的 width:auto 会按 cols 收缩，手机端只剩一小条；强制铺满卡片内容区 */
+.pk-def-shell .bf-card > .bf-textarea,
+.pk-def-shell .bf-card > textarea {
+  display: block;
+  width: 100%;
+}
+
 .pk-def-shell .bf-bullet-list > li {
   padding-left: 1.15rem;
 }
@@ -669,6 +706,50 @@
 .pk-def-shell .bf-hide-switch-card {
   padding: 12px 14px;
   min-height: 52px;
+}
+
+/* 说明条目：右侧箭头（几何绘制，避免 › 字形基线偏上） */
+.pk-def-shell .bf-hide-guide details {
+  padding: 0;
+  overflow: hidden;
+}
+
+.pk-def-shell .bf-hide-guide details > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 12px 14px;
+  list-style: none;
+}
+
+.pk-def-shell .bf-hide-guide details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.pk-def-shell .bf-hide-guide details > summary::after {
+  content: "";
+  flex-shrink: 0;
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-inline: 2px;
+  border-right: 2.5px solid var(--bf-ink-3);
+  border-bottom: 2.5px solid var(--bf-ink-3);
+  transform: rotate(-45deg);
+  transform-origin: center;
+  transition: transform 0.15s ease;
+}
+
+.pk-def-shell .bf-hide-guide details[open] > summary::after {
+  transform: rotate(45deg);
+}
+
+.pk-def-shell .bf-hide-guide details > ul,
+.pk-def-shell .bf-hide-guide details > ol {
+  margin: 0;
+  padding: 0 14px 12px;
 }
 
 html[data-pack="default"] .bf-shell {

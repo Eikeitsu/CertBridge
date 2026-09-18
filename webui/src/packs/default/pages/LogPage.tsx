@@ -3,12 +3,14 @@ import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { clearActivityLog, fetchActivityLog } from "@/features/log/model/logSlice";
 import { selectActivityLog } from "@/features/log/model/selectors";
 import { useLogLevelFilter } from "@/features/log/hooks/useLogLevelFilter";
+import { useLogWrap } from "@/features/log/hooks/useLogWrap";
 import { formatByteSize } from "@/features/log/lib/formatByteSize";
 import { toast } from "@/shared/api/ksu";
 import { confirmAction } from "@/shared/lib/confirmAction";
 import { filterLogEntries, parseLogText } from "@/shared/lib/log";
 import { LogLevel } from "@/entities/module/enums";
 import { Loader } from "@/shared/ui/Loader";
+import { Switch } from "@/shared/ui/primitives";
 import { DEFAULT_VOICE } from "../voice";
 
 const LEVELS: { id: string; label: string }[] = [
@@ -23,6 +25,7 @@ export function DefaultLogPage() {
   const dispatch = useAppDispatch();
   const { text, loading, bytes, lines } = useAppSelector(selectActivityLog);
   const [levelFilter, setLevelFilter] = useLogLevelFilter();
+  const [wrap, setWrap] = useLogWrap();
   const v = DEFAULT_VOICE.log;
   const entries = useMemo(() => parseLogText(text), [text]);
   const filtered = useMemo(
@@ -52,6 +55,16 @@ export function DefaultLogPage() {
               {lv.label}
             </button>
           ))}
+        </div>
+      </div>
+
+      <div className="pk-def-group pk-def-log-wrap">
+        <div className="pk-def-row">
+          <div className="pk-def-row__main">
+            <strong>自动换行</strong>
+            <span>关闭后长行横向滚动，便于对齐排查</span>
+          </div>
+          <Switch checked={wrap} onChange={setWrap} />
         </div>
       </div>
 
@@ -86,7 +99,7 @@ export function DefaultLogPage() {
       {loading ? (
         <Loader label="读取日志…" />
       ) : filtered.length ? (
-        <div className="pk-def-log">
+        <div className={`pk-def-log${wrap ? "" : " is-nowrap"}`}>
           {filtered.map((line, i) => (
             <div key={`${i}-${line.raw}`} className={`pk-def-log__line lv-${line.level}`}>
               [{line.level.toUpperCase()}] {line.body}

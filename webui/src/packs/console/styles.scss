@@ -196,6 +196,7 @@ html[data-theme="light"] .pk-con-dock {
 .pk-con-termframe__bar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
   padding: 7px 12px;
   border-bottom: 1px solid var(--pk-line);
@@ -216,12 +217,44 @@ html[data-theme="light"] .pk-con-dock {
     12px 0 0 color-mix(in srgb, var(--pk-accent) 45%, transparent),
     24px 0 0 color-mix(in srgb, var(--pk-accent) 25%, transparent);
   margin-right: 28px;
+  flex-shrink: 0;
+}
+
+.pk-con-termframe__bar > span {
+  flex: 1;
+  min-width: 0;
+}
+
+.pk-con-termframe__flag {
+  appearance: none;
+  border: 1px solid var(--pk-line);
+  background: transparent;
+  color: var(--pk-dim);
+  font: inherit;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 2px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.pk-con-termframe__flag[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--pk-accent) 55%, var(--pk-line));
+  color: var(--pk-accent);
+  background: color-mix(in srgb, var(--pk-accent) 10%, transparent);
 }
 
 .pk-con-termframe .pk-con-term {
   flex: 1;
   min-height: 36dvh;
   max-height: calc(100dvh - 260px);
+}
+
+.pk-con-termframe .pk-con-term.is-nowrap {
+  white-space: pre;
+  word-break: normal;
+  overflow-x: auto;
 }
 
 .pk-con-page--log .pk-con-term {
@@ -285,13 +318,26 @@ html[data-theme="light"] .pk-con-dock {
 }
 
 .pk-con-block__head {
-  padding: 9px 12px;
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+  box-sizing: border-box;
+  min-height: 36px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--pk-line);
   font-size: 0.68rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--pk-accent);
   background: color-mix(in srgb, var(--pk-accent) 6%, transparent);
+}
+
+.pk-con-block__head::before {
+  content: "▶";
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  line-height: 1;
+  color: var(--pk-accent);
 }
 
 .pk-con-block > .pk-con-actions {
@@ -375,19 +421,37 @@ html[data-theme="light"] .pk-con-dock {
 
 .pk-con-shell .bf-card-plain__title,
 .pk-con-shell .bf-card__title {
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+  box-sizing: border-box;
+  min-height: 36px;
   font-family: var(--bf-font-mono);
   font-size: 0.68rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--pk-accent);
   margin: 0;
-  padding: 9px 12px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--pk-line);
   background: color-mix(in srgb, var(--pk-accent) 6%, transparent);
 }
 
+.pk-con-shell .bf-card-plain__title::before,
+.pk-con-shell .bf-card__title::before {
+  content: "▶";
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  line-height: 1;
+  color: var(--pk-accent);
+}
+
 .pk-con-shell .bf-card__title {
   margin: -12px -12px 12px;
+}
+
+.pk-con-shell .bf-card:has(> .bf-card__meta) > .bf-card__title {
+  margin-bottom: 0;
 }
 
 .pk-con-shell .bf-card-plain__meta,
@@ -395,9 +459,15 @@ html[data-theme="light"] .pk-con-dock {
   font-family: var(--bf-font-mono);
   font-size: 0.7rem;
   margin: 0;
-  padding: 8px 12px 0;
+  padding: 8px 12px 6px;
   color: var(--pk-dim);
-  line-height: 1.4;
+  line-height: 1.45;
+  text-align: left;
+}
+
+.pk-con-shell .bf-card__meta {
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .pk-con-shell .bf-card-plain.bf-appearance {
@@ -422,7 +492,15 @@ html[data-theme="light"] .pk-con-dock {
 .pk-con-shell
   .bf-card-plain:not(.bf-appearance)
   > *:not(.bf-card-plain__title, .bf-card-plain__meta) {
-  padding: 10px 12px 12px;
+  padding: 6px 12px 12px;
+}
+
+.pk-con-shell .bf-card-plain:not(.bf-appearance) > .bf-card-plain__meta + * {
+  padding-top: 4px;
+}
+
+.pk-con-shell .bf-card > .bf-card__meta + * {
+  margin-top: 2px;
 }
 
 .pk-con-shell .bf-about-hero-wrap {
@@ -436,9 +514,10 @@ html[data-theme="light"] .pk-con-dock {
 }
 
 .pk-con-shell .bf-row {
-  padding: 9px 0;
+  padding: 10px 12px;
   min-height: 44px;
   border-top-color: var(--pk-line);
+  box-sizing: border-box;
 }
 
 .pk-con-shell .bf-segment--stack {
@@ -453,6 +532,65 @@ html[data-theme="light"] .pk-con-dock {
 .pk-con-shell .bf-bullet-list {
   margin: 10px 0 0;
   padding-left: 1.1em;
+}
+
+.pk-con-shell .bf-notice {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 2px;
+}
+
+.pk-con-shell .bf-hide-guide details {
+  padding: 0;
+  margin-bottom: 8px;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.pk-con-shell .bf-hide-guide details > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  min-height: 40px;
+  padding: 10px 12px;
+  list-style: none;
+  font-family: var(--bf-font-mono);
+  font-size: 0.78rem;
+}
+
+.pk-con-shell .bf-hide-guide details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.pk-con-shell .bf-hide-guide details > summary::before {
+  content: "▶";
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  line-height: 1;
+  color: var(--pk-ink);
+  transition: transform 0.15s ease;
+}
+
+.pk-con-shell .bf-hide-guide details[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.pk-con-shell .bf-hide-guide details > ul,
+.pk-con-shell .bf-hide-guide details > ol {
+  margin: 0;
+  padding: 0 12px 10px 28px;
+}
+
+.pk-con-shell .bf-textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 2px;
+}
+
+.pk-con-block > .bf-row:first-of-type {
+  border-top: 0;
 }
 
 .pk-con-shell .bf-switch {

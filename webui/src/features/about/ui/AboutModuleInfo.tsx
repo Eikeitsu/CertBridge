@@ -1,6 +1,6 @@
 import { EMPTY_PLACEHOLDER } from "@/shared/config/constants";
 import { useAppSelector } from "@/app/store/hooks";
-import { selectDeviceLabel, selectModuleStatus } from "@/features/status/model/selectors";
+import { selectDeviceName, selectModuleStatus } from "@/features/status/model/selectors";
 import { isFlagOn } from "@/shared/lib/flag";
 import { parseEnum } from "@/shared/lib/enum";
 import { Experimental14System } from "@/entities/module/enums";
@@ -21,7 +21,7 @@ type AboutRow = {
 
 export function useAboutModuleRows(): AboutRow[] {
   const status = useAppSelector(selectModuleStatus);
-  const deviceLabel = useAppSelector(selectDeviceLabel);
+  const deviceName = useAppSelector(selectDeviceName);
   const androidLabel = status.release
     ? `Android ${status.release}${status.api ? ` (API ${status.api})` : ""}`
     : EMPTY_PLACEHOLDER;
@@ -49,7 +49,7 @@ export function useAboutModuleRows(): AboutRow[] {
     {
       key: "device",
       label: "设备",
-      value: deviceLabel || EMPTY_PLACEHOLDER,
+      value: deviceName || EMPTY_PLACEHOLDER,
       group: "env",
     },
     { key: "system", label: "系统", value: androidLabel, group: "env" },

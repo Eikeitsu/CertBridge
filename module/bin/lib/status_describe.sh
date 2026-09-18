@@ -23,6 +23,12 @@ compose_module_description() {
       ;;
   esac
 
+  if [ -f "$STATEDIR/hot-update" ]; then
+    format_module_description "♻️热更新中" "重新注入证书" \
+      "本次更新无需重启；完成后自动显示实际状态"
+    return 0
+  fi
+
   if hot_session_recorded; then
     hot_added=$(awk -F= '$1 == "added_count" { print $2; exit }' \
       "$STATEDIR/hot-session.conf" 2>/dev/null)

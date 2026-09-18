@@ -5,6 +5,8 @@ compute_status_tag() {
   force_verify="${1:-0}"
   [ -f "$MODDIR/disable" ] && { echo "⛔已禁用"; return 0; }
 
+  [ -f "$STATEDIR/hot-update" ] && { echo "♻️热更新中"; return 0; }
+
   if hot_session_recorded; then
     hot_failed=$(awk -F= '$1 == "namespace_failed" { print $2; exit }' \
       "$STATEDIR/hot-session.conf" 2>/dev/null)

@@ -609,8 +609,9 @@
   padding: 14px 12px;
   max-height: 58vh;
   overflow: auto;
-  margin-inline: calc(-1 * var(--pk-pad) + 4px);
-  width: calc(100% + 2 * var(--pk-pad) - 8px);
+  margin-inline: 8px;
+  width: auto;
+  box-sizing: border-box;
 }
 
 .pk-def-log__line.lv-error {

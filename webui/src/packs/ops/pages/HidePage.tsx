@@ -7,7 +7,6 @@ import { HideAllowRow } from "@/features/hide/ui/HideAllowRow";
 import { HideCaptureWarning } from "@/features/hide/ui/HideCaptureWarning";
 import { HideStatusCard } from "@/features/hide/ui/HideStatusCard";
 import { HideGuidePanel } from "@/features/hide/ui/HideGuidePanel";
-import { CaptureChecklistCard } from "@/features/hide/ui/CaptureChecklistCard";
 import { ZnWhitelistEditor } from "@/features/hide/ui/ZnWhitelistEditor";
 import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
 import { OPS_VOICE } from "../voice";
@@ -26,12 +25,8 @@ export function OpsHidePage() {
         <p>{OPS_VOICE.hide.sub}</p>
       </header>
 
+      {/* 精简：一条告警即可；完整检查清单留给默认主题 */}
       <HideCaptureWarning title={h.captureTitle} meta={h.captureMeta} banner />
-      <CaptureChecklistCard
-        title={h.checklistTitle}
-        meta={h.checklistMeta}
-        dismissLabel={h.checklistDismiss}
-      />
 
       {hide.hideSupported ? (
         <section className="pk-ops-panel">
@@ -73,9 +68,10 @@ export function OpsHidePage() {
       {zn.znHideSupported ? (
         <ZnWhitelistEditor
           title={h.whitelistTitle}
-          meta={h.whitelistMeta}
-          hint={h.whitelistHint}
+          meta={`${h.whitelistMeta} · 一行一个包名，# 注释；保存后强停 App`}
+          hint=""
           saveLabel={h.whitelistSave}
+          rows={3}
         />
       ) : null}
 
@@ -83,7 +79,7 @@ export function OpsHidePage() {
       <details className="pk-ops-fold">
         <summary>{h.guideTitle}</summary>
         <div className="pk-ops-fold__body">
-          <HideGuidePanel title={h.guideTitle} meta={h.guideMeta} accordion />
+          <HideGuidePanel meta={h.guideMeta} accordion bare />
         </div>
       </details>
     </div>

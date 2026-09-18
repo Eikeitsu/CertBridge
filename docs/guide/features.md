@@ -33,7 +33,7 @@
 | 开机完整合并           | 每次重启重新生成「完整系统库 + addon」，不依赖持久化基线（完整兼容模式）                                                                                      |
 | 挂载模式               | **完整兼容**（默认，运行时 bind，无需挂载元模块）或 **轻量 Magic**（仅叠 addon；Magisk 一般自带，KernelSU 需确认叠层）；见 [配置说明](/guide/config#挂载模式) |
 | 分版本注入             | Android 7–13 挂载 system；Android 14+ 同时绑定 APEX 与 system 临时层（完整兼容）；轻量模式下 APEX 仍由脚本注入                                                |
-| 关键命名空间           | `service.sh` 补齐 PID 1、Zygote、Settings、Reqable、ProxyPin（**不扫全机应用**）                                                                              |
+| 关键命名空间           | `service.sh` 补齐 PID 1、Zygote、Settings（**不扫全机、不强注 Reqable/ProxyPin**，以免抵消「卸载模块」）                                                      |
 | 用户证书热挂载（可选） | 读取用户凭据区 CA，免重启注入系统信任库；见 [配置说明](/guide/config)                                                                                         |
 | 存储卡热挂载（可选）   | 扫描指定目录证书并免重启挂载；默认 `/sdcard/CertBridge`                                                                                                       |
 | 无痕卸载（可选）       | 只撤销本次临时会话，不改永久配置与系统文件                                                                                                                    |

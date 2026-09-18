@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { clearActivityLog, fetchActivityLog } from "@/features/log/model/logSlice";
 import { selectActivityLog } from "@/features/log/model/selectors";
 import { useLogLevelFilter } from "@/features/log/hooks/useLogLevelFilter";
+import { useLogWrap } from "@/features/log/hooks/useLogWrap";
 import { formatByteSize } from "@/features/log/lib/formatByteSize";
 import { toast } from "@/shared/api/ksu";
 import { confirmAction } from "@/shared/lib/confirmAction";
@@ -17,6 +18,7 @@ export function ConsoleLogPage() {
   const dispatch = useAppDispatch();
   const { text, loading, bytes, lines } = useAppSelector(selectActivityLog);
   const [levelFilter, setLevelFilter] = useLogLevelFilter();
+  const [wrap, setWrap] = useLogWrap();
   const v = CONSOLE_VOICE.log;
   const entries = useMemo(() => parseLogText(text), [text]);
   const filtered = useMemo(
@@ -72,8 +74,18 @@ export function ConsoleLogPage() {
         <Loader label="reading…" />
       ) : (
         <section className="pk-con-termframe">
-          <div className="pk-con-termframe__bar">journal · {filtered.length} lines</div>
-          <pre className="pk-con-term">
+          <div className="pk-con-termframe__bar">
+            <span>journal · {filtered.length} lines</span>
+            <button
+              type="button"
+              className="pk-con-termframe__flag"
+              aria-pressed={wrap}
+              onClick={() => setWrap(!wrap)}
+            >
+              wrap={wrap ? "on" : "off"}
+            </button>
+          </div>
+          <pre className={`pk-con-term${wrap ? "" : " is-nowrap"}`}>
             {filtered.length
               ? filtered.map((l) => `[${l.level}] ${l.body}`).join("\n")
               : v.empty}

@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { clearActivityLog, fetchActivityLog } from "@/features/log/model/logSlice";
 import { selectActivityLog } from "@/features/log/model/selectors";
 import { useLogLevelFilter } from "@/features/log/hooks/useLogLevelFilter";
+import { useLogWrap } from "@/features/log/hooks/useLogWrap";
 import { formatByteSize } from "@/features/log/lib/formatByteSize";
 import { toast } from "@/shared/api/ksu";
 import { confirmAction } from "@/shared/lib/confirmAction";
@@ -23,6 +24,7 @@ export function OpsLogPage() {
   const dispatch = useAppDispatch();
   const { text, loading, bytes, lines } = useAppSelector(selectActivityLog);
   const [levelFilter, setLevelFilter] = useLogLevelFilter();
+  const [wrap, setWrap] = useLogWrap();
   const v = OPS_VOICE.log;
   const entries = useMemo(() => parseLogText(text), [text]);
   const filtered = useMemo(
@@ -78,13 +80,21 @@ export function OpsLogPage() {
           >
             {v.clear}
           </button>
+          <label className={`pk-ops-check${wrap ? " is-on" : ""}`}>
+            <input
+              type="checkbox"
+              checked={wrap}
+              onChange={(e) => setWrap(e.target.checked)}
+            />
+            <span>折行</span>
+          </label>
         </div>
       </div>
 
       {loading ? (
         <Loader label="读取日志…" />
       ) : (
-        <pre className="pk-ops-term">
+        <pre className={`pk-ops-term${wrap ? "" : " is-nowrap"}`}>
           {filtered.length
             ? filtered.map((l) => `[${l.level}] ${l.body}`).join("\n")
             : v.empty}

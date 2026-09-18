@@ -31,6 +31,7 @@ export const STORAGE_KEYS = {
   uiCustom: "cb_ui_custom",
   hotSdPath: "cb_hot_sd_path",
   logLevelFilter: "cb_log_level_filter",
+  logWrap: "cb_log_wrap",
   captureChecklistDismissed: "cb_capture_checklist_dismissed",
   updateChannel: "cb_update_channel",
 } as const;

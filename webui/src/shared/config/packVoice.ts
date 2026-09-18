@@ -118,7 +118,7 @@ const SHARED_HIDE: PackVoice["hide"] = {
   switchTitle: "隐藏开关",
   switchMeta: "关闭后不再登记 try_umount",
   allowTitle: "启用挂载隐藏协助",
-  allowOn: "注入 / 热挂载成功后登记 SuSFS try_umount",
+  allowOn: "注入 / 热挂载成功后登记 umount 路径（有内核能力时）",
   allowOff: "关闭时不写隐藏状态、不注册 umount",
   toastOn: "已开启隐藏协助（下次注入 / 热挂载时登记）",
   toastOff: "已关闭隐藏协助（重启后清除内核登记）",

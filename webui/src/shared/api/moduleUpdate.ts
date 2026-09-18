@@ -8,6 +8,17 @@ export interface LocalModuleInfo {
   versionCode: number;
 }
 
+export type ModuleUpdatePhase = "download" | "write" | "install" | "manager";
+
+export type ModuleUpdateProgress = {
+  phase: ModuleUpdatePhase;
+  /** 0–100；写盘/安装阶段可逐步推进 */
+  percent: number;
+  detail?: string;
+};
+
+export type ModuleUpdateProgressFn = (p: ModuleUpdateProgress) => void;
+
 const INSTALL_AUTO = "/data/adb/certbridge/install_auto";
 
 const MANAGER_PACKAGES = [
@@ -44,12 +55,22 @@ function shellQuote(s: string): string {
   return `'${String(s).replace(/'/g, `'\\''`)}'`;
 }
 
-async function writeBinaryFile(dest: string, data: ArrayBuffer): Promise<boolean> {
+function clampPercent(n: number): number {
+  if (!Number.isFinite(n)) return 0;
+  return Math.max(0, Math.min(100, Math.round(n)));
+}
+
+async function writeBinaryFile(
+  dest: string,
+  data: ArrayBuffer,
+  onProgress?: ModuleUpdateProgressFn,
+): Promise<boolean> {
   const bytes = new Uint8Array(data);
   const dir = dest.replace(/\/[^/]+$/, "");
   const init = await exec(`mkdir -p '${dir}' && : > '${dest}' && echo ok`, 10_000);
   if (!(init.stdout || "").includes("ok")) return false;
   const chunk = 18 * 1024;
+  const total = Math.max(1, bytes.length);
   for (let i = 0; i < bytes.length; i += chunk) {
     const slice = bytes.subarray(i, Math.min(i + chunk, bytes.length));
     let bin = "";
@@ -57,33 +78,92 @@ async function writeBinaryFile(dest: string, data: ArrayBuffer): Promise<boolean
     const b64 = btoa(bin);
     const r = await exec(`echo '${b64}' | base64 -d >> '${dest}'`, 60_000);
     if (r.errno === -1) return false;
+    const written = Math.min(i + slice.length, total);
+    onProgress?.({
+      phase: "write",
+      percent: clampPercent(55 + (written / total) * 25),
+      detail: `${written}/${total}`,
+    });
   }
   const check = await exec(`[ -s '${dest}' ] && echo ok`, 5_000);
   return (check.stdout || "").includes("ok");
 }
 
+async function fetchToBuffer(
+  url: string,
+  onProgress?: ModuleUpdateProgressFn,
+): Promise<ArrayBuffer | null> {
+  const resp = await fetch(url, {
+    headers: { "User-Agent": "CertBridge-WebUI" },
+  });
+  if (!resp.ok) return null;
+
+  const total = Number(resp.headers.get("content-length")) || 0;
+  if (!resp.body || typeof resp.body.getReader !== "function") {
+    const buf = await resp.arrayBuffer();
+    onProgress?.({
+      phase: "download",
+      percent: buf.byteLength > 0 ? 55 : 0,
+      detail: `bytes=${buf.byteLength}`,
+    });
+    return buf.byteLength > 0 ? buf : null;
+  }
+
+  const reader = resp.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let received = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (value?.length) {
+      chunks.push(value);
+      received += value.length;
+      const pct =
+        total > 0 ? (received / total) * 55 : Math.min(50, 8 + received / 200_000);
+      onProgress?.({
+        phase: "download",
+        percent: clampPercent(pct),
+        detail: total > 0 ? `${received}/${total}` : `bytes=${received}`,
+      });
+    }
+  }
+  if (received <= 0) return null;
+  const out = new Uint8Array(received);
+  let offset = 0;
+  for (const c of chunks) {
+    out.set(c, offset);
+    offset += c.length;
+  }
+  onProgress?.({ phase: "download", percent: 55, detail: `bytes=${received}` });
+  return out.buffer;
+}
+
 async function downloadZip(
   url: string,
   zip: string,
+  onProgress?: ModuleUpdateProgressFn,
 ): Promise<{ ok: boolean; detail: string }> {
   const u = shellQuote(url);
   const z = shellQuote(zip);
   const dir = zip.replace(/\/[^/]+$/, "");
 
+  onProgress?.({ phase: "download", percent: 2, detail: "start" });
+
   try {
-    const resp = await fetch(url, {
-      headers: { "User-Agent": "CertBridge-WebUI" },
-    });
-    if (resp.ok) {
-      const buf = await resp.arrayBuffer();
-      if (buf.byteLength > 0 && (await writeBinaryFile(zip, buf))) {
-        return { ok: true, detail: `webview bytes=${buf.byteLength}` };
-      }
+    const buf = await fetchToBuffer(url, onProgress);
+    if (buf && buf.byteLength > 0 && (await writeBinaryFile(zip, buf, onProgress))) {
+      onProgress?.({
+        phase: "write",
+        percent: 82,
+        detail: `webview bytes=${buf.byteLength}`,
+      });
+      return { ok: true, detail: `webview bytes=${buf.byteLength}` };
     }
   } catch {
     /* curl fallback */
   }
 
+  onProgress?.({ phase: "download", percent: 12, detail: "curl" });
   const script = [
     `mkdir -p '${dir}'`,
     `rm -f ${z}`,
@@ -98,6 +178,7 @@ async function downloadZip(
   if (/error=download_failed/.test(out) || !/downloaded=1/.test(out)) {
     return { ok: false, detail: out };
   }
+  onProgress?.({ phase: "download", percent: 82, detail: out });
   return { ok: true, detail: out };
 }
 
@@ -154,7 +235,10 @@ async function openZipInManager(zip: string): Promise<{ ok: boolean; detail: str
 
 export type ModuleInstallMode = "cli" | "manager" | "";
 
-export async function downloadAndInstallModule(zipUrl: string): Promise<{
+export async function downloadAndInstallModule(
+  zipUrl: string,
+  onProgress?: ModuleUpdateProgressFn,
+): Promise<{
   ok: boolean;
   error: string;
   detail: string;
@@ -167,7 +251,7 @@ export async function downloadAndInstallModule(zipUrl: string): Promise<{
     return { ok: false, error: "缺少下载地址", detail: "", zipPath, mode: "" };
   }
 
-  const dl = await downloadZip(url, zipPath);
+  const dl = await downloadZip(url, zipPath, onProgress);
   if (!dl.ok) {
     return {
       ok: false,
@@ -178,16 +262,20 @@ export async function downloadAndInstallModule(zipUrl: string): Promise<{
     };
   }
 
+  onProgress?.({ phase: "install", percent: 88, detail: "cli" });
   await exec(`mkdir -p /data/adb/certbridge && touch '${INSTALL_AUTO}'`, 5_000);
   const cli = await installModuleCli(zipPath);
   await exec(`rm -f '${INSTALL_AUTO}'`, 5_000);
 
   if (cli.ok) {
+    onProgress?.({ phase: "install", percent: 100, detail: "done" });
     return { ok: true, error: "", detail: cli.detail, zipPath, mode: "cli" };
   }
 
+  onProgress?.({ phase: "manager", percent: 94, detail: "open" });
   const mgr = await openZipInManager(zipPath);
   if (mgr.ok) {
+    onProgress?.({ phase: "manager", percent: 100, detail: "opened" });
     return {
       ok: true,
       error: "",

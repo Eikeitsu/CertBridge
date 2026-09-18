@@ -25,16 +25,10 @@ inject_one_target() {
     fi
 
     if [ "$mode" = "namespaces" ]; then
-      for pkg in \
-        com.android.settings \
-        com.reqable.android \
-        com.reqable.android.pro \
-        com.reqable \
-        com.proxy.pin \
-        com.network.proxy \
-        com.wangyu.proxypin; do
-        bind_package_soft "$pkg" "$target" "$stage"
-      done
+      # 只补 Settings：勿强注 Reqable/ProxyPin。
+      # 对抓包 App 再 bind 会盖掉 KSU「卸载模块」已卸的挂载，造成「开着卸载仍显示证书已安装」。
+      # 抓包 App 应继承 Zygote；开卸载时由 try_umount 在进程启动时剥离。
+      bind_package_soft "com.android.settings" "$target" "$stage"
 
       ns_file="$STATEDIR/.inject-ns.$$"
       collect_inject_namespaces "$ns_file" "$target"

@@ -457,10 +457,20 @@ html[data-theme="light"] .pk-ops-btn {
   border-radius: var(--pk-radius);
   background: var(--pk-panel);
   border: 1px solid var(--pk-line);
-  padding: 0 14px 12px;
+
+  /* 未展开不加底 padding，避免大块空白 */
+  padding: 0 14px;
 }
 
-.pk-ops-fold summary {
+.pk-ops-fold[open] {
+  padding-bottom: 12px;
+}
+
+.pk-ops-fold > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   cursor: pointer;
   font-weight: 700;
   font-size: 0.88rem;
@@ -469,8 +479,22 @@ html[data-theme="light"] .pk-ops-btn {
   color: var(--pk-ink);
 }
 
-.pk-ops-fold summary::-webkit-details-marker {
+.pk-ops-fold > summary::-webkit-details-marker {
   display: none;
+}
+
+.pk-ops-fold > summary::after {
+  content: "+";
+  flex-shrink: 0;
+  font-family: var(--bf-font-mono, ui-monospace, monospace);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--pk-muted);
+}
+
+.pk-ops-fold[open] > summary::after {
+  content: "−";
 }
 
 .pk-ops-fold__body {
@@ -508,6 +532,61 @@ html[data-theme="light"] .pk-ops-btn {
   line-height: 1.55;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+.pk-ops-term.is-nowrap {
+  white-space: pre;
+  word-break: normal;
+  overflow-x: auto;
+}
+
+.pk-ops-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--pk-line);
+  background: transparent;
+  color: var(--pk-muted);
+  font-size: 0.78rem;
+  font-weight: 650;
+  cursor: pointer;
+  user-select: none;
+}
+
+.pk-ops-check input {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  border: 1.5px solid var(--pk-line-strong, var(--pk-line));
+  border-radius: 3px;
+  background: transparent;
+  display: grid;
+  place-content: center;
+  flex-shrink: 0;
+}
+
+.pk-ops-check input::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  transform: scale(0);
+  transition: transform 0.12s ease;
+  background: var(--pk-accent);
+  border-radius: 1px;
+}
+
+.pk-ops-check input:checked::before {
+  transform: scale(1);
+}
+
+.pk-ops-check.is-on {
+  border-color: color-mix(in srgb, var(--pk-accent) 50%, transparent);
+  color: var(--pk-accent);
+  background: color-mix(in srgb, var(--pk-accent) 10%, transparent);
 }
 
 html[data-theme="light"] .pk-ops-term {
@@ -609,6 +688,65 @@ html[data-theme="light"] .pk-ops-term {
   min-height: 48px;
 }
 
+/* 隐藏页：说明条目更密；白名单输入铺满 */
+.pk-ops-shell .bf-hide-guide details {
+  padding: 8px 10px;
+  margin-bottom: 6px;
+}
+
+.pk-ops-shell .bf-hide-guide details > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.35;
+  list-style: none;
+}
+
+.pk-ops-shell .bf-hide-guide details > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* 内层：未展开 +，展开 −（按每条自己的 open，不跟外层 fold） */
+.pk-ops-shell .bf-hide-guide details > summary::after {
+  content: "+";
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--pk-muted) 14%, transparent);
+  font-family: var(--bf-font-mono, ui-monospace, monospace);
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--pk-muted);
+}
+
+.pk-ops-shell .bf-hide-guide details[open] > summary::after {
+  content: "−";
+}
+
+.pk-ops-shell .bf-hide-guide p,
+.pk-ops-shell .bf-hide-guide li {
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.pk-ops-shell .bf-textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.pk-ops-page--hide .bf-btn-row {
+  margin-top: 10px;
+}
+
 html[data-pack="ops"] {
   --bf-bg: #0b1118;
   --bf-chrome: #0b1118;
@@ -639,4 +777,64 @@ html[data-pack="ops"][data-theme="light"] {
   --bf-stroke-strong: rgba(15, 23, 42, 0.18);
 
   background: #dbe3ec;
+}
+
+/* 更新下载：紧凑芯片条 + 扫描渐变 */
+html[data-pack="ops"] .bf-update-flow {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--bf-surface-2);
+  border: 1px solid var(--bf-stroke);
+}
+
+html[data-pack="ops"] .bf-update-flow__head {
+  margin-bottom: 6px;
+}
+
+html[data-pack="ops"] .bf-update-flow__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--bf-ink-2);
+}
+
+html[data-pack="ops"] .bf-update-flow__pct {
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: var(--bf-font-mono);
+  color: var(--pk-accent, var(--bf-primary));
+}
+
+html[data-pack="ops"] .bf-update-flow__track {
+  height: 6px;
+  border-radius: 4px;
+  border: 0;
+  background: color-mix(in srgb, var(--bf-ink) 10%, transparent);
+}
+
+html[data-pack="ops"] .bf-update-flow__fill {
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--pk-accent, var(--bf-primary)),
+    color-mix(in srgb, var(--pk-accent, var(--bf-primary)) 55%, #38bdf8),
+    var(--pk-accent, var(--bf-primary))
+  );
+  background-size: 200% 100%;
+  animation: bf-update-scan 1.1s linear infinite;
+  transition: width 0.2s linear;
+}
+
+html[data-pack="ops"] .bf-update-flow.is-install .bf-update-flow__label::before,
+html[data-pack="ops"] .bf-update-flow.is-manager .bf-update-flow__label::before {
+  content: "● ";
+  color: var(--pk-accent, var(--bf-primary));
+  animation: bf-update-blink 0.9s step-end infinite;
+}
+
+html[data-pack="ops"] .bf-btn--busy.bf-btn--primary {
+  box-shadow: 0 0 0 1px
+    color-mix(in srgb, var(--pk-accent, var(--bf-primary)) 45%, transparent);
+  animation: bf-update-pulse 0.9s ease-in-out infinite;
 }

@@ -12,6 +12,7 @@ type ZnWhitelistEditorProps = {
   meta?: string;
   hint?: string;
   saveLabel?: string;
+  rows?: number;
 };
 
 export function ZnWhitelistEditor({
@@ -19,6 +20,7 @@ export function ZnWhitelistEditor({
   meta = "名单内不过滤 mount/maps",
   hint = "一行一个包名；# 开头为注释。保存后强停相关 App 或重启生效。",
   saveLabel = "保存白名单",
+  rows = 5,
 }: ZnWhitelistEditorProps) {
   const { voice } = usePackVoice();
   const [text, setText] = useState("");
@@ -55,29 +57,18 @@ export function ZnWhitelistEditor({
 
   return (
     <Card title={title} meta={meta}>
-      <p className="bf-page-sub" style={{ marginBottom: 10 }}>
-        {hint}
-      </p>
+      {hint ? (
+        <p className="bf-page-sub" style={{ marginBottom: 10 }}>
+          {hint}
+        </p>
+      ) : null}
       <textarea
         className="bf-textarea"
-        rows={8}
+        rows={rows}
         value={text}
         disabled={!loaded || isPending}
         onChange={(e) => setText(e.target.value)}
         spellCheck={false}
-        style={{
-          width: "100%",
-          fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
-          fontSize: "0.78rem",
-          lineHeight: 1.45,
-          padding: 10,
-          borderRadius: 8,
-          border: "1px solid var(--bf-line)",
-          background: "var(--bf-surface-2, var(--bf-bg))",
-          color: "var(--bf-ink)",
-          boxSizing: "border-box",
-          resize: "vertical",
-        }}
       />
       <div className="bf-btn-row" style={{ marginTop: 12 }}>
         <Button variant="primary" disabled={!loaded || isPending} onClick={handleSave}>

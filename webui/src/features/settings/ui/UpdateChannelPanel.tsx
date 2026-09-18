@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button, Card, Row, Segment, Switch } from "@/shared/ui/primitives";
 import { toast } from "@/shared/api/ksu";
-import { downloadAndInstallModule } from "@/shared/api/moduleUpdate";
+import {
+  downloadAndInstallModule,
+  type ModuleUpdatePhase,
+} from "@/shared/api/moduleUpdate";
 import {
   UPDATE_CHANNELS,
   UPDATE_CHANNEL_HINT,
@@ -15,10 +18,18 @@ import {
   type ChannelCheckResult,
   type UpdateChannel,
 } from "@/shared/lib/updateChannel";
+import { UpdateInstallProgress } from "./UpdateInstallProgress";
 
 type UpdateChannelPanelProps = {
   dense?: boolean;
   surface?: "card" | "plain";
+};
+
+const INSTALL_BTN: Record<ModuleUpdatePhase, string> = {
+  download: "下载中…",
+  write: "写入中…",
+  install: "安装中…",
+  manager: "打开中…",
 };
 
 export function UpdateChannelPanel({ dense, surface = "card" }: UpdateChannelPanelProps) {
@@ -26,6 +37,8 @@ export function UpdateChannelPanel({ dense, surface = "card" }: UpdateChannelPan
   const [preferCdn, setPreferCdnState] = useState(false);
   const [busy, setBusy] = useState(false);
   const [installing, setInstalling] = useState(false);
+  const [phase, setPhase] = useState<ModuleUpdatePhase | null>(null);
+  const [percent, setPercent] = useState(0);
   const [result, setResult] = useState<ChannelCheckResult | null>(null);
 
   useEffect(() => {
@@ -79,21 +92,35 @@ export function UpdateChannelPanel({ dense, surface = "card" }: UpdateChannelPan
       return;
     }
     setInstalling(true);
+    setPhase("download");
+    setPercent(0);
     try {
-      const r = await downloadAndInstallModule(zip);
+      const r = await downloadAndInstallModule(zip, (p) => {
+        setPhase(p.phase);
+        setPercent(p.percent);
+      });
       if (!r.ok) {
         toast(r.error || "安装失败", "bad");
         return;
       }
+      setPercent(100);
       toast(r.mode === "cli" ? "已刷入模块" : "已打开管理器，请确认安装", "ok");
       void runCheck(true);
     } finally {
       setInstalling(false);
+      setPhase(null);
+      setPercent(0);
     }
   };
 
   const remote = result?.remote;
   const canInstall = !!(result && remote && (result.hasUpdate || result.canSwitch));
+  const installLabel =
+    installing && phase
+      ? INSTALL_BTN[phase]
+      : result?.hasUpdate
+        ? "下载并安装"
+        : "切换安装";
 
   return (
     <Card
@@ -143,16 +170,18 @@ export function UpdateChannelPanel({ dense, surface = "card" }: UpdateChannelPan
         ) : null}
         {result?.error ? <div className="bf-row__desc">{result.error}</div> : null}
       </div>
-      <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+      <UpdateInstallProgress active={installing} phase={phase} percent={percent} />
+      <div className="bf-update-actions">
         <Button disabled={busy || installing} onClick={() => void runCheck(false)}>
           检查更新
         </Button>
         <Button
           variant="primary"
+          className={installing ? "bf-btn--busy" : undefined}
           disabled={!canInstall || busy || installing}
           onClick={() => void onInstall()}
         >
-          {installing ? "安装中…" : result?.hasUpdate ? "下载并安装" : "切换安装"}
+          {installLabel}
         </Button>
       </div>
     </Card>

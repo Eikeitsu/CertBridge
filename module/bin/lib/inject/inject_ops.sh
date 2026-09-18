@@ -66,6 +66,8 @@ inject_one_target() {
     orphan_tmpfs_stage "$stage"
     log_debug "inject: orphaned stage $stage"
   fi
+  # 仅对本目标成功 bind 后登记，避免失败路径误标 hide_applied
+  [ "$rc" = "0" ] && hide_assist_for_target "$target"
   return "$rc"
 }
 
@@ -81,8 +83,10 @@ inject_boot_namespaces() {
   }
 
   # Android 7–13 + magic：无 APEX、system 走 Magic Mount → 无需脚本 bind
+  # 仍登记 try_umount：管理器叠层落在 cacerts 路径上，与脚本 bind 同源
   if [ "$(get_api)" -lt 34 ] && is_magic_mount_mode; then
     log_debug "inject: magic mode on API $(get_api), skip bind (Magic Mount)"
+    hide_assist_after_inject
     return 0
   fi
 
@@ -95,13 +99,13 @@ inject_boot_namespaces() {
   [ "$has_target" = "1" ] || {
     if is_magic_mount_mode; then
       log_warn "inject: magic mode with no bind targets"
+      hide_assist_after_inject
       return 0
     fi
     log_error "inject: no CA target directory found"
     record_inject_fail no_target
     return 1
   }
-  hide_assist_after_inject
   return "$rc"
 }
 
@@ -112,7 +116,7 @@ inject_app_namespaces() {
   }
   [ -s "$APPLIED_MAP" ] || return 0
 
-  # Android 7–13 + magic：无脚本 bind 目标
+  # Android 7–13 + magic：无脚本 bind 目标（boot 路径已登记 try_umount）
   if [ "$(get_api)" -lt 34 ] && is_magic_mount_mode; then
     log_debug "inject: magic mode on API $(get_api), skip namespace bind"
     return 0
@@ -130,7 +134,10 @@ inject_app_namespaces() {
     inject_one_target "$target" namespaces || rc=1
   done
   [ "$has_target" = "1" ] || {
-    is_magic_mount_mode && return 0
+    is_magic_mount_mode && {
+      hide_assist_after_inject
+      return 0
+    }
     record_inject_fail no_target
     return 1
   }

@@ -13,8 +13,15 @@ fi
 # 热更新期间的过渡状态：管理器列表立即可见
 STATEDIR="${STATEDIR:-$MODDIR/data/state}"
 mkdir -p "$STATEDIR" 2>/dev/null
-date '+%Y-%m-%d %H:%M:%S' >"$STATEDIR/hot-update" 2>/dev/null
+# 写入 epoch，便于状态查询对卡死标记做 TTL 清理
+date +%s >"$STATEDIR/hot-update" 2>/dev/null
 chmod 0600 "$STATEDIR/hot-update" 2>/dev/null
+
+hu_clear_hot_marker() {
+	rm -f "$STATEDIR/hot-update" 2>/dev/null
+}
+trap hu_clear_hot_marker 0 1 2 15
+
 if type update_module_description >/dev/null 2>&1; then
 	update_module_description >/dev/null 2>&1 || true
 fi
@@ -32,7 +39,8 @@ if [ -f "$MODDIR/service.sh" ]; then
 	fi
 fi
 
-rm -f "$STATEDIR/hot-update" 2>/dev/null
+hu_clear_hot_marker
+trap - 0 1 2 15
 
 # 注入已按新配置重建，则不应再显示「待重启」
 if type update_reboot_required_flag >/dev/null 2>&1; then

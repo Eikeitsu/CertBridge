@@ -126,4 +126,37 @@ hot_session_active() {
   [ "$actual" = "$hot_session" ]
 }
 
+# 热更新过渡标记：正常数十秒内由 hotinstall 清除。
+# 若进程被安装器杀掉会残留，导致 WebUI 一直显示「热更新中」。
+# 超过 TTL 自动清除；返回 0=已清除或不存在，1=仍在进行中。
+HOT_UPDATE_MARKER_TTL_SEC="${HOT_UPDATE_MARKER_TTL_SEC:-180}"
+clear_stale_hot_update_marker() {
+  _marker="${STATEDIR}/hot-update"
+  [ -f "$_marker" ] || return 0
+  _ts=$(tr -d ' \r\n' <"$_marker" 2>/dev/null)
+  _now=$(date +%s 2>/dev/null | tr -d ' \r\n')
+  case "$_ts" in
+    ""|*[!0-9]*)
+      _ts=$(stat -c %Y "$_marker" 2>/dev/null | tr -d ' \r\n')
+      ;;
+  esac
+  case "$_ts" in
+    ""|*[!0-9]*)
+      rm -f "$_marker" 2>/dev/null
+      return 0
+      ;;
+  esac
+  case "$_now" in
+    ""|*[!0-9]*)
+      rm -f "$_marker" 2>/dev/null
+      return 0
+      ;;
+  esac
+  if [ "$((_now - _ts))" -gt "$HOT_UPDATE_MARKER_TTL_SEC" ]; then
+    rm -f "$_marker" 2>/dev/null
+    return 0
+  fi
+  return 1
+}
+
 # 证书缺省显示名（applied 第 4 列为空时）

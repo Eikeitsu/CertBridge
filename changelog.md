@@ -1,10 +1,10 @@
 # CertBridge CI
 
 
-- **WebUI**：使用 React 全面重构模块 webui
-- **更新通道**：正式（Pages）与 CI（`ci-dist`），可检测下载，CI 可选 jsDelivr，支持无人值守刷入；
-- **是否挂载 system**：支持设置 Android 14+ 是否挂载 system（`experimental_14_system`）；
-- 刷新复核走 `status --live`；注入失败展示可读原因；
-- **模块免重启热更新**：已安装且启用时，若本次未改 `system/`、`sepolicy.rule`、`zygisk/`，刷入后可热切换模块目录并重跑注入，无需重启；首次安装、模块禁用、或上述路径有变更时仍提示重启；失败则回退标准更新流程（保留 `update` 标记）
-- **CI**：Package Module 推送 `ci-dist`（`update.json` + zip）；Build Web 只出 artifact 并串联重打包；停用 `dist-web` 作为更新通道
-- **文档 / 工程**：新增 [WebUI 使用说明](/guide/webui) 与双通道、分支说明；补齐 lint / husky；修复文档站死链与打包校验问题；修复部分管理器（如 SukiSU）桥接偏晚导致 WebUI 无法执行 shell
+- **挂载隐藏协助组件**：安装时可带上隐藏协助脚本；WebUI「隐藏」页用已有开关控制是否在注入 / 热挂载成功后登记 umount 路径（`hide_allow`）
+- **不强制 SuSFS**：有 SuSFS / KernelSU umount 时自动配合登记；没有也能正常用证书。Magisk 等可继续搭配 Shamiko、ZygiskNext 等做进程侧卸载隐藏
+- **登记时机更完整**：开机注入成功会登记；轻量 Magic 挂载、热挂载的多个证书目标也会登记；仅成功绑定的目标才写入，避免误报「已登记」
+- **先探测再登记**：登记前检查设备是否具备对应 umount 能力；隐藏页实况可看到是否已登记、是否检测到 SuSFS 等
+- **可选开机持久化**：若本机已有 susfs4ksu 配置目录，成功登记后写入其列表，方便开机后再次生效；关闭隐藏开关时会去掉本模块写入的路径
+- **卸载与热挂载路径清理**：覆盖默认 `/dev/.fs*`、`/mnt/.ca*` 以及历史 `/dev/.cb*` 等临时层，减少残留
+- **文案与文档**：隐藏说明、截图、WebUI 指引与配置注释对齐当前默认临时路径

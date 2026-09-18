@@ -96,6 +96,10 @@ compose_hide_summary() {
   summary="${mount_label} · 临时层 ${tmpfs_label}"
   if [ "$applied" = "1" ]; then
     summary="${summary} · 已注册 SuSFS/内核 umount"
+  elif hide_susfs_available || hide_ksud_kernel_umount_available; then
+    summary="${summary} · 未登记（需重新注入或热挂载）"
+  else
+    summary="${summary} · 无法内核登记（无 SuSFS TRY_UMOUNT / ksud）"
   fi
   summary="${summary} · 助手：${provider_label}"
   echo "$summary"
@@ -105,6 +109,16 @@ emit_hide_status() {
   echo "hide_supported=1"
   echo "hide_allow=$(read_conf hide_allow 0)"
   echo "stage_root=$RUNTIME_MOUNT_ROOT"
+  if hide_susfs_available; then
+    echo "hide_susfs=1"
+  else
+    echo "hide_susfs=0"
+  fi
+  if hide_ksud_kernel_umount_available; then
+    echo "hide_ksud_umount=1"
+  else
+    echo "hide_ksud_umount=0"
+  fi
   if hide_assist_enabled; then
     provider=$(detect_hide_provider)
     echo "hide_provider=$provider"

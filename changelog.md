@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **挂载隐藏协助**：SuSFS / ksud `try_umount` 脚本组件；`hide_allow` 开启后在注入与热挂载成功时登记
+- **路径与登记**：默认临时层 `/dev/.fs*`；卸载与热挂载覆盖 `.fs*` / `.ca*` / 历史 `.cb*`；magic 轻量模式与多目标热挂载也会登记
+- **SuSFS 探测与持久化**：登记前检查 `CONFIG_KSU_SUSFS_TRY_UMOUNT`；成功后写入 `susfs4ksu/try_umount.txt` 供开机重登记；关闭开关时移除本模块路径；状态展示 SuSFS 是否可用
+- **文档**：隐藏说明与 WebUI 文案对齐当前临时层默认路径
+
 ## v3.0.0
 
 - **WebUI**：使用 React 全面重构模块 webui

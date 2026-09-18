@@ -8,8 +8,5 @@
     "prettier --write --ignore-unknown"
   ],
   "*.{json,html,yml,yaml}": ["prettier --write --ignore-unknown"],
-  "*.md": [
-    "prettier --write --ignore-unknown",
-    "markdownlint-cli2 --fix"
-  ]
+  "*.md": ["prettier --write --ignore-unknown", "markdownlint-cli2 --fix"]
 }

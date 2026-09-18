@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v3.0.0
+
 - **WebUI**：使用 React 全面重构模块 webui
 - **更新通道**：正式（Pages）与 CI（`ci-dist`），可检测下载，CI 可选 jsDelivr，支持无人值守刷入；
 - **是否挂载 system**：支持设置 Android 14+ 是否挂载 system（`experimental_14_system`）；

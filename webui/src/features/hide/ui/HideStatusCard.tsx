@@ -30,6 +30,7 @@ export function HideStatusCard({
   const znSupported = isFlagOn(status.zn_hide_supported);
   const znAllow = isFlagOn(status.zn_hide_allow);
   const forceBind = isFlagOn(status.force_bind_capture);
+  const lateInject = isFlagOn(status.late_inject);
   const metaParts = [status.hide_summary, status.zn_hide_summary].filter(Boolean);
   const meta = metaParts.length ? metaParts.join(" · ") : "基于当前设备探测";
   const canRegister = hideSusfs || hideKsud || hideNohello;
@@ -45,6 +46,7 @@ export function HideStatusCard({
     { k: "STAGE", v: status.stage_root || TMPFS_STYLES[tmpfsStyle].paths[0] },
     { k: "路径", v: TMPFS_STYLES[tmpfsStyle].label },
     { k: "强注抓包", v: forceBind ? "开启（旧行为）" : "关闭（尊重卸载）" },
+    { k: "晚注入", v: lateInject ? "开启（service namespaces）" : "关闭（仅 boot）" },
     { k: "助手", v: provider },
     { k: "SuSFS", v: hideSusfs ? "TRY_UMOUNT 可用" : "未检测到" },
     { k: "NoHello", v: hideNohello ? "已安装" : "未检测到" },
@@ -104,6 +106,14 @@ export function HideStatusCard({
           extra={
             <Tag tone={forceBind ? "warn" : "ok"}>
               {forceBind ? "开启（旧行为）" : "关闭（尊重卸载）"}
+            </Tag>
+          }
+        />
+        <Row
+          title="开机后晚注入"
+          extra={
+            <Tag tone={lateInject ? "warn" : "ok"}>
+              {lateInject ? "开启（service namespaces）" : "关闭（仅 boot）"}
             </Tag>
           }
         />

@@ -3,6 +3,7 @@ import { selectModuleStatus } from "@/features/status/model/selectors";
 import { isFlagOn } from "@/shared/lib/flag";
 import { useHideAllow } from "@/features/hide/hooks/useHideAllow";
 import { useForceBindCapture } from "@/features/hide/hooks/useForceBindCapture";
+import { useLateInject } from "@/features/hide/hooks/useLateInject";
 import { useZnHideAllow } from "@/features/hide/hooks/useZnHideAllow";
 import { HideAllowRow } from "@/features/hide/ui/HideAllowRow";
 import { HideCaptureWarning } from "@/features/hide/ui/HideCaptureWarning";
@@ -16,6 +17,7 @@ import { DEFAULT_VOICE } from "../voice";
 export function DefaultHidePage() {
   const hide = useHideAllow();
   const force = useForceBindCapture();
+  const late = useLateInject();
   const zn = useZnHideAllow();
   const status = useAppSelector(selectModuleStatus);
   const { voice } = usePackVoice();
@@ -46,6 +48,21 @@ export function DefaultHidePage() {
             title={h.forceBindTitle}
             descOn={h.forceBindOn}
             descOff={h.forceBindOff}
+            large
+          />
+        </div>
+      </section>
+
+      <section className="pk-def-section">
+        <h2 className="pk-def-section__title">开机注入</h2>
+        <div className="pk-def-group">
+          <HideAllowRow
+            checked={late.lateInject}
+            disabled={late.isPending}
+            onChange={late.handleChange}
+            title={h.lateInjectTitle}
+            descOn={h.lateInjectOn}
+            descOff={h.lateInjectOff}
             large
           />
         </div>

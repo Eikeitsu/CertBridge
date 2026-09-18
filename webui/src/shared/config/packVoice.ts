@@ -79,6 +79,14 @@ export type PackVoice = {
     forceBindConfirmOnTitle: string;
     forceBindConfirmOnBody: string;
     forceBindConfirmOnOk: string;
+    lateInjectTitle: string;
+    lateInjectOn: string;
+    lateInjectOff: string;
+    lateInjectToastOn: string;
+    lateInjectToastOff: string;
+    lateInjectConfirmOnTitle: string;
+    lateInjectConfirmOnBody: string;
+    lateInjectConfirmOnOk: string;
     znSwitchTitle: string;
     znSwitchMeta: string;
     znAllowTitle: string;
@@ -143,6 +151,15 @@ const SHARED_HIDE: PackVoice["hide"] = {
   forceBindConfirmOnBody:
     "开启后会对正在运行的 Reqable、ProxyPin 补绑证书层，并可能盖掉 KSU「卸载模块」已卸的挂载（旧版行为）。会削弱对该 App 的隐藏效果，仅建议抓包调试时短期开启。无需整机重启。",
   forceBindConfirmOnOk: "开启",
+  lateInjectTitle: "开机后晚注入（兼容）",
+  lateInjectOn: "boot_completed 后 service 再跑应用命名空间注入；难机更稳，痕迹也更多",
+  lateInjectOff: "默认：仅 boot 注入，service 只收尾写状态（痕迹更少）",
+  lateInjectToastOn: "已开启晚注入（后台补一次命名空间）",
+  lateInjectToastOff: "已关闭晚注入；下次开机 service 不再 namespaces 注入",
+  lateInjectConfirmOnTitle: "开启开机后晚注入？",
+  lateInjectConfirmOnBody:
+    "开启后本次会后台补一次应用命名空间注入，之后每次开机 boot_completed 时 service 也会再注入。可提高难机兼容，但会增加对进程命名空间的介入（部分环境可能加重 Found KSU 类误伤）。仅建议证书不生效时短期开启。",
+  lateInjectConfirmOnOk: "开启",
   znSwitchTitle: "Zygisk 挂载过滤",
   znSwitchMeta: "过滤 mountinfo / maps，并弱化 so 路径泄露",
   znAllowTitle: "启用 Zygisk 挂载痕迹过滤",

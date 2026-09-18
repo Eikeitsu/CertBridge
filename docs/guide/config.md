@@ -12,6 +12,9 @@ mount_mode=compatible
 experimental_14_system=skip
 tmpfs_style=dev
 quiet_prop=1
+hot_allow=1
+force_bind_capture=0
+late_inject=0
 ```
 
 | 键                       | 含义                                                         | 默认         |
@@ -23,6 +26,8 @@ quiet_prop=1
 | `experimental_14_system` | Android 14+（两种挂载模式均生效）：`auto` / `skip`（见下文） | `skip`       |
 | `tmpfs_style`            | 临时挂载路径：`dev` / `mnt` / `short` / `legacy`             | `dev`        |
 | `quiet_prop`             | `1`=管理器列表中性简介；`0`=动态写入运行状态                 | `1`          |
+| `force_bind_capture`     | `1`=强注 Reqable/ProxyPin（旧行为）；`0`=尊重卸载模块        | `0`          |
+| `late_inject`            | `1`=service 晚注入 namespaces；`0`=仅 boot 注入              | `0`          |
 
 ### 挂载模式
 

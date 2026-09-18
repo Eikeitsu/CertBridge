@@ -14,10 +14,26 @@ MODDIR=${MODDIR:-${0%/*}/..}
 . "$LIBDIR/cli_config.sh"
 # shellcheck disable=SC1090
 . "$LIBDIR/cli_hot.sh"
+# shellcheck disable=SC1090
+. "$LIBDIR/cli_help.sh"
 
-case "$1" in
+RAW_CMD="$1"
+CMD=$(cli_normalize_cmd "$RAW_CMD")
+
+case "$CMD" in
+  help)
+    cmd_help "$2"
+    exit $?
+    ;;
+  "" )
+    # 无参数：打印帮助（友好入口）
+    cmd_help
+    exit 0
+    ;;
   status) cmd_status "$2" ;;
   verify) cmd_verify ;;
+  get) cmd_get_conf "$2" ;;
+  set) cmd_set_conf "$2" "$3" ;;
   list_custom) cmd_list_custom ;;
   list_applied_fps) cmd_list_applied_fps ;;
   toggle) cmd_toggle "$2" "$3" ;;
@@ -40,13 +56,14 @@ case "$1" in
   set_late_inject) cmd_set_late_inject "$2" ;;
   get_zn_whitelist) cmd_get_zn_whitelist ;;
   set_zn_whitelist) cmd_set_zn_whitelist "$2" ;;
-  reinject|sync)
+  reinject)
     echo "error=hot_reload_disabled"
     echo "reboot_required=1"
+    echo "hint=永久配置改完需重启；临时证书用 hot_mount / hot_unmount"
     exit 1
     ;;
   *)
-    echo "usage: cert_manager.sh {status [--live]|verify|list_custom|list_applied_fps|toggle|sync_apps|set_mount_mode|set_experimental_14_system|set_tmpfs_style|set_quiet_prop|set_hot_allow|set_hide_allow|hide_reregister|set_zn_hide_allow|set_force_bind_capture|set_late_inject|get_zn_whitelist|set_zn_whitelist|install_custom|import_app_preset|remove_custom|cert_info|hot_mount|hot_unmount}"
+    cli_unknown "$RAW_CMD"
     exit 1
     ;;
 esac

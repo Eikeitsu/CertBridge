@@ -55,6 +55,7 @@ export type ModuleStatus = {
   hide_supported?: string;
   hide_allow?: string;
   force_bind_capture?: string;
+  late_inject?: string;
   zn_hide_supported?: string;
   zn_hide_allow?: string;
   zn_hide_zn_module?: string;

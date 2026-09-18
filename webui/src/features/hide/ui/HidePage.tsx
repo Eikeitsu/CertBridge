@@ -6,6 +6,7 @@ import { selectModuleStatus } from "@/features/status/model/selectors";
 import { isFlagOn } from "@/shared/lib/flag";
 import { useHideAllow } from "../hooks/useHideAllow";
 import { useForceBindCapture } from "../hooks/useForceBindCapture";
+import { useLateInject } from "../hooks/useLateInject";
 import { useZnHideAllow } from "../hooks/useZnHideAllow";
 import { HideAllowRow } from "./HideAllowRow";
 import { HideCaptureWarning } from "./HideCaptureWarning";
@@ -18,6 +19,7 @@ import { ZnWhitelistEditor } from "./ZnWhitelistEditor";
 export function HidePage() {
   const hide = useHideAllow();
   const force = useForceBindCapture();
+  const late = useLateInject();
   const zn = useZnHideAllow();
   const status = useAppSelector(selectModuleStatus);
   const { voice } = usePackVoice();
@@ -50,6 +52,16 @@ export function HidePage() {
           title={h.forceBindTitle}
           descOn={h.forceBindOn}
           descOff={h.forceBindOff}
+        />
+      </Card>
+      <Card title="开机注入" meta="默认仅 boot；难机可开晚注入">
+        <HideAllowRow
+          checked={late.lateInject}
+          disabled={false}
+          onChange={late.handleChange}
+          title={h.lateInjectTitle}
+          descOn={h.lateInjectOn}
+          descOff={h.lateInjectOff}
         />
       </Card>
       {hide.hideSupported ? (

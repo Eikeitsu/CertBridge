@@ -110,6 +110,7 @@ hot_failed=0"
   emit_zn_hide_status
   emit_install_profile_status
   emit_zygisk_loader_status
+  echo "force_bind_capture=$(read_conf force_bind_capture 0)"
   echo "version=$(grep '^version=' "$MODDIR/module.prop" 2>/dev/null | cut -d= -f2-)"
   echo "$hot_status"
 }

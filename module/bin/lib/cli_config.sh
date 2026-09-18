@@ -100,6 +100,8 @@ cmd_set_hide_allow() {
   esac
   [ -f "$LIBDIR/hide_assist.sh" ] || { echo "error=hide_feature_not_installed"; return 1; }
   write_conf hide_allow "$val" || { echo "error=write_failed"; return 1; }
+  # 开关变更后清探测缓存，开启时再按需拉起 ksud / susfs
+  hide_probe_cache_clear 2>/dev/null || true
   if [ "$val" = "0" ]; then
     hide_clear_applied 2>/dev/null || rm -f "$STATEDIR/hide-assist.conf" 2>/dev/null
     log_info "config: hide_allow=0 (cleared hide state; reboot clears kernel try_umount)"
@@ -126,6 +128,23 @@ cmd_set_zn_hide_allow() {
   echo "ok=1"
   echo "zn_hide_allow=$val"
   echo "hint=开关变更后需重启相关 App 或整机后 Zygisk 挂钩才会按新配置生效"
+}
+
+cmd_set_force_bind_capture() {
+  val="$1"
+  case "$val" in
+    0|1) ;;
+    *) echo "error=invalid_force_bind_capture"; return 1 ;;
+  esac
+  write_conf force_bind_capture "$val" || { echo "error=write_failed"; return 1; }
+  log_info "config: force_bind_capture=$val"
+  echo "ok=1"
+  echo "force_bind_capture=$val"
+  if [ "$val" = "1" ]; then
+    echo "hint=下次命名空间注入时会强注 Reqable/ProxyPin；可盖掉「卸载模块」。建议仅抓包调试时开启，改后重启或等下次注入生效"
+  else
+    echo "hint=已恢复默认：尊重卸载模块，不再强注抓包 App"
+  fi
 }
 
 ZN_WHITELIST_FILE="$CONFDIR/zn_whitelist.txt"

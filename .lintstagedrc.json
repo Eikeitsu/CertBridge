@@ -7,6 +7,9 @@
     "stylelint --fix --allow-empty-input",
     "prettier --write --ignore-unknown"
   ],
-  "*.{json,html,yml,yaml,md}": ["prettier --write --ignore-unknown"],
-  "*.md": ["markdownlint-cli2 --fix"]
+  "*.{json,html,yml,yaml}": ["prettier --write --ignore-unknown"],
+  "*.md": [
+    "prettier --write --ignore-unknown",
+    "markdownlint-cli2 --fix"
+  ]
 }

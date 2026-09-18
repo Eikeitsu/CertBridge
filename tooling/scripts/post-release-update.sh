@@ -55,16 +55,18 @@ pathlib.Path("docs/public/update.json").write_text(text, encoding="utf-8")
 if notes:
     changelog_path = pathlib.Path("changelog.md")
     changelog = (
-        changelog_path.read_text(encoding="utf-8").strip()
+        changelog_path.read_text(encoding="utf-8")
         if changelog_path.exists()
         else ""
     )
     section = f"## {raw}\n\n{notes}"
     if changelog.startswith("# Changelog") or changelog.startswith("# 更新日志"):
         header, _, rest = changelog.partition("\n")
-        changelog = header + "\n\n" + section + ("\n\n" + rest.strip() if rest.strip() else "")
+        # 不要 strip() 整段 rest：会吃掉章节标题上下的空行，触发 MD022/MD032
+        rest = rest.lstrip("\n").rstrip() + ("\n" if rest.strip() else "")
+        changelog = header + "\n\n" + section + ("\n\n" + rest if rest.strip() else "\n")
     else:
-        changelog = section + ("\n\n" + changelog if changelog else "")
+        changelog = section + ("\n\n" + changelog.rstrip() + "\n" if changelog.strip() else "\n")
     changelog_path.write_text(changelog.rstrip() + "\n", encoding="utf-8")
 print(text)
 PY

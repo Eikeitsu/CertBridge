@@ -58,12 +58,19 @@ def parse(text: str) -> tuple[str, list[tuple[str, str]]]:
 
 
 def render(preamble: str, sections: list[tuple[str, str]]) -> str:
+    """Serialize sections with exactly one blank line around each heading/body.
+
+    parse() keeps the blank line after ``##`` inside ``body`` (leading ``\\n``).
+    Re-adding another blank here would create MD012 (multiple blanks), and
+    markdownlint --fix may then collapse into MD022/MD032 on commit hooks.
+    """
     parts = [preamble.rstrip(), ""]
     for heading, body in sections:
         parts.append(f"## {heading}")
         parts.append("")
-        if body.strip():
-            parts.append(body.rstrip())
+        cleaned = body.strip("\n")
+        if cleaned.strip():
+            parts.append(cleaned)
             parts.append("")
     return "\n".join(parts).rstrip() + "\n"
 

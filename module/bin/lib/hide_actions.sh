@@ -13,6 +13,7 @@ hide_assist_enabled() {
 
 # susfs4ksu 模块开机 post-mount 会按此文件重登记（仅在目录存在时写入）
 SUSFS_TRY_UMOUNT_FILE="${SUSFS_TRY_UMOUNT_FILE:-/data/adb/susfs4ksu/try_umount.txt}"
+HIDE_PROBE_CACHE="${HIDE_PROBE_CACHE:-$STATEDIR/hide-probe.cache}"
 
 hide_clear_applied() {
   hide_unpersist_all_try_umount
@@ -45,16 +46,93 @@ hide_resolve_susfs_bin() {
   return 1
 }
 
-# 先探测内核/用户态是否真正支持 TRY_UMOUNT，再登记（不盲目 add）
-hide_susfs_available() {
-  SUSFS_BIN=$(hide_resolve_susfs_bin) || return 1
-  export SUSFS_BIN
-  "$SUSFS_BIN" show enabled_features 2>/dev/null | grep -q "CONFIG_KSU_SUSFS_TRY_UMOUNT"
+hide_probe_cache_boot_ok() {
+  [ -f "$HIDE_PROBE_CACHE" ] || return 1
+  cache_boot=$(awk -F= '$1 == "boot_id" { sub(/^[^=]*=/, ""); print; exit }' "$HIDE_PROBE_CACHE" 2>/dev/null | tr -d '\r')
+  cache_epoch=$(awk -F= '$1 == "boot_epoch" { sub(/^[^=]*=/, ""); print; exit }' "$HIDE_PROBE_CACHE" 2>/dev/null | tr -d '\r')
+  cur_boot=$(current_boot_id 2>/dev/null)
+  cur_epoch=$(current_boot_epoch 2>/dev/null)
+  [ -n "$cache_boot" ] && [ "$cache_boot" = "$cur_boot" ] || return 1
+  [ "$cache_epoch" = "$cur_epoch" ]
 }
 
+hide_probe_cache_get() {
+  key="$1"
+  hide_probe_cache_boot_ok || return 1
+  val=$(awk -F= -v key="$key" '$1 == key { sub(/^[^=]*=/, ""); print; exit }' "$HIDE_PROBE_CACHE" 2>/dev/null | tr -d '\r')
+  [ -n "$val" ] || return 1
+  echo "$val"
+}
+
+hide_probe_cache_set() {
+  key="$1"
+  value="$2"
+  mkdir -p "$STATEDIR" 2>/dev/null || return 0
+  cur_boot=$(current_boot_id 2>/dev/null)
+  cur_epoch=$(current_boot_epoch 2>/dev/null)
+  tmp="$HIDE_PROBE_CACHE.tmp.$$"
+  if hide_probe_cache_boot_ok; then
+    awk -F= -v key="$key" -v value="$value" '
+      BEGIN { done=0 }
+      $1 == key { print key "=" value; done=1; next }
+      { print }
+      END { if (!done) print key "=" value }
+    ' "$HIDE_PROBE_CACHE" >"$tmp" 2>/dev/null || {
+      rm -f "$tmp"
+      return 0
+    }
+  else
+    {
+      echo "boot_id=$cur_boot"
+      echo "boot_epoch=$cur_epoch"
+      [ "$key" = "susfs" ] || echo "susfs=0"
+      [ "$key" = "ksud" ] || echo "ksud=0"
+      echo "$key=$value"
+    } >"$tmp" 2>/dev/null || {
+      rm -f "$tmp"
+      return 0
+    }
+  fi
+  mv -f "$tmp" "$HIDE_PROBE_CACHE" 2>/dev/null || rm -f "$tmp"
+}
+
+hide_probe_cache_clear() {
+  rm -f "$HIDE_PROBE_CACHE" 2>/dev/null
+}
+
+# 先探测内核/用户态是否真正支持 TRY_UMOUNT，再登记（不盲目 add）
+# 结果按 boot 缓存，避免每次 status 拉起 ksu_susfs
+hide_susfs_available() {
+  cached=$(hide_probe_cache_get susfs 2>/dev/null) || cached=
+  if [ -n "$cached" ]; then
+    [ "$cached" = "1" ]
+    return $?
+  fi
+  ok=0
+  if SUSFS_BIN=$(hide_resolve_susfs_bin); then
+    export SUSFS_BIN
+    if "$SUSFS_BIN" show enabled_features 2>/dev/null | grep -q "CONFIG_KSU_SUSFS_TRY_UMOUNT"; then
+      ok=1
+    fi
+  fi
+  hide_probe_cache_set susfs "$ok"
+  [ "$ok" = "1" ]
+}
+
+# 结果按 boot 缓存，避免每次 status 执行 ksud kernel
 hide_ksud_kernel_umount_available() {
-  [ -x /data/adb/ksu/bin/ksud ] || return 1
-  /data/adb/ksud kernel 2>&1 | grep -q "umount"
+  cached=$(hide_probe_cache_get ksud 2>/dev/null) || cached=
+  if [ -n "$cached" ]; then
+    [ "$cached" = "1" ]
+    return $?
+  fi
+  ok=0
+  if [ -x /data/adb/ksu/bin/ksud ] && \
+      /data/adb/ksu/bin/ksud kernel 2>&1 | grep -q "umount"; then
+    ok=1
+  fi
+  hide_probe_cache_set ksud "$ok"
+  [ "$ok" = "1" ]
 }
 
 hide_record_applied() {

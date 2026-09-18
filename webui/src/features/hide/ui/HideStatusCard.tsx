@@ -97,9 +97,7 @@ export function HideStatusCard({
         <Row
           title="SuSFS TRY_UMOUNT"
           extra={
-            <Tag tone={hideSusfs ? "ok" : "warn"}>
-              {hideSusfs ? "可用" : "未检测到"}
-            </Tag>
+            <Tag tone={hideSusfs ? "ok" : "warn"}>{hideSusfs ? "可用" : "未检测到"}</Tag>
           }
         />
         <Row

@@ -131,7 +131,7 @@ export function DefaultHomePage() {
         <dl className="pk-def-kv">
           <div>
             <dt>设备</dt>
-            <dd>{overview.deviceLabel}</dd>
+            <dd>{overview.deviceName}</dd>
           </div>
           <div>
             <dt>系统</dt>

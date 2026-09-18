@@ -95,7 +95,7 @@ disabled=${overview.isDisabled ? 1 : 0} reboot_pending=${overview.isPendingReboo
 
       <section className="pk-con-block">
         <div className="pk-con-block__head">{v.env}</div>
-        <pre className="pk-con-pre">{`device=${overview.deviceLabel}
+        <pre className="pk-con-pre">{`device=${overview.deviceName}
 android=${overview.androidLabel}
 root=${overview.rootLabel}
 inject=${overview.apexLabel}

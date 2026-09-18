@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import {
-  fetchDeviceLabel,
+  fetchDeviceInfo,
   fetchStatus,
   listCustom,
   rebootDevice,
@@ -19,7 +19,10 @@ type StatusState = {
   bootstrapped: boolean;
   status: ModuleStatus;
   customCertificates: CustomCertificate[];
+  /** 顶栏：机型 · 系统 */
   deviceLabel: string;
+  /** 运行环境「设备」：仅机型 */
+  deviceName: string;
   lastRefreshedAt: string;
   error?: string;
 };
@@ -70,6 +73,7 @@ const initialState: StatusState = {
   status: {},
   customCertificates: [],
   deviceLabel: "本机",
+  deviceName: "本机",
   lastRefreshedAt: "--",
 };
 
@@ -81,12 +85,17 @@ export const bootstrapStatus = createAsyncThunk("status/bootstrap", async () => 
   if (!hasBridge()) {
     await new Promise((r) => window.setTimeout(r, 280));
   }
-  const [deviceLabel, status, customCertificates] = await Promise.all([
-    fetchDeviceLabel().catch(() => "本机"),
+  const [device, status, customCertificates] = await Promise.all([
+    fetchDeviceInfo().catch(() => ({ label: "本机", name: "本机" })),
     fetchStatus(),
     listCustom().catch(() => [] as CustomCertificate[]),
   ]);
-  return { deviceLabel, status, customCertificates };
+  return {
+    deviceLabel: device.label,
+    deviceName: device.name,
+    status,
+    customCertificates,
+  };
 });
 
 function formatSyncToast(sync: {
@@ -158,6 +167,7 @@ const statusSlice = createSlice({
         state.loading = false;
         state.bootstrapped = true;
         state.deviceLabel = action.payload.deviceLabel;
+        state.deviceName = action.payload.deviceName;
         state.status = action.payload.status;
         state.customCertificates = action.payload.customCertificates;
         state.lastRefreshedAt = formatClockTime();

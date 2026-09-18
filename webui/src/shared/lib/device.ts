@@ -64,14 +64,40 @@ fi
 printf '%s\\t%s\\n' "$model" "$os"
 `.trim();
 
-export function formatDeviceLabel(stdout: string): string {
+export type DeviceInfo = {
+  /** 顶栏等：机型 · 厂商系统（可无系统段） */
+  label: string;
+  /** 运行环境「设备」：仅机型 */
+  name: string;
+};
+
+function parseDeviceLine(stdout: string): { model: string; os: string } {
   const line = String(stdout || "")
     .split(/\r?\n/)
     .map((s) => s.trim())
     .find(Boolean);
-  if (!line) return "本机";
+  if (!line) return { model: "本机", os: "" };
   const tab = line.indexOf("\t");
   const model = (tab >= 0 ? line.slice(0, tab) : line).trim() || "本机";
   const os = (tab >= 0 ? line.slice(tab + 1) : "").trim();
+  return { model, os };
+}
+
+/** 顶栏：机型 + 厂商 ROM/系统名 */
+export function formatDeviceLabel(stdout: string): string {
+  const { model, os } = parseDeviceLine(stdout);
   return os ? `${model} · ${os}` : model;
+}
+
+/** 运行环境「设备」卡片：只要机型 */
+export function formatDeviceName(stdout: string): string {
+  return parseDeviceLine(stdout).model;
+}
+
+export function formatDeviceInfo(stdout: string): DeviceInfo {
+  const { model, os } = parseDeviceLine(stdout);
+  return {
+    name: model,
+    label: os ? `${model} · ${os}` : model,
+  };
 }

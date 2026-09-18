@@ -3,6 +3,7 @@ import { useAppSelector } from "@/app/store/hooks";
 import {
   selectCustomCertificates,
   selectDeviceLabel,
+  selectDeviceName,
   selectLastRefreshedAt,
   selectModuleStatus,
   selectStatusError,
@@ -36,6 +37,7 @@ export function useTrustOverview() {
   const status = useAppSelector(selectModuleStatus);
   const customCertificates = useAppSelector(selectCustomCertificates);
   const deviceLabel = useAppSelector(selectDeviceLabel);
+  const deviceName = useAppSelector(selectDeviceName);
   const isLoading = useAppSelector(selectStatusLoading);
   const lastRefreshedAt = useAppSelector(selectLastRefreshedAt);
   const statusError = useAppSelector(selectStatusError);
@@ -149,6 +151,8 @@ export function useTrustOverview() {
     isHotAllow,
     trustScore,
     deviceLabel: deviceLabel || "本机",
+    /** 运行环境「设备」：仅机型，不含厂商系统名 */
+    deviceName: deviceName || deviceLabel || "本机",
     rootLabel: status.root || EMPTY_PLACEHOLDER,
     apexLabel: resolveApexLabel(status.apex_ok),
     mountModeLabel: MOUNT_MODES[mountMode].shortLabel,

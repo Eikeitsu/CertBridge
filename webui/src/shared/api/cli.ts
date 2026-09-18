@@ -19,7 +19,11 @@ import type {
   ModuleStatus,
   TmpfsStyle,
 } from "@/entities/module/types";
-import { DEVICE_INFO_SHELL, formatDeviceLabel } from "@/shared/lib/device";
+import {
+  DEVICE_INFO_SHELL,
+  formatDeviceInfo,
+  type DeviceInfo,
+} from "@/shared/lib/device";
 
 const CUSTOM_LIST_PREFIX = "custom|";
 
@@ -204,10 +208,15 @@ export async function rebootDevice() {
   return exec("svc power reboot || reboot");
 }
 
-export async function fetchDeviceLabel(): Promise<string> {
+export async function fetchDeviceInfo(): Promise<DeviceInfo> {
   const result = await exec(DEVICE_INFO_SHELL);
   if (result.errno === -1 && /no_bridge|no_ksu_bridge/.test(result.stderr || "")) {
-    return "未检测到 WebUI 桥接";
+    return { label: "未检测到 WebUI 桥接", name: "未检测到 WebUI 桥接" };
   }
-  return formatDeviceLabel(result.stdout);
+  return formatDeviceInfo(result.stdout);
+}
+
+/** @deprecated 优先用 fetchDeviceInfo；保留给只要顶栏文案的调用 */
+export async function fetchDeviceLabel(): Promise<string> {
+  return (await fetchDeviceInfo()).label;
 }

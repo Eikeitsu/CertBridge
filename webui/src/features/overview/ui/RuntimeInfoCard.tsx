@@ -10,7 +10,7 @@ export function RuntimeInfoCard({ overview, title = "运行信息" }: RuntimeInf
   return (
     <Card title={title} meta={`上次刷新 ${overview.lastRefreshedAt}`}>
       <ListGroup>
-        <Row title="设备" extra={overview.deviceLabel} />
+        <Row title="设备" extra={overview.deviceName} />
         <Row title="系统" extra={overview.androidLabel} />
         <Row title="Root" extra={overview.rootLabel} />
         <Row title="注入" extra={overview.apexLabel} />

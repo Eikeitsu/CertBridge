@@ -16,6 +16,8 @@ export const selectHasModuleStatus = (state: RootState) =>
 
 export const selectDeviceLabel = (state: RootState) => state.status.deviceLabel;
 
+export const selectDeviceName = (state: RootState) => state.status.deviceName;
+
 export const selectLastRefreshedAt = (state: RootState) => state.status.lastRefreshedAt;
 
 export const selectStatusError = (state: RootState) => state.status.error;

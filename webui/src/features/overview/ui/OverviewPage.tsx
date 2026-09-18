@@ -104,7 +104,7 @@ export function OverviewPage() {
         <dl className="bf-env-grid">
           <div>
             <dt>设备</dt>
-            <dd>{overview.deviceLabel}</dd>
+            <dd>{overview.deviceName}</dd>
           </div>
           <div>
             <dt>系统</dt>

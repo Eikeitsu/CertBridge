@@ -297,7 +297,11 @@ RUN_VERSION="$(hu_version "$SRC/module.prop")"
 case "$RUN_VERSION" in "" | *[!0-9]*) hu_log "abort: 更新源版本号无效，保留标准更新标记"; exit 0 ;; esac
 
 # 就地覆盖（只增改不删），全程不出现空模块窗口。
+# webroot 含打包产物：先整目录替换，避免旧 js/css 残留。
 # 不使用 cp -a：部分 Android toybox/第三方环境对该短选项兼容性不一致。
+if [ -d "$SRC/webroot" ] && [ -f "$SRC/webroot/index.html" ]; then
+	rm -rf "$OLD/webroot" 2>/dev/null
+fi
 _cp_err="$(cp -rfp "$SRC"/. "$OLD"/ 2>&1)"
 _cp_rc=$?
 if [ "$_cp_rc" -ne 0 ]; then
@@ -316,18 +320,9 @@ for f in module.prop post-fs-data.sh service.sh bin/common.sh hotinstall.sh; do
 done
 hu_log "ok: 已就地覆盖到 $OLD"
 
-# 生效与清理分离：复制成功后立刻清除当前更新标记并执行 hotinstall，
-# 不再让第三方安装器的延迟收尾阻塞服务重启。
-if [ -e "$NEW" ]; then
-	rm -rf "$NEW" 2>/dev/null || {
-		hu_log "fail: 无法清理 $NEW，保留标准更新标记"
-		exit 1
-	}
-	[ ! -e "$NEW" ] || {
-		hu_log "fail: 清理后 $NEW 仍存在，保留标准更新标记"
-		exit 1
-	}
-fi
+# 生效优先：先清 update 并拉起 hotinstall。
+# 暂存目录先留给安装器收尾（InstallX 等会继续对 modules_update 做
+# chcon/chown/chmod）；过早删除会刷屏 No such file，并可能被当成安装失败。
 if [ -e "$OLD/update" ]; then
 	rm -f "$OLD/update" "$OLD/remove" 2>/dev/null || {
 		hu_log "fail: 无法清理更新标记，保留标准更新流程"
@@ -338,6 +333,61 @@ if [ -e "$OLD/update" ]; then
 		exit 1
 	}
 fi
+if [ -f "$OLD/$SCRIPT" ]; then
+	if command -v setsid >/dev/null 2>&1; then
+		setsid sh "$OLD/$SCRIPT" </dev/null >/dev/null 2>&1 &
+	else
+		nohup sh "$OLD/$SCRIPT" </dev/null >/dev/null 2>&1 &
+	fi
+	hu_log "ok: 已启动 $SCRIPT（立即生效，pid $!）"
+else
+	hu_log "fail: 缺少 $SCRIPT，保留标准更新标记"
+	exit 1
+fi
+
+# 等安装器不再改动暂存（最少约 10s），再删同版本 modules_update。
+hu_wait_installer_idle() {
+	_prev=""
+	_same=0
+	_i=0
+	_min_wait=10
+	while [ "$_i" -lt 45 ]; do
+		sleep 1
+		_i=$((_i + 1))
+		[ -d "$NEW" ] || return 0
+		_cur="$(hu_sig)"
+		if [ "$_cur" = "$_prev" ]; then
+			_same=$((_same + 1))
+		else
+			_same=0
+		fi
+		_prev="$_cur"
+		if [ "$_i" -ge "$_min_wait" ] && [ "$_same" -ge 3 ]; then
+			return 0
+		fi
+	done
+	return 1
+}
+
+if [ -d "$NEW" ]; then
+	if hu_wait_installer_idle; then
+		hu_log "info: 安装器收尾已空闲，开始清理暂存"
+	else
+		hu_log "warn: 等待安装器超时，仍尝试清理同版本暂存"
+	fi
+	_pending_version="$(hu_version "$NEW/module.prop")"
+	if [ "$_pending_version" = "$RUN_VERSION" ] || [ ! -f "$NEW/module.prop" ]; then
+		rm -rf "$NEW" 2>/dev/null
+		if [ -e "$NEW" ]; then
+			hu_log "warn: 首次清理 $NEW 未成功，将在观察期重试"
+		else
+			hu_log "ok: 已清理 $NEW"
+		fi
+	else
+		hu_log "info: 检测到其他待更新版本 ${_pending_version:-未知}，暂不清理"
+	fi
+fi
+
 if [ -d "$PAYLOAD" ]; then
 	if rm -rf "$PAYLOAD" 2>/dev/null && [ ! -e "$PAYLOAD" ]; then
 		rmdir /data/adb/.certbridge_hot_update_payload 2>/dev/null
@@ -346,13 +396,10 @@ if [ -d "$PAYLOAD" ]; then
 		hu_log "warn: 热更新外部副本清理失败，将在后台再次尝试"
 	fi
 fi
-# 更新已经完成后立即释放当前锁；当前进程只负责继续观察管理器的残留标记。
+
+# 更新主体已完成：释放锁，继续观察管理器可能回写的残留标记。
 hu_cleanup_lock
 rm -f /data/adb/.certbridge_hot_update.sh 2>/dev/null
-if [ -f "$OLD/$SCRIPT" ]; then
-	sh "$OLD/$SCRIPT" >/dev/null 2>&1 &
-	hu_log "ok: 已启动 $SCRIPT（立即生效，pid $!）"
-fi
 
 # 管理器可能在我们之后才 touch update / 回写暂存，持续观察一段时间。
 # 只清理同一版本的残留；发现版本更高或尚未写完整的更新就立即停止，
@@ -362,7 +409,7 @@ _seen_update=0
 while [ "$_i" -lt 120 ]; do
 	if [ -e "$NEW" ]; then
 		_pending_version="$(hu_version "$NEW/module.prop")"
-		if [ "$_pending_version" = "$RUN_VERSION" ]; then
+		if [ "$_pending_version" = "$RUN_VERSION" ] || [ ! -f "$NEW/module.prop" ]; then
 			rm -rf "$NEW" 2>/dev/null
 			[ ! -e "$NEW" ] || break
 			rm -f "$OLD/update" "$OLD/remove" 2>/dev/null

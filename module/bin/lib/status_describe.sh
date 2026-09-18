@@ -24,9 +24,11 @@ compose_module_description() {
   esac
 
   if [ -f "$STATEDIR/hot-update" ]; then
-    format_module_description "♻️热更新中" "重新注入证书" \
-      "本次更新无需重启；完成后自动显示实际状态"
-    return 0
+    if ! clear_stale_hot_update_marker; then
+      format_module_description "♻️热更新中" "重新注入证书" \
+        "本次更新无需重启；完成后自动显示实际状态"
+      return 0
+    fi
   fi
 
   if hot_session_recorded; then

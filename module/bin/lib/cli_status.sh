@@ -8,6 +8,7 @@ cmd_status() {
     --live|live|verify) live=1 ;;
   esac
   if [ "$live" = "1" ]; then
+    clear_stale_hot_update_marker 2>/dev/null || true
     live_finalize_runtime_status live >/dev/null 2>&1 || true
   fi
 

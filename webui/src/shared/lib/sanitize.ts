@@ -52,9 +52,15 @@ export function resolveTrustLabel(status: {
   if (shortLabel) {
     const isIdle = /未启用/.test(shortLabel);
     const isWarn = /待重启|热挂载/.test(shortLabel);
+    // 热更新收尾竞态下偶发「运行正常 · 张」（缺数字），用 active_count 补上
+    let title = shortLabel;
+    if (/^运行正常/.test(shortLabel) && !/\d+\s*张/.test(shortLabel)) {
+      const n = String(status.active_count || "").replace(/\D/g, "") || "0";
+      title = n === "0" ? "运行正常" : `运行正常 · ${n} 张`;
+    }
     return {
       tone: isIdle ? TrustTone.Idle : isWarn ? TrustTone.Warn : TrustTone.Ok,
-      title: shortLabel,
+      title,
       hint: cleanStatusBody(status.desc_body) || hint,
     };
   }

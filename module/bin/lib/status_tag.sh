@@ -1,6 +1,37 @@
 #!/system/bin/sh
 # 由 status.sh 加载
 # 短标签与 module.prop 刷新
+
+# stdout: ✅运行正常 · N 张（或无张数的运行正常）
+format_running_ok_tag() {
+  n=""
+  if summary=$(compose_applied_cert_summary); then
+    n=$(printf '%s' "${summary%%|*}" | tr -d ' \r\n')
+  fi
+  case "$n" in
+    ""|*[!0-9]*) n=$(count_applied_certs) ;;
+  esac
+  case "$n" in
+    ""|*[!0-9]*|0) echo "✅运行正常" ;;
+    *) echo "✅运行正常 · ${n} 张" ;;
+  esac
+}
+
+# 缓存标签是否可直接展示（缺数字的「运行正常 · 张」不可信）
+status_tag_cache_usable() {
+  _tag="$1"
+  case "$_tag" in
+    "") return 1 ;;
+    *运行正常*)
+      case "$_tag" in
+        *[0-9]*张*|✅运行正常|运行正常) return 0 ;;
+        *) return 1 ;;
+      esac
+      ;;
+    *) return 0 ;;
+  esac
+}
+
 compute_status_tag() {
   force_verify="${1:-0}"
   [ -f "$MODDIR/disable" ] && { echo "⛔已禁用"; return 0; }
@@ -53,7 +84,12 @@ compute_status_tag() {
       "")
         ;;
       *)
-        echo "$cached_tag"
+        if status_tag_cache_usable "$cached_tag"; then
+          echo "$cached_tag"
+          return 0
+        fi
+        # 缺数字等坏缓存：按 applied 重算
+        format_running_ok_tag
         return 0
         ;;
     esac
@@ -64,12 +100,7 @@ compute_status_tag() {
       echo "⚠️异常"
       return 0
     }
-    if summary=$(compose_applied_cert_summary); then
-      n=${summary%%|*}
-      echo "✅运行正常 · ${n} 张"
-    else
-      echo "✅运行正常"
-    fi
+    format_running_ok_tag
     return 0
   fi
 
@@ -154,9 +185,8 @@ apply_verified_runtime_status() {
     elif ! inject_error_present; then
       write_inject_error verify_failed 2>/dev/null || true
     fi
-  elif summary=$(compose_applied_cert_summary); then
-    n=${summary%%|*}
-    tag="✅运行正常 · ${n} 张"
+  elif summary=$(compose_applied_cert_summary) || [ "$(count_applied_certs)" -gt 0 ]; then
+    tag=$(format_running_ok_tag)
     clear_inject_error 2>/dev/null || true
   else
     tag="✅运行正常"

@@ -110,8 +110,11 @@ compose_module_description() {
   fi
 
   if summary=$(compose_applied_cert_summary); then
-    n=${summary%%|*}
+    n=$(printf '%s' "${summary%%|*}" | tr -d ' \r\n')
     names=${summary#*|}
+    case "$n" in
+      ""|*[!0-9]*) n=$(count_applied_certs) ;;
+    esac
     format_module_description "✅运行正常" "已挂载:${n}" \
       "当前生效：${names}"
     return 0

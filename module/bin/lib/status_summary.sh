@@ -13,13 +13,17 @@ applied_cert_fallback_display() {
 }
 
 # 从 applied-certs.list 生成摘要（第 4 列为证书 CN/名称）
+# stdout: total|names；失败返回 1
 compose_applied_cert_summary() {
   mode="compact"
   [ -s "$APPLIED_MAP" ] || return 1
   names=""
   custom_n=0
   total=0
-  while IFS='|' read -r label name checksum display; do
+  while IFS='|' read -r label name checksum display || [ -n "$label" ]; do
+    label=$(printf '%s' "$label" | tr -d '\r')
+    name=$(printf '%s' "$name" | tr -d '\r')
+    display=$(printf '%s' "$display" | tr -d '\r')
     [ -n "$label" ] || continue
     total=$((total + 1))
     case "$mode:$label" in
@@ -37,6 +41,21 @@ compose_applied_cert_summary() {
   fi
   [ "$total" -gt 0 ] || return 1
   echo "${total}|${names}"
+}
+
+# 生效证书张数（供状态标签兜底，避免出现「运行正常 · 张」）
+count_applied_certs() {
+  [ -s "$APPLIED_MAP" ] || {
+    echo 0
+    return 0
+  }
+  total=0
+  while IFS='|' read -r label _rest || [ -n "$label" ]; do
+    label=$(printf '%s' "$label" | tr -d '\r')
+    [ -n "$label" ] || continue
+    total=$((total + 1))
+  done <"$APPLIED_MAP"
+  echo "$total"
 }
 
 # 配置已改但尚未重启：按开关 + 自定义目录预估

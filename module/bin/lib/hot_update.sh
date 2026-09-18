@@ -175,8 +175,40 @@ hot_update_request() {
 		ui_print "- 热更新副本创建失败：保留标准更新流程，请重启后生效"
 		return 1
 	fi
-	_worker="/data/adb/.certbridge_hot_update.sh"
-	cat >"$_worker" <<'HOT_UPDATE_WORKER'
+
+	hot_update_spawn_worker "$_modid" "$_script" "$HOT_UPDATE_PAYLOAD" || {
+		ui_print "- 热更新任务启动失败：保留标准更新流程，请重启后生效"
+		return 1
+	}
+	ui_print "- 已安排免重启热更新（无需重启）"
+	ui_print "- 服务会立即重启；模块列表残留标记会在后台清理"
+	return 0
+}
+
+hot_update_clear_stale_lock() {
+	_stale_lock="/data/adb/.$1.hot_update.lock"
+	[ -d "$_stale_lock" ] || return 0
+	if [ -f "$_stale_lock/pid" ]; then
+		_stale_pid="$(cat "$_stale_lock/pid" 2>/dev/null | tr -d ' \r\n')"
+		case "$_stale_pid" in
+			""|*[!0-9]*) ;;
+			*)
+				kill -0 "$_stale_pid" 2>/dev/null && return 1
+				rm -rf "$_stale_lock" 2>/dev/null
+				[ ! -e "$_stale_lock" ] && return 0
+				return 1
+				;;
+		esac
+	fi
+	# 兼容旧版留下的空锁目录；有内容但无法确认归属时不强删。
+	rmdir "$_stale_lock" 2>/dev/null
+}
+
+# 生成收尾作业脚本。参数: 目标路径
+hot_update_write_worker() {
+	_worker_path="$1"
+	[ -n "$_worker_path" ] || return 1
+	cat >"$_worker_path" <<'HOT_UPDATE_WORKER'
 #!/system/bin/sh
 # 由安装流程生成并脱离安装器运行；参数: <modid> <hotinstall 脚本名> [副本路径]
 MODID="$1"
@@ -353,34 +385,7 @@ rm -rf "$PAYLOAD" 2>/dev/null
 rmdir /data/adb/.certbridge_hot_update_payload 2>/dev/null
 rm -f /data/adb/.certbridge_hot_update.sh 2>/dev/null
 HOT_UPDATE_WORKER
-	chmod 0700 "$_worker" 2>/dev/null
-
-	hot_update_spawn_worker "$_modid" "$_script" "$HOT_UPDATE_PAYLOAD" || {
-		ui_print "- 热更新任务启动失败：保留标准更新流程，请重启后生效"
-		return 1
-	}
-	ui_print "- 已安排免重启热更新（无需重启）"
-	ui_print "- 服务会立即重启；模块列表残留标记会在后台清理"
-	return 0
-}
-
-hot_update_clear_stale_lock() {
-	_stale_lock="/data/adb/.$1.hot_update.lock"
-	[ -d "$_stale_lock" ] || return 0
-	if [ -f "$_stale_lock/pid" ]; then
-		_stale_pid="$(cat "$_stale_lock/pid" 2>/dev/null | tr -d ' \r\n')"
-		case "$_stale_pid" in
-			""|*[!0-9]*) ;;
-			*)
-				kill -0 "$_stale_pid" 2>/dev/null && return 1
-				rm -rf "$_stale_lock" 2>/dev/null
-				[ ! -e "$_stale_lock" ] && return 0
-				return 1
-				;;
-		esac
-	fi
-	# 兼容旧版留下的空锁目录；有内容但无法确认归属时不强删。
-	rmdir "$_stale_lock" 2>/dev/null
+	chmod 0700 "$_worker_path" 2>/dev/null
 }
 
 # 写出并脱离当前会话启动收尾作业。参数: <modid> <hotinstall 脚本名> [副本路径]

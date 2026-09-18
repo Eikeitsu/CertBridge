@@ -46,7 +46,7 @@ export const HIDE_GUIDE_SECTIONS = [
     id: "limits",
     title: "对本模块的诚实边界",
     body: [
-      "默认临时层在 /dev/.cb* 是为避开对 /data/local/tmp 的关键词扫描，不能替代 umount；检测方仍可能看到 cacerts 上的 bind。",
+      "默认临时层在 /dev/.fs* 是为避开对 /data/local/tmp 的关键词扫描，不能替代 umount；检测方仍可能看到 cacerts 上的 bind。",
       "无 SuSFS / Zygisk umount 助手时，读 mountinfo 的检测仍可能发现异常。",
       "可选 Zygisk 过滤可去掉 App 读到的本模块 mount/maps 行，并对指向本模块路径的 readlink 返回不存在；so 仍在内存，PLT 与 Zygisk 底座仍可能被检出。",
       "Reqable / ProxyPin 在 Zygisk 过滤白名单内，不会过滤其挂载视图，以免读不到系统 CA。",

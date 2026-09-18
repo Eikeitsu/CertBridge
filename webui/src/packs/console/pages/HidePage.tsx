@@ -3,6 +3,7 @@ import { useAppSelector } from "@/app/store/hooks";
 import { selectModuleStatus } from "@/features/status/model/selectors";
 import { isFlagOn } from "@/shared/lib/flag";
 import { useHideAllow } from "@/features/hide/hooks/useHideAllow";
+import { useForceBindCapture } from "@/features/hide/hooks/useForceBindCapture";
 import { useZnHideAllow } from "@/features/hide/hooks/useZnHideAllow";
 import { HideAllowRow } from "@/features/hide/ui/HideAllowRow";
 import { HideCaptureWarning } from "@/features/hide/ui/HideCaptureWarning";
@@ -15,6 +16,7 @@ import { CONSOLE_VOICE } from "../voice";
 
 export function ConsoleHidePage() {
   const hide = useHideAllow();
+  const force = useForceBindCapture();
   const zn = useZnHideAllow();
   const status = useAppSelector(selectModuleStatus);
   const { voice } = usePackVoice();
@@ -31,6 +33,17 @@ export function ConsoleHidePage() {
         meta={h.checklistMeta}
         dismissLabel={h.checklistDismiss}
       />
+      <section className="pk-con-block">
+        <div className="pk-con-block__head">capture / umount</div>
+        <HideAllowRow
+          checked={force.forceBind}
+          disabled={force.isPending}
+          onChange={force.handleChange}
+          title={h.forceBindTitle}
+          descOn={h.forceBindOn}
+          descOff={h.forceBindOff}
+        />
+      </section>
       {hide.hideSupported ? (
         <section className="pk-con-block">
           <div className="pk-con-block__head">{h.switchTitle}</div>

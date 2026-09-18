@@ -2,6 +2,7 @@ import { useAppSelector } from "@/app/store/hooks";
 import { selectModuleStatus } from "@/features/status/model/selectors";
 import { isFlagOn } from "@/shared/lib/flag";
 import { useHideAllow } from "@/features/hide/hooks/useHideAllow";
+import { useForceBindCapture } from "@/features/hide/hooks/useForceBindCapture";
 import { useZnHideAllow } from "@/features/hide/hooks/useZnHideAllow";
 import { HideAllowRow } from "@/features/hide/ui/HideAllowRow";
 import { HideCaptureWarning } from "@/features/hide/ui/HideCaptureWarning";
@@ -14,6 +15,7 @@ import { DEFAULT_VOICE } from "../voice";
 
 export function DefaultHidePage() {
   const hide = useHideAllow();
+  const force = useForceBindCapture();
   const zn = useZnHideAllow();
   const status = useAppSelector(selectModuleStatus);
   const { voice } = usePackVoice();
@@ -33,6 +35,21 @@ export function DefaultHidePage() {
         meta={h.checklistMeta}
         dismissLabel={h.checklistDismiss}
       />
+
+      <section className="pk-def-section">
+        <h2 className="pk-def-section__title">抓包与卸载</h2>
+        <div className="pk-def-group">
+          <HideAllowRow
+            checked={force.forceBind}
+            disabled={force.isPending}
+            onChange={force.handleChange}
+            title={h.forceBindTitle}
+            descOn={h.forceBindOn}
+            descOff={h.forceBindOff}
+            large
+          />
+        </div>
+      </section>
 
       {hide.hideSupported ? (
         <section className="pk-def-section">

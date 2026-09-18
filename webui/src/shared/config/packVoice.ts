@@ -71,6 +71,14 @@ export type PackVoice = {
     confirmOffTitle: string;
     confirmOffBody: string;
     confirmOffOk: string;
+    forceBindTitle: string;
+    forceBindOn: string;
+    forceBindOff: string;
+    forceBindToastOn: string;
+    forceBindToastOff: string;
+    forceBindConfirmOnTitle: string;
+    forceBindConfirmOnBody: string;
+    forceBindConfirmOnOk: string;
     znSwitchTitle: string;
     znSwitchMeta: string;
     znAllowTitle: string;
@@ -126,6 +134,16 @@ const SHARED_HIDE: PackVoice["hide"] = {
   confirmOffBody:
     "关闭后不再向 SuSFS / 内核注册 try_umount。已登记项需重启后才会从内核清除。",
   confirmOffOk: "关闭",
+  forceBindTitle: "强注抓包 App（旧行为）",
+  forceBindOn:
+    "注入时再次 bind Reqable/ProxyPin，开着「卸载模块」也可能显示证书已安装",
+  forceBindOff: "默认：尊重卸载模块，不强注抓包 App",
+  forceBindToastOn: "已开启强注（下次命名空间注入生效）",
+  forceBindToastOff: "已关闭强注，尊重卸载模块",
+  forceBindConfirmOnTitle: "开启强注抓包 App？",
+  forceBindConfirmOnBody:
+    "开启后，开机/命名空间注入会对 Reqable、ProxyPin 再次 bind，可能盖掉 KSU「卸载模块」已卸的挂载（旧版行为）。会削弱对该 App 的隐藏效果，仅建议抓包调试时短期开启。改后需重启或等待下次注入。",
+  forceBindConfirmOnOk: "开启",
   znSwitchTitle: "Zygisk 挂载过滤",
   znSwitchMeta: "过滤 mountinfo / maps，并弱化 so 路径泄露",
   znAllowTitle: "启用 Zygisk 挂载痕迹过滤",

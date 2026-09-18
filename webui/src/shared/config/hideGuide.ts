@@ -8,6 +8,7 @@ export const HIDE_GUIDE_SECTIONS = [
       "被抓包的目标 App：也不要对其开启卸载模块 / umount 类隐藏。否则 TLS 看不到系统信任库里的抓包 CA，表现为断网、证书错误。",
       "应对「检测 Root / 检测 mount」的其它 App，才在管理器里单独开卸载模块或排除列表；与抓包链路相关的包名一律排除在隐藏名单之外。",
       "本模块的 hide_allow / SuSFS try_umount 是全局登记 cacerts 路径；最终是否对某进程生效，仍取决于你是否对该进程启用了 umount。抓包时请先确认 Reqable 与目标 App 均未启用卸载模块。",
+      "若必须对抓包 App 开着「卸载模块」又要看到证书：可开「强注抓包 App」（force_bind_capture，旧行为）。注入时会再次 bind Reqable/ProxyPin，可能盖掉已卸挂载并削弱隐藏，仅建议调试时短期开启。",
     ],
   },
   {

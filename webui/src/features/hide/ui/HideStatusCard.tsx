@@ -27,6 +27,7 @@ export function HideStatusCard({
   const hideKsud = isFlagOn(status.hide_ksud_umount);
   const znSupported = isFlagOn(status.zn_hide_supported);
   const znAllow = isFlagOn(status.zn_hide_allow);
+  const forceBind = isFlagOn(status.force_bind_capture);
   const metaParts = [status.hide_summary, status.zn_hide_summary].filter(Boolean);
   const meta = metaParts.length ? metaParts.join(" · ") : "基于当前设备探测";
   const tryUmountLabel = hideApplied
@@ -40,6 +41,7 @@ export function HideStatusCard({
     { k: "挂载", v: MOUNT_MODES[mountMode].label },
     { k: "STAGE", v: status.stage_root || TMPFS_STYLES[tmpfsStyle].paths[0] },
     { k: "路径", v: TMPFS_STYLES[tmpfsStyle].label },
+    { k: "强注抓包", v: forceBind ? "开启（旧行为）" : "关闭（尊重卸载）" },
     { k: "助手", v: provider },
     { k: "SuSFS", v: hideSusfs ? "TRY_UMOUNT 可用" : "未检测到" },
     { k: "try_umount", v: tryUmountLabel },
@@ -82,6 +84,14 @@ export function HideStatusCard({
           extra={status.stage_root || TMPFS_STYLES[tmpfsStyle].paths[0]}
         />
         <Row title="路径风格" extra={TMPFS_STYLES[tmpfsStyle].label} />
+        <Row
+          title="强注抓包 App"
+          extra={
+            <Tag tone={forceBind ? "warn" : "ok"}>
+              {forceBind ? "开启（旧行为）" : "关闭（尊重卸载）"}
+            </Tag>
+          }
+        />
         <Row
           title="检测到的隐藏助手"
           extra={

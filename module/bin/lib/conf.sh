@@ -14,7 +14,7 @@ write_conf() {
   key="$1"
   value="$2"
   case "$key" in
-    reqable|proxypin|schema_version|mount_mode|tmpfs_style|quiet_prop|hot_allow|hide_allow|zn_hide_allow|experimental_14_system)
+    reqable|proxypin|schema_version|mount_mode|tmpfs_style|quiet_prop|hot_allow|hide_allow|zn_hide_allow|experimental_14_system|force_bind_capture)
       ;;
     *) return 1 ;;
   esac

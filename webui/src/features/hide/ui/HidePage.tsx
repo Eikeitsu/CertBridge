@@ -5,6 +5,7 @@ import { useAppSelector } from "@/app/store/hooks";
 import { selectModuleStatus } from "@/features/status/model/selectors";
 import { isFlagOn } from "@/shared/lib/flag";
 import { useHideAllow } from "../hooks/useHideAllow";
+import { useForceBindCapture } from "../hooks/useForceBindCapture";
 import { useZnHideAllow } from "../hooks/useZnHideAllow";
 import { HideAllowRow } from "./HideAllowRow";
 import { HideCaptureWarning } from "./HideCaptureWarning";
@@ -16,6 +17,7 @@ import { ZnWhitelistEditor } from "./ZnWhitelistEditor";
 
 export function HidePage() {
   const hide = useHideAllow();
+  const force = useForceBindCapture();
   const zn = useZnHideAllow();
   const status = useAppSelector(selectModuleStatus);
   const { voice } = usePackVoice();
@@ -40,6 +42,16 @@ export function HidePage() {
         meta={h.checklistMeta}
         dismissLabel={h.checklistDismiss}
       />
+      <Card title="抓包与卸载" meta="与隐藏协助独立">
+        <HideAllowRow
+          checked={force.forceBind}
+          disabled={force.isPending}
+          onChange={force.handleChange}
+          title={h.forceBindTitle}
+          descOn={h.forceBindOn}
+          descOff={h.forceBindOff}
+        />
+      </Card>
       {hide.hideSupported ? (
         <Card title={h.switchTitle} meta={h.switchMeta}>
           <HideAllowRow

@@ -77,17 +77,35 @@ bind_package_soft() {
   done
 }
 
-# 只收集关键命名空间，不再遍历全部 /proc（会在部分机型上卡住，导致状态永久「注入中」）
-# 不含 Reqable/ProxyPin：避免开机后二次 bind 抵消「卸载模块」
+# 抓包 App 包名（强注开关 force_bind_capture=1 时使用）
+capture_force_bind_packages() {
+  echo "com.reqable.android"
+  echo "com.reqable.android.pro"
+  echo "com.wangyu.proxypin"
+  echo "com.network.proxy"
+}
+
+is_force_bind_capture() {
+  [ "$(read_conf force_bind_capture 0)" = "1" ]
+}
+
+# 只收集应用侧命名空间，不再遍历全部 /proc（会在部分机型上卡住，导致状态永久「注入中」）
+# 不含 init/zygote：由 boot 注入；service 晚注入不再二次收集 zygote
+# force_bind_capture=1 时并入抓包 App（旧行为）
 collect_inject_namespaces() {
   ns_file="$1"
   target="$2"
   : >"$ns_file"
   seen="|"
-  for pid in 1 \
-      $(pidof zygote 2>/dev/null) $(pidof zygote64 2>/dev/null) \
-      $(pgrep -x zygote 2>/dev/null) $(pgrep -x zygote64 2>/dev/null) \
-      $(pidof com.android.settings 2>/dev/null); do
+  extra_pids=
+  if is_force_bind_capture; then
+    for pkg in $(capture_force_bind_packages); do
+      extra_pids="$extra_pids $(pidof "$pkg" 2>/dev/null)"
+    done
+  fi
+  for pid in \
+      $(pidof com.android.settings 2>/dev/null) \
+      $extra_pids; do
     [ -n "$pid" ] || continue
     [ -d "/proc/$pid/ns" ] || continue
     ns=$(readlink "/proc/$pid/ns/mnt" 2>/dev/null)

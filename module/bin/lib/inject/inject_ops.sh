@@ -14,21 +14,40 @@ inject_one_target() {
   bind_current_once "$target" "$stage" || rc=1
 
   if command -v nsenter >/dev/null 2>&1; then
-    bind_pid_once 1 init "$target" "$stage" || rc=1
-
-    if [ "$mode" = "namespaces" ] || [ "$mode" = "boot" ]; then
+    # boot：注入 init + zygote（子进程继承）。
+    # namespaces（service 晚注入）：默认不再 nsenter zygote/init，减轻「Found KSU」类误伤；
+    # 仅当 /proc/<pid>/mountinfo 看不到本模块 runtime bind 时才补注 zygote（开机过早未就绪的兜底）。
+    if [ "$mode" = "boot" ]; then
+      bind_pid_once 1 init "$target" "$stage" || rc=1
       for process in zygote zygote64; do
         for pid in $(pidof "$process" 2>/dev/null) $(pgrep -x "$process" 2>/dev/null); do
+          bind_pid_once "$pid" "$process" "$target" "$stage" || rc=1
+        done
+      done
+    elif [ "$mode" = "namespaces" ]; then
+      for process in zygote zygote64; do
+        for pid in $(pidof "$process" 2>/dev/null) $(pgrep -x "$process" 2>/dev/null); do
+          [ -n "$pid" ] || continue
+          if is_certbridge_runtime_bind "$target" "/proc/$pid/mountinfo" 2>/dev/null; then
+            log_debug "inject: skip zygote pid=$pid (already bound)"
+            continue
+          fi
+          log_info "inject: heal zygote pid=$pid (missing runtime bind)"
           bind_pid_once "$pid" "$process" "$target" "$stage" || rc=1
         done
       done
     fi
 
     if [ "$mode" = "namespaces" ]; then
-      # 只补 Settings：勿强注 Reqable/ProxyPin。
-      # 对抓包 App 再 bind 会盖掉 KSU「卸载模块」已卸的挂载，造成「开着卸载仍显示证书已安装」。
-      # 抓包 App 应继承 Zygote；开卸载时由 try_umount 在进程启动时剥离。
+      # 默认只补 Settings，尊重 KSU「卸载模块」。
+      # force_bind_capture=1 时额外强注 Reqable/ProxyPin（旧行为，可盖掉已卸挂载）。
       bind_package_soft "com.android.settings" "$target" "$stage"
+      if is_force_bind_capture; then
+        log_info "inject: force_bind_capture=1, rebinding capture apps"
+        for pkg in $(capture_force_bind_packages); do
+          bind_package_soft "$pkg" "$target" "$stage"
+        done
+      fi
 
       ns_file="$STATEDIR/.inject-ns.$$"
       collect_inject_namespaces "$ns_file" "$target"

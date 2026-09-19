@@ -35,6 +35,7 @@ case "$1" in
   set_hot_allow) cmd_set_hot_allow "$2" ;;
   set_hide_allow) cmd_set_hide_allow "$2" ;;
   set_zn_hide_allow) cmd_set_zn_hide_allow "$2" ;;
+  set_force_bind_capture) cmd_set_force_bind_capture "$2" ;;
   get_zn_whitelist) cmd_get_zn_whitelist ;;
   set_zn_whitelist) cmd_set_zn_whitelist "$2" ;;
   reinject|sync)
@@ -43,7 +44,7 @@ case "$1" in
     exit 1
     ;;
   *)
-    echo "usage: cert_manager.sh {status [--live]|verify|list_custom|list_applied_fps|toggle|sync_apps|set_mount_mode|set_experimental_14_system|set_tmpfs_style|set_quiet_prop|set_hot_allow|set_hide_allow|set_zn_hide_allow|get_zn_whitelist|set_zn_whitelist|install_custom|import_app_preset|remove_custom|cert_info|hot_mount|hot_unmount}"
+    echo "usage: cert_manager.sh {status [--live]|verify|list_custom|list_applied_fps|toggle|sync_apps|set_mount_mode|set_experimental_14_system|set_tmpfs_style|set_quiet_prop|set_hot_allow|set_hide_allow|set_zn_hide_allow|set_force_bind_capture|get_zn_whitelist|set_zn_whitelist|install_custom|import_app_preset|remove_custom|cert_info|hot_mount|hot_unmount}"
     exit 1
     ;;
 esac

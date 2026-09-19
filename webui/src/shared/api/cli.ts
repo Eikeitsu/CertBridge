@@ -148,6 +148,10 @@ export async function setZnHideAllow(value: FlagValue) {
   return cli(`set_zn_hide_allow ${value}`);
 }
 
+export async function setForceBindCapture(value: FlagValue) {
+  return cli(`set_force_bind_capture ${value}`);
+}
+
 function textToBase64(text: string): string {
   const bytes = new TextEncoder().encode(text);
   let binary = "";

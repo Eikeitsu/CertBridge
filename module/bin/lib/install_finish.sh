@@ -98,7 +98,7 @@ certbridge_install_preserve_user() {
   fi
   # 用户改过的 conf 键：在新模板上覆盖同名项（安装向导写的 reqable/proxypin/mount 仍优先）
   if [ -f "$OLD_MOD/config/certs.conf" ] && [ -f "$MODPATH/config/certs.conf" ]; then
-    for _k in tmpfs_style hot_allow hide_allow zn_hide_allow experimental_14_system quiet_prop; do
+    for _k in tmpfs_style hot_allow hide_allow zn_hide_allow experimental_14_system quiet_prop force_bind_capture; do
       _v=$(sed -n "s/^${_k}=//p" "$OLD_MOD/config/certs.conf" 2>/dev/null | head -n1 | tr -d '\r')
       [ -n "$_v" ] || continue
       # 本次安装若明确写入 hide/hot/zn，不回滚

@@ -2,6 +2,7 @@ import { useAppSelector } from "@/app/store/hooks";
 import { selectModuleStatus } from "@/features/status/model/selectors";
 import { isFlagOn } from "@/shared/lib/flag";
 import { useHideAllow } from "@/features/hide/hooks/useHideAllow";
+import { useForceBindCapture } from "@/features/hide/hooks/useForceBindCapture";
 import { useZnHideAllow } from "@/features/hide/hooks/useZnHideAllow";
 import { HideAllowRow } from "@/features/hide/ui/HideAllowRow";
 import { HideCaptureWarning } from "@/features/hide/ui/HideCaptureWarning";
@@ -13,6 +14,7 @@ import { OPS_VOICE } from "../voice";
 
 export function OpsHidePage() {
   const hide = useHideAllow();
+  const force = useForceBindCapture();
   const zn = useZnHideAllow();
   const status = useAppSelector(selectModuleStatus);
   const { voice } = usePackVoice();
@@ -27,6 +29,18 @@ export function OpsHidePage() {
 
       {/* 精简：一条告警即可；完整检查清单留给默认主题 */}
       <HideCaptureWarning title={h.captureTitle} meta={h.captureMeta} banner />
+
+      <section className="pk-ops-panel">
+        <h2 className="pk-ops-panel__title">抓包与卸载</h2>
+        <HideAllowRow
+          checked={force.forceBind}
+          disabled={force.isPending}
+          onChange={force.handleChange}
+          title={h.forceBindTitle}
+          descOn={h.forceBindOn}
+          descOff={h.forceBindOff}
+        />
+      </section>
 
       {hide.hideSupported ? (
         <section className="pk-ops-panel">

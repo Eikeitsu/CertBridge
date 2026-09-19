@@ -109,17 +109,18 @@ emit_hide_status() {
   echo "hide_supported=1"
   echo "hide_allow=$(read_conf hide_allow 0)"
   echo "stage_root=$RUNTIME_MOUNT_ROOT"
-  if hide_susfs_available; then
-    echo "hide_susfs=1"
-  else
-    echo "hide_susfs=0"
-  fi
-  if hide_ksud_kernel_umount_available; then
-    echo "hide_ksud_umount=1"
-  else
-    echo "hide_ksud_umount=0"
-  fi
+  # hide_allow=0：不执行 ksud / ksu_susfs（避免无谓拉起 KSU 痕迹）
   if hide_assist_enabled; then
+    if hide_susfs_available; then
+      echo "hide_susfs=1"
+    else
+      echo "hide_susfs=0"
+    fi
+    if hide_ksud_kernel_umount_available; then
+      echo "hide_ksud_umount=1"
+    else
+      echo "hide_ksud_umount=0"
+    fi
     provider=$(detect_hide_provider)
     echo "hide_provider=$provider"
     echo "hide_provider_label=$(hide_provider_label "$provider")"
@@ -130,6 +131,8 @@ emit_hide_status() {
     fi
     echo "hide_summary=$(compose_hide_summary)"
   else
+    echo "hide_susfs=0"
+    echo "hide_ksud_umount=0"
     echo "hide_provider=none"
     echo "hide_provider_label=已关闭（开关未开）"
     echo "hide_applied=0"

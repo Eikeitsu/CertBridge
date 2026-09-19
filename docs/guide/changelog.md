@@ -1,5 +1,9 @@
 # 更新日志
 
+## v4.1.1
+
+- **关闭 hide_allow 即时卸登记**：清 try_umount.txt / NoHello 的同时对已知 cacerts 路径执行 `ksud kernel umount del`（不 wipe 全表）
+
 ## v4.1.0
 
 - **减轻晚注入 / KSU 误伤**：service 命名空间阶段默认不再二次 nsenter zygote/init（boot 已注入）；仅当 mountinfo 看不到本模块 bind 时才补注 zygote

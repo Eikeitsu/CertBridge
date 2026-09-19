@@ -77,6 +77,7 @@ export type ModuleStatus = {
   hide_applied?: string;
   hide_susfs?: string;
   hide_ksud_umount?: string;
+  hide_nohello?: string;
   hide_summary?: string;
   version?: string;
   hot_active?: string;

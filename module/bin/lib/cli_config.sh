@@ -107,13 +107,15 @@ cmd_set_hide_allow() {
     log_info "config: hide_allow=0 (cleared hide state; reboot clears kernel try_umount)"
   else
     log_info "config: hide_allow=1 (will register on next inject / hot mount)"
-    if ! hide_susfs_available 2>/dev/null && ! hide_ksud_kernel_umount_available 2>/dev/null; then
-      log_warn "config: hide_allow=1 but SuSFS TRY_UMOUNT / ksud umount not detected"
+    if ! hide_susfs_available 2>/dev/null && \
+        ! hide_ksud_kernel_umount_available 2>/dev/null && \
+        ! hide_nohello_available 2>/dev/null; then
+      log_warn "config: hide_allow=1 but SuSFS/ksud/NoHello not detected"
     fi
   fi
   echo "ok=1"
   echo "hide_allow=$val"
-  echo "hint=开启后需重新注入或热挂载才会登记 try_umount；关闭后需重启以清除内核侧登记"
+  echo "hint=开启后需重新注入或热挂载才会登记（SuSFS/ksud/NoHello）；关闭后需重启以清除内核侧登记"
 }
 
 cmd_set_zn_hide_allow() {

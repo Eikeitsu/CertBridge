@@ -15,7 +15,7 @@ export function HideAllowRow({
   disabled,
   onChange,
   title = "启用挂载隐藏协助",
-  descOn = "注入 / 热挂载成功后登记 SuSFS try_umount",
+  descOn = "注入 / 热挂载成功后登记 SuSFS / NoHello umount",
   descOff = "关闭时不写隐藏状态、不注册 umount",
   large,
 }: HideAllowRowProps) {

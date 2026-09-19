@@ -7,7 +7,7 @@ export const HIDE_GUIDE_SECTIONS = [
       "Reqable / ProxyPin 等抓包软件：不要对其开启上述 Root 隐藏。否则软件内常显示「根证书未安装」，无法正常抓包。",
       "被抓包的目标 App：也不要对其开启卸载模块 / umount 类隐藏。否则 TLS 看不到系统信任库里的抓包 CA，表现为断网、证书错误。",
       "应对「检测 Root / 检测 mount」的其它 App，才在管理器里单独开卸载模块或排除列表；与抓包链路相关的包名一律排除在隐藏名单之外。",
-      "本模块的 hide_allow / SuSFS try_umount 是全局登记 cacerts 路径；最终是否对某进程生效，仍取决于你是否对该进程启用了 umount。抓包时请先确认 Reqable 与目标 App 均未启用卸载模块。",
+      "本模块的 hide_allow 会全局登记 cacerts 路径（SuSFS / ksud / NoHello）；最终是否对某进程卸挂载，仍取决于你是否对该进程启用了卸载模块 / 排除列表。抓包时请先确认 Reqable 与目标 App 均未启用。",
       "若必须对抓包 App 开着「卸载模块」又要看到证书：可开「强注抓包 App」（force_bind_capture，旧行为）。注入时会再次 bind Reqable/ProxyPin，可能盖掉已卸挂载并削弱隐藏，仅建议调试时短期开启。",
     ],
   },
@@ -16,10 +16,10 @@ export const HIDE_GUIDE_SECTIONS = [
     title: "Magisk / Magisk Alpha / Kitsune",
     body: [
       "排除列表（DenyList）：在 Magisk App「配置排除列表」勾选要对之隐藏 Root 的应用包名。这是 Magisk v24 起替代 MagiskHide 的机制，不是旧版 Hide。",
-      "强制执行排除列表（Enforce DenyList）：开启后主要对列表内 App 停用 Zygisk 模块注入，不等于完整隐藏 bind mount。与 Shamiko 常见用法冲突——使用 Shamiko 时通常应关闭 Enforce，把目标 App 放进排除列表，由 Shamiko 处理挂载隐藏。",
-      "不要把 Reqable、ProxyPin 或正在抓包的目标 App 放进排除列表（若使用 Shamiko / Zygisk umount）。",
-      "Magisk 可安装 ZygiskNext、ReZygisk、NeoZygisk（通常需关闭内置 Zygisk），它们同样能对目标进程 umount 模块挂载痕迹。",
-      "常见组合：Shamiko；或 ZygiskNext/ReZygisk/NeoZygisk 的 umount / 遵循排除列表；或 Zygisk Assistant / NoHello（偏 bind mount 隐藏）。",
+      "强制执行排除列表（Enforce DenyList）：开启后主要对列表内 App 停用 Zygisk 模块注入，不等于完整隐藏 bind mount。与 Shamiko / NoHello 常见用法冲突——使用时通常应关闭 Enforce，把目标 App 放进排除列表。",
+      "不要把 Reqable、ProxyPin 或正在抓包的目标 App 放进排除列表（若使用 Shamiko / NoHello / Zygisk umount）。",
+      "推荐：ZygiskNext/ReZygisk + NoHello。开启 hide_allow 后证书桥会把 cacerts 写成 NoHello 的 point 规则；是否 umount 仍由排除列表决定（分工同 KSU：模块登记路径，用户控 App）。",
+      "Magisk 官方没有路径级 umount 登记 API；仅靠 DenyList 往往卸不掉完整兼容的脚本 bind。",
     ],
   },
   {
@@ -39,8 +39,7 @@ export const HIDE_GUIDE_SECTIONS = [
     body: [
       "仅对需要躲检测的 App 启用「排除修改（Exclude Modifications）」。",
       "不要对 Reqable / ProxyPin / 被抓包目标启用排除修改，否则 CA 挂载对其不可见。",
-      "建议安装 NeoZygisk、ReZygisk 或 ZygiskNext（umount only）。",
-      "也可使用 Zygisk Assistant / NoHello 辅助隐藏 bind mount。",
+      "apd 没有类似 ksud 的路径 umount API。请装 ZygiskNext/ReZygisk + NoHello；hide_allow=1 时证书桥登记 point 规则，排除修改决定是否对这些 App umount。",
     ],
   },
   {

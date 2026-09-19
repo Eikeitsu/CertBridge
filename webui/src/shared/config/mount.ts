@@ -27,13 +27,13 @@ export const MOUNT_MODE_OPTIONS = [
 export const MOUNT_ROOT_NOTES = [
   {
     name: "Magisk",
-    note: "自带 Magic Mount；隐藏需配合排除列表 + Zygisk 助手",
+    note: "DenyList + NoHello / ZygiskNext；脚本 bind 需 NoHello point 规则",
   },
   {
     name: "KernelSU",
     note: "建议 SuSFS 或 ZygiskNext/ReZygisk umount；需 path_umount",
   },
-  { name: "APatch", note: "对目标 App 开「排除修改」+ Zygisk 助手" },
+  { name: "APatch", note: "排除修改 + NoHello / ZygiskNext（apd 无路径登记 API）" },
 ] as const;
 
 export const MOUNT_HELP_FOOTNOTE = "切换后需重启生效。";

@@ -21,8 +21,8 @@
 已安装时：
 
 - WebUI 出现「隐藏」页，顶部有 **启用开关**（`hide_allow`）
-- 开关打开时，注入 / 热挂载成功会向 SuSFS / 内核登记 `try_umount`
-- 关闭开关会清除本模块记录的隐藏状态文件；内核侧登记通常需**重启**才清掉
+- 开关打开时，注入 / 热挂载成功会向 SuSFS / 内核 / NoHello 登记 umount
+- 关闭开关会清除本模块记录的隐藏状态与 NoHello 托管规则；内核侧 SuSFS/ksud 登记通常需**重启**才清掉
 
 ### Zygisk 挂载痕迹过滤
 
@@ -111,8 +111,11 @@ Magisk 可安装 **ZygiskNext**、**ReZygisk**、**NeoZygisk**（通常需关闭
 
 - **Shamiko** + 排除列表（关闭 Enforce）
 - **ZygiskNext / ReZygisk / NeoZygisk** 的 umount / 遵循排除列表
-- **Zygisk Assistant / NoHello**（偏 bind mount 隐藏）
-- 本模块可选 **Zygisk 挂载痕迹过滤** + SuSFS **try_umount**（可同时使用）
+- **NoHello**（推荐）：装好后本模块在 `hide_allow=1` 时会把 cacerts 的 `point` 规则写入 `/data/adb/nohello/umount`；**是否对某 App 卸挂载仍由你是否把它放进排除列表决定**（与 KSU「登记路径 + 开卸载模块」同一分工）
+- **Zygisk Assistant**（偏 bind mount 隐藏）
+- 本模块可选 **Zygisk 挂载痕迹过滤**（可与上列同时使用）
+
+> Magisk **没有**类似 `ksud kernel umount add` 的官方路径登记 API；完整兼容的脚本 bind 要靠 NoHello 规则或 Zygisk 助手才能按排除列表卸掉。
 
 ---
 
@@ -129,8 +132,8 @@ Magisk 可安装 **ZygiskNext**、**ReZygisk**、**NeoZygisk**（通常需关闭
 
 1. **仅对需要躲检测的 App** 启用 **「排除修改（Exclude Modifications）」**。
 2. **不要**对 Reqable / ProxyPin / 被抓包目标启用排除修改。
-3. 建议安装 **NeoZygisk**、**ReZygisk** 或 **ZygiskNext**（umount only）。
-4. 也可使用 **Zygisk Assistant / NoHello** 辅助隐藏 bind mount。
+3. 建议安装 **NeoZygisk**、**ReZygisk** 或 **ZygiskNext**，并安装 **NoHello**：`hide_allow=1` 时证书桥登记 cacerts `point` 规则；排除修改决定对这些 App 是否 umount。
+4. `apd` **没有**路径级 umount 登记 API，勿期望与 `ksud` 对等。
 
 ---
 
@@ -140,6 +143,7 @@ Magisk 可安装 **ZygiskNext**、**ReZygisk**、**NeoZygisk**（通常需关闭
 | ---------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------- |
 | 临时层路径       | WebUI「更多 → 临时挂载路径」或 `certs.conf` 的 `tmpfs_style` | `dev`（默认）/ `short` / `legacy`；切换后需重启                             |
 | SuSFS try_umount | 可选组件 + WebUI 开关                                        | 安装隐藏组件并开启 `hide_allow` 后，bind 成功由 `hide_assist.sh` 注册       |
+| NoHello 规则     | 同上（检测到 NoHello 模块时）                                | 写入 `/data/adb/nohello/umount` 托管块；关闭 `hide_allow` 时移除本模块规则  |
 | Zygisk 挂载过滤  | 可选组件 + WebUI 开关                                        | `zn_hide_allow`；主路径 `zygisk/*.so`；辅路径仅在有非空 `zn_modules.txt` 时 |
 | 挂载模式         | WebUI「更多 → 挂载模式」                                     | 完整兼容 vs 轻量 Magic；见 [配置说明 · 挂载模式](/guide/config#挂载模式)    |
 

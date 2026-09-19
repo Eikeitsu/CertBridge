@@ -25,16 +25,18 @@ export function HideStatusCard({
   const hideApplied = isFlagOn(status.hide_applied);
   const hideSusfs = isFlagOn(status.hide_susfs);
   const hideKsud = isFlagOn(status.hide_ksud_umount);
+  const hideNohello = isFlagOn(status.hide_nohello);
   const znSupported = isFlagOn(status.zn_hide_supported);
   const znAllow = isFlagOn(status.zn_hide_allow);
   const forceBind = isFlagOn(status.force_bind_capture);
   const metaParts = [status.hide_summary, status.zn_hide_summary].filter(Boolean);
   const meta = metaParts.length ? metaParts.join(" · ") : "基于当前设备探测";
+  const canRegister = hideSusfs || hideKsud || hideNohello;
   const tryUmountLabel = hideApplied
     ? "已注册"
-    : hideSusfs || hideKsud
+    : canRegister
       ? "未登记"
-      : "无 SuSFS/ksud";
+      : "无 SuSFS/ksud/NoHello";
 
   const rows = [
     { k: "Root", v: status.root || "—" },
@@ -44,6 +46,7 @@ export function HideStatusCard({
     { k: "强注抓包", v: forceBind ? "开启（旧行为）" : "关闭（尊重卸载）" },
     { k: "助手", v: provider },
     { k: "SuSFS", v: hideSusfs ? "TRY_UMOUNT 可用" : "未检测到" },
+    { k: "NoHello", v: hideNohello ? "已安装" : "未检测到" },
     { k: "try_umount", v: tryUmountLabel },
   ];
   if (znSupported) {
@@ -111,9 +114,17 @@ export function HideStatusCard({
           }
         />
         <Row
+          title="NoHello"
+          extra={
+            <Tag tone={hideNohello ? "ok" : "warn"}>
+              {hideNohello ? "已安装（可登记 point）" : "未检测到"}
+            </Tag>
+          }
+        />
+        <Row
           title="本模块 try_umount"
           extra={
-            <Tag tone={hideApplied ? "ok" : hideSusfs || hideKsud ? "warn" : "default"}>
+            <Tag tone={hideApplied ? "ok" : canRegister ? "warn" : "default"}>
               {tryUmountLabel}
             </Tag>
           }

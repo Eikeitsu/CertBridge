@@ -1,5 +1,5 @@
 {
-  "version": "4.0.0.ci.138",
+  "version": "4.0.0.ci.139",
   "versionCode": 40001,
   "zipUrl": "https://raw.githubusercontent.com/Eikeitsu/CertBridge/ci-dist/CertBridge.zip",
   "changelog": "https://raw.githubusercontent.com/Eikeitsu/CertBridge/ci-dist/changelog.md"

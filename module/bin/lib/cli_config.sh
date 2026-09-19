@@ -103,11 +103,11 @@ cmd_set_hide_allow() {
   hide_probe_cache_clear 2>/dev/null || true
   if [ "$val" = "0" ]; then
     hide_clear_applied 2>/dev/null || rm -f "$STATEDIR/hide-assist.conf" 2>/dev/null
-    log_info "config: hide_allow=0 (cleared hide state; reboot clears kernel try_umount)"
+    log_info "config: hide_allow=0 (cleared hide state + ksud umount del)"
     echo "ok=1"
     echo "hide_allow=0"
     echo "hide_applied=0"
-    echo "hint=已关闭；NoHello 规则已移除，内核 try_umount 通常需重启才清"
+    echo "hint=已关闭；已清 try_umount.txt / NoHello，并尝试 ksud del（有 ksud 时即时）"
     return 0
   fi
 

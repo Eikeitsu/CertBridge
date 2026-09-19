@@ -129,10 +129,10 @@ const SHARED_HIDE: PackVoice["hide"] = {
   allowOn: "注入 / 热挂载成功后登记 umount 路径（SuSFS / ksud / NoHello）",
   allowOff: "关闭时不写隐藏状态、不注册 umount",
   toastOn: "已开启（后台登记 try_umount）",
-  toastOff: "已关闭隐藏协助",
+  toastOff: "已关闭（清列表 + 尝试 ksud del）",
   confirmOffTitle: "关闭挂载隐藏协助？",
   confirmOffBody:
-    "关闭后不再向 SuSFS / ksud / NoHello 注册 umount。NoHello 规则会立即移除；内核侧 try_umount 通常需重启才清。",
+    "关闭后不再登记 umount，并立刻清 try_umount.txt / NoHello；有 ksud 时会 kernel umount del 本模块路径。无 ksud 的旧内核若仍残留，重启后才会清。",
   confirmOffOk: "关闭",
   forceBindTitle: "强注抓包 App（旧行为）",
   forceBindOn: "对运行中的 Reqable/ProxyPin 补绑；开着「卸载模块」也可能显示证书已安装",

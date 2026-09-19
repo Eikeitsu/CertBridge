@@ -21,6 +21,8 @@ NOHELLO_END_MARK="${NOHELLO_END_MARK:-# END CertBridge}"
 HIDE_PROBE_CACHE="${HIDE_PROBE_CACHE:-$STATEDIR/hide-probe.cache}"
 
 hide_clear_applied() {
+  # 尽量当场从内核 umount 列表删掉本模块路径（ksud del）；失败则仍清文件侧
+  hide_unregister_kernel_try_umount_all 2>/dev/null || true
   hide_unpersist_all_try_umount
   hide_nohello_unpersist_all
   rm -f "$HIDE_STATE_FILE" 2>/dev/null
@@ -185,6 +187,50 @@ hide_try_ksud_umount_add() {
   [ -x /data/adb/ksu/bin/ksud ] || return 1
   hide_ensure_ksud_umount_feature 2>/dev/null || true
   /data/adb/ksu/bin/ksud kernel umount add "$target" --flags 2 >/dev/null 2>&1
+}
+
+# 从内核 try_umount 列表删除单路径（KSU-Next：ksud kernel umount del）
+hide_try_ksud_umount_del() {
+  target="$1"
+  [ -n "$target" ] || return 1
+  case "$target" in
+    */) target=${target%/} ;;
+  esac
+  [ -x /data/adb/ksu/bin/ksud ] || return 1
+  /data/adb/ksu/bin/ksud kernel umount del "$target" >/dev/null 2>&1
+}
+
+# 关闭 hide_allow 时：对已知 cacerts 路径做内核 del（不 wipe 全表，避免误伤其它模块）
+hide_unregister_kernel_try_umount_all() {
+  seen="|"
+  for target in $(list_target_stores 2>/dev/null); do
+    [ -n "$target" ] || continue
+    case "$seen" in *"|$target|"*) continue ;; esac
+    seen="$seen$target|"
+    if hide_try_ksud_umount_del "$target"; then
+      log_info "hide: ksud umount del ($target)"
+    fi
+    # 旧 SuSFS CLI（若仍支持）；无则忽略
+    if hide_susfs_bin_present 2>/dev/null; then
+      "$SUSFS_BIN" del_try_umount "$target" >/dev/null 2>&1 || \
+        "$SUSFS_BIN" remove_try_umount "$target" >/dev/null 2>&1 || true
+    fi
+  done
+  # try_umount.txt 里可能还有历史路径
+  if [ -f "$SUSFS_TRY_UMOUNT_FILE" ]; then
+    while IFS= read -r line || [ -n "$line" ]; do
+      case "$line" in
+        ''|'#'*) continue ;;
+      esac
+      case "$line" in
+        */cacerts|*/cacerts/) ;;
+        *) continue ;;
+      esac
+      case "$seen" in *"|$line|"*) continue ;; esac
+      seen="$seen$line|"
+      hide_try_ksud_umount_del "$line" 2>/dev/null || true
+    done <"$SUSFS_TRY_UMOUNT_FILE"
+  fi
 }
 
 # 从 mountinfo 收集 cacerts 上实际存在的挂载点（比 list_target_stores 更贴近内核所见）

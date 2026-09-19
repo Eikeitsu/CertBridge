@@ -44,7 +44,8 @@ export function HideCaptureWarning({
           的应用开启隐藏；抓包链路相关包名一律关掉 umount
         </li>
         <li>
-          若必须对抓包 App 开着卸载模块又要看到证书：可开「强注抓包 App」（旧行为），会盖掉已卸挂载，削弱隐藏
+          若必须对抓包 App 开着卸载模块又要看到证书：可开「强注抓包
+          App」（旧行为），会盖掉已卸挂载，削弱隐藏
         </li>
       </ul>
     </Card>

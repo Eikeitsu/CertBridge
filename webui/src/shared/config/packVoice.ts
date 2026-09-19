@@ -135,8 +135,7 @@ const SHARED_HIDE: PackVoice["hide"] = {
     "关闭后不再向 SuSFS / 内核注册 try_umount。已登记项需重启后才会从内核清除。",
   confirmOffOk: "关闭",
   forceBindTitle: "强注抓包 App（旧行为）",
-  forceBindOn:
-    "注入时再次 bind Reqable/ProxyPin，开着「卸载模块」也可能显示证书已安装",
+  forceBindOn: "注入时再次 bind Reqable/ProxyPin，开着「卸载模块」也可能显示证书已安装",
   forceBindOff: "默认：尊重卸载模块，不强注抓包 App",
   forceBindToastOn: "已开启强注（下次命名空间注入生效）",
   forceBindToastOff: "已关闭强注，尊重卸载模块",

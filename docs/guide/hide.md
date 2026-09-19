@@ -22,7 +22,8 @@
 
 - WebUI 出现「隐藏」页，顶部有 **启用开关**（`hide_allow`）
 - 开关打开时，注入 / 热挂载成功会向 SuSFS / 内核 / NoHello 登记 umount
-- 关闭开关会清除本模块记录的隐藏状态与 NoHello 托管规则；内核侧 SuSFS/ksud 登记通常需**重启**才清掉。开启开关会**立刻写 conf** 并在后台登记 try_umount / NoHello（不堵 WebUI）；验证卸载只需**强停 App**，不必为此反复重启。
+- 关闭开关会立刻清 `try_umount.txt` / NoHello，并对本模块路径调用 `ksud kernel umount del`（有 ksud 时即时从内核列表移除；**不会** `wipe` 全表）。开启开关会**立刻写 conf** 并在后台登记（不堵 WebUI）；验证卸载只需**强停 App**
+- 无 ksud / 旧 SuSFS 仅有 add 无 del 时，内核残留可能仍需重启才清
 
 ### Zygisk 挂载痕迹过滤
 

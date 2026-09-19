@@ -1,12 +1,6 @@
 # CertBridge CI
 
 
-- **挂载隐藏协助组件**：安装时可带上隐藏协助脚本；WebUI「隐藏」页用已有开关控制是否在注入 / 热挂载成功后登记 umount 路径（`hide_allow`）
-- **不强制 SuSFS**：有 SuSFS / KernelSU umount 时自动配合登记；没有也能正常用证书。Magisk 等可继续搭配 Shamiko、ZygiskNext 等做进程侧卸载隐藏
-- **登记时机更完整**：开机注入成功会登记；轻量 Magic 挂载、热挂载的多个证书目标也会登记；仅成功绑定的目标才写入，避免误报「已登记」
-- **先探测再登记**：登记前检查设备是否具备对应 umount 能力；隐藏页实况可看到是否已登记、是否检测到 SuSFS 等
-- **可选开机持久化**：若本机已有 susfs4ksu 配置目录，成功登记后写入其列表，方便开机后再次生效；关闭隐藏开关时会去掉本模块写入的路径
-- **卸载与热挂载路径清理**：覆盖默认 `/dev/.fs*`、`/mnt/.ca*` 以及历史 `/dev/.cb*` 等临时层，减少残留
-- **文案与文档**：隐藏说明、截图、WebUI 指引与配置注释对齐当前默认临时路径
-- **尊重「卸载模块」**：开机命名空间注入不再强注 Reqable / ProxyPin，避免二次 bind 盖掉 KSU 已卸的挂载；抓包 App 继承 Zygote，开卸载时由 try_umount 剥离
-- **下载更新交互动画**：下载 / 写入 / 安装分阶段进度；默认柔和进度条、精简扫描条、控制台 ASCII 条，三套主题各自样式
+- **减轻晚注入 / KSU 误伤**：service 命名空间阶段默认不再二次 nsenter zygote/init（boot 已注入）；仅当 mountinfo 看不到本模块 bind 时才补注 zygote
+- **隐藏探测更省**：`hide_allow=0` 时 status 不再执行 `ksud` / `ksu_susfs`；开启后按 boot 缓存探测结果，避免每次刷新拉起
+- **强注抓包 App 开关**：`force_bind_capture`（默认关）。开启后命名空间注入会再次 bind Reqable/ProxyPin（旧行为），开着「卸载模块」也可能显示证书已安装；默认尊重卸载、不强注

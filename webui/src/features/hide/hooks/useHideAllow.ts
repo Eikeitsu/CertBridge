@@ -41,7 +41,12 @@ export function useHideAllow() {
           }
           const kv = parseKv(result.stdout || "");
           dispatch(mergeStatus(kv));
-          toast(checked ? h.toastOn : h.toastOff, "ok");
+          if (checked && kv.hint) {
+            toast(kv.hint, kv.hide_applied === FLAG_ON ? "ok" : "warn");
+          } else {
+            toast(checked ? h.toastOn : h.toastOff, "ok");
+          }
+          void dispatch(refreshStatus(SILENT_REFRESH));
         });
 
       if (!checked) {

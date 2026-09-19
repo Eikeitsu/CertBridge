@@ -100,22 +100,51 @@ cmd_set_hide_allow() {
   esac
   [ -f "$LIBDIR/hide_assist.sh" ] || { echo "error=hide_feature_not_installed"; return 1; }
   write_conf hide_allow "$val" || { echo "error=write_failed"; return 1; }
-  # 开关变更后清探测缓存，开启时再按需拉起 ksud / susfs
   hide_probe_cache_clear 2>/dev/null || true
   if [ "$val" = "0" ]; then
     hide_clear_applied 2>/dev/null || rm -f "$STATEDIR/hide-assist.conf" 2>/dev/null
     log_info "config: hide_allow=0 (cleared hide state; reboot clears kernel try_umount)"
+    echo "ok=1"
+    echo "hide_allow=0"
+    echo "hide_applied=0"
+    echo "hint=已关闭；内核侧已登记项通常需重启才清除"
+    return 0
+  fi
+
+  log_info "config: hide_allow=1 (register now)"
+  # 立刻登记，不必等重启 / 再注入
+  hide_assist_after_inject 2>/dev/null || true
+  echo "ok=1"
+  echo "hide_allow=1"
+  if hide_read_applied 2>/dev/null; then
+    echo "hide_applied=1"
+    echo "hint=已当场登记。请强停目标 App 再开以验证「卸载模块」；无需为此再重启"
   else
-    log_info "config: hide_allow=1 (will register on next inject / hot mount)"
-    if ! hide_susfs_available 2>/dev/null && \
-        ! hide_ksud_kernel_umount_available 2>/dev/null && \
-        ! hide_nohello_available 2>/dev/null; then
-      log_warn "config: hide_allow=1 but SuSFS/ksud/NoHello not detected"
+    echo "hide_applied=0"
+    if ! hide_susfs_bin_present 2>/dev/null && ! hide_susfs4ksu_module_present 2>/dev/null && \
+        ! [ -x /data/adb/ksu/bin/ksud ] && ! hide_nohello_available 2>/dev/null; then
+      echo "hint=本机无 SuSFS/ksud/NoHello，兼容模式脚本 bind 无法被「卸载模块」卸掉。请先安装 susfs4ksu 或确认内核支持 ksud umount"
+    else
+      echo "hint=探测到助手但当场登记未成功，请看模块日志 hide: 行；可再执行 hide_reregister"
     fi
   fi
+}
+
+# 仅重跑 try_umount / NoHello 登记（不重绑证书）；验证卸载时不必重启
+cmd_hide_reregister() {
+  [ -f "$LIBDIR/hide_assist.sh" ] || { echo "error=hide_feature_not_installed"; return 1; }
+  hide_assist_enabled || { echo "error=hide_allow_off"; echo "hint=请先开启 hide_allow"; return 1; }
+  hide_probe_cache_clear 2>/dev/null || true
+  hide_assist_after_inject 2>/dev/null || true
   echo "ok=1"
-  echo "hide_allow=$val"
-  echo "hint=开启后需重新注入或热挂载才会登记（SuSFS/ksud/NoHello）；关闭后需重启以清除内核侧登记"
+  if hide_read_applied 2>/dev/null; then
+    echo "hide_applied=1"
+    echo "hint=登记完成。强停 App 再开即可测卸载，无需重启"
+  else
+    echo "hide_applied=0"
+    echo "hint=登记未成功：检查 SuSFS/ksud/NoHello 与模块日志"
+  fi
+  emit_hide_status 2>/dev/null || true
 }
 
 cmd_set_zn_hide_allow() {

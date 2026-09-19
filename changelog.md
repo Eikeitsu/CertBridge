@@ -8,6 +8,7 @@
 - **NoHello 适配**：检测到 NoHello 时，`hide_allow=1` 会把 cacerts 写成 `/data/adb/nohello/umount` 的 `point` 规则（托管块）；Magisk 排除列表 / APatch 排除修改决定对哪些 App umount，分工同 KSU
 - **修复兼容模式不尊重 KSU 卸载模块**：post-fs 过早探测失败不再整轮缓存；先写入 `susfs4ksu/try_umount.txt` 供 post-mount/boot-completed 重登记；有 `ksu_susfs`/`ksud` 即尝试当场登记；service 晚注入后再强制登记一次
 - **KSU-Next kernel_umount**：登记前尝试 `ksud feature set kernel_umount 1`（特性关闭时即使有路径也不会卸）；按 mountinfo 实况补登记；隐藏页展示特性与 try_umount.txt 路径
+- **hide_allow 当场登记**：开启隐藏协助或 `hide_reregister` 立即写 try_umount / 调 ksud，验证卸载只需强停 App，不必为此反复重启
 
 ## v4.0.0
 

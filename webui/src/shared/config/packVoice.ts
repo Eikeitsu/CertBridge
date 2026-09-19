@@ -128,8 +128,8 @@ const SHARED_HIDE: PackVoice["hide"] = {
   allowTitle: "启用挂载隐藏协助",
   allowOn: "注入 / 热挂载成功后登记 umount 路径（SuSFS / ksud / NoHello）",
   allowOff: "关闭时不写隐藏状态、不注册 umount",
-  toastOn: "已开启隐藏协助（下次注入 / 热挂载时登记）",
-  toastOff: "已关闭隐藏协助（重启后清除内核登记）",
+  toastOn: "已开启并尝试当场登记（看实况 try_umount）",
+  toastOff: "已关闭隐藏协助（内核登记通常需重启才清）",
   confirmOffTitle: "关闭挂载隐藏协助？",
   confirmOffBody:
     "关闭后不再向 SuSFS / ksud / NoHello 注册 umount。已登记项需重启后才会从内核侧清除；NoHello 托管规则会立即移除。",

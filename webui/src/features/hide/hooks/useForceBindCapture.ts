@@ -29,9 +29,10 @@ export function useForceBindCapture() {
 
   const handleChange = useCallback(
     (checked: boolean) => {
-      const apply = () =>
-        runExclusive(async () => {
-          dispatch(patchStatus({ force_bind_capture: checked ? FLAG_ON : FLAG_OFF }));
+      const apply = () => {
+        dispatch(patchStatus({ force_bind_capture: checked ? FLAG_ON : FLAG_OFF }));
+        toast(checked ? h.forceBindToastOn : h.forceBindToastOff, "ok");
+        void runExclusive(async () => {
           const result = await setForceBindCapture(checked ? FLAG_ON : FLAG_OFF);
           if (isCliFailure(result)) {
             toast(errorFromResult(result.stdout, result.stderr), "bad");
@@ -40,8 +41,8 @@ export function useForceBindCapture() {
           }
           const kv = parseKv(result.stdout || "");
           dispatch(mergeStatus(kv));
-          toast(checked ? h.forceBindToastOn : h.forceBindToastOff, "ok");
         });
+      };
 
       if (checked) {
         confirmAction({
@@ -54,7 +55,7 @@ export function useForceBindCapture() {
         return;
       }
 
-      void apply();
+      apply();
     },
     [dispatch, runExclusive, h],
   );

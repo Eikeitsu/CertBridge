@@ -78,6 +78,8 @@ export type ModuleStatus = {
   hide_susfs?: string;
   hide_ksud_umount?: string;
   hide_nohello?: string;
+  hide_kernel_umount_feature?: string;
+  hide_try_umount_paths?: string;
   hide_summary?: string;
   version?: string;
   hot_active?: string;

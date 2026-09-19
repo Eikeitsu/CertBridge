@@ -18,6 +18,8 @@ import { FLAG_OFF, FLAG_ON } from "@/shared/config/constants";
 import { useAsyncLock } from "@/shared/hooks/useAsyncLock";
 
 const SILENT_REFRESH = { syncApps: false } as const;
+/** 后台登记完成后刷新实况，不挡开关 */
+const DEFERRED_REFRESH_MS = 2500;
 
 export function useHideAllow() {
   const dispatch = useAppDispatch();
@@ -30,9 +32,11 @@ export function useHideAllow() {
 
   const handleChange = useCallback(
     (checked: boolean) => {
-      const apply = () =>
-        runExclusive(async () => {
-          dispatch(patchStatus({ hide_allow: checked ? FLAG_ON : FLAG_OFF }));
+      const apply = () => {
+        // 先翻开关再跑 CLI，避免等 shell 才有反馈
+        dispatch(patchStatus({ hide_allow: checked ? FLAG_ON : FLAG_OFF }));
+        toast(checked ? h.toastOn : h.toastOff, "ok");
+        void runExclusive(async () => {
           const result = await setHideAllow(checked ? FLAG_ON : FLAG_OFF);
           if (isCliFailure(result)) {
             toast(errorFromResult(result.stdout, result.stderr), "bad");
@@ -41,8 +45,13 @@ export function useHideAllow() {
           }
           const kv = parseKv(result.stdout || "");
           dispatch(mergeStatus(kv));
-          toast(checked ? h.toastOn : h.toastOff, "ok");
+          if (checked) {
+            window.setTimeout(() => {
+              void dispatch(refreshStatus(SILENT_REFRESH));
+            }, DEFERRED_REFRESH_MS);
+          }
         });
+      };
 
       if (!checked) {
         confirmAction({
@@ -55,7 +64,7 @@ export function useHideAllow() {
         return;
       }
 
-      void apply();
+      apply();
     },
     [dispatch, runExclusive, h],
   );

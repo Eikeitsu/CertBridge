@@ -26,6 +26,7 @@ export function HideStatusCard({
   const hideSusfs = isFlagOn(status.hide_susfs);
   const hideKsud = isFlagOn(status.hide_ksud_umount);
   const hideNohello = isFlagOn(status.hide_nohello);
+  const hideKuFeat = isFlagOn(status.hide_kernel_umount_feature);
   const znSupported = isFlagOn(status.zn_hide_supported);
   const znAllow = isFlagOn(status.zn_hide_allow);
   const forceBind = isFlagOn(status.force_bind_capture);
@@ -47,8 +48,19 @@ export function HideStatusCard({
     { k: "助手", v: provider },
     { k: "SuSFS", v: hideSusfs ? "TRY_UMOUNT 可用" : "未检测到" },
     { k: "NoHello", v: hideNohello ? "已安装" : "未检测到" },
+    {
+      k: "kernel_umount",
+      v: hideKuFeat
+        ? "已开启"
+        : hideKsud || status.root?.includes("Kernel")
+          ? "未开启/未知"
+          : "—",
+    },
     { k: "try_umount", v: tryUmountLabel },
   ];
+  if (status.hide_try_umount_paths) {
+    rows.push({ k: "登记路径", v: status.hide_try_umount_paths });
+  }
   if (znSupported) {
     rows.push({ k: "Zygisk过滤", v: znAllow ? "已开启" : "已关闭" });
     rows.push({
@@ -122,6 +134,14 @@ export function HideStatusCard({
           }
         />
         <Row
+          title="KSU kernel_umount 特性"
+          extra={
+            <Tag tone={hideKuFeat ? "ok" : "warn"}>
+              {hideKuFeat ? "已开启" : "未开启（登记了也可能不卸）"}
+            </Tag>
+          }
+        />
+        <Row
           title="本模块 try_umount"
           extra={
             <Tag tone={hideApplied ? "ok" : canRegister ? "warn" : "default"}>
@@ -129,6 +149,9 @@ export function HideStatusCard({
             </Tag>
           }
         />
+        {status.hide_try_umount_paths ? (
+          <Row title="try_umount.txt 路径" extra={status.hide_try_umount_paths} />
+        ) : null}
         {znSupported ? (
           <Row
             title="Zygisk 挂载过滤"

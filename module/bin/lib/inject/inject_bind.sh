@@ -89,6 +89,49 @@ is_force_bind_capture() {
   [ "$(read_conf force_bind_capture 0)" = "1" ]
 }
 
+# 对已注入的 cacerts，把当前运行中的抓包 App 补绑一遍（不重建 stage，供开关即时生效）
+# 前提：init/当前 ns 上目标已有本模块 runtime bind；否则跳过并打日志
+force_bind_capture_now() {
+  command -v nsenter >/dev/null 2>&1 || {
+    log_warn "force_bind: nsenter unavailable"
+    return 1
+  }
+  generation_valid 2>/dev/null || {
+    log_warn "force_bind: generation invalid, skip live bind"
+    return 1
+  }
+  ok=0
+  for target in $(list_target_stores 2>/dev/null); do
+    [ -d "$target" ] || continue
+    if ! is_certbridge_runtime_bind "$target" "/proc/1/mountinfo" 2>/dev/null && \
+        ! is_certbridge_runtime_bind "$target" 2>/dev/null; then
+      log_debug "force_bind: skip $target (not injected)"
+      continue
+    fi
+    for pkg in $(capture_force_bind_packages); do
+      for pid in $(pidof "$pkg" 2>/dev/null); do
+        [ -n "$pid" ] || continue
+        [ -d "/proc/$pid/ns" ] || continue
+        src=
+        if nsenter --mount=/proc/"$pid"/ns/mnt -- test -d "/proc/1/root$target" 2>/dev/null; then
+          src="/proc/1/root$target"
+        fi
+        [ -n "$src" ] || {
+          log_debug "force_bind: $pkg pid=$pid cannot see init:$target"
+          continue
+        }
+        if nsenter --mount=/proc/"$pid"/ns/mnt -- mount --bind "$src" "$target" 2>/dev/null; then
+          log_info "force_bind: $pkg pid=$pid → $target"
+          ok=1
+        else
+          log_warn "force_bind: $pkg pid=$pid bind failed"
+        fi
+      done
+    done
+  done
+  [ "$ok" = "1" ]
+}
+
 # 只收集应用侧命名空间，不再遍历全部 /proc（会在部分机型上卡住，导致状态永久「注入中」）
 # 不含 init/zygote：由 boot 注入；service 晚注入不再二次收集 zygote
 # force_bind_capture=1 时并入抓包 App（旧行为）

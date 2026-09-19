@@ -96,7 +96,8 @@ compose_hide_summary() {
   summary="${mount_label} · 临时层 ${tmpfs_label}"
   if [ "$applied" = "1" ]; then
     summary="${summary} · 已注册 SuSFS/内核/NoHello umount"
-  elif hide_susfs_available || hide_ksud_kernel_umount_available || hide_nohello_available; then
+  elif hide_susfs_available || hide_ksud_kernel_umount_available || hide_nohello_available || \
+      hide_susfs4ksu_module_present || hide_susfs_bin_present; then
     summary="${summary} · 未登记（需重新注入或热挂载）"
   else
     summary="${summary} · 无法登记（无 SuSFS/ksud/NoHello）"
@@ -126,6 +127,22 @@ emit_hide_status() {
     else
       echo "hide_nohello=0"
     fi
+    # kernel_umount 特性（KSU-Next：关着则登记了也不会卸）
+    hide_ku=0
+    if [ -x /data/adb/ksu/bin/ksud ]; then
+      if /data/adb/ksu/bin/ksud feature get kernel_umount 2>/dev/null | grep -qE 'value[=:][[:space:]]*1|enabled|true'; then
+        hide_ku=1
+      elif /data/adb/ksu/bin/ksud feature get 1 2>/dev/null | grep -qE 'value[=:][[:space:]]*1|enabled|true'; then
+        hide_ku=1
+      fi
+    fi
+    echo "hide_kernel_umount_feature=$hide_ku"
+    # try_umount.txt 中本模块相关路径（便于对照）
+    hide_paths=
+    if [ -f "$SUSFS_TRY_UMOUNT_FILE" ]; then
+      hide_paths=$(grep -E '/cacerts$' "$SUSFS_TRY_UMOUNT_FILE" 2>/dev/null | tr '\n' ',' | sed 's/,$//')
+    fi
+    echo "hide_try_umount_paths=${hide_paths:-}"
     provider=$(detect_hide_provider)
     echo "hide_provider=$provider"
     echo "hide_provider_label=$(hide_provider_label "$provider")"
@@ -139,6 +156,8 @@ emit_hide_status() {
     echo "hide_susfs=0"
     echo "hide_ksud_umount=0"
     echo "hide_nohello=0"
+    echo "hide_kernel_umount_feature=0"
+    echo "hide_try_umount_paths="
     echo "hide_provider=none"
     echo "hide_provider_label=已关闭（开关未开）"
     echo "hide_applied=0"

@@ -100,22 +100,38 @@ cmd_set_hide_allow() {
   esac
   [ -f "$LIBDIR/hide_assist.sh" ] || { echo "error=hide_feature_not_installed"; return 1; }
   write_conf hide_allow "$val" || { echo "error=write_failed"; return 1; }
-  # 开关变更后清探测缓存，开启时再按需拉起 ksud / susfs
   hide_probe_cache_clear 2>/dev/null || true
   if [ "$val" = "0" ]; then
     hide_clear_applied 2>/dev/null || rm -f "$STATEDIR/hide-assist.conf" 2>/dev/null
     log_info "config: hide_allow=0 (cleared hide state; reboot clears kernel try_umount)"
-  else
-    log_info "config: hide_allow=1 (will register on next inject / hot mount)"
-    if ! hide_susfs_available 2>/dev/null && \
-        ! hide_ksud_kernel_umount_available 2>/dev/null && \
-        ! hide_nohello_available 2>/dev/null; then
-      log_warn "config: hide_allow=1 but SuSFS/ksud/NoHello not detected"
-    fi
+    echo "ok=1"
+    echo "hide_allow=0"
+    echo "hide_applied=0"
+    echo "hint=已关闭；NoHello 规则已移除，内核 try_umount 通常需重启才清"
+    return 0
   fi
+
+  log_info "config: hide_allow=1 (queue background register)"
+  # 立刻返回，避免 WebUI 开关卡住；登记放后台
+  (
+    hide_assist_after_inject 2>/dev/null || true
+  ) >>"$LOG_FILE" 2>&1 &
   echo "ok=1"
-  echo "hide_allow=$val"
-  echo "hint=开启后需重新注入或热挂载才会登记（SuSFS/ksud/NoHello）；关闭后需重启以清除内核侧登记"
+  echo "hide_allow=1"
+  echo "hide_applied=0"
+  echo "hint=已开启，后台登记中；稍后刷新实况。验证卸载请强停 App，无需重启"
+}
+
+# 仅重跑 try_umount / NoHello 登记（不重绑证书）；后台执行以免卡住
+cmd_hide_reregister() {
+  [ -f "$LIBDIR/hide_assist.sh" ] || { echo "error=hide_feature_not_installed"; return 1; }
+  hide_assist_enabled || { echo "error=hide_allow_off"; echo "hint=请先开启 hide_allow"; return 1; }
+  hide_probe_cache_clear 2>/dev/null || true
+  (
+    hide_assist_after_inject 2>/dev/null || true
+  ) >>"$LOG_FILE" 2>&1 &
+  echo "ok=1"
+  echo "hint=已在后台重新登记；数秒后刷新隐藏实况"
 }
 
 cmd_set_zn_hide_allow() {
@@ -129,7 +145,7 @@ cmd_set_zn_hide_allow() {
   log_info "config: zn_hide_allow=$val (Zygisk mount filter; reboot apps / device to apply)"
   echo "ok=1"
   echo "zn_hide_allow=$val"
-  echo "hint=开关变更后需重启相关 App 或整机后 Zygisk 挂钩才会按新配置生效"
+  echo "hint=已保存；强停相关 App 后生效（不必整机重启）"
 }
 
 cmd_set_force_bind_capture() {
@@ -143,9 +159,15 @@ cmd_set_force_bind_capture() {
   echo "ok=1"
   echo "force_bind_capture=$val"
   if [ "$val" = "1" ]; then
-    echo "hint=下次命名空间注入时会强注 Reqable/ProxyPin；可盖掉「卸载模块」。建议仅抓包调试时开启，改后重启或等下次注入生效"
+    # 后台补绑正在运行的抓包 App（不重建 stage，不阻塞 WebUI）
+    (
+      # shellcheck disable=SC1090
+      . "$LIBDIR/inject/inject_bind.sh"
+      force_bind_capture_now 2>/dev/null || true
+    ) >>"$LOG_FILE" 2>&1 &
+    echo "hint=已开启；若抓包 App 在运行将后台补绑，否则打开即可。可能盖掉「卸载模块」"
   else
-    echo "hint=已恢复默认：尊重卸载模块，不再强注抓包 App"
+    echo "hint=已关闭；请强停抓包 App 再开，以去掉已绑挂载（不必整机重启）"
   fi
 }
 

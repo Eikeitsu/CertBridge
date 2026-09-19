@@ -79,8 +79,11 @@ inject_one_target() {
     orphan_tmpfs_stage "$stage"
     log_debug "inject: orphaned stage $stage"
   fi
-  # 仅对本目标成功 bind 后登记，避免失败路径误标 hide_applied
-  [ "$rc" = "0" ] && hide_assist_for_target "$target"
+  # 登记 try_umount：成功 bind，或目标上已有本模块 runtime bind（service 晚注入
+  # 时 bind_current 失败不应挡住登记，否则 KSU 卸载模块无法卸脚本 bind）
+  if [ "$rc" = "0" ] || is_certbridge_runtime_bind "$target" 2>/dev/null; then
+    hide_assist_for_target "$target"
+  fi
   return "$rc"
 }
 
@@ -103,6 +106,9 @@ inject_boot_namespaces() {
     return 0
   fi
 
+  # 允许 service 阶段重新探测 SuSFS/ksud（post-fs 过早失败不永久缓存）
+  hide_probe_cache_clear 2>/dev/null || true
+
   rc=0
   has_target=0
   for target in $(list_target_stores); do
@@ -119,6 +125,8 @@ inject_boot_namespaces() {
     record_inject_fail no_target
     return 1
   }
+  # 再扫一遍登记，覆盖「单目标 rc 失败但挂载已在」的窗口
+  hide_assist_after_inject
   return "$rc"
 }
 
@@ -132,6 +140,7 @@ inject_app_namespaces() {
   # Android 7–13 + magic：无脚本 bind 目标（boot 路径已登记 try_umount）
   if [ "$(get_api)" -lt 34 ] && is_magic_mount_mode; then
     log_debug "inject: magic mode on API $(get_api), skip namespace bind"
+    hide_assist_after_inject
     return 0
   fi
 
@@ -139,6 +148,8 @@ inject_app_namespaces() {
     record_inject_fail nsenter_unavailable
     return 1
   }
+
+  hide_probe_cache_clear 2>/dev/null || true
 
   rc=0
   has_target=0
@@ -154,6 +165,8 @@ inject_app_namespaces() {
     record_inject_fail no_target
     return 1
   }
+  # service 晚注入时 SusFS/ksud 通常已就绪：强制再登记一次
+  hide_assist_after_inject
   if [ "$rc" != "0" ]; then
     # 若尚未记下更具体原因，记为命名空间部分失败
     [ -f "$INJECT_FAIL_FILE" ] || record_inject_fail namespace_partial

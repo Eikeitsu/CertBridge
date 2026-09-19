@@ -96,7 +96,8 @@ compose_hide_summary() {
   summary="${mount_label} · 临时层 ${tmpfs_label}"
   if [ "$applied" = "1" ]; then
     summary="${summary} · 已注册 SuSFS/内核/NoHello umount"
-  elif hide_susfs_available || hide_ksud_kernel_umount_available || hide_nohello_available; then
+  elif hide_susfs_available || hide_ksud_kernel_umount_available || hide_nohello_available || \
+      hide_susfs4ksu_module_present || hide_susfs_bin_present; then
     summary="${summary} · 未登记（需重新注入或热挂载）"
   else
     summary="${summary} · 无法登记（无 SuSFS/ksud/NoHello）"

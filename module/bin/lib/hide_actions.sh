@@ -158,11 +158,44 @@ hide_ksud_kernel_umount_available() {
 }
 
 # 直接尝试 ksud 登记（探测失败时仍试一次，避免漏登）
+# KernelSU-Next 等需先打开 kernel_umount 特性，否则列表有路径也不会执行 umount
+hide_ensure_ksud_umount_feature() {
+  [ -x /data/adb/ksu/bin/ksud ] || return 1
+  # 已开启则跳过
+  if /data/adb/ksu/bin/ksud feature get kernel_umount 2>/dev/null | grep -qE 'value[=:][[:space:]]*1|enabled|true'; then
+    return 0
+  fi
+  if /data/adb/ksu/bin/ksud feature get 1 2>/dev/null | grep -qE 'value[=:][[:space:]]*1|enabled|true'; then
+    return 0
+  fi
+  /data/adb/ksu/bin/ksud feature set kernel_umount 1 >/dev/null 2>&1 && {
+    log_info "hide: enabled ksud feature kernel_umount"
+    return 0
+  }
+  /data/adb/ksu/bin/ksud feature set 1 1 >/dev/null 2>&1 && {
+    log_info "hide: enabled ksud feature id=1 (kernel_umount)"
+    return 0
+  }
+  return 1
+}
+
 hide_try_ksud_umount_add() {
   target="$1"
   [ -n "$target" ] || return 1
   [ -x /data/adb/ksu/bin/ksud ] || return 1
+  hide_ensure_ksud_umount_feature 2>/dev/null || true
   /data/adb/ksu/bin/ksud kernel umount add "$target" --flags 2 >/dev/null 2>&1
+}
+
+# 从 mountinfo 收集 cacerts 上实际存在的挂载点（比 list_target_stores 更贴近内核所见）
+hide_collect_live_cacert_mounts() {
+  mi="${1:-/proc/1/mountinfo}"
+  [ -f "$mi" ] || return 0
+  awk '
+    $5 ~ /\/cacerts$/ {
+      print $5
+    }
+  ' "$mi" 2>/dev/null | sort -u
 }
 
 # NoHello 已安装且启用（Magisk / APatch：登记 point 规则，由排除列表触发 umount）
@@ -385,12 +418,12 @@ hide_assist_for_target() {
   case "$target" in
     */) target=${target%/} ;;
   esac
-  applied=0
+  live=0
+  file_ok=0
 
   # 1) 先持久化：susfs4ksu post-mount / boot-completed 会读 try_umount.txt
-  #    （SuSFS v2 无内核 TRY_UMOUNT 时走 ksud，也依赖此文件）
   if hide_persist_try_umount "$target"; then
-    applied=1
+    file_ok=1
   fi
 
   # 2) 当场登记：有 ksu_susfs 就试（不因 feature 探测失败而跳过）
@@ -398,34 +431,37 @@ hide_assist_for_target() {
     if "$SUSFS_BIN" add_try_umount "$target" 1 2>/dev/null; then
       log_info "hide: susfs try_umount registered ($target)"
       hide_probe_cache_set susfs 1
-      applied=1
+      live=1
     elif "$SUSFS_BIN" add_try_umount "$target" >/dev/null 2>&1; then
       log_info "hide: susfs try_umount registered legacy ($target)"
       hide_probe_cache_set susfs 1
-      applied=1
+      live=1
     else
-      log_debug "hide: susfs add_try_umount soft-fail ($target); rely on try_umount.txt / ksud"
+      log_warn "hide: susfs add_try_umount failed ($target)"
     fi
   fi
 
-  # 3) ksud kernel umount（SuSFS v2 / 无 TRY_UMOUNT 配置时的主路径）
+  # 3) ksud kernel umount（先确保 feature 开启；SuSFS v2 / KSU-Next 主路径）
   if hide_try_ksud_umount_add "$target"; then
     log_info "hide: ksud kernel umount registered ($target)"
     hide_probe_cache_set ksud 1
-    applied=1
-  elif hide_ksud_kernel_umount_available; then
+    live=1
+  elif [ -x /data/adb/ksu/bin/ksud ]; then
     log_warn "hide: ksud kernel umount add failed ($target)"
   fi
 
   # 4) NoHello point 规则（Magisk / APatch）
   if hide_nohello_available; then
     if hide_nohello_persist "$target"; then
-      applied=1
+      live=1
     fi
   fi
 
-  if [ "$applied" = "1" ]; then
+  # 仅当场登记成功才标 hide_applied；只写文件不够
+  if [ "$live" = "1" ]; then
     hide_record_applied
+  elif [ "$file_ok" = "1" ]; then
+    log_info "hide: path in try_umount.txt only ($target); await susfs4ksu boot-completed"
   elif ! hide_susfs_bin_present && ! hide_susfs4ksu_module_present && \
       ! [ -x /data/adb/ksu/bin/ksud ] && ! hide_nohello_available; then
     log_warn "hide: hide_allow=1 but no SuSFS/ksud/NoHello; Magisk/APatch 请装 NoHello 或 ZygiskNext umount"
@@ -439,9 +475,41 @@ hide_assist_after_inject() {
     hide_clear_applied
     return 0
   }
-  # 注入阶段清失败缓存，允许 service 晚于 post-fs 再探测
   hide_probe_cache_clear 2>/dev/null || true
+  hide_ensure_ksud_umount_feature 2>/dev/null || true
+
+  seen="|"
   for target in $(list_target_stores); do
+    case "$seen" in *"|$target|"*) continue ;; esac
+    seen="$seen$target|"
     hide_assist_for_target "$target"
+  done
+
+  # 按 init/zygote mountinfo 实况补登记
+  for mi in /proc/1/mountinfo; do
+    [ -f "$mi" ] || continue
+    for target in $(hide_collect_live_cacert_mounts "$mi"); do
+      if is_certbridge_runtime_bind "$target" "$mi" 2>/dev/null || \
+          is_tmpfs_cacert_overlay "$target" "$mi" 2>/dev/null; then
+        case "$seen" in *"|$target|"*) continue ;; esac
+        seen="$seen$target|"
+        log_info "hide: register live mountinfo path ($target)"
+        hide_assist_for_target "$target"
+      fi
+    done
+  done
+  for process in zygote zygote64; do
+    for pid in $(pidof "$process" 2>/dev/null); do
+      [ -f "/proc/$pid/mountinfo" ] || continue
+      for target in $(hide_collect_live_cacert_mounts "/proc/$pid/mountinfo"); do
+        if is_certbridge_runtime_bind "$target" "/proc/$pid/mountinfo" 2>/dev/null || \
+            is_tmpfs_cacert_overlay "$target" "/proc/$pid/mountinfo" 2>/dev/null; then
+          case "$seen" in *"|$target|"*) continue ;; esac
+          seen="$seen$target|"
+          log_info "hide: register zygote mountinfo path ($target)"
+          hide_assist_for_target "$target"
+        fi
+      done
+    done
   done
 }

@@ -30,9 +30,10 @@ export function useZnHideAllow() {
 
   const handleChange = useCallback(
     (checked: boolean) => {
-      const apply = () =>
-        runExclusive(async () => {
-          dispatch(patchStatus({ zn_hide_allow: checked ? FLAG_ON : FLAG_OFF }));
+      const apply = () => {
+        dispatch(patchStatus({ zn_hide_allow: checked ? FLAG_ON : FLAG_OFF }));
+        toast(checked ? h.znToastOn : h.znToastOff, "ok");
+        void runExclusive(async () => {
           const result = await setZnHideAllow(checked ? FLAG_ON : FLAG_OFF);
           if (isCliFailure(result)) {
             toast(errorFromResult(result.stdout, result.stderr), "bad");
@@ -41,8 +42,8 @@ export function useZnHideAllow() {
           }
           const kv = parseKv(result.stdout || "");
           dispatch(mergeStatus(kv));
-          toast(checked ? h.znToastOn : h.znToastOff, "ok");
         });
+      };
 
       if (!checked) {
         confirmAction({
@@ -55,7 +56,7 @@ export function useZnHideAllow() {
         return;
       }
 
-      void apply();
+      apply();
     },
     [dispatch, runExclusive, h],
   );

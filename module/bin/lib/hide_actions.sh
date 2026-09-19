@@ -486,8 +486,8 @@ hide_assist_after_inject() {
   done
 
   # 按 init/zygote mountinfo 实况补登记
-  for mi in /proc/1/mountinfo; do
-    [ -f "$mi" ] || continue
+  mi=/proc/1/mountinfo
+  if [ -f "$mi" ]; then
     for target in $(hide_collect_live_cacert_mounts "$mi"); do
       if is_certbridge_runtime_bind "$target" "$mi" 2>/dev/null || \
           is_tmpfs_cacert_overlay "$target" "$mi" 2>/dev/null; then
@@ -497,7 +497,7 @@ hide_assist_after_inject() {
         hide_assist_for_target "$target"
       fi
     done
-  done
+  fi
   for process in zygote zygote64; do
     for pid in $(pidof "$process" 2>/dev/null); do
       [ -f "/proc/$pid/mountinfo" ] || continue

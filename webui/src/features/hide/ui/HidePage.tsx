@@ -45,7 +45,7 @@ export function HidePage() {
       <Card title="抓包与卸载" meta="与隐藏协助独立">
         <HideAllowRow
           checked={force.forceBind}
-          disabled={force.isPending}
+          disabled={false}
           onChange={force.handleChange}
           title={h.forceBindTitle}
           descOn={h.forceBindOn}
@@ -56,7 +56,7 @@ export function HidePage() {
         <Card title={h.switchTitle} meta={h.switchMeta}>
           <HideAllowRow
             checked={hide.hideAllow}
-            disabled={hide.isPending}
+            disabled={false}
             onChange={hide.handleChange}
             title={h.allowTitle}
             descOn={h.allowOn}
@@ -68,7 +68,7 @@ export function HidePage() {
         <Card title={h.znSwitchTitle} meta={h.znSwitchMeta}>
           <HideAllowRow
             checked={zn.znHideAllow}
-            disabled={zn.isPending}
+            disabled={false}
             onChange={zn.handleChange}
             title={h.znAllowTitle}
             descOn={h.znAllowOn}

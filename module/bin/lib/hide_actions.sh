@@ -518,7 +518,12 @@ hide_assist_for_target() {
 # 注入完成后对所有目标路径注册隐藏协助
 hide_assist_after_inject() {
   hide_assist_enabled || {
-    hide_clear_applied
+    # 仅当本模块曾写过隐藏状态 / 托管规则时才清理，避免「装了但关着」每次开机无谓调 ksud
+    if hide_read_applied 2>/dev/null || \
+        { [ -f "$NOHELLO_UMOUNT_FILE" ] && grep -qF "$NOHELLO_BEGIN_MARK" "$NOHELLO_UMOUNT_FILE" 2>/dev/null; } || \
+        { [ -f "$SUSFS_TRY_UMOUNT_FILE" ] && grep -qE '/cacerts$' "$SUSFS_TRY_UMOUNT_FILE" 2>/dev/null; }; then
+      hide_clear_applied
+    fi
     return 0
   }
   hide_probe_cache_clear 2>/dev/null || true

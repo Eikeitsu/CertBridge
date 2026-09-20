@@ -18,11 +18,14 @@ get_target_store() {
 MODULE_SYSTEM_CACERTS="$MODDIR/system/etc/security/cacerts"
 
 # 每个信任库目标对应的 runtime tmpfs 目录（注入与状态校验共用）
+# 所有 conscrypt APEX 路径共用一层，避免多目标重复整库拷贝
 target_stage_dir() {
   target="$1"
   case "$target" in
-    "$APEX_CACERTS") echo "$RUNTIME_MOUNT_ROOT/apex" ;;
     "$SYSTEM_CACERTS") echo "$RUNTIME_MOUNT_ROOT/system" ;;
+    "$APEX_CACERTS"|/apex/com.android.conscrypt/cacerts|/apex/com.android.conscrypt@*/cacerts)
+      echo "$RUNTIME_MOUNT_ROOT/apex"
+      ;;
     *)
       name=$(echo "$target" | tr '/@' '__' | sed 's/__*/_/g')
       echo "$RUNTIME_MOUNT_ROOT/$name"
@@ -136,7 +139,7 @@ detach_runtime_cacert_binds() {
       esac
     fi
     tries=0
-    while [ "$tries" -lt 6 ] && is_certbridge_runtime_bind "$target"; do
+    while [ "$tries" -lt 3 ] && is_certbridge_runtime_bind "$target"; do
       umount "$target" 2>/dev/null || umount -l "$target" 2>/dev/null || break
       detached=$((detached + 1))
       tries=$((tries + 1))
@@ -144,7 +147,7 @@ detach_runtime_cacert_binds() {
     if command -v nsenter >/dev/null 2>&1 && [ -d /proc/1/ns/mnt ]; then
       tries=0
       mi_tmp="$STATEDIR/.detach-mi.$$"
-      while [ "$tries" -lt 6 ]; do
+      while [ "$tries" -lt 3 ]; do
         nsenter --mount=/proc/1/ns/mnt -- cat /proc/self/mountinfo >"$mi_tmp" 2>/dev/null || break
         is_certbridge_runtime_bind "$target" "$mi_tmp" || break
         nsenter --mount=/proc/1/ns/mnt -- umount "$target" 2>/dev/null || \
@@ -156,7 +159,7 @@ detach_runtime_cacert_binds() {
     fi
   done
 
-  # 清理仍挂着的 staging（含历史路径）
+  # 清理仍挂着的 staging：优先当前风格根，再扫历史路径（目录不存在则跳过）
   for root in \
     "$RUNTIME_MOUNT_ROOT" \
     /dev/.fs0 /dev/.fs1 /dev/.cb0 /dev/.cb1 \
@@ -209,6 +212,22 @@ list_target_stores() {
       echo "$SYSTEM_CACERTS"
       ;;
     esac
+  fi
+}
+
+# boot_multi_apex=0（默认）：14+ 仅主 APEX（跳过 @版本与 system）；7–13 仍绑 system
+# boot_multi_apex=1：与 list_target_stores 相同，完整尊重双模式 / experimental_14_system
+list_boot_inject_targets() {
+  if [ "$(read_conf boot_multi_apex 0)" = "1" ]; then
+    list_target_stores
+    return 0
+  fi
+  if [ "$(get_api)" -ge 34 ]; then
+    [ -d "$APEX_CACERTS" ] && echo "$APEX_CACERTS"
+    return 0
+  fi
+  if binds_system_cacerts && [ -d "$SYSTEM_CACERTS" ]; then
+    echo "$SYSTEM_CACERTS"
   fi
 }
 

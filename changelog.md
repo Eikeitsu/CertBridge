@@ -2,10 +2,14 @@
 
 ## Unreleased
 
-- **晚注入开关**：`late_inject`（默认关）。关时 `service.sh` 只收尾写状态，不再 `namespaces` 注入（仅 boot 注入、痕迹更少，减轻 Found KSU 类误伤）；开时 boot_completed 后再补应用命名空间，开启瞬间也会后台补一次。WebUI「隐藏」页可调；升级保留原值，缺省按 0
-- **CLI 友好化**：`cb help` / `-h` 分组说明；常用缩写（如 `st`/`li`/`hm`）；统一 `get`/`set <key>`；未知命令返回 `error=unknown_command` 并提示接近名称
-- **外部目录收敛**：无人值守标记与热更新副本/worker 统一到 `/data/adb/certbridge/`，用完删空目录；卸载清理该目录及历史 `.certbridge_*` 残留
-- **进一步减少开机痕迹**：`late_inject=0` 时 boot 绑定跳过整库 cksum、orphan 拆临时层不再进 zygote、service/heal 状态只核 init（不 nsenter zygote）；boot zygote PID 去重。难机可开 `late_inject=1` 恢复完整复核；调试可设 `CERTBRIDGE_VERIFY_ZYGOTE=1`
+- **冷门实验默认痕迹最少**：`boot_bind_zygote` / `boot_multi_apex` / `service_probe` 默认均为 `0`；证书异常时再在「冷门实验」打开兼容项。升级若已有旧值会保留
+- **冷门实验语义补齐**：`boot_multi_apex=0` 在 14+ 仅主 APEX（跳过 `@版本` 与 system）；`late_inject=0` 时 service 自动不退避、不 heal。打开 `boot_multi_apex=1` 仍完整走双模式目标列表
+- **开机加速**：APEX/`@版本` 共用同一 tmpfs 层；`generation_source_busy` 不扫全机 `/proc`；无热会话跳过 hot unmount；detach 重试收敛
+- **冷门实验子页**：强注 / 晚注入 / 上述三项收入「隐藏 → 冷门实验」
+- **晚注入开关**：`late_inject`（默认关）
+- **CLI 友好化**：`cb help` / 缩写 / 统一 `get`/`set`
+- **外部目录收敛**：热更新等到 `/data/adb/certbridge/`
+- **进一步减少开机痕迹**：`late_inject=0` 时跳过整库 cksum、orphan 不进 zygote、状态默认只核 init
 
 ## v4.1.2
 

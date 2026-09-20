@@ -56,6 +56,9 @@ export type ModuleStatus = {
   hide_allow?: string;
   force_bind_capture?: string;
   late_inject?: string;
+  boot_bind_zygote?: string;
+  boot_multi_apex?: string;
+  service_probe?: string;
   zn_hide_supported?: string;
   zn_hide_allow?: string;
   zn_hide_zn_module?: string;

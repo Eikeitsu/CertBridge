@@ -156,6 +156,18 @@ export async function setLateInject(value: FlagValue) {
   return cli(`set_late_inject ${value}`);
 }
 
+export async function setBootBindZygote(value: FlagValue) {
+  return cli(`set_boot_bind_zygote ${value}`);
+}
+
+export async function setBootMultiApex(value: FlagValue) {
+  return cli(`set_boot_multi_apex ${value}`);
+}
+
+export async function setServiceProbe(value: FlagValue) {
+  return cli(`set_service_probe ${value}`);
+}
+
 function textToBase64(text: string): string {
   const bytes = new TextEncoder().encode(text);
   let binary = "";

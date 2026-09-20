@@ -8,8 +8,9 @@ export const HIDE_GUIDE_SECTIONS = [
       "被抓包的目标 App：也不要对其开启卸载模块 / umount 类隐藏。否则 TLS 看不到系统信任库里的抓包 CA，表现为断网、证书错误。",
       "应对「检测 Root / 检测 mount」的其它 App，才在管理器里单独开卸载模块或排除列表；与抓包链路相关的包名一律排除在隐藏名单之外。",
       "本模块的 hide_allow 会全局登记 cacerts 路径（SuSFS / ksud / NoHello）；最终是否对某进程卸挂载，仍取决于你是否对该进程启用了卸载模块 / 排除列表。抓包时请先确认 Reqable 与目标 App 均未启用。",
-      "若必须对抓包 App 开着「卸载模块」又要看到证书：可开「强注抓包 App」（force_bind_capture，旧行为）。注入时会再次 bind Reqable/ProxyPin，可能盖掉已卸挂载并削弱隐藏，仅建议调试时短期开启。",
-      "默认仅 boot 注入证书；若难机部分 App 仍读不到 CA，可开「开机后晚注入」（late_inject）。开后 service 会再跑应用命名空间注入，痕迹更多，部分环境可能加重 Found KSU 类提示。",
+      "若必须对抓包 App 开着「卸载模块」又要看到证书：可在「隐藏 → 冷门实验」开启「强注抓包 App」（force_bind_capture）。注入时会再次 bind Reqable/ProxyPin，可能盖掉已卸挂载并削弱隐藏，仅建议调试时短期开启。",
+      "默认仅 boot 注入证书；若难机部分 App 仍读不到 CA，可在冷门实验开「开机后晚注入」（late_inject）。开后 service 会再跑应用命名空间注入，痕迹更多，部分环境可能加重 Found KSU 类提示。",
+      "仍误报 Found KSU 时，可在冷门实验关闭「开机注入 Zygote」或「注入全部 APEX」；可能牺牲兼容，改后需重启。",
     ],
   },
   {

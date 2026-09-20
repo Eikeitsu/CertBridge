@@ -293,7 +293,12 @@ finalize_runtime_status() {
     # 先标稳定中，避免 Magisk 列表长时间停在旧失败态
     write_runtime_status "$phase" 2 "✨稳定中"
     update_module_description
-    apex_ok=$(verify_store_with_backoff)
+    if service_should_probe; then
+      apex_ok=$(verify_store_with_backoff)
+    else
+      # late_inject=0 或 service_probe=0：单次轻量校验（不退避）
+      apex_ok=$(check_store_injected)
+    fi
   else
     apex_ok=$(check_store_injected)
   fi

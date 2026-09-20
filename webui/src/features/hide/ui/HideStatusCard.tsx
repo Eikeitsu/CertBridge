@@ -31,6 +31,18 @@ export function HideStatusCard({
   const znAllow = isFlagOn(status.zn_hide_allow);
   const forceBind = isFlagOn(status.force_bind_capture);
   const lateInject = isFlagOn(status.late_inject);
+  const bootZygote =
+    status.boot_bind_zygote === undefined || status.boot_bind_zygote === ""
+      ? false
+      : isFlagOn(status.boot_bind_zygote);
+  const multiApex =
+    status.boot_multi_apex === undefined || status.boot_multi_apex === ""
+      ? false
+      : isFlagOn(status.boot_multi_apex);
+  const serviceProbe =
+    status.service_probe === undefined || status.service_probe === ""
+      ? false
+      : isFlagOn(status.service_probe);
   const metaParts = [status.hide_summary, status.zn_hide_summary].filter(Boolean);
   const meta = metaParts.length ? metaParts.join(" · ") : "基于当前设备探测";
   const canRegister = hideSusfs || hideKsud || hideNohello;
@@ -47,6 +59,9 @@ export function HideStatusCard({
     { k: "路径", v: TMPFS_STYLES[tmpfsStyle].label },
     { k: "强注抓包", v: forceBind ? "开启（旧行为）" : "关闭（尊重卸载）" },
     { k: "晚注入", v: lateInject ? "开启（service namespaces）" : "关闭（仅 boot）" },
+    { k: "开机Zygote", v: bootZygote ? "开启" : "关闭（仅 init）" },
+    { k: "boot目标", v: multiApex ? "完整（双模式）" : "精简（14+ 仅主 APEX）" },
+    { k: "晚注入复核", v: serviceProbe ? "开启（需晚注入）" : "关闭" },
     { k: "助手", v: provider },
     { k: "SuSFS", v: hideSusfs ? "TRY_UMOUNT 可用" : "未检测到" },
     { k: "NoHello", v: hideNohello ? "已安装" : "未检测到" },
@@ -114,6 +129,30 @@ export function HideStatusCard({
           extra={
             <Tag tone={lateInject ? "warn" : "ok"}>
               {lateInject ? "开启（service namespaces）" : "关闭（仅 boot）"}
+            </Tag>
+          }
+        />
+        <Row
+          title="开机注入 Zygote"
+          extra={
+            <Tag tone={bootZygote ? "ok" : "warn"}>
+              {bootZygote ? "开启" : "关闭（仅 init）"}
+            </Tag>
+          }
+        />
+        <Row
+          title="完整 boot 目标"
+          extra={
+            <Tag tone={multiApex ? "ok" : "warn"}>
+              {multiApex ? "开启（双模式）" : "精简（14+ 仅主 APEX）"}
+            </Tag>
+          }
+        />
+        <Row
+          title="晚注入状态复核"
+          extra={
+            <Tag tone={serviceProbe ? "ok" : "warn"}>
+              {serviceProbe ? "开启（需晚注入）" : "关闭"}
             </Tag>
           }
         />

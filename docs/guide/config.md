@@ -15,6 +15,9 @@ quiet_prop=1
 hot_allow=1
 force_bind_capture=0
 late_inject=0
+boot_bind_zygote=0
+boot_multi_apex=0
+service_probe=0
 ```
 
 | 键                       | 含义                                                                          | 默认         |
@@ -28,6 +31,9 @@ late_inject=0
 | `quiet_prop`             | `1`=管理器列表中性简介；`0`=动态写入运行状态                                  | `1`          |
 | `force_bind_capture`     | `1`=强注 Reqable/ProxyPin（旧行为）；`0`=尊重卸载模块                         | `0`          |
 | `late_inject`            | `1`=service 晚注入 + 完整 zygote 复核；`0`=仅 boot、痕迹更少（状态只核 init） | `0`          |
+| `boot_bind_zygote`       | `1`=开机 nsenter zygote；`0`=仅 bind init（默认痕迹最少）                     | `0`          |
+| `boot_multi_apex`        | `1`=完整双模式目标；`0`=14+ 仅主 APEX（默认痕迹最少）                         | `0`          |
+| `service_probe`          | 仅 `late_inject=1`：`1`=退避+heal；`0`=单次写状态（默认）                     | `0`          |
 
 ### 挂载模式
 

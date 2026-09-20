@@ -48,8 +48,16 @@ ensure_stage_tmpfs() {
 }
 
 # 将 GEN_CERTS 刷入 stage；失败时打印首个问题文件名
+# 多目标共用同一 stage 时，内容已就绪则跳过整库再拷（开机加速）
 fill_stage_from_generation() {
   stage="$1"
+  expected=$(count_certs "$GEN_CERTS")
+  if [ "$expected" -gt 0 ] && \
+      [ "$(count_certs "$stage")" -eq "$expected" ] && \
+      verify_direct_addons "$stage" 2>/dev/null; then
+    log_debug "inject: reuse stage $stage (already matches generation)"
+    return 0
+  fi
   fail_name=""
   rm -f "$stage"/* 2>/dev/null
   for cert in "$GEN_CERTS"/*.*; do
@@ -63,7 +71,7 @@ fill_stage_from_generation() {
       return 1
     fi
   done
-  [ "$(count_certs "$stage")" -eq "$(count_certs "$GEN_CERTS")" ] || {
+  [ "$(count_certs "$stage")" -eq "$expected" ] || {
     log_error "inject: tmpfs cert count mismatch for stage=$stage${fail_name:+ (last=$fail_name)}"
     record_inject_fail stage_copy_failed "数量不一致${fail_name:+:$fail_name}"
     return 1

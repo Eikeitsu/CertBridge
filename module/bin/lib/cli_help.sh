@@ -21,6 +21,9 @@ cli_normalize_cmd() {
     set_zn_hide_allow|zn) echo set_zn_hide_allow ;;
     set_force_bind_capture|fb|force) echo set_force_bind_capture ;;
     set_late_inject|li|late) echo set_late_inject ;;
+    set_boot_bind_zygote|bbz|zygote) echo set_boot_bind_zygote ;;
+    set_boot_multi_apex|bma|apex) echo set_boot_multi_apex ;;
+    set_service_probe|sp|probe) echo set_service_probe ;;
     get_zn_whitelist|gzn) echo get_zn_whitelist ;;
     set_zn_whitelist|szn) echo set_zn_whitelist ;;
     install_custom|ic) echo install_custom ;;
@@ -37,7 +40,7 @@ cli_normalize_cmd() {
 }
 
 cli_conf_keys() {
-  echo "reqable proxypin mount_mode experimental_14_system tmpfs_style quiet_prop hot_allow hide_allow zn_hide_allow force_bind_capture late_inject"
+  echo "reqable proxypin mount_mode experimental_14_system tmpfs_style quiet_prop hot_allow hide_allow zn_hide_allow force_bind_capture late_inject boot_bind_zygote boot_multi_apex service_probe"
 }
 
 cmd_get_conf() {
@@ -48,7 +51,7 @@ cmd_get_conf() {
     return 1
   }
   case "$key" in
-    reqable|proxypin|mount_mode|experimental_14_system|tmpfs_style|quiet_prop|hot_allow|hide_allow|zn_hide_allow|force_bind_capture|late_inject)
+    reqable|proxypin|mount_mode|experimental_14_system|tmpfs_style|quiet_prop|hot_allow|hide_allow|zn_hide_allow|force_bind_capture|late_inject|boot_bind_zygote|boot_multi_apex|service_probe)
       ;;
     schema_version)
       echo "schema_version=$(read_conf schema_version 4)"
@@ -97,6 +100,9 @@ cmd_set_conf() {
     zn_hide_allow|zn) cmd_set_zn_hide_allow "$val" ;;
     force_bind_capture|fb|force) cmd_set_force_bind_capture "$val" ;;
     late_inject|li|late) cmd_set_late_inject "$val" ;;
+    boot_bind_zygote|bbz|zygote) cmd_set_boot_bind_zygote "$val" ;;
+    boot_multi_apex|bma|apex) cmd_set_boot_multi_apex "$val" ;;
+    service_probe|sp|probe) cmd_set_service_probe "$val" ;;
     reqable|proxypin) cmd_toggle "$key" "$val" ;;
     *)
       echo "error=invalid_key"
@@ -142,6 +148,9 @@ CertBridge CLI (cb / cert_manager.sh)
   set_zn_hide_allow|zn …
   set_force_bind_capture|fb|force …
   set_late_inject|li|late …
+  set_boot_bind_zygote|bbz …
+  set_boot_multi_apex|bma …
+  set_service_probe|sp …
   hide_reregister|hr       立刻重登记 try_umount
   get_zn_whitelist|gzn
   set_zn_whitelist|szn <b64>
@@ -170,11 +179,15 @@ cb set <key> <value>
   zn_hide_allow              0 | 1
   force_bind_capture         0 | 1
   late_inject                0 | 1
+  boot_bind_zygote           0 | 1（默认 0=开机不进 zygote）
+  boot_multi_apex            0 | 1（默认 0=14+ 仅主 APEX；1=完整双模式目标）
+  service_probe              0 | 1（默认 0；仅 late_inject=1 时做退避/heal）
   reqable / proxypin         0 | 1（同 toggle）
 
 例:
+  cb set boot_bind_zygote 1
+  cb set boot_multi_apex 1
   cb set late_inject 1
-  cb li 1
   cb set_mount_mode magic
 EOF
       ;;
@@ -212,8 +225,11 @@ cb get_zn_whitelist|gzn
 cb set_zn_whitelist|szn <base64>
 cb set_force_bind_capture|fb <0|1>
 cb set_late_inject|li <0|1>
+cb set_boot_bind_zygote|bbz <0|1>
+cb set_boot_multi_apex|bma <0|1>
+cb set_service_probe|sp <0|1>
 
-hide / zn 需对应组件已安装；详见文档「挂载隐藏」。
+hide / zn 需对应组件已安装；冷门实验项见 WebUI「隐藏 → 冷门实验」。
 EOF
       ;;
     aliases|alias|short)
@@ -223,6 +239,7 @@ EOF
   t→toggle  sa→sync_apps  g→get  mm→set_mount_mode  e14→…
   tf→tmpfs  qp→quiet_prop  ha→hot_allow  hide→hide_allow
   zn→zn_hide_allow  fb/force→force_bind  li/late→late_inject
+  bbz→boot_bind_zygote  bma→boot_multi_apex  sp→service_probe
   hm/hu→hot_mount/unmount  hr→hide_reregister
   ic/ip/rm→install/import/remove  info→cert_info
 EOF
@@ -250,7 +267,8 @@ cli_unknown() {
     help status verify get set list_custom list_applied_fps toggle sync_apps \
     set_mount_mode set_experimental_14_system set_tmpfs_style set_quiet_prop \
     set_hot_allow set_hide_allow hide_reregister set_zn_hide_allow \
-    set_force_bind_capture set_late_inject get_zn_whitelist set_zn_whitelist \
+    set_force_bind_capture set_late_inject set_boot_bind_zygote set_boot_multi_apex \
+    set_service_probe get_zn_whitelist set_zn_whitelist \
     install_custom import_app_preset remove_custom cert_info hot_mount hot_unmount
   do
     case "$c" in

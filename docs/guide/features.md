@@ -1,61 +1,102 @@
 # 功能介绍
 
-## 做什么
+**证书桥**（仓库 CertBridge，模块 id `CertBridge`）运行在 Magisk / KernelSU / APatch 上：真正干活的是开机脚本与可选组件；WebUI / CLI 只是配置与观察入口。
 
-证书桥（CertBridge）把抓包 CA **合并进** Android **系统信任库**。每次开机都会：
+**下载**：[GitHub Releases](https://github.com/Eikeitsu/CertBridge/releases)（`CertBridge_v*.zip` / `*_lite.zip`）→ [安装说明](/guide/install)
 
-1. 从未被本模块挂载的实时 system / Conscrypt APEX 信任库读取完整 `hash.N` 证书集
-2. 加入本模块启用的 Reqable / ProxyPin / 自定义等附加证书
-3. 校验通过后，把**整份**证书集 bind 到信任库路径
+## 产品组成
 
-模块**不保存**系统 CA 基线，也**不修改**系统分区文件。
+| 组件                 | 说明                                                                 |
+| -------------------- | -------------------------------------------------------------------- |
+| Magisk 模块          | `post-fs-data` / `service`：合并 CA、bind 信任库、可选晚注入         |
+| WebUI（可选）        | 管理器内：首页 / 证书 / 日志 / 隐藏 / 更多                           |
+| 免重启热挂载（可选） | 用户凭据区或存储卡证书临时注入；重启后消失                           |
+| 挂载隐藏协助（可选） | SuSFS / `ksud` / NoHello 登记 try_umount；默认安装会装、开关默认关   |
+| Zygisk 过滤（可选）  | 进程内过滤 mountinfo / maps 中本模块行；**默认安装不安**，自定义可选 |
+| CLI                  | 模块内 `bin/cb` → `cert_manager.sh`（`help` / `status` / `set` …）   |
 
-## WebUI 预览
+## 核心：系统 CA 注入
 
-|                   概览                   |                 证书                  |
-| :--------------------------------------: | :-----------------------------------: |
-| ![概览](/screenshots/webui-overview.png) | ![证书](/screenshots/webui-certs.png) |
+每次开机大致流程：
 
-|                日志                 |                 更多                 |
-| :---------------------------------: | :----------------------------------: |
-| ![日志](/screenshots/webui-log.png) | ![更多](/screenshots/webui-more.png) |
+1. 从未被本模块挂载的实时 system / Conscrypt APEX 信任库读取完整 `hash.N` 集合
+2. 加入已启用的 Reqable / ProxyPin / 自定义等 addon
+3. 校验通过后，把**整份**证书集 bind 到信任库路径（完整兼容模式）
 
-## 主要能力
+模块**不保存**系统 CA 基线，也**不修改**系统分区文件。实时源过少、复制不完整或 addon 校验失败时**放弃本次注入**，系统原库不变。
 
-默认安装会检测已安装抓包 App 并导入 CA，同时安装 WebUI 与热挂载；自定义安装可逐项选择 Reqable、ProxyPin、WebUI 或免重启热挂载。若检测到 **HttpCanary** 或 **ADGuard**，会依次询问是否导入为自定义证书。
+## 证书来源
 
-| 能力                 | 说明                                                                                                                                                                            |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Reqable CA           | 从已安装 Reqable App 读取根证（**不内置**）；开机可再刷新；可开关                                                                                                               |
-| ProxyPin CA          | 优先从已安装 ProxyPin App 导入；未检测到且安装时启用了 ProxyPin 时用模块内置兜底；可开关                                                                                        |
-| HttpCanary / ADGuard | 仅二者在安装时可能询问导入为**自定义**证书；其它工具请手动上传                                                                                                                  |
-| 自定义证书           | 上传 PEM / DER；校验 CA、有效期、hash；显示名取自 CN / O；可点开详情                                                                                                            |
-| 开机完整合并         | 每次重启重新生成「完整系统库 + addon」，不依赖持久化基线（完整兼容模式）                                                                                                        |
-| 挂载模式             | **完整兼容**（默认，运行时 bind，无需挂载元模块）或 **轻量 Magic**（仅叠 addon；Magisk 一般自带，KernelSU 需确认叠层）；见 [配置说明](/guide/config#挂载模式)                   |
-| 分版本注入           | Android 7–13 挂载 system；Android 14+ 同时绑定 APEX 与 system 临时层（完整兼容）；轻量模式下 APEX 仍由脚本注入                                                                  |
-| 关键命名空间         | 默认仅 **boot** 注入；`late_inject=1`（冷门实验）时 `service.sh` 在 `boot_completed` 后再补应用命名空间（**不扫全机、不强注 Reqable/ProxyPin**，除非另开 `force_bind_capture`） |
+| 来源                    | 行为                                                             |
+| ----------------------- | ---------------------------------------------------------------- |
+| Reqable                 | 从已安装 App 读取（**不内置**样例）；可开关；开机 / 刷新可再同步 |
+| ProxyPin                | 优先 App；未检测到且安装时启用了 ProxyPin → 模块内置兜底；可开关 |
+| HttpCanary / ADGuard    | 安装时可能询问导入为**自定义**；刷新时也可探测                   |
+| 自定义                  | WebUI 上传 PEM / DER，或放入 `certs/custom/`；显示名取自证书主题 |
+| 用户区 / 存储卡（临时） | 需热挂载组件；见 [配置说明 · 热挂载](/guide/config#热挂载)       |
 
-| 用户证书热挂载（可选） | 读取用户凭据区 CA，免重启注入系统信任库；见 [配置说明](/guide/config) |
-| 存储卡热挂载（可选） | 扫描指定目录证书并免重启挂载；默认 `/sdcard/CertBridge` |
-| 无痕卸载（可选） | 只撤销本次临时会话，不改永久配置与系统文件 |
-| Action 实用菜单 | 音量上刷新；音量下可挂载/卸载临时 CA（需已安装热挂载） |
-| WebUI（可选） | 概览状态、证书开关与详情、热挂载、日志；更多页可调挂载模式 / 主题 / 莫奈 / 布局 / 紧凑与字号 |
+## 挂载模式
 
-| 双层生效 | 永久配置重启生效；热挂载立即生效，重启后临时层消失 |
-| 完整版 / Lite | 完整版内置 OpenSSL；Lite 用约 8KB `cbx509` dex。详见 [安装与升级](/guide/install) |
+| 模式                      | 说明                                                                |
+| ------------------------- | ------------------------------------------------------------------- |
+| **完整兼容** `compatible` | 默认。运行时整库合并 + bind；**不依赖** Magic Mount 元模块          |
+| **轻量 Magic** `magic`    | 仅叠 addon 到 `system/`；Magisk 一般自带；KernelSU 常需确认叠层正确 |
 
-实时源少于 10 张、复制不完整或附加证书校验失败时，模块会放弃本次注入，系统原始信任库保持不变。绑定成功后的内容检查仅记日志，不会因误判拆掉已挂上的证书层。
+Android 14+：默认 `experimental_14_system=skip`，优先脚本 bind **主 APEX**，跳过 system（痕迹更少）。详情见 [配置说明](/guide/config#挂载模式)。
 
-临时会话使用独立证书目录。**热挂载**会覆盖 PID 1、Zygote 与当前可访问的活动命名空间，并合并当前已启用的永久 addon（避免临时层盖掉 Reqable / ProxyPin）。卸载前核对会话标记与挂载身份；若其它模块叠在 CertBridge 上方，会拒绝强拆并提示重试或重启。
+## 挂载隐藏（摘要）
+
+检测方可能从 `mountinfo`、路径或 trust store 内容发现异常。模块提供两套**互不替代**的可选能力：
+
+| 能力                | 作用                                            | 默认安装       |
+| ------------------- | ----------------------------------------------- | -------------- |
+| SuSFS / 内核 umount | 登记后，对开启「卸载模块」的 App 卸掉本模块挂载 | 装组件、开关关 |
+| Zygisk 挂载过滤     | 在目标进程内过滤读到的 mount / maps 本模块行    | 不安装         |
+
+**抓包链路不要开卸载模块**，否则会出现「根证书未安装」或断网。完整说明见 [挂载隐藏](/guide/hide)。
+
+## 冷门实验（默认痕迹最少）
+
+默认均为关闭 / 跳过，证书异常时再在 WebUI「隐藏 → 冷门实验」打开：
+
+| 键                   | 默认关时的含义                                        |
+| -------------------- | ----------------------------------------------------- |
+| `late_inject`        | 仅 boot 注入，service 不再补命名空间                  |
+| `boot_bind_zygote`   | 开机只 bind init，不 nsenter zygote                   |
+| `boot_multi_apex`    | 14+ 只绑主 APEX（跳过 `@版本` 与 system）             |
+| `service_probe`      | 不退避校验 / 延迟 heal（仅 `late_inject=1` 时有意义） |
+| `force_bind_capture` | 尊重「卸载模块」，不强注 Reqable/ProxyPin             |
+
+## 界面入口
+
+- [WebUI 使用说明](/guide/webui)
+- [命令行 CLI](/guide/cli)
+- [挂载隐藏](/guide/hide)
 
 ## 适用场景
 
-- Reqable / ProxyPin / Charles / mitmproxy 等需要**系统 CA** 的抓包
-- Android 14+ 系统 CA 在 APEX 内、普通 `system` 覆盖无效时
+| 场景                        | 建议                               |
+| --------------------------- | ---------------------------------- |
+| Reqable / ProxyPin 系统抓包 | 默认安装 + 重启；确认指纹一致      |
+| Android 14+ APEX 信任库     | 完整兼容即可；缺证再开冷门实验     |
+| 想躲 mount 检测             | 装隐藏协助并开启；可选 Zygisk 过滤 |
+| 只要体积小                  | 刷 Lite 包（无 OpenSSL）           |
+| 临时试用用户区 CA           | 热挂载；永久请用自定义导入         |
 
 ## 不做什么
 
-- 不提供抓包代理本身（请使用 Reqable、ProxyPin 等 App）
-- **不修改 SELinux 策略**；仅给挂载用的临时证书目录设置文件上下文（`chcon`）
-- **不会**把用户凭据区证书永久「搬家」进模块；永久导入请用 WebUI / `certs/custom/`。临时试用请用可选热挂载
-- 不内置 Reqable 样例证书（须从本机 App 导入）
+- 不提供抓包代理本身（请用 Reqable、ProxyPin 等）
+- **不修改** SELinux 策略文件（仅对临时证书目录 `chcon`）
+- 不把用户凭据区证书永久「搬家」进模块
+- 不内置 Reqable 样例证书
+
+## 路径速查
+
+```text
+/data/adb/modules/CertBridge/
+/data/adb/modules/CertBridge/config/certs.conf
+/data/adb/modules/CertBridge/config/zn_whitelist.txt   # 装了 Zygisk 过滤时
+/data/adb/modules/CertBridge/bin/cb
+/data/adb/modules/CertBridge/data/install.log
+/data/adb/certbridge/                                  # 热更新等外部短时文件
+```

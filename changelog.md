@@ -3,6 +3,7 @@
 ## Unreleased
 
 - **Zygisk 挂载过滤**：`native/zygisk_hide`、构建脚本、默认 `zn_whitelist.txt`；`build:module` 会编 so；CI 装 NDK 并 `REQUIRE_ZYGISK_HIDE=1`
+- **文档重写**：明按当前模块能力重写使用手册
 
 ## v4.2.0
 

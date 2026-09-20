@@ -1,81 +1,106 @@
 # 安装与升级
 
+::: tip 下载模块
+正式包只在 GitHub Releases，点这里打开：
+
+**[https://github.com/Eikeitsu/CertBridge/releases](https://github.com/Eikeitsu/CertBridge/releases)**
+
+多数人下载 `CertBridge_v*.zip`（完整版）；体积敏感再选 `*_lite.zip`。不要在 Issues、讨论区或文档站目录里找 zip。
+:::
+
 ## 环境要求
 
-- **Magisk** v20.4+ / **KernelSU**（含 SukiSU 等衍生） / **APatch**
-- Android 7.0+（API 24+）；Android 14+ 走 APEX + system 双路径注入
-- 建议使用支持模块 WebUI 的管理器（KernelSU 管理器、MMRL / WebUI-X 等）
+- 已安装 **Magisk**、**KernelSU**（含 SukiSU 等）、**APatch** 或兼容方案
+- Android 7.0+（API 24+）；Android 14+ 走 APEX 注入
+- 使用 WebUI 需支持模块网页的管理器（KernelSU / SukiSU / APatch 系 / MMRL / WebUI-X 等）
 
-## 下载哪个包？
+## 该下哪个？先看这三句
 
-| 包名                     | 内容                                                                                  | 适用                                                                                                            |
-| ------------------------ | ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `CertBridge_v*.zip`      | **完整版**：内置静态 OpenSSL（默认 arm + arm64；安装后再按设备 ABI 只留一份，约 7MB） | 推荐大多数用户；Recovery 刷入更稳                                                                               |
-| `CertBridge_v*_lite.zip` | **Lite**：约 8KB `cbx509` dex，**无** OpenSSL                                         | 体积敏感；依赖 `app_process`/`dalvikvm`。纯 Recovery 环境可能无法在安装阶段解析 App 证书，可重启后用 WebUI 导入 |
+1. **多数人**：下 `CertBridge_v<版本>.zip`（**完整版**，内置 OpenSSL）刷入即可。管理器「检查更新」也是拉这个。
+2. **只要体积小**：下 `CertBridge_v*_lite.zip`（约 8KB `cbx509` dex，无 OpenSSL）。
+3. **二者模块 id 相同**（`CertBridge`），不要同时装；覆盖刷入即可切换。
 
-二者模块 ID 相同（`CertBridge`），不要同时安装；覆盖刷入即可切换。
+## Release 文件一览
 
-在线更新（`updateJson`）默认指向完整版 zip。
+每个正式版在 [GitHub Releases](https://github.com/Eikeitsu/CertBridge/releases) 大致包含：
+
+| 文件名                   | 内容                                                            | 适合谁                                            |
+| ------------------------ | --------------------------------------------------------------- | ------------------------------------------------- |
+| `CertBridge_v*.zip`      | 完整版：静态 OpenSSL（默认 arm + arm64，安装后按 ABI 只留一份） | **推荐默认**；Recovery 刷入更稳                   |
+| `CertBridge_v*_lite.zip` | Lite：`cbx509` dex，依赖本机 `app_process` / `dalvikvm`         | 体积敏感；纯 Recovery 安装阶段可能解析不了 App 证 |
+
+说明：
+
+- 在线更新（`updateJson`）始终指向**完整版**。
+- Lite 可在重启后用 WebUI / 自定义目录补证书。
+- 发布包可含 `zygisk/*.so`（Zygisk 过滤）；未构建 so 时自定义勾选会提示缺组件。
 
 ## 安装步骤
 
-1. 从 [GitHub Releases](https://github.com/Eikeitsu/CertBridge/releases) 下载最新 zip（完整版或 Lite）
+1. 从 [Releases](https://github.com/Eikeitsu/CertBridge/releases) 选一个 zip
 2. 在模块管理器中刷入
-3. 在 20 秒内用音量键选择：
-   - **音量上：默认安装（推荐）**——检测 Reqable / ProxyPin；ProxyPin 无 App 证时用内置兜底；安装 WebUI 与免重启热挂载；挂载模式固定为**完整兼容**
-   - **音量下：自定义安装**——依次选择 Reqable、ProxyPin、WebUI、免重启热挂载，并选择**挂载模式**（完整兼容 / 轻量 Magic）
-   - 若检测到 **HttpCanary**、**ADGuard**，会再依次询问是否导入为自定义
-   - 未检测到按键或超时 → 默认完整安装
-4. **重启**手机
-5. 若安装了 WebUI，打开页面确认状态与证书详情；也可在「更多 → 挂载模式」切换（需再重启）
+3. **20 秒内**用音量键选择安装方式（见下表）
+4. **重启**
+5. 打开 WebUI 或看模块简介确认状态
 
-自定义安装中每个组件均需明确按音量上；音量下或超时会跳过该项。挂载模式询问：音量上=完整兼容，音量下=轻量 Magic；超时则完整兼容。
+### 默认安装（音量上 / 超时）
 
-### 挂载模式与元模块（摘要）
+| 项目               | 行为                                                      |
+| ------------------ | --------------------------------------------------------- |
+| Reqable / ProxyPin | 自动检测 App CA；ProxyPin 无 App 证时用内置兜底           |
+| WebUI              | 安装                                                      |
+| 热挂载             | 安装                                                      |
+| 挂载隐藏协助       | **安装**，`hide_allow` **默认关闭**（可在「隐藏」页开启） |
+| Zygisk 过滤        | **不安装**                                                |
+| 挂载模式           | 固定 **完整兼容**                                         |
 
-| 模式                  | 默认安装     | 说明                                                                                                         |
-| --------------------- | ------------ | ------------------------------------------------------------------------------------------------------------ |
-| 完整兼容 `compatible` | ✅           | 运行时 bind，**不需要** Magic Mount 元模块                                                                   |
-| 轻量 Magic `magic`    | 仅自定义可选 | 模块 `system/` **只叠 addon**；**Magisk** 一般自带即可；**KernelSU** 常需确认挂载/元模块，否则可能整目录遮蔽 |
+### 自定义安装（音量下）
 
-详见 [配置说明 · 挂载模式](/guide/config#挂载模式)。
+依次询问：Reqable、ProxyPin、WebUI、热挂载、挂载隐藏协助、**Zygisk 挂载痕迹过滤**、挂载模式（完整兼容 / 轻量 Magic）。
 
-补充行为：
+| 组件         | 勾选后默认开关                       |
+| ------------ | ------------------------------------ |
+| 挂载隐藏协助 | `hide_allow=1`（可在 WebUI 关）      |
+| Zygisk 过滤  | `zn_hide_allow=1`（需已启用 Zygisk） |
 
-- **Reqable**：未从 App 导入成功时，安装会关掉 Reqable 开关（模块不内置 Reqable 样例）
-- **ProxyPin**：无 App 证但安装时选了 ProxyPin → 使用内置兜底；App 与内置都没有 → 跳过并关掉开关
-- 安装日志：`data/install.log`（含 OpenSSL / Lite 探测与导入诊断）
+若检测到 **HttpCanary**、**ADGuard**，会再询问是否导入为自定义证书。
 
-支持管理器在线更新：`module.prop` 的 `updateJson` 指向文档站 `update.json`。
+无人值守：存在 `/data/adb/certbridge/install_auto` 时跳过音量键，走默认安装（用后删除）。
 
-![概览](/screenshots/webui-overview.png)
+### Action 按钮
 
-## 模块目录（设备上）
+- **音量上**（或超时）：刷新 / 同步状态
+- **音量下**：已装热挂载时可挂载或卸载临时 CA
+
+## 在线更新
+
+`module.prop` 的 `updateJson` 指向文档站正式通道。WebUI「更多」可切换 **正式 / CI** 通道（CI 来自 `ci-dist` 分支，便于尝鲜）。
+
+升级会尽量保留 `certs.conf`、自定义证书与安装档案；组件是否安装以本次刷入选择为准。
+
+## 热更新说明
+
+支持免重启热更新（管理器 / WebUI 安装模块时）。外部短时文件在 `/data/adb/certbridge/`；失败会回退到需重启的标准更新。
+
+## 设备上目录（摘要）
 
 ```text
 /data/adb/modules/CertBridge/
-├── module.prop
-├── post-fs-data.sh
-├── service.sh
-├── action.sh
-├── bin/                 # common / APEX 注入 / CLI
-│   ├── openssl/         # 仅完整版：安装后按 ABI 精简
-│   ├── cbx509/          # 仅 Lite：classes.dex
-│   └── hot_mount.sh     # 可选热挂载
+├── module.prop / post-fs-data.sh / service.sh / action.sh
+├── bin/                 # common、注入、cb、可选 hot / hide / openssl 或 cbx509
 ├── certs/
 │   ├── builtin/         # 仅 ProxyPin 兜底
 │   ├── sources/         # 从 App 导入的 Reqable / ProxyPin
 │   ├── custom/          # 用户自定义
 │   ├── generation/      # 本次启动生成的完整证书集
-│   └── hot/             # 可选临时会话（卸载后删除）
+│   └── hot/             # 临时会话（卸载后删除）
 ├── config/certs.conf
-├── config/install-profile.conf
-├── data/install.log
+├── config/zn_whitelist.txt   # Zygisk 白名单（有组件时）
+├── zygisk/              # 可选 *.so
+├── data/
 └── webroot/             # 可选 WebUI
 ```
 
-模块不在安装时抓取或长期保存系统 CA，也不创建会触发 Magic Mount 的 `system/cacerts` 目录。重启时读取实时信任库；至少 10 张且完整合并、校验成功后才挂载。任一步失败都保留系统原始信任库。
-
 ## 卸载
 
-在模块管理器中卸载后必须重启。卸载脚本会尝试结束当前**临时热挂载**会话；**不会**主动拆除开机永久系统 CA 挂载（以免误伤其它证书模块叠加层），重启由内核统一清理。
+在模块管理器卸载后**必须重启**。卸载脚本会尝试结束当前热挂载会话；**不会**强拆开机永久 CA 挂载（以免误伤其它证书模块叠层），由重启统一清理。

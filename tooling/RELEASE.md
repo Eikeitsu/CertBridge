@@ -17,52 +17,42 @@
 ## Unreleased
 
 - 用一两句说清用户能感知的变化（修了什么 / 新增什么）
-- 一条一个要点；不要写「对齐某某」「参考某某」等对外无关措辞
+- 一条一个要点；不要写对外无关的过程措辞
 ```
 
-- 发版前保持 `## Unreleased` 在文件最上方（标题 `# 更新日志` 之后）。
-- 空的 stub 可以保留：`## Unreleased` 下面暂时无条目。
-- **不要**在开发中直接新建 `## vX.Y.Z` / `## 2026.xx.xx`（除非刻意补历史版本说明）。
+- 发版前保持 `## Unreleased` 在 `# 更新日志` 之后最上方
+- 空的 stub 可以保留
+- **不要**在开发中直接新建 `## vX.Y.Z`（除非刻意补历史）
 
 ## 发版时工作流做什么
 
 Actions → **Release Module**（或推送 `v*` tag）：
 
-1. 打包模块 zip，创建 GitHub Release（正文优先取当前版本节；没有则回退 Unreleased）
-2. `promote-changelog.py <version>`：非空 `Unreleased` → 当前版本号，并留下空 stub
-3. `promote-changelog.py --export-docs`：文档站两份 changelog **去掉 Unreleased**
-4. 更新 `update.json` / `module.prop` / `package.json` 等并推送主分支；Pages 目录只保留**本次** zip（删除上一版包）；因 `GITHUB_TOKEN` 推送不会连锁触发其它 Actions，脚本会再 `gh workflow run build-docs.yml`
+1. 打包模块 zip，创建 GitHub Release
+2. `promote-changelog.py`：非空 Unreleased → 当前版本号，留下空 stub
+3. `--export-docs`：文档站两份 changelog **去掉 Unreleased**
+4. 更新 `update.json` / `module.prop` / `package.json` 等并推送；再触发 Build Docs
 
-工作流拆为 `build` → `publish` → `post` 三阶段；版本解析见 `resolve-release-version.py`，回写见 `post-release-update.sh`。版本号仍为 semver：`vMAJOR.MINOR.PATCH`。
+### 正式 vs CI
 
-### 正式 vs CI 通道
-
-- **正式**：本工作流写 Pages `update.json` + `releases/` zip；`module.prop` 的 `updateJson` 始终指向 Pages。
-- **CI**：`Package Module` 在 push `master` 时 stamp `*.ci.N` 并推到 **`ci-dist`**（清单与 zip 同 tip，无单独 `updates` 分支）。WebUI「更多 → 更新通道」可读 CI。
-- Release 的「预发布」勾选只影响 GitHub Release 标记，**不**单独建预发布更新通道。
-
-因此：
-
-- 根目录 `changelog.md`：发版后仍有空的 `## Unreleased`（给下一轮开发用）
-- 文档站两份：只有已发布版本，**没有 Unreleased**
+- **正式**：Pages `update.json` + `releases/`；`module.prop` 始终指向 Pages
+- **CI**：`Package Module` push `master` 时 stamp `*.ci.N` 并推到 **`ci-dist`**
+- Release「预发布」勾选只影响 GitHub 标记，不另建更新通道
 
 ## 本地命令（可选）
 
 ```bash
-# 预览：把 Unreleased 提升为某版本（会改 changelog.md，慎用）
 python3 tooling/scripts/promote-changelog.py v2.1.0 changelog.md
-
-# 仅生成文档站用日志（不含 Unreleased）
 python3 tooling/scripts/promote-changelog.py --export-docs changelog.md \
   docs/guide/changelog.md docs/public/changelog.md
 ```
 
-## AI / 协作者检查清单
+## 检查清单
 
-1. 有用户可见改动 → 在 `changelog.md` → `## Unreleased` 追加 bullet
+1. 有用户可见改动 → `changelog.md` → `## Unreleased` 追加 bullet
 2. 不要把 Unreleased 写进 `docs/**/changelog.md`
 3. 不要删空的 `## Unreleased` stub
-4. 发版用工作流，不要手改版本号后漏同步文档站两份日志
+4. 发版用工作流，避免手改版本号漏同步
 
-相关脚本：`promote-changelog.py`、`prepare-release-notes.py`、`resolve-release-version.py`、`post-release-update.sh`。  
-构建细节见 [`BUILD.md`](./BUILD.md)。
+相关：`promote-changelog.py`、`prepare-release-notes.py`、`resolve-release-version.py`、`post-release-update.sh`。  
+构建见 [`BUILD.md`](./BUILD.md)。

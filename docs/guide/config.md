@@ -1,8 +1,19 @@
 # 配置说明
 
-## certs.conf
+推荐用 **WebUI** 修改。也可用 `bin/cb set` / `cb get`，或直接编辑文件。
 
-路径：`/data/adb/modules/CertBridge/config/certs.conf`
+| 文件                          | 内容                                       |
+| ----------------------------- | ------------------------------------------ |
+| `config/certs.conf`           | 证书开关、挂载模式、热挂载、隐藏与冷门实验 |
+| `config/zn_whitelist.txt`     | Zygisk 过滤白名单（一行一个包名）          |
+| `config/install-profile.conf` | 安装时写入的组件档案（只读状态）           |
+| `data/state/`                 | 运行态缓存、隐藏协助状态等                 |
+
+路径前缀：`/data/adb/modules/CertBridge/`。
+
+---
+
+## `certs.conf` 常用项
 
 ```text
 schema_version=4
@@ -20,298 +31,105 @@ boot_multi_apex=0
 service_probe=0
 ```
 
-| 键                       | 含义                                                                          | 默认         |
-| ------------------------ | ----------------------------------------------------------------------------- | ------------ |
-| `schema_version`         | 配置结构版本，请勿手动修改                                                    | `4`          |
-| `reqable`                | 启用 Reqable（App 导入）CA                                                    | `1`          |
-| `proxypin`               | 启用 ProxyPin CA（App 或内置兜底）                                            | `1`          |
-| `mount_mode`             | 挂载模式：`compatible` 或 `magic`                                             | `compatible` |
-| `experimental_14_system` | Android 14+（两种挂载模式均生效）：`auto` / `skip`（见下文）                  | `skip`       |
-| `tmpfs_style`            | 临时挂载路径：`dev` / `mnt` / `short` / `legacy`                              | `dev`        |
-| `quiet_prop`             | `1`=管理器列表中性简介；`0`=动态写入运行状态                                  | `1`          |
-| `force_bind_capture`     | `1`=强注 Reqable/ProxyPin（旧行为）；`0`=尊重卸载模块                         | `0`          |
-| `late_inject`            | `1`=service 晚注入 + 完整 zygote 复核；`0`=仅 boot、痕迹更少（状态只核 init） | `0`          |
-| `boot_bind_zygote`       | `1`=开机 nsenter zygote；`0`=仅 bind init（默认痕迹最少）                     | `0`          |
-| `boot_multi_apex`        | `1`=完整双模式目标；`0`=14+ 仅主 APEX（默认痕迹最少）                         | `0`          |
-| `service_probe`          | 仅 `late_inject=1`：`1`=退避+heal；`0`=单次写状态（默认）                     | `0`          |
+安装了对应组件后，还可能出现：
 
-### 挂载模式
+| 键              | 含义                                  |
+| --------------- | ------------------------------------- |
+| `hide_allow`    | `1`=开启 SuSFS / 内核 try_umount 登记 |
+| `zn_hide_allow` | `1`=开启 Zygisk 挂载过滤              |
 
-证书桥提供两种把 CA 送进系统信任库的方式，可在 **自定义安装** 用音量键选择，或在 WebUI「更多 → 挂载模式」切换（均需**重启**生效）。默认安装固定为完整兼容。两种模式覆盖 **Android 7–17**，并按 API 分两支处理：
+### 证书开关
 
-|                           | Android 7–13（API &lt; 34）            | Android 14+（API ≥ 34，默认 `experimental_14_system=skip`）               |
-| ------------------------- | -------------------------------------- | ------------------------------------------------------------------------- |
-| **完整兼容** `compatible` | 脚本整库 bind `system` cacerts         | 脚本 bind **APEX**；默认**跳过** system（`auto` 时再 bind system）        |
-| **轻量 Magic** `magic`    | 仅 Magic Mount 叠 addon（无脚本 bind） | 脚本 bind **APEX**；默认**跳过** system（`auto` 时 Magic Mount 叠 addon） |
+| 键         | 默认 | 含义                               |
+| ---------- | ---- | ---------------------------------- |
+| `reqable`  | `1`  | 启用从 App 导入的 Reqable CA       |
+| `proxypin` | `1`  | 启用 ProxyPin CA（App 或内置兜底） |
 
-#### 完整兼容（`compatible`，默认）
+改开关后一般需**重启**（或热挂载场景下按界面提示）才完整生效。
 
-| 项目           | 行为                                                                                                        |
-| -------------- | ----------------------------------------------------------------------------------------------------------- |
-| 原理           | 开机从当前系统 / Conscrypt 信任库做**完整合并**，加上启用的 addon，经 tmpfs 后 `bind` 到目标路径            |
-| 模块 `system/` | **不写**叠层目录（避免错误叠层导致系统 CA 被遮蔽）                                                          |
-| Android 7–13   | bind `/system/etc/security/cacerts`                                                                         |
-| Android 14+    | 默认只 bind APEX（`experimental_14_system=skip`）；设为 `auto` 时再 bind system（供仍读 system 库的客户端） |
-| 临时目录       | 默认 `/dev/.fs0`（热挂载 `/dev/.fs1`）；可选 `mnt` / `short` / `legacy`                                     |
-| 注入后         | 目标 bind 保留，临时 staging 挂载点立即拆除，降低 mountinfo 路径指纹                                        |
-| 元模块         | **不需要**。Magisk / KernelSU / APatch 只要能跑 `post-fs-data` / `service` 即可                             |
-| 特点           | 兼容面宽；不依赖管理器 Magic Mount 实现                                                                     |
+### 挂载模式 {#挂载模式}
 
-适合：大多数用户、KernelSU 未确认挂载叠层是否正确、需要多 CA / 热挂载 / 与完整校验一致的场景。
+可在自定义安装或 WebUI「更多 → 挂载模式」切换，**重启**后生效。默认安装固定完整兼容。
 
-> 注意：完整兼容在 `experimental_14_system=auto` 时会在 `/system/etc/security/cacerts` 上留下整库 bind。默认 `skip` 已跳过 system；若仍需 system 侧证书且不想整库 bind，可改用 **轻量 Magic** 并设 `auto`。
+|                           | Android 7–13                           | Android 14+（默认 `experimental_14_system=skip`）      |
+| ------------------------- | -------------------------------------- | ------------------------------------------------------ |
+| **完整兼容** `compatible` | 脚本整库 bind system cacerts           | 脚本 bind **APEX**；默认**跳过** system                |
+| **轻量 Magic** `magic`    | 仅 Magic Mount 叠 addon（无脚本 bind） | 脚本 bind **APEX**；默认跳过 system；`auto` 时叠 addon |
 
-#### 轻量 Magic Mount（`magic`）
+#### 完整兼容（默认）
 
-| 项目           | 行为                                                                                                                                                         |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 原理           | 只把**当前启用的 addon**（Reqable / ProxyPin / 自定义等）写成 `hash.N`，放入模块的 `system/etc/security/cacerts/`，交给管理器的 **Magic Mount** 叠进系统目录 |
-| 模块 `system/` | **仅 addon 文件**；无证书时会删掉空目录，避免空目录整库遮蔽                                                                                                  |
-| Android 7–13   | 主要依赖 Magic Mount，开机脚本不对 system 做整库 bind                                                                                                        |
-| Android 14+    | **APEX 仍由脚本 bind**；默认 `skip` 时不叠 system，设 `auto` 时才 Magic Mount 叠 addon                                                                       |
-| 元模块         | 见下表                                                                                                                                                       |
-| 特点           | system 侧痕迹更接近「多几张系统 CA」；依赖管理器叠层实现正确                                                                                                 |
+- 开机完整合并系统库 + addon → tmpfs → `bind` 到目标路径
+- 模块 `system/` **不写**叠层目录（避免空目录遮蔽整库）
+- **不需要** Magic Mount 元模块
 
-| Root 方案    | 轻量模式是否需要元模块                                                                                                                                                               |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Magisk**   | 一般**不需要**（自带 Magic Mount，按文件叠层）                                                                                                                                       |
-| **KernelSU** | **常常需要**确认：管理器或挂载元模块必须对 `system/` 做**文件级叠层**。若实现成「用模块目录整目录替换」，系统 CA 会只剩模块里那几张，表现为大面积 TLS 失败——请立刻改回完整兼容并重启 |
-| **APatch**   | 视版本挂载实现而定；异常时改用完整兼容                                                                                                                                               |
+#### 轻量 Magic
 
-适合：已确认 Magic Mount 叠层正常、希望 system 侧无整库 bind 痕迹的环境。不确定时请用完整兼容。
+- 只把启用的 addon 写成 `hash.N` 放进模块 `system/etc/security/cacerts/`
+- **Magisk** 一般自带文件级叠层即可
+- **KernelSU** 常需确认叠层正确；若整目录替换导致只剩几张 CA、大面积 TLS 失败 → 立刻改回完整兼容并重启
 
-#### 如何选择
+#### `experimental_14_system`
 
-1. 默认 / 不确定 / 不要依赖元模块 → **完整兼容**
-2. Magisk 且检测器盯 system cacerts 叠层 → **轻量 Magic**
-3. KernelSU → 优先完整兼容；仅在确认叠层正确后再用轻量
-4. 切换模式、改开关、导入自定义后都要**重启**
+仅 Android 14+ 生效：
 
-也可在 WebUI「更多 → 挂载模式」切换，**重启后生效**。
+| 值     | 含义                                                          |
+| ------ | ------------------------------------------------------------- |
+| `skip` | 默认：不处理 system，只脚本 bind APEX                         |
+| `auto` | 再按 `mount_mode` 处理 system（compatible=bind / magic=叠层） |
 
-#### 实验：Android 14+ 是否跳过 system（`experimental_14_system`）
+与 `boot_multi_apex=0`（默认）配合：14+ 只绑**主** APEX，跳过 `@版本` 与 system，痕迹更少。设 `boot_multi_apex=1` 时走完整目标列表（仍尊重双模式与本键）。
 
-与 `mount_mode` **正交**：在 **Android 14+** 上对 **完整兼容与轻量 Magic 均生效**；Android 7–13 忽略（无 APEX 时仍必须处理 system）。可在 WebUI「更多」页或 CLI 修改：
+### 临时层路径 `tmpfs_style`
 
-```text
-experimental_14_system=skip
-```
+| 值       | 路径示意                  |
+| -------- | ------------------------- |
+| `dev`    | `/dev/.fs*`（默认）       |
+| `mnt`    | `/mnt/.ca*`               |
+| `short`  | `local/tmp` 下短名        |
+| `legacy` | 历史 `sys-ca-merge*` 风格 |
 
-| 值                 | 14+ APEX      | 14+ system                                                                | 说明                                                 |
-| ------------------ | ------------- | ------------------------------------------------------------------------- | ---------------------------------------------------- |
-| **`skip`（默认）** | 脚本整库 bind | **跳过**：不 bind、不叠层                                                 | 缩小 system 路径痕迹；仍读 system 库的客户端可能缺证 |
-| **`auto`**         | 脚本整库 bind | **自动**按 `mount_mode`：compatible 脚本 bind；magic Magic Mount 叠 addon | 需要 system 路径上也有证书时选用                     |
+换路径**不能替代** umount 隐藏；见 [挂载隐藏](/guide/hide)。
 
-需要「APEX 脚本注入 + system 只叠 addon」时，请用正式模式 **`magic`**，并设 `experimental_14_system=auto`。
+### 其它行为
 
-改后需**重启**。也可用：
+| 键                   | 默认 | 含义                                                          |
+| -------------------- | ---- | ------------------------------------------------------------- |
+| `quiet_prop`         | `1`  | 管理器列表保持中性简介；`0`=写入运行状态标签                  |
+| `hot_allow`          | `1`  | 允许 WebUI / Action 发起临时热挂载（需已装组件）              |
+| `force_bind_capture` | `0`  | `1`=命名空间强注 Reqable/ProxyPin；默认尊重「卸载模块」       |
+| `late_inject`        | `0`  | `1`=`boot_completed` 后再补应用命名空间（兼容难机，痕迹更多） |
+| `boot_bind_zygote`   | `0`  | `1`=开机 nsenter zygote；默认只 bind init                     |
+| `boot_multi_apex`    | `0`  | `1`=完整双模式目标；默认 14+ 仅主 APEX                        |
+| `service_probe`      | `0`  | 仅 `late_inject=1`：`1`=退避校验+延迟 heal                    |
 
-```text
-cb set_experimental_14_system auto
-```
+冷门实验入口：WebUI **隐藏 → 冷门实验**。
 
-默认即为 `skip`；若抓包软件提示系统区无证书，再改为 `auto` 或改用 `magic`（并设 `auto`）。
+---
 
-### 动态模块简介（`quiet_prop`）
+## 热挂载 {#热挂载}
 
-管理器列表里的 `description` 默认保持中性产品文案（`quiet_prop=1`），不写入 emoji / 运行状态。可在 WebUI「更多」页用 **动态模块简介** 开关打开；打开后列表会随运行状态更新（`quiet_prop=0`）。WebUI 内状态展示不受此开关影响。
+需安装热挂载组件且 `hot_allow=1`。
 
-### 临时层路径（`tmpfs_style`）
+| 类型     | 说明                                                |
+| -------- | --------------------------------------------------- |
+| 用户区   | 读取用户凭据区 CA，免重启注入系统信任库             |
+| 存储卡   | 扫描目录（常用文档下 `cacerts`）；可用 CLI 指定路径 |
+| 无痕卸载 | 只撤销本次临时会话，不改永久配置                    |
 
-完整兼容与热挂载会把合并后的证书集放到临时层再 bind。可用 WebUI「更多 → 临时挂载路径」或直接改 `certs.conf`（切换后需**重启**）：
+临时层会合并当前已启用的永久 addon，避免盖掉 Reqable / ProxyPin。重启后临时会话消失。CLI：`cb hot_mount` / `cb hot_unmount`。
 
-| 值            | 开机注入                       | 热挂载                             | 说明                                                |
-| ------------- | ------------------------------ | ---------------------------------- | --------------------------------------------------- |
-| `dev`（默认） | `/dev/.fs0`                    | `/dev/.fs1`                        | 避开 `/data/local/tmp` 关键词；注入后拆除临时挂载点 |
-| `mnt`         | `/mnt/.ca0`                    | `/mnt/.ca1`                        | `/mnt` 下短名临时层                                 |
-| `short`       | `/data/local/tmp/.fs0`         | `/data/local/tmp/.fs1`             | 短路径                                              |
-| `legacy`      | `/data/local/tmp/sys-ca-merge` | `/data/local/tmp/sys-ca-merge-hot` | 旧版可读路径，便于排障                              |
+---
 
-热挂载会话标记为 `.sess`（升级后仍识别旧文件名）。卸载会清理上述路径。
+## Zygisk 白名单
 
-也可在 WebUI「证书」页用开关修改 Reqable / ProxyPin。开关与自定义永久证书仍在**重启后**生效，避免重写正在使用的开机证书层。点击证书行可展开详情（主题、颁发者、有效期、指纹等由模块 X509 工具解析；标题自动取 CN / O）。**下拉刷新**会尝试从已启用 App 同步最新 CA（有变化则提示重启）。
+路径：`config/zn_whitelist.txt`。一行一个包名（可含 `:进程` 前缀匹配）；`#` 开头为注释。默认含 Reqable / ProxyPin 相关包名，名单内**不过滤** mount/maps，避免抓包 App 读不到系统 CA。
 
-### 挂载隐藏（可选）
+WebUI「隐藏」页可编辑；保存后需**强停相关 App** 或重启生效。CLI：`cb get_zn_whitelist` / `cb set_zn_whitelist`。
 
-- **换路径 ≠ 隐身**：检测方仍可能看到 cacerts 上的 bind mount。
-- **KernelSU + SuSFS**：若安装了挂载隐藏协助组件并开启开关，模块 bind 成功后会尝试 `add_try_umount`。
-- **抓包时**：对 Reqable / ProxyPin 与被抓包目标 **关闭**「卸载模块 / Umount / 排除修改」，否则会出现「根证书未安装」或断网。详见 [常见问题 · 根证书未安装 / 断网](/guide/faq#root-cert-missing)。
-- **Magisk**：对目标 App 配置**排除列表（DenyList）**，并配合 Shamiko 或 ZygiskNext/ReZygisk/NeoZygisk 的 umount；使用 Shamiko 时通常应**关闭**「强制执行排除列表（Enforce DenyList）」。
-- **APatch**：对目标 App 开「排除修改」，并安装 Zygisk 助手模块。
-- 挂载隐藏协助为可选组件；未安装时 WebUI 不显示「隐藏」页。专项说明随该组件文档一并提供。
+---
 
-这也只减弱字符串特征，挡不住「信任库被 bind」本身。
+## 相关文档
 
-![证书页](/screenshots/webui-certs.png)
-
-## 安装组件记录
-
-安装脚本会生成 `config/install-profile.conf`，例如：
-
-```text
-install_mode=default
-webui=1
-hot_reload=1
-mount_mode=compatible
-reqable_source=app
-proxypin_source=builtin
-```
-
-| 键                | 含义                                                     |
-| ----------------- | -------------------------------------------------------- |
-| `install_mode`    | `default` 或 `custom`                                    |
-| `webui`           | 是否安装了 WebUI（`1` / `0`）                            |
-| `hot_reload`      | 是否安装了免重启热挂载（`1` / `0`）                      |
-| `mount_mode`      | `compatible` 或 `magic`                                  |
-| `reqable_source`  | `app` 或 `none`（未导入成功则为 none，对应开关会被关掉） |
-| `proxypin_source` | `app` / `builtin` / `none`                               |
-
-选择不安装 WebUI 不影响开机证书注入；选择不安装热挂载后，设备上不会保留 `bin/hot_mount.sh`，WebUI 也会隐藏对应区域。
-
-默认安装固定 `mount_mode=compatible`；仅**自定义安装**会询问挂载模式。
-
-## 自定义证书
-
-适用于 HttpCanary、ADGuard、Charles、mitmproxy 等，或 Reqable / ProxyPin 未自动检测到时。显示名优先取证书 CN（其次 O）。
-
-1. WebUI 支持 PEM（Base64 文本）与 DER（二进制）；后缀常见 `.pem`、`.crt`、`.cer`、`.der`，按**内容**识别，不必先改名
-2. 模块使用自带 **X509 工具**校验（完整版为静态 OpenSSL；Lite 为 `cbx509` dex）。检查 X.509、有效期和 `CA:TRUE`
-3. 自动计算 8 位十六进制 `subject_hash_old` 作为系统信任库文件名，冲突时分配 `.1`、`.2` 等
-4. 单个文件最大 64 KiB；保存后写入**系统**信任库，**重启生效**（与「仅装到用户证书」不是同一层）
-5. 长期只用自定义证书时，可关闭 Reqable / ProxyPin 开关，避免多张并存造成困惑
-
-也可将证书放入 `certs/custom/`，下次开机一并合并；日常更推荐 WebUI。安装时若检测到 HttpCanary、ADGuard，也会询问是否直接导入到该目录。
-
-## 临时免重启挂载（热挂载）
-
-用一句话理解：**临时把某几张 CA「塞进」系统信任库，马上能试抓包，不用重启；点卸载或重启就没了，不改永久配置。**
-
-它和 WebUI 里「自定义证书 / 开关 Reqable」不是一回事——那些是**永久**的，要重启才进入开机那一层。
-
-### 永久 vs 临时
-
-|          | 永久（开机注入）                          | 临时（热挂载）                       |
-| -------- | ----------------------------------------- | ------------------------------------ |
-| 改什么   | `certs.conf`、自定义上传、`certs/custom/` | 只建一次临时会话                     |
-| 何时生效 | **重启后**                                | **立刻**                             |
-| 重启后   | 还在                                      | **自动消失**                         |
-| 入口     | WebUI 开关 / 上传                         | WebUI「临时免重启挂载」或 **Action** |
-
-热挂载时，模块还会把你**已经启用的永久证**（如 Reqable / ProxyPin）一并带上，避免临时层把它们盖掉。
-
-### 安装时是否带上
-
-- 选择**默认安装**，或
-- **自定义安装**时对「免重启热挂载」按音量上确认
-
-否则不会保留 `bin/hot_mount.sh`，WebUI 隐藏热挂载区，Action 实用菜单会提示组件未安装。
-
-### 三种挂载模式
-
-证书可以从两个地方「捡」：
-
-#### 挂载用户证书
-
-- **读哪里**：系统「设置 → 安全 → 加密与凭据 → 用户证书」里已经装好的 CA（各用户下的 `cacerts-added`）
-- **你要做的**：先在系统设置里把抓包 CA 装成**用户证书**
-- **然后**：WebUI 点「挂载用户证书」，或 Action 里选挂载用户区
-- **结果**：这些用户证被**临时抬成系统信任**，很多 App 才会真正信任
-- **注意**：会扫本机所有用户 / 工作资料里的用户证，等于临时「全局信任」它们，只挂你信得过的
-
-#### 挂载存储卡证书
-
-- **读哪里**：默认 **`/sdcard/CertBridge`**（WebUI 里可改成其它 `/sdcard/...` 路径）
-- **你要做的**：把 `.pem` / `.crt` / `.cer` / `.der` 等 CA 文件拷进该文件夹
-- **然后**：点「挂载存储卡证书」
-- **结果**：只信任你放进该目录的证，一般比「挂用户区」更干净、更好控
-- **典型用法**：从 Reqable 导出当前根证 → 丢进 `/sdcard/CertBridge` → 挂载 → 立刻试抓包，确认指纹对不对
-
-#### 合并挂载（挂载全部）
-
-- **= 用户证书 + 存储卡证书一次做完**
-- 两边都有证时用；只想用一边就不要选全部
-
-单次最多约 128 张通过校验的 CA（须为 CA、未过期、≤ 64 KiB）。
-
-### 无痕卸载
-
-- **只拆掉这次热挂载会话**，把系统信任库视图恢复成挂载前的样子
-- **不会**：删设置里的用户证书、删存储卡文件、改 `certs.conf`、动永久自定义证
-- **等价操作**：点「无痕卸载」，或直接**重启**（临时层本来就会消失）
-- 若提示卸不干净（别的模块又叠了一层），按提示重试或重启即可
-
-### 和 Action 的关系
-
-**同一套功能，两个入口**，底层都调用 `bin/hot_mount.sh`：
-
-|                         | WebUI「证书」页底部 | 模块管理器 **Action**                    |
-| ----------------------- | ------------------- | ---------------------------------------- |
-| 挂用户 / 存储卡 / 全部  | 三个按钮            | 音量下进菜单后逐项询问；上=执行、下=跳过 |
-| 存储卡路径              | 可输入 / 修改       | 固定 `/sdcard/CertBridge`                |
-| 无痕卸载                | 「无痕卸载」按钮    | 菜单最后一项                             |
-| 音量上（Action 第一级） | —                   | **只刷新状态**，不挂载                   |
-
-### 推荐用法（最简单）
-
-1. 从抓包 App **导出当前根证书**
-2. 放进 `/sdcard/CertBridge`（没有就新建）
-3. WebUI → 证书页 → **挂载存储卡证书**
-4. **强停**要抓的 App 再打开，试抓包
-5. 通了：再做成 WebUI「自定义证书」并**重启**（永久）；或点 **无痕卸载** / 重启清掉临时层
-
-若证书已经装在系统「用户证书」里，用「挂载用户证书」即可，不必拷到存储卡。
-
-### 注意
-
-- 不会改 `certs.conf`，也不会永久写入 `certs/custom/`
-- 「用户区」会把各用户凭据里的 CA 提到**全局系统信任**，请确认来源可信
-- 若提示命名空间部分未覆盖：强停目标 App 再开，或卸载后重挂；仍异常可重启
-- 与永久注入可同时存在：简介里会同时提示临时张数与永久证书概况
-
-## WebUI「更多」页（显示选项）
-
-在已安装 WebUI 时可用：
-
-- **外观**：深浅色、强调色、字号（统一 Trust Signal 视觉；旧主题包已移除）
-- **挂载模式** / **临时挂载路径** / **动态模块简介**：见上文
-- **挂载隐藏**：可选组件；抓包链路勿对目标开 umount，见 [常见问题](/guide/faq#root-cert-missing)
-- **关于**：版本、文档、开源与打赏入口
-
-深色模式下模块会同步状态栏图标颜色（依赖管理器 WebUI 桥接，如 MMRL / WebUI-X）。
-
-## 状态与简介
-
-默认关闭动态简介时，管理器列表只显示中性产品文案。开启后，列表简介格式为：`[大状态|子状态] 说明`  
-（emoji 后无空格；方括号内 `|` 两侧不加空格；括号外若用到 `|` 则两侧加空格）
-
-例如：`[✅运行正常|已挂载:2] 当前生效：Reqable、ProxyPin`。
-
-| 大状态              | 常见含义                                          |
-| ------------------- | ------------------------------------------------- |
-| ✅运行正常          | 开机注入成功，附加证书已挂上                      |
-| ⏳待重启            | 永久开关或自定义证书已改，需重启                  |
-| 🔥热挂载            | 存在临时会话（可能附带「部分未覆盖」「待重启」）  |
-| ⚠️异常              | 证书集未就绪或注入失败（见日志 / `inject-error`） |
-| 💤未启用            | 当前没有启用的附加证书                            |
-| ✨注入中 / 🔎检测中 | 开机流程尚未写完最终状态                          |
-| ⛔已禁用            | 模块被管理器禁用                                  |
-
-WebUI 概览与简介只读开机写入的运行时状态缓存，不再后台轮询。
-
-## 日志
-
-- `data/install.log` — 安装与运行日志；WebUI「日志」页可查看 / 清空；超过约 512KB 会轮转为 `install.log.1`
-- 刷入时若 OpenSSL / Lite 探测失败，安装日志会写出诊断信息
-
-## 模块外短时目录
-
-`/data/adb/certbridge/` 仅放**用完即删**的外部状态（不随模块目录常驻）：
-
-| 路径                  | 用途                                               |
-| --------------------- | -------------------------------------------------- |
-| `install_auto`        | WebUI 无人值守刷入时的音量键跳过标记；安装读完即删 |
-| `hot_update_payload/` | 免重启更新时的模块完整副本                         |
-| `hot_update.sh`       | 热更新收尾 worker                                  |
-| `*.hot_update.lock`   | 热更新互斥锁                                       |
-
-空目录会在标记清除 / 热更新结束 / 卸载时删掉。历史上散落在 `/data/adb/.certbridge_*` 的文件也会被清理。
+- [挂载隐藏](/guide/hide) — SuSFS / Zygisk / 分 Root 方案
+- [命令行 CLI](/guide/cli) — `cb set` / `cb status`
+- [常见问题](/guide/faq)

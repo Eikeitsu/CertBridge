@@ -2,7 +2,7 @@
 
 **证书桥**（仓库 CertBridge，模块 id `CertBridge`）运行在 Magisk / KernelSU / APatch 上：真正干活的是开机脚本与可选组件；WebUI / CLI 只是配置与观察入口。
 
-**下载**：[GitHub Releases](https://github.com/Eikeitsu/CertBridge/releases)（`CertBridge_v*.zip` / `*_lite.zip`）→ [安装说明](/guide/install)
+**下载**：[GitHub Releases](https://github.com/Eikeitsu/CertBridge/releases)（`*_arm64.zip` / `*_arm.zip` / `*_x86.zip` / `*_x64.zip` / `*_lite.zip`）→ [安装说明](/guide/install)
 
 ## 产品组成
 

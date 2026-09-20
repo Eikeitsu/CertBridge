@@ -57,15 +57,23 @@ print("wrote", out)
 PY
 }
 
-echo "promote: fetch ${CI_BASE}/CertBridge.zip"
+echo "promote: fetch ${CI_BASE}/CertBridge.zip → CertBridge_${RAW}_arm64.zip"
 curl -fsSL -o "$STAGE/CertBridge.zip" "${CI_BASE}/CertBridge.zip"
-restamp_zip_file "$STAGE/CertBridge.zip" "CertBridge_${RAW}.zip"
+restamp_zip_file "$STAGE/CertBridge.zip" "CertBridge_${RAW}_arm64.zip"
 
-if curl -fsSL -o "$STAGE/CertBridge_lite.zip" "${CI_BASE}/CertBridge_lite.zip"; then
-  restamp_zip_file "$STAGE/CertBridge_lite.zip" "CertBridge_${RAW}_lite.zip"
-else
-  echo "warn: no CertBridge_lite.zip on ci-dist tip — skip lite" >&2
-fi
+promote_optional() {
+  local remote="$1" out="$2"
+  if curl -fsSL -o "$STAGE/$remote" "${CI_BASE}/$remote"; then
+    restamp_zip_file "$STAGE/$remote" "$out"
+  else
+    echo "warn: no $remote on ci-dist tip — skip" >&2
+  fi
+}
+
+promote_optional CertBridge_arm.zip "CertBridge_${RAW}_arm.zip"
+promote_optional CertBridge_x86.zip "CertBridge_${RAW}_x86.zip"
+promote_optional CertBridge_x64.zip "CertBridge_${RAW}_x64.zip"
+promote_optional CertBridge_lite.zip "CertBridge_${RAW}_lite.zip"
 
 ls -la release/CertBridge_*.zip
 echo "promote done RAW=$RAW CODE=$CODE SHA=${PROMOTE_SHA:-tip}"

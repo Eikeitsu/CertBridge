@@ -91,7 +91,8 @@ jobs:
           else
             NAME="$TAG"
           fi
-          ZIP="CertBridge_${version}.zip"
+          # 正式 updateJson / Pages 默认 arm64 分包；其它 ABI 仍随 Release 上传
+          ZIP="CertBridge_${version}_arm64.zip"
 
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "raw=$version" >> "$GITHUB_OUTPUT"

@@ -109,29 +109,37 @@ const OPENSSL_ALL_BINARIES = [
   "openssl-x86",
 ];
 
-/** abi 短名 → 文件名；默认只打手机架构，模拟器用 OPENSSL_ABIS=all */
+/** abi 短名 → openssl 文件名 / Magisk zygisk .so */
 const OPENSSL_ABI_FILE = {
   arm: "openssl-arm",
   arm64: "openssl-arm64",
-  x64: "openssl-x64",
-  x86_64: "openssl-x64",
   x86: "openssl-x86",
+  x64: "openssl-x64",
+  x86_64: "openssl-x64", // 别名 → 产物名用 x64
+};
+const ZYGISK_SO_BY_ABI = {
+  arm: "armeabi-v7a.so",
+  arm64: "arm64-v8a.so",
+  x86: "x86.so",
+  x64: "x86_64.so",
+  x86_64: "x86_64.so",
 };
 
-function resolveOpensslPackageBinaries() {
-  const raw = (process.env.OPENSSL_ABIS ?? "arm,arm64").trim().toLowerCase();
+/** OPENSSL_ABIS → 短名列表；默认 all = arm/arm64/x86/x64 */
+function resolvePackageAbis() {
+  const raw = (process.env.OPENSSL_ABIS ?? "all").trim().toLowerCase();
   if (raw === "all") {
-    return [...OPENSSL_ALL_BINARIES];
+    return ["arm", "arm64", "x86", "x64"];
   }
   const selected = [];
   for (const token of raw.split(/[,+\s]+/).filter(Boolean)) {
-    const name = OPENSSL_ABI_FILE[token];
-    if (!name) {
+    if (!OPENSSL_ABI_FILE[token]) {
       throw new Error(
         `unknown OPENSSL_ABIS token "${token}" (use arm,arm64,x86,x64 or all)`,
       );
     }
-    if (!selected.includes(name)) selected.push(name);
+    const abi = token === "x86_64" ? "x64" : token;
+    if (!selected.includes(abi)) selected.push(abi);
   }
   if (!selected.length) {
     throw new Error("OPENSSL_ABIS resolved to empty set");
@@ -139,7 +147,18 @@ function resolveOpensslPackageBinaries() {
   return selected;
 }
 
-const OPENSSL_BINARIES = resolveOpensslPackageBinaries();
+function binariesForAbis(abis) {
+  return abis.map((abi) => OPENSSL_ABI_FILE[abi]);
+}
+
+/** PACKAGE_FAT=1 → 单 zip 含全部选中 ABI（旧行为）；默认按 ABI 分包 */
+function wantFatPackage() {
+  const v = (process.env.PACKAGE_FAT ?? "0").trim().toLowerCase();
+  return v === "1" || v === "true" || v === "yes";
+}
+
+const PACKAGE_ABIS = resolvePackageAbis();
+const OPENSSL_BINARIES = binariesForAbis(PACKAGE_ABIS);
 
 const OPENSSL_ZIP_URL =
   "https://github.com/JelmerDeHen/MagiskBypassCertificateTransparencyError/releases/download/v0.0.1/MagiskBypassCertificateTransparencyError.zip";
@@ -211,8 +230,10 @@ async function ensureOpensslBinaries() {
     [
       "# Static OpenSSL for Android",
       "# Used when the install / runtime environment has no system openssl.",
-      "# Package ships phone ABIs by default (arm + arm64); set OPENSSL_ABIS=all for x86/x64.",
-      "# Install keeps only the device ABI on disk.",
+      "# Packaging splits one zip per ABI by default (OPENSSL_ABIS=all).",
+      "# Set PACKAGE_FAT=1 to ship all selected ABIs in one zip.",
+      "# Restrict with OPENSSL_ABIS=arm,arm64 if you only need phone ABIs.",
+      "# Install still trims to the device ABI if a fat zip is used.",
       "# Source: MagiskBypassCertificateTransparencyError static builds",
       "# https://github.com/JelmerDeHen/MagiskBypassCertificateTransparencyError",
       "",
@@ -221,11 +242,11 @@ async function ensureOpensslBinaries() {
   log("bundled openssl binaries ready");
 }
 
-/** 发布 zip 只保留本次打包选中的架构，去掉仓库里可能残留的其它 ABI */
-function pruneStagingOpenssl() {
+/** 发布 zip 只保留 keepBinaries；去掉仓库里可能残留的其它 ABI */
+function pruneStagingOpenssl(keepBinaries) {
   const dir = join(staging, "bin", "openssl");
   if (!existsSync(dir)) return;
-  const keep = new Set(OPENSSL_BINARIES);
+  const keep = new Set(keepBinaries);
   for (const name of OPENSSL_ALL_BINARIES) {
     const path = join(dir, name);
     if (!existsSync(path)) continue;
@@ -233,12 +254,28 @@ function pruneStagingOpenssl() {
     rmSync(path);
     log(`omitted from zip: bin/openssl/${name}`);
   }
-  for (const name of OPENSSL_BINARIES) {
+  for (const name of keepBinaries) {
     if (!existsSync(join(dir, name))) {
       throw new Error(`staging missing openssl binary: ${name}`);
     }
   }
-  log(`openssl in zip: ${OPENSSL_BINARIES.join(", ")}`);
+  log(`openssl in zip: ${keepBinaries.join(", ")}`);
+}
+
+/** 按 ABI 只保留对应 zygisk/*.so */
+function pruneStagingZygisk(abi) {
+  const dir = join(staging, "zygisk");
+  if (!existsSync(dir)) return;
+  const keepSo = abi ? ZYGISK_SO_BY_ABI[abi] : null;
+  for (const name of readdirSync(dir)) {
+    if (!name.endsWith(".so")) continue;
+    if (!keepSo || name === keepSo) continue;
+    rmSync(join(dir, name));
+    log(`omitted from zip: zygisk/${name}`);
+  }
+  if (keepSo && !existsSync(join(dir, keepSo))) {
+    log(`no zygisk/${keepSo} in this package (optional)`);
+  }
 }
 
 function listBuiltinCertFiles(kind) {
@@ -378,7 +415,7 @@ function copyDirFromModule(relPath) {
   }
 }
 
-function applyEdition(edition) {
+function applyEdition(edition, { keepBinaries, abi }) {
   writeFileSync(join(staging, "bin", "edition"), `${edition}\n`, "utf8");
   if (edition === "lite") {
     rmSync(join(staging, "bin", "openssl"), { recursive: true, force: true });
@@ -398,14 +435,32 @@ function applyEdition(edition) {
   // 完整版只用 OpenSSL，不打入 Lite dex
   rmSync(join(staging, "bin", "cbx509"), { recursive: true, force: true });
   rmSync(join(staging, "bin", "cbx509.sh"), { force: true });
-  pruneStagingOpenssl();
-  log("edition=full (openssl only)");
+  pruneStagingOpenssl(keepBinaries);
+  pruneStagingZygisk(abi);
+  if (abi) {
+    let prop = readFileSync(join(staging, "module.prop"), "utf8");
+    prop = prop.replace(/^name=.*/m, `name=证书桥 (${abi})`);
+    prop = prop.replace(
+      /^description=.*/m,
+      `description=[${abi}|内置 OpenSSL] 系统信任抓包 CA。兼容 Magisk / KernelSU / APatch`,
+    );
+    writeFileSync(join(staging, "module.prop"), prop, "utf8");
+  }
+  log(`edition=full (openssl only${abi ? `, abi=${abi}` : ", fat"})`);
 }
 
-async function packageOne(edition, version) {
-  const zipName =
-    edition === "lite" ? `CertBridge_${version}_lite.zip` : `CertBridge_${version}.zip`;
+async function packageOne(edition, version, abi = null) {
+  let zipName;
+  if (edition === "lite") {
+    zipName = `CertBridge_${version}_lite.zip`;
+  } else if (abi) {
+    zipName = `CertBridge_${version}_${abi}.zip`;
+  } else {
+    zipName = `CertBridge_${version}.zip`;
+  }
   const zipPath = join(releaseDir, zipName);
+  const keepBinaries =
+    edition === "lite" ? [] : abi ? binariesForAbis([abi]) : OPENSSL_BINARIES;
 
   rmSync(staging, { recursive: true, force: true });
   mkdirSync(staging, { recursive: true });
@@ -444,7 +499,7 @@ async function packageOne(edition, version) {
       );
     }
   }
-  applyEdition(edition);
+  applyEdition(edition, { keepBinaries, abi });
 
   if (!existsSync(builtWebDir)) {
     throw new Error("missing .build/webroot — run npm run build:web first");
@@ -460,6 +515,7 @@ async function packageOne(edition, version) {
 
 const version = readVersion();
 const editions = resolvePackageEditions();
+const fat = wantFatPackage();
 mkdirSync(releaseDir, { recursive: true });
 
 if (editions.includes("lite")) {
@@ -475,7 +531,7 @@ if (editions.includes("lite")) {
 if (editions.includes("full")) {
   await ensureOpensslBinaries();
   log(
-    `openssl package ABIs: ${OPENSSL_BINARIES.join(", ")} (OPENSSL_ABIS=${process.env.OPENSSL_ABIS || "arm,arm64"})`,
+    `openssl ABIs: ${PACKAGE_ABIS.join(", ")} → ${OPENSSL_BINARIES.join(", ")} (OPENSSL_ABIS=${process.env.OPENSSL_ABIS || "all"}; PACKAGE_FAT=${fat ? "1" : "0"})`,
   );
   validateOpensslBinaries();
 }
@@ -483,6 +539,18 @@ if (editions.includes("full")) {
 validateSources();
 
 for (const edition of editions) {
-  await packageOne(edition, version);
+  if (edition === "lite") {
+    await packageOne("lite", version);
+    continue;
+  }
+  if (fat) {
+    await packageOne("full", version, null);
+  } else {
+    for (const abi of PACKAGE_ABIS) {
+      await packageOne("full", version, abi);
+    }
+  }
 }
-log(`done (${editions.join(", ")})`);
+log(
+  `done (${editions.join(", ")}; full=${fat ? "fat" : `split:${PACKAGE_ABIS.join("+")}`})`,
+);

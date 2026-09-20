@@ -52,7 +52,10 @@ function resolveJavaBin() {
   const fromPath = spawnSync("java", ["-version"], { encoding: "utf8" });
   if (fromPath.status === 0) return "java";
 
-  const cacheRoot = join(dirname(fileURLToPath(import.meta.url)), "../../.build/cbx509-cache/jdk");
+  const cacheRoot = join(
+    dirname(fileURLToPath(import.meta.url)),
+    "../../.build/cbx509-cache/jdk",
+  );
   if (!existsSync(cacheRoot)) return null;
   const walkJava = (dir) => {
     for (const name of readdirSync(dir)) {

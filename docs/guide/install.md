@@ -5,7 +5,7 @@
 
 **[https://github.com/Eikeitsu/CertBridge/releases](https://github.com/Eikeitsu/CertBridge/releases)**
 
-多数人下载 `CertBridge_v*.zip`（完整版）；体积敏感再选 `*_lite.zip`。不要在 Issues、讨论区或文档站目录里找 zip。
+真机下 `CertBridge_v*_arm64.zip`（推荐）或 `*_arm.zip`；模拟器用 `*_x64.zip` / `*_x86.zip`；体积敏感再选 `*_lite.zip`。不要在 Issues、讨论区或文档站目录里找 zip。
 :::
 
 ## 环境要求
@@ -16,24 +16,28 @@
 
 ## 该下哪个？先看这三句
 
-1. **多数人**：下 `CertBridge_v<版本>.zip`（**完整版**，内置 OpenSSL）刷入即可。管理器「检查更新」也是拉这个。
-2. **只要体积小**：下 `CertBridge_v*_lite.zip`（约 8KB `cbx509` dex，无 OpenSSL）。
-3. **二者模块 id 相同**（`CertBridge`），不要同时装；覆盖刷入即可切换。
+1. **多数人（arm64 手机）**：下 `CertBridge_v*_arm64.zip`（完整版，仅含本架构 OpenSSL）。管理器「检查更新」也是拉这个。
+2. **其它架构**：下 `*_arm.zip` / `*_x86.zip` / `*_x64.zip`。
+3. **只要体积小**：下 `CertBridge_v*_lite.zip`（约 8KB `cbx509` dex，无 OpenSSL）。模块 id 相同（`CertBridge`），不要同时装；覆盖刷入即可切换。
 
 ## Release 文件一览
 
 每个正式版在 [GitHub Releases](https://github.com/Eikeitsu/CertBridge/releases) 大致包含：
 
-| 文件名                   | 内容                                                            | 适合谁                                            |
-| ------------------------ | --------------------------------------------------------------- | ------------------------------------------------- |
-| `CertBridge_v*.zip`      | 完整版：静态 OpenSSL（默认 arm + arm64，安装后按 ABI 只留一份） | **推荐默认**；Recovery 刷入更稳                   |
-| `CertBridge_v*_lite.zip` | Lite：`cbx509` dex，依赖本机 `app_process` / `dalvikvm`         | 体积敏感；纯 Recovery 安装阶段可能解析不了 App 证 |
+| 文件名                    | 内容                                      | 适合谁                                 |
+| ------------------------- | ----------------------------------------- | -------------------------------------- |
+| `CertBridge_v*_arm64.zip` | 完整版：仅 arm64 OpenSSL（+ 对应 Zygisk） | **推荐默认**；多数真机                 |
+| `CertBridge_v*_arm.zip`   | 完整版：仅 arm OpenSSL                    | 32 位 arm 设备                         |
+| `CertBridge_v*_x86.zip`   | 完整版：仅 x86 OpenSSL                    | x86 模拟器                             |
+| `CertBridge_v*_x64.zip`   | 完整版：仅 x64 OpenSSL（Android x86_64）  | x86_64 模拟器                          |
+| `CertBridge_v*_lite.zip`  | Lite：`cbx509` dex，无 OpenSSL            | 体积敏感；Recovery 导入 App 证可能受限 |
 
 说明：
 
-- 在线更新（`updateJson`）始终指向**完整版**。
+- 在线更新（`updateJson`）始终指向 **arm64 完整版**。
 - Lite 可在重启后用 WebUI / 自定义目录补证书。
-- 发布包可含 `zygisk/*.so`（Zygisk 过滤）；未构建 so 时自定义勾选会提示缺组件。
+- 发布包可含对应 ABI 的 `zygisk/*.so`；未构建 so 时自定义勾选会提示缺组件。
+- 本地若需旧式「单包多架构」：`PACKAGE_FAT=1 npm run package:module`。
 
 ## 安装步骤
 

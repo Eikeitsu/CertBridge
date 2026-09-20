@@ -19,15 +19,23 @@ inject_one_target() {
     # 仅当 /proc/<pid>/mountinfo 看不到本模块 runtime bind 时才补注 zygote（开机过早未就绪的兜底）。
     if [ "$mode" = "boot" ]; then
       bind_pid_once 1 init "$target" "$stage" || rc=1
+      # 每个 zygote 名只取一组去重 PID，避免 pidof+pgrep 双扫重复 nsenter
       for process in zygote zygote64; do
+        seen_pids="|"
         for pid in $(pidof "$process" 2>/dev/null) $(pgrep -x "$process" 2>/dev/null); do
+          [ -n "$pid" ] || continue
+          case "$seen_pids" in *"|$pid|"*) continue ;; esac
+          seen_pids="${seen_pids}${pid}|"
           bind_pid_once "$pid" "$process" "$target" "$stage" || rc=1
         done
       done
     elif [ "$mode" = "namespaces" ]; then
       for process in zygote zygote64; do
+        seen_pids="|"
         for pid in $(pidof "$process" 2>/dev/null) $(pgrep -x "$process" 2>/dev/null); do
           [ -n "$pid" ] || continue
+          case "$seen_pids" in *"|$pid|"*) continue ;; esac
+          seen_pids="${seen_pids}${pid}|"
           if is_certbridge_runtime_bind "$target" "/proc/$pid/mountinfo" 2>/dev/null; then
             log_debug "inject: skip zygote pid=$pid (already bound)"
             continue

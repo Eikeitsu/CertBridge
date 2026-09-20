@@ -54,9 +54,10 @@ certbridge_install_choose_mode() {
   INSTALL_MOUNT_MODE="compatible"
 
   # WebUI / CLI 无人值守更新：见此文件则跳过音量键，走默认安装
-  if [ -f /data/adb/certbridge/install_auto ]; then
+  if [ -f "${CB_EXT_DIR:-/data/adb/certbridge}/install_auto" ]; then
     ui_print "- 检测到无人值守标记：使用默认安装"
-    rm -f /data/adb/certbridge/install_auto 2>/dev/null
+    rm -f "${CB_EXT_DIR:-/data/adb/certbridge}/install_auto" 2>/dev/null
+    cb_ext_rmdir_if_empty 2>/dev/null || rmdir /data/adb/certbridge 2>/dev/null
     return 0
   fi
 

@@ -121,6 +121,7 @@
 | SuSFS 开关      | `hide_allow`：开启后后台登记 try_umount / NoHello（不堵 UI）；关闭后不登记；内核登记通常需重启才清 |
 | Zygisk 过滤开关 | `zn_hide_allow`；改后强停相关 App 生效；未安装时提示需自定义重刷                                   |
 | 强注抓包 App    | `force_bind_capture`：开启后后台补绑运行中的 Reqable/ProxyPin；关闭后请强停再开                    |
+| 开机后晚注入    | `late_inject`：默认关；开后 service 再 namespaces 注入（难机兼容），开启时也会后台补一次           |
 | Zygisk 底座     | 探测 Magisk / ZygiskNext / ReZygisk / NeoZygisk；未开时告警                                        |
 | 抓包白名单      | 编辑 `zn_whitelist.txt`；名单内不过滤 mount/maps                                                   |
 | 挂载与隐藏实况  | Root、挂载模式、临时层、助手、try_umount、Zygisk 过滤与底座                                        |
@@ -204,13 +205,24 @@ Action **不再**提供音量键热挂载菜单；临时挂载请用 WebUI。
 模块提供 shell CLI（**不是**独立原生可执行文件）。短包装：`bin/cb`。
 
 ```bash
+# 帮助（分组命令 + 缩写）
+adb shell su -c '/data/adb/modules/CertBridge/bin/cb help'
+adb shell su -c '/data/adb/modules/CertBridge/bin/cb help set'
+
 # 读缓存状态（轻量）
-adb shell su -c '/data/adb/modules/CertBridge/bin/cert_manager.sh status'
+adb shell su -c '/data/adb/modules/CertBridge/bin/cb status'
+# 缩写
+adb shell su -c '/data/adb/modules/CertBridge/bin/cb st'
 
 # 强制实测注入并回写状态（与 WebUI「刷新复核」相同）
-adb shell su -c '/data/adb/modules/CertBridge/bin/cert_manager.sh status --live'
+adb shell su -c '/data/adb/modules/CertBridge/bin/cb status --live'
 # 或
 adb shell su -c '/data/adb/modules/CertBridge/bin/cb verify'
+
+# 读/写单项配置（set 走专用校验，与 set_* 长名等价）
+adb shell su -c '/data/adb/modules/CertBridge/bin/cb get late_inject'
+adb shell su -c '/data/adb/modules/CertBridge/bin/cb set late_inject 1'
+adb shell su -c '/data/adb/modules/CertBridge/bin/cb li 1'
 ```
 
-常用子命令：`toggle`、`install_custom`、`list_custom`、`set_mount_mode`、`hot_mount` / `hot_unmount`。完整用法见脚本 `usage` 输出。
+常用子命令：`toggle`、`install_custom`、`list_custom`、`set_mount_mode`、`hot_mount` / `hot_unmount`、`get` / `set`。完整列表与缩写见 `cb help` / `cb help aliases`。未知命令会返回 `error=unknown_command` 并提示接近的名称。

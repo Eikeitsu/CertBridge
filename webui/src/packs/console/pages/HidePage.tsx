@@ -4,6 +4,7 @@ import { selectModuleStatus } from "@/features/status/model/selectors";
 import { isFlagOn } from "@/shared/lib/flag";
 import { useHideAllow } from "@/features/hide/hooks/useHideAllow";
 import { useForceBindCapture } from "@/features/hide/hooks/useForceBindCapture";
+import { useLateInject } from "@/features/hide/hooks/useLateInject";
 import { useZnHideAllow } from "@/features/hide/hooks/useZnHideAllow";
 import { HideAllowRow } from "@/features/hide/ui/HideAllowRow";
 import { HideCaptureWarning } from "@/features/hide/ui/HideCaptureWarning";
@@ -17,6 +18,7 @@ import { CONSOLE_VOICE } from "../voice";
 export function ConsoleHidePage() {
   const hide = useHideAllow();
   const force = useForceBindCapture();
+  const late = useLateInject();
   const zn = useZnHideAllow();
   const status = useAppSelector(selectModuleStatus);
   const { voice } = usePackVoice();
@@ -42,6 +44,17 @@ export function ConsoleHidePage() {
           title={h.forceBindTitle}
           descOn={h.forceBindOn}
           descOff={h.forceBindOff}
+        />
+      </section>
+      <section className="pk-con-block">
+        <div className="pk-con-block__head">late inject</div>
+        <HideAllowRow
+          checked={late.lateInject}
+          disabled={late.isPending}
+          onChange={late.handleChange}
+          title={h.lateInjectTitle}
+          descOn={h.lateInjectOn}
+          descOff={h.lateInjectOff}
         />
       </section>
       {hide.hideSupported ? (

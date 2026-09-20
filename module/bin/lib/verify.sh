@@ -117,16 +117,26 @@ check_store_injected() {
     fi
   fi
 
+  # late_inject=0：状态只看 init（pid 1）。boot 已把 bind 打进 zygote，子进程继承；
+  # service / heal 再 nsenter zygote 做 cksum 会放大开机痕迹，易 Found KSU。
+  # late_inject=1 或显式 CERTBRIDGE_VERIFY_ZYGOTE=1 时才进 zygote 复核。
+  verify_zygote=0
+  if [ "${CERTBRIDGE_VERIFY_ZYGOTE:-0}" = "1" ] || [ "$(read_conf late_inject 0)" = "1" ]; then
+    verify_zygote=1
+  fi
+
   has_bind_target=0
   for target in $(list_status_verify_targets); do
     has_bind_target=1
     namespace_store_operational 1 "$target" || { echo 0; return 0; }
-    for zygote in zygote zygote64; do
-      # 只取第一个主 Zygote，避免次要/残留进程误杀状态
-      pid=$(pidof "$zygote" 2>/dev/null | awk '{print $1; exit}')
-      [ -n "$pid" ] || continue
-      namespace_store_operational "$pid" "$target" || { echo 0; return 0; }
-    done
+    if [ "$verify_zygote" = "1" ]; then
+      for zygote in zygote zygote64; do
+        # 只取第一个主 Zygote，避免次要/残留进程误杀状态
+        pid=$(pidof "$zygote" 2>/dev/null | awk '{print $1; exit}')
+        [ -n "$pid" ] || continue
+        namespace_store_operational "$pid" "$target" || { echo 0; return 0; }
+      done
+    fi
   done
 
   # 无 bind 目标（magic+<14，或 14+ skip 且无 APEX）：叠层校验已通过则视为就绪

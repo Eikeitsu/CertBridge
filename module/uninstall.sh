@@ -27,8 +27,12 @@ rm -rf "$MODDIR/data/runtime-mounts" 2>/dev/null
 
 # 清理免重启更新产生的外部副本、worker、锁和模块专属暂存。
 # 不使用通配 modules_update 清理，避免影响其它模块。
-command -v pkill >/dev/null 2>&1 && pkill -f '/data/adb/.certbridge_hot_update.sh' 2>/dev/null
+command -v pkill >/dev/null 2>&1 && {
+  pkill -f '/data/adb/certbridge/hot_update.sh' 2>/dev/null
+  pkill -f '/data/adb/.certbridge_hot_update.sh' 2>/dev/null
+}
 rm -rf \
+  /data/adb/certbridge \
   /data/adb/.certbridge_hot_update_payload \
   /data/adb/.certbridge_hot_update.sh \
   /data/adb/.CertBridge.hot_update.lock \

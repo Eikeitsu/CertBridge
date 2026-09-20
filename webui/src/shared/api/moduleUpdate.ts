@@ -20,6 +20,7 @@ export type ModuleUpdateProgress = {
 export type ModuleUpdateProgressFn = (p: ModuleUpdateProgress) => void;
 
 const INSTALL_AUTO = "/data/adb/certbridge/install_auto";
+const EXT_DIR = "/data/adb/certbridge";
 
 const MANAGER_PACKAGES = [
   "com.rifsxd.ksunext",
@@ -263,9 +264,9 @@ export async function downloadAndInstallModule(
   }
 
   onProgress?.({ phase: "install", percent: 88, detail: "cli" });
-  await exec(`mkdir -p /data/adb/certbridge && touch '${INSTALL_AUTO}'`, 5_000);
+  await exec(`mkdir -p '${EXT_DIR}' && touch '${INSTALL_AUTO}'`, 5_000);
   const cli = await installModuleCli(zipPath);
-  await exec(`rm -f '${INSTALL_AUTO}'`, 5_000);
+  await exec(`rm -f '${INSTALL_AUTO}'; rmdir '${EXT_DIR}' 2>/dev/null || true`, 5_000);
 
   if (cli.ok) {
     onProgress?.({ phase: "install", percent: 100, detail: "done" });

@@ -152,6 +152,10 @@ export async function setForceBindCapture(value: FlagValue) {
   return cli(`set_force_bind_capture ${value}`);
 }
 
+export async function setLateInject(value: FlagValue) {
+  return cli(`set_late_inject ${value}`);
+}
+
 function textToBase64(text: string): string {
   const bytes = new TextEncoder().encode(text);
   let binary = "";

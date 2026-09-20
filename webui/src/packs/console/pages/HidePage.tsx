@@ -3,8 +3,6 @@ import { useAppSelector } from "@/app/store/hooks";
 import { selectModuleStatus } from "@/features/status/model/selectors";
 import { isFlagOn } from "@/shared/lib/flag";
 import { useHideAllow } from "@/features/hide/hooks/useHideAllow";
-import { useForceBindCapture } from "@/features/hide/hooks/useForceBindCapture";
-import { useLateInject } from "@/features/hide/hooks/useLateInject";
 import { useZnHideAllow } from "@/features/hide/hooks/useZnHideAllow";
 import { HideAllowRow } from "@/features/hide/ui/HideAllowRow";
 import { HideCaptureWarning } from "@/features/hide/ui/HideCaptureWarning";
@@ -12,13 +10,12 @@ import { HideStatusCard } from "@/features/hide/ui/HideStatusCard";
 import { HideGuidePanel } from "@/features/hide/ui/HideGuidePanel";
 import { CaptureChecklistCard } from "@/features/hide/ui/CaptureChecklistCard";
 import { ZnWhitelistEditor } from "@/features/hide/ui/ZnWhitelistEditor";
+import { HideExperimentPanel } from "@/features/hide/ui/HideExperimentPanel";
 import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
 import { CONSOLE_VOICE } from "../voice";
 
 export function ConsoleHidePage() {
   const hide = useHideAllow();
-  const force = useForceBindCapture();
-  const late = useLateInject();
   const zn = useZnHideAllow();
   const status = useAppSelector(selectModuleStatus);
   const { voice } = usePackVoice();
@@ -35,28 +32,6 @@ export function ConsoleHidePage() {
         meta={h.checklistMeta}
         dismissLabel={h.checklistDismiss}
       />
-      <section className="pk-con-block">
-        <div className="pk-con-block__head">capture / umount</div>
-        <HideAllowRow
-          checked={force.forceBind}
-          disabled={force.isPending}
-          onChange={force.handleChange}
-          title={h.forceBindTitle}
-          descOn={h.forceBindOn}
-          descOff={h.forceBindOff}
-        />
-      </section>
-      <section className="pk-con-block">
-        <div className="pk-con-block__head">late inject</div>
-        <HideAllowRow
-          checked={late.lateInject}
-          disabled={late.isPending}
-          onChange={late.handleChange}
-          title={h.lateInjectTitle}
-          descOn={h.lateInjectOn}
-          descOff={h.lateInjectOff}
-        />
-      </section>
       {hide.hideSupported ? (
         <section className="pk-con-block">
           <div className="pk-con-block__head">{h.switchTitle}</div>
@@ -98,6 +73,7 @@ export function ConsoleHidePage() {
           saveLabel={h.whitelistSave}
         />
       ) : null}
+      <HideExperimentPanel />
       <HideStatusCard variant="table" />
       <HideGuidePanel title={h.guideTitle} meta={h.guideMeta} accordion />
     </div>

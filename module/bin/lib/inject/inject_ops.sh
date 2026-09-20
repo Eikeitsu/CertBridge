@@ -19,16 +19,21 @@ inject_one_target() {
     # 仅当 /proc/<pid>/mountinfo 看不到本模块 runtime bind 时才补注 zygote（开机过早未就绪的兜底）。
     if [ "$mode" = "boot" ]; then
       bind_pid_once 1 init "$target" "$stage" || rc=1
-      # 每个 zygote 名只取一组去重 PID，避免 pidof+pgrep 双扫重复 nsenter
-      for process in zygote zygote64; do
-        seen_pids="|"
-        for pid in $(pidof "$process" 2>/dev/null) $(pgrep -x "$process" 2>/dev/null); do
-          [ -n "$pid" ] || continue
-          case "$seen_pids" in *"|$pid|"*) continue ;; esac
-          seen_pids="${seen_pids}${pid}|"
-          bind_pid_once "$pid" "$process" "$target" "$stage" || rc=1
+      # boot_bind_zygote=0：不进 zygote（仅 init），减轻 Found KSU；子进程一般继承，难机可保持默认 1
+      if [ "$(read_conf boot_bind_zygote 0)" = "1" ]; then
+        # 每个 zygote 名只取一组去重 PID，避免 pidof+pgrep 双扫重复 nsenter
+        for process in zygote zygote64; do
+          seen_pids="|"
+          for pid in $(pidof "$process" 2>/dev/null) $(pgrep -x "$process" 2>/dev/null); do
+            [ -n "$pid" ] || continue
+            case "$seen_pids" in *"|$pid|"*) continue ;; esac
+            seen_pids="${seen_pids}${pid}|"
+            bind_pid_once "$pid" "$process" "$target" "$stage" || rc=1
+          done
         done
-      done
+      else
+        log_info "inject: boot_bind_zygote=0, skip zygote (init only)"
+      fi
     elif [ "$mode" = "namespaces" ]; then
       for process in zygote zygote64; do
         seen_pids="|"
@@ -119,7 +124,7 @@ inject_boot_namespaces() {
 
   rc=0
   has_target=0
-  for target in $(list_target_stores); do
+  for target in $(list_boot_inject_targets); do
     has_target=1
     inject_one_target "$target" boot || rc=1
   done

@@ -22,14 +22,18 @@ source_identity() {
 # 是否仍有命名空间直接挂着 generation 目录本身（不可安全替换）
 # 注意：运行时 tmpfs 拷贝层（RUNTIME_MOUNT_ROOT）不算 —— 软重启后仍可能残留，
 # 但不应阻止重建 GEN_CURRENT；后续 inject 会刷新 tmpfs 内容。
+# 只扫 init + zygote，避免遍历全机 /proc（开机关键路径）
 generation_source_busy() {
   generation_id=$(path_identity "$GEN_CERTS")
   [ -n "$generation_id" ] || return 1
   generation_seen="|"
-  for generation_proc in /proc/[0-9]*; do
-    [ -d "$generation_proc/ns" ] || continue
-    generation_pid=${generation_proc##*/}
-    generation_ns=$(readlink "$generation_proc/ns/mnt" 2>/dev/null)
+  generation_pids="1"
+  for generation_proc in zygote zygote64; do
+    generation_pids="$generation_pids $(pidof "$generation_proc" 2>/dev/null)"
+  done
+  for generation_pid in $generation_pids; do
+    [ -n "$generation_pid" ] && [ -d "/proc/$generation_pid/ns" ] || continue
+    generation_ns=$(readlink "/proc/$generation_pid/ns/mnt" 2>/dev/null)
     [ -n "$generation_ns" ] || continue
     case "$generation_seen" in *"|$generation_ns|"*) continue ;; esac
     generation_seen="$generation_seen$generation_ns|"

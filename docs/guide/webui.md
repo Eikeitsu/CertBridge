@@ -120,8 +120,7 @@
 | 抓包检查清单    | 首次打开可关闭的步骤卡片                                                                           |
 | SuSFS 开关      | `hide_allow`：开启后后台登记 try_umount / NoHello（不堵 UI）；关闭后不登记；内核登记通常需重启才清 |
 | Zygisk 过滤开关 | `zn_hide_allow`；改后强停相关 App 生效；未安装时提示需自定义重刷                                   |
-| 强注抓包 App    | `force_bind_capture`：开启后后台补绑运行中的 Reqable/ProxyPin；关闭后请强停再开                    |
-| 开机后晚注入    | `late_inject`：默认关；开后 service 再 namespaces 注入（难机兼容），开启时也会后台补一次           |
+| 冷门实验        | 入口在隐藏页底部；内含强注 / 晚注入 / 开机 Zygote / 多 APEX / 状态复核，默认无需改动               |
 | Zygisk 底座     | 探测 Magisk / ZygiskNext / ReZygisk / NeoZygisk；未开时告警                                        |
 | 抓包白名单      | 编辑 `zn_whitelist.txt`；名单内不过滤 mount/maps                                                   |
 | 挂载与隐藏实况  | Root、挂载模式、临时层、助手、try_umount、Zygisk 过滤与底座                                        |

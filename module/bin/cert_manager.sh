@@ -54,6 +54,9 @@ case "$CMD" in
   set_zn_hide_allow) cmd_set_zn_hide_allow "$2" ;;
   set_force_bind_capture) cmd_set_force_bind_capture "$2" ;;
   set_late_inject) cmd_set_late_inject "$2" ;;
+  set_boot_bind_zygote) cmd_set_boot_bind_zygote "$2" ;;
+  set_boot_multi_apex) cmd_set_boot_multi_apex "$2" ;;
+  set_service_probe) cmd_set_service_probe "$2" ;;
   get_zn_whitelist) cmd_get_zn_whitelist ;;
   set_zn_whitelist) cmd_set_zn_whitelist "$2" ;;
   reinject)

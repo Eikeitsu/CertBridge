@@ -14,7 +14,7 @@ write_conf() {
   key="$1"
   value="$2"
   case "$key" in
-    reqable|proxypin|schema_version|mount_mode|tmpfs_style|quiet_prop|hot_allow|hide_allow|zn_hide_allow|experimental_14_system|force_bind_capture|late_inject)
+    reqable|proxypin|schema_version|mount_mode|tmpfs_style|quiet_prop|hot_allow|hide_allow|zn_hide_allow|experimental_14_system|force_bind_capture|late_inject|boot_bind_zygote|boot_multi_apex|service_probe)
       ;;
     *) return 1 ;;
   esac
@@ -115,6 +115,13 @@ binds_system_cacerts() {
   fi
   is_magic_mount_mode && return 1
   return 0
+}
+
+# late_inject=0：service 几乎空跑（不 namespaces / 不退避 / 不 heal）
+# service_probe 仅在 late_inject=1 时决定是否做退避校验与延迟 heal
+service_should_probe() {
+  [ "$(read_conf late_inject 0)" = "1" ] || return 1
+  [ "$(read_conf service_probe 0)" = "1" ]
 }
 
 # Android 14+ 且 skip：清空 system 叠层（magic 也不叠）。

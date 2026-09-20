@@ -87,6 +87,32 @@ export type PackVoice = {
     lateInjectConfirmOnTitle: string;
     lateInjectConfirmOnBody: string;
     lateInjectConfirmOnOk: string;
+    experimentEntryTitle: string;
+    experimentEntryMeta: string;
+    experimentEntryCta: string;
+    experimentSheetTitle: string;
+    experimentIntro: string;
+    bootZygoteTitle: string;
+    bootZygoteOn: string;
+    bootZygoteOff: string;
+    bootZygoteToastOn: string;
+    bootZygoteToastOff: string;
+    bootZygoteConfirmOnTitle: string;
+    bootZygoteConfirmOnBody: string;
+    bootZygoteConfirmOnOk: string;
+    bootMultiApexTitle: string;
+    bootMultiApexOn: string;
+    bootMultiApexOff: string;
+    bootMultiApexToastOn: string;
+    bootMultiApexToastOff: string;
+    bootMultiApexConfirmOnTitle: string;
+    bootMultiApexConfirmOnBody: string;
+    bootMultiApexConfirmOnOk: string;
+    serviceProbeTitle: string;
+    serviceProbeOn: string;
+    serviceProbeOff: string;
+    serviceProbeToastOn: string;
+    serviceProbeToastOff: string;
     znSwitchTitle: string;
     znSwitchMeta: string;
     znAllowTitle: string;
@@ -160,6 +186,35 @@ const SHARED_HIDE: PackVoice["hide"] = {
   lateInjectConfirmOnBody:
     "开启后本次会后台补一次应用命名空间注入，之后每次开机 boot_completed 时 service 也会再注入。可提高难机兼容，但会增加对进程命名空间的介入（部分环境可能加重 Found KSU 类误伤）。仅建议证书不生效时短期开启。",
   lateInjectConfirmOnOk: "开启",
+  experimentEntryTitle: "冷门实验",
+  experimentEntryMeta: "默认痕迹最少；证书异常时再打开兼容项",
+  experimentEntryCta: "打开冷门实验选项",
+  experimentSheetTitle: "冷门实验选项",
+  experimentIntro:
+    "下列开关默认偏痕迹最少。证书不生效或难机再逐项打开；改开机相关项后需重启。",
+  bootZygoteTitle: "开机注入 Zygote",
+  bootZygoteOn: "boot 时对 zygote 做 bind（兼容更好，痕迹更多）",
+  bootZygoteOff: "默认：仅 bind init，不进 zygote（痕迹更少）",
+  bootZygoteToastOn: "已开启开机 Zygote 注入；重启后生效",
+  bootZygoteToastOff: "已关闭开机 Zygote 注入；重启后生效",
+  bootZygoteConfirmOnTitle: "开启开机 Zygote 注入？",
+  bootZygoteConfirmOnBody:
+    "开启后开机会对 zygote 做 nsenter bind，兼容更好，但更容易被 Found KSU 类检测盯上。改后需重启。",
+  bootZygoteConfirmOnOk: "开启",
+  bootMultiApexTitle: "完整 boot 注入目标",
+  bootMultiApexOn: "按双模式注入（主 APEX + @版本；system 仍受挂载模式控制）",
+  bootMultiApexOff: "默认精简：14+ 仅主 APEX（跳过 @版本与 system）；7–13 仍绑 system",
+  bootMultiApexToastOn: "已开启完整目标列表；重启后生效",
+  bootMultiApexToastOff: "已改回精简 boot 目标；重启后生效",
+  bootMultiApexConfirmOnTitle: "开启完整 boot 目标？",
+  bootMultiApexConfirmOnBody:
+    "开启后按挂载模式注入全部目标（含 conscrypt@版本 等），兼容更好、痕迹更多。改后需重启。",
+  bootMultiApexConfirmOnOk: "开启完整目标",
+  serviceProbeTitle: "晚注入时的状态复核",
+  serviceProbeOn: "late_inject=1 时：service 退避校验 + 延迟 heal",
+  serviceProbeOff: "默认关；即使开了晚注入也不退避/heal（late_inject=0 时本项无影响）",
+  serviceProbeToastOn: "已开启晚注入状态复核；下次开机且 late_inject=1 时生效",
+  serviceProbeToastOff: "已关闭晚注入状态复核；下次开机生效",
   znSwitchTitle: "Zygisk 挂载过滤",
   znSwitchMeta: "过滤 mountinfo / maps，并弱化 so 路径泄露",
   znAllowTitle: "启用 Zygisk 挂载痕迹过滤",

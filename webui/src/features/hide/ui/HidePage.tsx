@@ -5,8 +5,6 @@ import { useAppSelector } from "@/app/store/hooks";
 import { selectModuleStatus } from "@/features/status/model/selectors";
 import { isFlagOn } from "@/shared/lib/flag";
 import { useHideAllow } from "../hooks/useHideAllow";
-import { useForceBindCapture } from "../hooks/useForceBindCapture";
-import { useLateInject } from "../hooks/useLateInject";
 import { useZnHideAllow } from "../hooks/useZnHideAllow";
 import { HideAllowRow } from "./HideAllowRow";
 import { HideCaptureWarning } from "./HideCaptureWarning";
@@ -15,11 +13,10 @@ import { HideStatusCard } from "./HideStatusCard";
 import { HideGuidePanel } from "./HideGuidePanel";
 import { CaptureChecklistCard } from "./CaptureChecklistCard";
 import { ZnWhitelistEditor } from "./ZnWhitelistEditor";
+import { HideExperimentPanel } from "./HideExperimentPanel";
 
 export function HidePage() {
   const hide = useHideAllow();
-  const force = useForceBindCapture();
-  const late = useLateInject();
   const zn = useZnHideAllow();
   const status = useAppSelector(selectModuleStatus);
   const { voice } = usePackVoice();
@@ -44,26 +41,6 @@ export function HidePage() {
         meta={h.checklistMeta}
         dismissLabel={h.checklistDismiss}
       />
-      <Card title="抓包与卸载" meta="与隐藏协助独立">
-        <HideAllowRow
-          checked={force.forceBind}
-          disabled={false}
-          onChange={force.handleChange}
-          title={h.forceBindTitle}
-          descOn={h.forceBindOn}
-          descOff={h.forceBindOff}
-        />
-      </Card>
-      <Card title="开机注入" meta="默认仅 boot；难机可开晚注入">
-        <HideAllowRow
-          checked={late.lateInject}
-          disabled={false}
-          onChange={late.handleChange}
-          title={h.lateInjectTitle}
-          descOn={h.lateInjectOn}
-          descOff={h.lateInjectOff}
-        />
-      </Card>
       {hide.hideSupported ? (
         <Card title={h.switchTitle} meta={h.switchMeta}>
           <HideAllowRow
@@ -101,6 +78,7 @@ export function HidePage() {
           saveLabel={h.whitelistSave}
         />
       ) : null}
+      <HideExperimentPanel />
       <HideStatusCard />
       <HideIntroCard title={h.introTitle} body={h.introBody} docsCta={h.docsCta} />
       <HideGuidePanel title={h.guideTitle} meta={h.guideMeta} />

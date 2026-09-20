@@ -23,12 +23,23 @@ if ! acquire_write_lock; then
   exit 1
 fi
 POST_HAS_LOCK=1
+# 无热会话状态且热临时层未挂载时跳过完整 unmount（加速冷启动）
 if [ -x "$BINDIR/hot_mount.sh" ]; then
-  if ! CERTBRIDGE_LOCK_HELD=1 sh "$BINDIR/hot_mount.sh" unmount_locked >/dev/null 2>&1; then
-    write_inject_error hot_unmount_failed
-    log_msg "post-fs-data: stale hot session cleanup failed"
-    finalize_runtime_status post-fs-data >/dev/null
-    exit 1
+  _hot_need_clean=0
+  [ -f "$STATEDIR/hot-session.conf" ] && _hot_need_clean=1
+  if [ "$_hot_need_clean" = "0" ] && [ -n "${HOT_RUNTIME_ROOT:-}" ] && \
+      mountpoint -q "$HOT_RUNTIME_ROOT" 2>/dev/null; then
+    _hot_need_clean=1
+  fi
+  if [ "$_hot_need_clean" = "1" ]; then
+    if ! CERTBRIDGE_LOCK_HELD=1 sh "$BINDIR/hot_mount.sh" unmount_locked >/dev/null 2>&1; then
+      write_inject_error hot_unmount_failed
+      log_msg "post-fs-data: stale hot session cleanup failed"
+      finalize_runtime_status post-fs-data >/dev/null
+      exit 1
+    fi
+  else
+    log_msg "post-fs-data: skip hot unmount (no session)"
   fi
 else
   log_msg "post-fs-data: hot reload component not installed"

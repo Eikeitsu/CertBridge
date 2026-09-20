@@ -112,6 +112,9 @@ hot_failed=0"
   emit_zygisk_loader_status
   echo "force_bind_capture=$(read_conf force_bind_capture 0)"
   echo "late_inject=$(read_conf late_inject 0)"
+  echo "boot_bind_zygote=$(read_conf boot_bind_zygote 0)"
+  echo "boot_multi_apex=$(read_conf boot_multi_apex 0)"
+  echo "service_probe=$(read_conf service_probe 0)"
   echo "version=$(grep '^version=' "$MODDIR/module.prop" 2>/dev/null | cut -d= -f2-)"
   echo "$hot_status"
 }

@@ -58,8 +58,8 @@ fi
 release_write_lock
 SERVICE_HAS_LOCK=0
 finalize_runtime_status service >/dev/null
-# 覆盖「boot_completed 后立刻校验仍假阴性、稍后才真正可用」窗口
-if [ "$rc" -eq 0 ]; then
+# late_inject=0 或 service_probe=0：跳过延迟 heal
+if [ "$rc" -eq 0 ] && service_should_probe; then
   heal_runtime_status_later 45
 fi
 trap - 1 2 15

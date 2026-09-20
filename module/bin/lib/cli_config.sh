@@ -191,6 +191,57 @@ cmd_set_late_inject() {
   fi
 }
 
+cmd_set_boot_bind_zygote() {
+  val="$1"
+  case "$val" in
+    0|1) ;;
+    *) echo "error=invalid_boot_bind_zygote"; return 1 ;;
+  esac
+  write_conf boot_bind_zygote "$val" || { echo "error=write_failed"; return 1; }
+  log_info "config: boot_bind_zygote=$val (reboot required)"
+  echo "ok=1"
+  echo "boot_bind_zygote=$val"
+  if [ "$val" = "0" ]; then
+    echo "hint=已关闭开机 Zygote 注入；重启后仅 bind init，部分机可能缺证"
+  else
+    echo "hint=已开启开机 Zygote 注入；重启后生效"
+  fi
+}
+
+cmd_set_boot_multi_apex() {
+  val="$1"
+  case "$val" in
+    0|1) ;;
+    *) echo "error=invalid_boot_multi_apex"; return 1 ;;
+  esac
+  write_conf boot_multi_apex "$val" || { echo "error=write_failed"; return 1; }
+  log_info "config: boot_multi_apex=$val (reboot required)"
+  echo "ok=1"
+  echo "boot_multi_apex=$val"
+  if [ "$val" = "0" ]; then
+    echo "hint=已改为精简 boot：14+ 仅主 APEX（跳过 @版本与 system）；重启后生效"
+  else
+    echo "hint=已开启完整目标列表（尊重双模式）；重启后生效"
+  fi
+}
+
+cmd_set_service_probe() {
+  val="$1"
+  case "$val" in
+    0|1) ;;
+    *) echo "error=invalid_service_probe"; return 1 ;;
+  esac
+  write_conf service_probe "$val" || { echo "error=write_failed"; return 1; }
+  log_info "config: service_probe=$val"
+  echo "ok=1"
+  echo "service_probe=$val"
+  if [ "$val" = "0" ]; then
+    echo "hint=已关闭状态复核；仅 late_inject=1 时本项有意义，下次开机生效"
+  else
+    echo "hint=已开启状态复核（需同时 late_inject=1 才会退避/heal）；下次开机生效"
+  fi
+}
+
 ZN_WHITELIST_FILE="$CONFDIR/zn_whitelist.txt"
 
 cmd_get_zn_whitelist() {

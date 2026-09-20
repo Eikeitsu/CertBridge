@@ -294,5 +294,18 @@ WebUI 概览与简介只读开机写入的运行时状态缓存，不再后台�
 
 ## 日志
 
-- `data/install.log` — 安装与运行日志；WebUI「日志」页可查看 / 清空
+- `data/install.log` — 安装与运行日志；WebUI「日志」页可查看 / 清空；超过约 512KB 会轮转为 `install.log.1`
 - 刷入时若 OpenSSL / Lite 探测失败，安装日志会写出诊断信息
+
+## 模块外短时目录
+
+`/data/adb/certbridge/` 仅放**用完即删**的外部状态（不随模块目录常驻）：
+
+| 路径 | 用途 |
+| --- | --- |
+| `install_auto` | WebUI 无人值守刷入时的音量键跳过标记；安装读完即删 |
+| `hot_update_payload/` | 免重启更新时的模块完整副本 |
+| `hot_update.sh` | 热更新收尾 worker |
+| `*.hot_update.lock` | 热更新互斥锁 |
+
+空目录会在标记清除 / 热更新结束 / 卸载时删掉。历史上散落在 `/data/adb/.certbridge_*` 的文件也会被清理。

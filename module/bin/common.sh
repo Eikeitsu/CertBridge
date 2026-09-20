@@ -48,6 +48,15 @@ certbridge_init_paths() {
   HOT_RUNTIME_ROOT="/dev/.fs1"
   MIN_SAFE_CERTS=10
   MAX_CUSTOM_BYTES=65536
+  # 模块目录外的短时状态（无人值守标记、热更新副本/worker）；用完应清空，卸载时整目录删除
+  CB_EXT_DIR="${CB_EXT_DIR:-/data/adb/certbridge}"
+}
+
+# 外部目录空则删掉，避免 /data/adb 下残留空文件夹
+cb_ext_rmdir_if_empty() {
+  [ -n "${CB_EXT_DIR:-}" ] || CB_EXT_DIR="/data/adb/certbridge"
+  rmdir "$CB_EXT_DIR" 2>/dev/null
+  return 0
 }
 
 certbridge_load_lib() {

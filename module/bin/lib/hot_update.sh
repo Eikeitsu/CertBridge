@@ -1,6 +1,24 @@
 #!/system/bin/sh
 # 免重启更新：非首次安装且「需重启路径」无变更时，请求热更新并拉起 hotinstall.sh
 # - 管理器提供热更新接口时只 export；否则自行做 modules_update → modules 切换
+#
+# 外部短时文件统一放在 /data/adb/certbridge/（与无人值守 install_auto 同目录），
+# 用完删除；并清理历史 /data/adb/.certbridge_* 残留。
+
+CB_EXT_DIR="${CB_EXT_DIR:-/data/adb/certbridge}"
+CB_HOT_PAYLOAD_DIR="${CB_HOT_PAYLOAD_DIR:-$CB_EXT_DIR/hot_update_payload}"
+CB_HOT_WORKER="${CB_HOT_WORKER:-$CB_EXT_DIR/hot_update.sh}"
+
+hot_update_legacy_cleanup() {
+	rm -rf /data/adb/.certbridge_hot_update_payload 2>/dev/null
+	rm -f /data/adb/.certbridge_hot_update.sh 2>/dev/null
+}
+
+hot_update_ext_rmdir_if_empty() {
+	rmdir "$CB_HOT_PAYLOAD_DIR" 2>/dev/null
+	rmdir "$CB_EXT_DIR" 2>/dev/null
+	return 0
+}
 
 hot_update_modid() {
 	_prop="${1:-$MODPATH/module.prop}"
@@ -106,11 +124,12 @@ hot_update_write_desc() {
 hot_update_snapshot_payload() {
 	_snapshot_src="$1"
 	_snapshot_id="$2"
-	_snapshot_base="/data/adb/.certbridge_hot_update_payload"
+	_snapshot_base="$CB_HOT_PAYLOAD_DIR"
 	_snapshot_tmp="$_snapshot_base/.${_snapshot_id}.tmp.$$"
 	_snapshot_dst="$_snapshot_base/$_snapshot_id"
 	HOT_UPDATE_PAYLOAD=""
 	[ -d "$_snapshot_src" ] || return 1
+	hot_update_legacy_cleanup
 	mkdir -p "$_snapshot_base" 2>/dev/null || return 1
 	rm -rf "$_snapshot_tmp" 2>/dev/null
 	mkdir -p "$_snapshot_tmp" 2>/dev/null || return 1
@@ -186,22 +205,27 @@ hot_update_request() {
 }
 
 hot_update_clear_stale_lock() {
-	_stale_lock="/data/adb/.$1.hot_update.lock"
-	[ -d "$_stale_lock" ] || return 0
-	if [ -f "$_stale_lock/pid" ]; then
-		_stale_pid="$(cat "$_stale_lock/pid" 2>/dev/null | tr -d ' \r\n')"
-		case "$_stale_pid" in
-			""|*[!0-9]*) ;;
-			*)
-				kill -0 "$_stale_pid" 2>/dev/null && return 1
-				rm -rf "$_stale_lock" 2>/dev/null
-				[ ! -e "$_stale_lock" ] && return 0
-				return 1
-				;;
-		esac
-	fi
-	# 兼容旧版留下的空锁目录；有内容但无法确认归属时不强删。
-	rmdir "$_stale_lock" 2>/dev/null
+	# 新路径 + 旧锁路径一并检查
+	for _stale_lock in \
+		"$CB_EXT_DIR/$1.hot_update.lock" \
+		"/data/adb/.$1.hot_update.lock"; do
+		[ -d "$_stale_lock" ] || continue
+		if [ -f "$_stale_lock/pid" ]; then
+			_stale_pid="$(cat "$_stale_lock/pid" 2>/dev/null | tr -d ' \r\n')"
+			case "$_stale_pid" in
+				""|*[!0-9]*) ;;
+				*)
+					kill -0 "$_stale_pid" 2>/dev/null && return 1
+					rm -rf "$_stale_lock" 2>/dev/null
+					[ -e "$_stale_lock" ] && return 1
+					continue
+					;;
+			esac
+		fi
+		# 兼容旧版留下的空锁目录；有内容但无法确认归属时不强删。
+		rmdir "$_stale_lock" 2>/dev/null
+	done
+	return 0
 }
 
 # 生成收尾作业脚本。参数: 目标路径
@@ -213,11 +237,14 @@ hot_update_write_worker() {
 # 由安装流程生成并脱离安装器运行；参数: <modid> <hotinstall 脚本名> [副本路径]
 MODID="$1"
 SCRIPT="$2"
-PAYLOAD="${3:-/data/adb/.certbridge_hot_update_payload/$MODID}"
+PAYLOAD="${3:-/data/adb/certbridge/hot_update_payload/$MODID}"
 OLD="/data/adb/modules/$MODID"
 NEW="/data/adb/modules_update/$MODID"
 LOG="$OLD/data/hot-update.log"
-LOCK="/data/adb/.${MODID}.hot_update.lock"
+LOCK="/data/adb/certbridge/${MODID}.hot_update.lock"
+EXT_DIR="/data/adb/certbridge"
+LEGACY_PAYLOAD_BASE="/data/adb/.certbridge_hot_update_payload"
+LEGACY_WORKER="/data/adb/.certbridge_hot_update.sh"
 
 if ! mkdir "$LOCK" 2>/dev/null; then
 	exit 0
@@ -390,7 +417,8 @@ fi
 
 if [ -d "$PAYLOAD" ]; then
 	if rm -rf "$PAYLOAD" 2>/dev/null && [ ! -e "$PAYLOAD" ]; then
-		rmdir /data/adb/.certbridge_hot_update_payload 2>/dev/null
+		rmdir "$EXT_DIR/hot_update_payload" 2>/dev/null
+		rmdir "$LEGACY_PAYLOAD_BASE" 2>/dev/null
 		hu_log "ok: 已清理热更新外部副本"
 	else
 		hu_log "warn: 热更新外部副本清理失败，将在后台再次尝试"
@@ -399,7 +427,8 @@ fi
 
 # 更新主体已完成：释放锁，继续观察管理器可能回写的残留标记。
 hu_cleanup_lock
-rm -f /data/adb/.certbridge_hot_update.sh 2>/dev/null
+rm -f "$EXT_DIR/hot_update.sh" "$LEGACY_WORKER" 2>/dev/null
+rmdir "$EXT_DIR" 2>/dev/null
 
 # 管理器可能在我们之后才 touch update / 回写暂存，持续观察一段时间。
 # 只清理同一版本的残留；发现版本更高或尚未写完整的更新就立即停止，
@@ -429,8 +458,10 @@ done
 [ -e "$NEW" ] && hu_log "warn: $NEW 仍残留"
 [ -f "$OLD/update" ] && hu_log "warn: $OLD/update 仍残留"
 rm -rf "$PAYLOAD" 2>/dev/null
-rmdir /data/adb/.certbridge_hot_update_payload 2>/dev/null
-rm -f /data/adb/.certbridge_hot_update.sh 2>/dev/null
+rmdir "$EXT_DIR/hot_update_payload" 2>/dev/null
+rmdir "$LEGACY_PAYLOAD_BASE" 2>/dev/null
+rm -f "$EXT_DIR/hot_update.sh" "$LEGACY_WORKER" 2>/dev/null
+rmdir "$EXT_DIR" 2>/dev/null
 HOT_UPDATE_WORKER
 	chmod 0700 "$_worker_path" 2>/dev/null
 }
@@ -439,10 +470,12 @@ HOT_UPDATE_WORKER
 hot_update_spawn_worker() {
 	_sw_modid="$1"
 	_sw_script="${2:-hotinstall.sh}"
-	_sw_payload="${3:-/data/adb/.certbridge_hot_update_payload/$_sw_modid}"
+	_sw_payload="${3:-$CB_HOT_PAYLOAD_DIR/$_sw_modid}"
 	[ -n "$_sw_modid" ] || return 1
 	hot_update_clear_stale_lock "$_sw_modid" || return 1
-	_sw_path="/data/adb/.certbridge_hot_update.sh"
+	hot_update_legacy_cleanup
+	mkdir -p "$CB_EXT_DIR" 2>/dev/null || return 1
+	_sw_path="$CB_HOT_WORKER"
 	hot_update_write_worker "$_sw_path" || return 1
 	# setsid 才能真正脱离安装器的会话；没有就退回 nohup
 	if command -v setsid >/dev/null 2>&1; then

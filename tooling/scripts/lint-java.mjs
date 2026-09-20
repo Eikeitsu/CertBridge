@@ -48,15 +48,37 @@ function download(url, dest) {
   });
 }
 
+function resolveJavaBin() {
+  const fromPath = spawnSync("java", ["-version"], { encoding: "utf8" });
+  if (fromPath.status === 0) return "java";
+
+  const cacheRoot = join(dirname(fileURLToPath(import.meta.url)), "../../.build/cbx509-cache/jdk");
+  if (!existsSync(cacheRoot)) return null;
+  const walkJava = (dir) => {
+    for (const name of readdirSync(dir)) {
+      const p = join(dir, name);
+      const st = statSync(p);
+      if (st.isDirectory()) {
+        const found = walkJava(p);
+        if (found) return found;
+      } else if (name === "java" || name === "java.exe") {
+        return p;
+      }
+    }
+    return null;
+  };
+  return walkJava(cacheRoot);
+}
+
 const files = walk("tooling/cbx509");
 if (!files.length) {
   console.log("[lint:java] no java files");
   process.exit(0);
 }
 
-const java = spawnSync("java", ["-version"], { encoding: "utf8" });
-if (java.status !== 0) {
-  const msg = "[lint:java] java not found";
+const javaBin = resolveJavaBin();
+if (!javaBin) {
+  const msg = "[lint:java] java not found (PATH or .build/cbx509-cache/jdk)";
   if (requireFmt) {
     console.error(msg);
     process.exit(1);
@@ -84,5 +106,5 @@ const args = [
   jar,
   ...(fix ? ["-i", ...files] : ["--dry-run", "--set-exit-if-changed", ...files]),
 ];
-const r = spawnSync("java", args, { encoding: "utf8", stdio: "inherit" });
+const r = spawnSync(javaBin, args, { encoding: "utf8", stdio: "inherit" });
 process.exit(r.status ?? 1);

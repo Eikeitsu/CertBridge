@@ -21,23 +21,23 @@ _SCRIPTS = Path(__file__).resolve().parent
 
 
 def stamp_prop_text(prop_text: str, version: str, version_code: int) -> str:
-    if not re.search(r"^version=", prop_text, re.M):
+    if not re.search(r"^version=", prop_text, re.MULTILINE):
         raise SystemExit("module.prop missing version=")
-    if not re.search(r"^versionCode=", prop_text, re.M):
+    if not re.search(r"^versionCode=", prop_text, re.MULTILINE):
         raise SystemExit("module.prop missing versionCode=")
-    out = re.sub(r"^version=.*$", f"version={version}", prop_text, count=1, flags=re.M)
+    out = re.sub(r"^version=.*$", f"version={version}", prop_text, count=1, flags=re.MULTILINE)
     out = re.sub(
         r"^versionCode=.*$",
         f"versionCode={version_code}",
         out,
         count=1,
-        flags=re.M,
+        flags=re.MULTILINE,
     )
     return out
 
 
 def base_from_prop(prop_text: str) -> str:
-    m = re.search(r"^version=(.+)$", prop_text, re.M)
+    m = re.search(r"^version=(.+)$", prop_text, re.MULTILINE)
     raw = (m.group(1).strip() if m else "0.0.0").lstrip("vV")
     raw = re.sub(r"\.ci\.\d+$", "", raw)
     return raw or "0.0.0"
@@ -72,9 +72,7 @@ def main() -> int:
         if env_run.isdigit() and int(env_run) >= 1:
             run = int(env_run)
         else:
-            raise SystemExit(
-                "missing run number: set GITHUB_RUN_NUMBER or pass --run N"
-            )
+            raise SystemExit("missing run number: set GITHUB_RUN_NUMBER or pass --run N")
 
     text = args.prop.read_text(encoding="utf-8")
     if args.code > 0:

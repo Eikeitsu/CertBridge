@@ -41,7 +41,7 @@ def _as_code(raw: object) -> int | None:
 def read_code_from_prop(path: Path) -> int | None:
     if not path.is_file():
         return None
-    m = re.search(r"^versionCode=(.+)$", path.read_text(encoding="utf-8"), re.M)
+    m = re.search(r"^versionCode=(.+)$", path.read_text(encoding="utf-8"), re.MULTILINE)
     if not m:
         return None
     return _as_code(m.group(1).strip())
@@ -59,9 +59,7 @@ def read_code_from_json(path: Path) -> int | None:
 
 def read_code_from_url(url: str, timeout: float = 8.0) -> int | None:
     try:
-        req = urllib.request.Request(
-            url, headers={"User-Agent": "CertBridge-version-code"}
-        )
+        req = urllib.request.Request(url, headers={"User-Agent": "CertBridge-version-code"})
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             data = json.loads(resp.read().decode("utf-8"))
     except (

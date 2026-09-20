@@ -3,11 +3,14 @@
 #
 # Early-CI layout (json and zips on the same branch tip):
 #   update.json
-#   CertBridge.zip
+#   CertBridge.zip          ← arm64 full (Magisk update 默认)
+#   CertBridge_arm.zip
+#   CertBridge_x86.zip
+#   CertBridge_x64.zip
 #   CertBridge_lite.zip
-#   changelog.md          (optional short notes)
+#   changelog.md            (optional short notes)
 #   SOURCE_SHA
-#   INPUT_DIGEST          (optional)
+#   INPUT_DIGEST            (optional)
 #   README.md
 #
 # Env: GITHUB_TOKEN, GITHUB_REPOSITORY, GITHUB_SHA
@@ -63,22 +66,55 @@ else
   echo "warn: no lite zip; skipping CertBridge_lite.zip" >&2
 fi
 
-# Full zip: any CertBridge_*.zip that is not lite
-FULL_SRC=""
+# Prefer per-ABI split: *_arm64.zip → CertBridge.zip (update 默认通道)
+# 完整版 4 包：arm / arm64 / x86 / x64
+# Fallback: fat CertBridge_*.zip（非 lite / 非架构后缀）
+ARM64_SRC=""
+ARM_SRC=""
+X86_SRC=""
+X64_SRC=""
+FAT_SRC=""
 shopt -s nullglob
 for z in release/CertBridge_*.zip; do
   case "$z" in
     *_lite.zip) continue ;;
-    *) FULL_SRC="$z" ;;
+    *_arm64.zip) ARM64_SRC="$z" ;;
+    *_arm.zip) ARM_SRC="$z" ;;
+    *_x86_64.zip) X64_SRC="$z" ;; # 兼容旧名 → 发布为 x64
+    *_x64.zip) X64_SRC="$z" ;;
+    *_x86.zip) X86_SRC="$z" ;;
+    *) FAT_SRC="$z" ;;
   esac
 done
 shopt -u nullglob
-if [ -z "$FULL_SRC" ] || [ ! -f "$FULL_SRC" ]; then
-  echo "missing full release/CertBridge_*.zip" >&2
+
+if [ -n "$ARM64_SRC" ] && [ -f "$ARM64_SRC" ]; then
+  cp "$ARM64_SRC" "$STAGE/CertBridge.zip"
+  echo "ci-dist: CertBridge.zip ← $ARM64_SRC (arm64)"
+elif [ -n "$FAT_SRC" ] && [ -f "$FAT_SRC" ]; then
+  cp "$FAT_SRC" "$STAGE/CertBridge.zip"
+  echo "ci-dist: CertBridge.zip ← $FAT_SRC (fat fallback)"
+else
+  echo "missing full release zip (need *_arm64.zip or fat CertBridge_*.zip)" >&2
+  ls -la release/ >&2 || true
   exit 1
 fi
-cp "$FULL_SRC" "$STAGE/CertBridge.zip"
-echo "ci-dist: CertBridge.zip ← $FULL_SRC"
+
+publish_abi_alias() {
+  local src="$1" dest="$2" label="$3"
+  if [ -n "$src" ] && [ -f "$src" ]; then
+    cp "$src" "$STAGE/$dest"
+    echo "ci-dist: $dest ← $src"
+  else
+    rm -f "$STAGE/$dest"
+    echo "warn: no $label zip; removed stale $dest if any" >&2
+  fi
+}
+
+publish_abi_alias "$ARM_SRC" CertBridge_arm.zip arm
+publish_abi_alias "$X86_SRC" CertBridge_x86.zip x86
+publish_abi_alias "$X64_SRC" CertBridge_x64.zip x64
+rm -f "$STAGE/CertBridge_x86_64.zip"
 
 PROP="module/module.prop"
 VERSION="$(sed -n 's/^version=//p' "$PROP" | head -n1 | tr -d '\r')"
@@ -145,8 +181,11 @@ CertBridge **CI channel**: update manifest and module zips on the **same** branc
 
 | Path | Contents |
 |------|----------|
-| \`update.json\` | Magisk-compatible update check |
-| \`CertBridge.zip\` | Full module (latest CI) |
+| \`update.json\` | Magisk-compatible update check（默认 arm64 完整版） |
+| \`CertBridge.zip\` | Full module arm64（latest CI） |
+| \`CertBridge_arm.zip\` | Full module arm |
+| \`CertBridge_x86.zip\` | Full module x86 |
+| \`CertBridge_x64.zip\` | Full module x64 |
 | \`CertBridge_lite.zip\` | Lite module (when built) |
 | \`changelog.md\` | Short CI notes |
 

@@ -1,0 +1,6 @@
+# Clang-format for native/zygisk_hide (when present)
+BasedOnStyle: LLVM
+IndentWidth: 2
+ColumnLimit: 100
+SortIncludes: true
+AllowShortFunctionsOnASingleLine: Inline

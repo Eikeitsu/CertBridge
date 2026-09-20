@@ -21,8 +21,8 @@ import java.util.TimeZone;
 import javax.security.auth.x500.X500Principal;
 
 /**
- * Minimal openssl-compatible x509 helper for CertBridge Lite.
- * Supports the subset used by module shell scripts.
+ * Minimal openssl-compatible x509 helper for CertBridge Lite. Supports the subset used by module
+ * shell scripts.
  */
 public final class Main {
   private Main() {}
@@ -422,9 +422,9 @@ public final class Main {
   }
 
   /**
-   * OpenSSL X509_NAME_hash_old: MD5(subject Name DER), first 4 bytes LE → 8 hex.
-   * MD5 必须纯 Java：Magisk 安装环境里 app_process 调 Conscrypt MessageDigest
-   * 常会直接失败，而解析 / CA:TRUE / 有效期都不走 MD5，于是表现为「无法计算系统库文件名」。
+   * OpenSSL X509_NAME_hash_old: MD5(subject Name DER), first 4 bytes LE → 8 hex. MD5 必须纯
+   * Java：Magisk 安装环境里 app_process 调 Conscrypt MessageDigest 常会直接失败，而解析 / CA:TRUE / 有效期都不走
+   * MD5，于是表现为「无法计算系统库文件名」。
    */
   private static String subjectHashOld(X509Certificate cert) throws Exception {
     byte[] nameDer = null;

@@ -8,7 +8,7 @@ CODE="${CODE:?}"
 TAG="${TAG:?}"
 DEFAULT_BRANCH="${DEFAULT_BRANCH:?}"
 PAGES_BASE="${PAGES_BASE:-https://eikeitsu.github.io/CertBridge}"
-ZIP="${ZIP:-CertBridge_${RAW}.zip}"
+ZIP="${ZIP:-CertBridge_${RAW}_arm64.zip}"
 
 git config user.name "github-actions[bot]"
 git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

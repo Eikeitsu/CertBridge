@@ -6,7 +6,7 @@
 
 ### 模块从哪里下载？
 
-**[GitHub Releases](https://github.com/Eikeitsu/CertBridge/releases)**。选 `CertBridge_v*.zip`（推荐）或 `*_lite.zip`。文档站是说明书，不托管安装包；顶部导航「下载」也指向同一地址。
+**[GitHub Releases](https://github.com/Eikeitsu/CertBridge/releases)**。选 `*_arm64.zip`（推荐）或 `*_arm.zip` / `*_x86.zip` / `*_x64.zip` / `*_lite.zip`。文档站是说明书，不托管安装包；顶部导航「下载」也指向同一地址。
 
 ### 刷完没反应 / 证书还是错的？
 

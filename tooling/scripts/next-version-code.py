@@ -18,7 +18,6 @@ import argparse
 import json
 import os
 import re
-import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -42,7 +41,7 @@ def _as_code(raw: object) -> int | None:
 def read_code_from_prop(path: Path) -> int | None:
     if not path.is_file():
         return None
-    m = re.search(r"^versionCode=(.+)$", path.read_text(encoding="utf-8"), re.M)
+    m = re.search(r"^versionCode=(.+)$", path.read_text(encoding="utf-8"), re.MULTILINE)
     if not m:
         return None
     return _as_code(m.group(1).strip())
@@ -96,7 +95,9 @@ def collect_codes(repo: Path, fetch_remote: bool) -> list[int]:
     return codes
 
 
-def next_version_code(*, repo: Path, fetch_remote: bool = True, extras: list[int] | None = None) -> int:
+def next_version_code(
+    *, repo: Path, fetch_remote: bool = True, extras: list[int] | None = None
+) -> int:
     codes = collect_codes(repo, fetch_remote)
     if extras:
         codes.extend(c for c in extras if isinstance(c, int) and c > 0)

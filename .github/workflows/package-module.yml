@@ -1,35 +1,46 @@
 name: Package Module
 
+# 只打模块 zip。同提交改了 Web 时 skip push，等 Build Web 成功后再打（避免双次 stamp）。
+# INPUT_DIGEST 与 ci-dist tip 相同则跳过重建/发布。
+
 on:
   push:
     branches: [main, master]
     paths:
       - "module/**"
       - "webui/**"
+      - "native/**"
       - "tooling/scripts/build-web.mjs"
       - "tooling/scripts/build-cbx509.mjs"
+      - "tooling/scripts/build-zygisk-hide.mjs"
       - "tooling/scripts/package-module.mjs"
       - "tooling/scripts/stamp-ci-module-version.py"
       - "tooling/scripts/next-version-code.py"
       - "tooling/scripts/publish-ci-dist.sh"
       - "tooling/scripts/git-push-tree.sh"
+      - "tooling/scripts/plan-packaging-deps.sh"
+      - "tooling/scripts/module-input-digest.sh"
       - "tooling/cbx509/**"
       - "package.json"
       - "package-lock.json"
       - ".github/actions/setup-node-npm/**"
+      - ".github/actions/setup-ndk-clang/**"
       - ".github/workflows/package-module.yml"
   pull_request:
     branches: [main, master]
     paths:
       - "module/**"
       - "webui/**"
+      - "native/**"
       - "tooling/scripts/build-web.mjs"
       - "tooling/scripts/build-cbx509.mjs"
+      - "tooling/scripts/build-zygisk-hide.mjs"
       - "tooling/scripts/package-module.mjs"
       - "tooling/cbx509/**"
       - "package.json"
       - "package-lock.json"
       - ".github/actions/setup-node-npm/**"
+      - ".github/actions/setup-ndk-clang/**"
       - ".github/workflows/package-module.yml"
   workflow_run:
     workflows: ["Build Web"]
@@ -46,11 +57,45 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  package-module:
+  plan:
     if: >
       github.event_name != 'workflow_run' ||
       (github.event.workflow_run.conclusion == 'success' &&
        github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    outputs:
+      run_package: ${{ steps.gate.outputs.run_package }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Decide whether to package now
+        id: gate
+        env:
+          EXPECTED_SHA: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+          BEFORE_SHA: ${{ github.event_name == 'push' && github.event.before || '' }}
+          EVENT_NAME: ${{ github.event_name }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          chmod +x tooling/scripts/plan-packaging-deps.sh
+          eval "$(tooling/scripts/plan-packaging-deps.sh)"
+          echo "plan: web=$need_web ready=$siblings_ready → run=$run_package"
+          echo "run_package=$run_package" >> "$GITHUB_OUTPUT"
+          if [ "$run_package" != "1" ]; then
+            if [ "$EVENT_NAME" = "push" ]; then
+              echo "skip push packaging：同提交改了 Web，等 Build Web 成功后再打"
+            else
+              echo "skip workflow_run packaging：依赖未就绪"
+            fi
+          fi
+
+  package-module:
+    needs: plan
+    if: needs.plan.outputs.run_package == '1'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -60,8 +105,24 @@ jobs:
 
       - uses: ./.github/actions/setup-node-npm
 
+      - name: Compute input digest
+        id: digest
+        run: |
+          set -euo pipefail
+          chmod +x tooling/scripts/module-input-digest.sh
+          DIGEST="$(tooling/scripts/module-input-digest.sh | tail -1)"
+          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+          echo "input digest=$DIGEST"
+          tip="$(curl -fsSL "https://raw.githubusercontent.com/${{ github.repository }}/ci-dist/INPUT_DIGEST" 2>/dev/null || true)"
+          if [ -n "$tip" ] && [ "$tip" = "$DIGEST" ]; then
+            echo "unchanged=1" >> "$GITHUB_OUTPUT"
+            echo "module inputs unchanged vs ci-dist tip — skip rebuild/publish"
+          else
+            echo "unchanged=0" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Stamp CI module.prop
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && steps.digest.outputs.unchanged != '1'
         id: stamp
         run: |
           chmod +x tooling/scripts/*.sh || true
@@ -70,9 +131,22 @@ jobs:
           echo "version_code=$version_code" >> "$GITHUB_OUTPUT"
           cat module/module.prop
 
-      - run: npm run build:module
+      - name: Setup NDK (Zygisk sources present)
+        if: steps.digest.outputs.unchanged != '1' && hashFiles('native/zygisk_hide/**') != ''
+        uses: ./.github/actions/setup-ndk-clang
+        id: ndk
+
+      - name: Build module zip
+        if: steps.digest.outputs.unchanged != '1'
+        env:
+          ANDROID_NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
+          SKIP_ZYGISK_HIDE: ${{ hashFiles('native/zygisk_hide/**') == '' && '1' || '0' }}
+          REQUIRE_ZYGISK_HIDE: ${{ hashFiles('tooling/scripts/build-zygisk-hide.mjs') != '' && hashFiles('native/zygisk_hide/**') != '' && '1' || '0' }}
+          ZYGISK_ABIS: arm64-v8a,armeabi-v7a
+        run: npm run build:module
 
       - uses: actions/upload-artifact@v4
+        if: steps.digest.outputs.unchanged != '1'
         with:
           name: magisk-module
           path: release/*.zip
@@ -80,6 +154,7 @@ jobs:
 
       - name: Publish ci-dist (update.json + zips)
         if: >
+          steps.digest.outputs.unchanged != '1' &&
           github.event_name != 'pull_request' &&
           ((github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')) ||
            (github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')) ||
@@ -89,6 +164,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_SHA: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+          INPUT_DIGEST: ${{ steps.digest.outputs.digest }}
         run: |
           chmod +x tooling/scripts/publish-ci-dist.sh tooling/scripts/git-push-tree.sh
           tooling/scripts/publish-ci-dist.sh "${{ steps.stamp.outputs.version }}"

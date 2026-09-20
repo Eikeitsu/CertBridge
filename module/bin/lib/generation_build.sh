@@ -8,15 +8,10 @@ source_identity() {
   echo "api=$(get_api)"
   echo "source=$src"
   echo "source_count=$(count_certs "$src")"
-  checksum=$(
-    for cert in "$src"/*.*; do
-      [ -f "$cert" ] || continue
-      name=$(basename "$cert")
-      is_cert_filename "$name" || continue
-      cksum "$cert" 2>/dev/null
-    done | sort | cksum | awk '{print $1 ":" $2}'
-  )
-  echo "source_checksum=${checksum:-unknown}"
+  # 轻量指纹：数量 + 目录占用，避免对数百张系统 CA 逐文件 cksum（开机加速）
+  # 与双模式无关；addon 完整性仍由 applied-certs.list 校验
+  size_kb=$(du -sk "$src" 2>/dev/null | awk '{print $1}')
+  echo "source_checksum=light:$(count_certs "$src"):${size_kb:-0}"
 }
 
 # 是否仍有命名空间直接挂着 generation 目录本身（不可安全替换）

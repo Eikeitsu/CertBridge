@@ -115,6 +115,35 @@ orphan_tmpfs_stage() {
 # 软重启不换 mount 时，若不先卸掉，build_boot_generation 会把旧 addon
 #（如已关闭的 ProxyPin 243f0bfb.0）当成「系统基线」再次拷进 generation。
 detach_runtime_cacert_binds() {
+  # 冷启动常见：无残留则整段跳过（不改双模式语义）
+  _detach_need=0
+  if [ -n "${RUNTIME_MOUNT_ROOT:-}" ] && [ -d "$RUNTIME_MOUNT_ROOT" ]; then
+    if mountpoint -q "$RUNTIME_MOUNT_ROOT" 2>/dev/null; then
+      _detach_need=1
+    else
+      for _s in "$RUNTIME_MOUNT_ROOT"/*; do
+        [ -d "$_s" ] || continue
+        if mountpoint -q "$_s" 2>/dev/null; then
+          _detach_need=1
+          break
+        fi
+      done
+    fi
+  fi
+  if [ "$_detach_need" = "0" ]; then
+    for _t in "$APEX_CACERTS" "$SYSTEM_CACERTS"; do
+      [ -d "$_t" ] || continue
+      if is_certbridge_runtime_bind "$_t" 2>/dev/null; then
+        _detach_need=1
+        break
+      fi
+    done
+  fi
+  if [ "$_detach_need" = "0" ]; then
+    log_debug "store: detach skip (no leftover runtime binds)"
+    return 0
+  fi
+
   targets=""
   seen="|"
   for target in "$APEX_CACERTS" "$SYSTEM_CACERTS"; do

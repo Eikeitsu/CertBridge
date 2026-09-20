@@ -30,6 +30,19 @@ copy_cert_store() {
   source_n=$(count_certs "$src")
   [ "$source_n" -ge "$MIN_SAFE_CERTS" ] || return 1
   mkdir -p "$dest" 2>/dev/null || return 1
+  # 短路径：整目录拷后剔除非证书（少 fork，加速开机 generation）
+  if cp -a "$src"/. "$dest"/ 2>/dev/null; then
+    for f in "$dest"/*; do
+      [ -e "$f" ] || continue
+      if [ ! -f "$f" ]; then
+        rm -rf "$f" 2>/dev/null
+        continue
+      fi
+      is_cert_filename "$(basename "$f")" || rm -f "$f"
+    done
+    [ "$(count_certs "$dest")" -eq "$source_n" ] && return 0
+    rm -f "$dest"/* 2>/dev/null
+  fi
   for cert in "$src"/*.*; do
     [ -f "$cert" ] || continue
     name=$(basename "$cert")

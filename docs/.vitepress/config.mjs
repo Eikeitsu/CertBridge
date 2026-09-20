@@ -24,10 +24,6 @@ export default defineConfig({
     siteTitle: "证书桥",
     nav: [
       { text: "首页", link: "/" },
-      {
-        text: "下载",
-        link: "https://github.com/Eikeitsu/CertBridge/releases",
-      },
       { text: "功能介绍", link: "/guide/features" },
       { text: "安装", link: "/guide/install" },
       { text: "常见问题", link: "/guide/faq" },
@@ -77,8 +73,7 @@ export default defineConfig({
       },
     ],
     footer: {
-      message:
-        '证书桥 · <a href="https://github.com/Eikeitsu/CertBridge/releases">下载模块</a> · Magisk / KernelSU / APatch',
+      message: "证书桥 · CertBridge · Magisk / KernelSU / APatch",
       copyright: "由许小墨维护",
     },
     search: {

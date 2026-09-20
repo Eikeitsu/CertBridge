@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# Promote CI zips from ci-dist: download, rewrite module.prop version, re-zip.
+#
+# Env:
+#   GITHUB_REPOSITORY (or OWNER_REPO)
+#   PROMOTE_SHA (optional; logged only)
+#   RAW / CODE — target version + versionCode (required)
+#   UPDATE_JSON (optional; default Pages update.json)
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+cd "$ROOT"
+
+OWNER_REPO="${GITHUB_REPOSITORY:-${OWNER_REPO:-Eikeitsu/CertBridge}}"
+RAW="${RAW:?RAW required}"
+CODE="${CODE:?CODE required}"
+UPDATE_JSON="${UPDATE_JSON:-https://eikeitsu.github.io/CertBridge/update.json}"
+CI_BASE="${CI_ZIP_URL_BASE:-https://raw.githubusercontent.com/${OWNER_REPO}/ci-dist}"
+
+mkdir -p release
+STAGE="$(mktemp -d)"
+cleanup() { rm -rf "$STAGE"; }
+trap cleanup EXIT
+
+restamp_zip_file() {
+  local src_zip="$1" out_name="$2"
+  local unpack="$STAGE/unpack-$(basename "$out_name" .zip)"
+  rm -rf "$unpack"
+  mkdir -p "$unpack"
+  python3 - "$src_zip" "$unpack" <<'PY'
+import sys, zipfile
+zf = zipfile.ZipFile(sys.argv[1])
+zf.extractall(sys.argv[2])
+PY
+  local prop="$unpack/module.prop"
+  [ -f "$prop" ] || {
+    echo "missing module.prop in $src_zip" >&2
+    exit 1
+  }
+  sed -i "s/^version=.*/version=${RAW}/" "$prop"
+  sed -i "s/^versionCode=.*/versionCode=${CODE}/" "$prop"
+  if grep -q '^updateJson=' "$prop"; then
+    sed -i "s|^updateJson=.*|updateJson=${UPDATE_JSON}|" "$prop"
+  else
+    echo "updateJson=${UPDATE_JSON}" >>"$prop"
+  fi
+  python3 - "$unpack" "release/${out_name}" <<'PY'
+import sys, zipfile
+from pathlib import Path
+root = Path(sys.argv[1])
+out = Path(sys.argv[2])
+with zipfile.ZipFile(out, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+    for p in sorted(root.rglob("*")):
+        if p.is_file():
+            zf.write(p, p.relative_to(root).as_posix())
+print("wrote", out)
+PY
+}
+
+echo "promote: fetch ${CI_BASE}/CertBridge.zip"
+curl -fsSL -o "$STAGE/CertBridge.zip" "${CI_BASE}/CertBridge.zip"
+restamp_zip_file "$STAGE/CertBridge.zip" "CertBridge_${RAW}.zip"
+
+if curl -fsSL -o "$STAGE/CertBridge_lite.zip" "${CI_BASE}/CertBridge_lite.zip"; then
+  restamp_zip_file "$STAGE/CertBridge_lite.zip" "CertBridge_${RAW}_lite.zip"
+else
+  echo "warn: no CertBridge_lite.zip on ci-dist tip — skip lite" >&2
+fi
+
+ls -la release/CertBridge_*.zip
+echo "promote done RAW=$RAW CODE=$CODE SHA=${PROMOTE_SHA:-tip}"

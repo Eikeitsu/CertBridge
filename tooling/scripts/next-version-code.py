@@ -18,7 +18,6 @@ import argparse
 import json
 import os
 import re
-import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -60,7 +59,9 @@ def read_code_from_json(path: Path) -> int | None:
 
 def read_code_from_url(url: str, timeout: float = 8.0) -> int | None:
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "CertBridge-version-code"})
+        req = urllib.request.Request(
+            url, headers={"User-Agent": "CertBridge-version-code"}
+        )
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             data = json.loads(resp.read().decode("utf-8"))
     except (
@@ -96,7 +97,9 @@ def collect_codes(repo: Path, fetch_remote: bool) -> list[int]:
     return codes
 
 
-def next_version_code(*, repo: Path, fetch_remote: bool = True, extras: list[int] | None = None) -> int:
+def next_version_code(
+    *, repo: Path, fetch_remote: bool = True, extras: list[int] | None = None
+) -> int:
     codes = collect_codes(repo, fetch_remote)
     if extras:
         codes.extend(c for c in extras if isinstance(c, int) and c > 0)

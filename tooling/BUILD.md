@@ -38,17 +38,42 @@ docs/                   # VitePress 用户文档
 
 ```bash
 npm install
+npm run check                 # typecheck + 全量 lint + prettier
+npm run lint                  # js/style/md/shell/py/java/clang
+npm run format                # prettier
+npm run format:all            # prettier + lint --fix
 npm run dev:web
 npm run build:web
 npm run typecheck:web
 npm run build:cbx509          # Lite 用 dex
 npm run package:module        # 打 zip（默认完整版 + Lite）
-npm run build:module          # build:web + package:module（若已接入 Zygisk 脚本则会编 so）
+npm run build:module          # build:web + package:module（有 Zygisk 源码时 CI 会编 so）
 npm run dev:docs
 npm run build:docs
 ```
 
-存在 `native/zygisk_hide/` 与 `npm run build:zygisk-hide` 时：需 Android NDK；本地可 `SKIP_ZYGISK_HIDE=1` 跳过；CI 可用 `REQUIRE_ZYGISK_HIDE=1` 强制编 so。无 so 时仍可打包，自定义安装勾选 Zygisk 过滤会提示缺组件。
+存在 `native/zygisk_hide/` 与 `npm run build:zygisk-hide` 时：CI 使用 `.github/actions/setup-ndk-clang`；本地可 `SKIP_ZYGISK_HIDE=1` 跳过；`REQUIRE_ZYGISK_HIDE=1` 强制编 so。无 so 时仍可打包，自定义安装勾选 Zygisk 过滤会提示缺组件。
+
+### Lint 覆盖
+
+| 种类     | 命令         | 工具                                |
+| -------- | ------------ | ----------------------------------- |
+| TS/JS    | `lint:js`    | ESLint                              |
+| SCSS/CSS | `lint:style` | Stylelint                           |
+| Markdown | `lint:md`    | markdownlint-cli2                   |
+| Shell    | `lint:shell` | ShellCheck                          |
+| Python   | `lint:py`    | ruff                                |
+| Java     | `lint:java`  | google-java-format                  |
+| C/C++    | `lint:clang` | clang-format（无 `native/` 则跳过） |
+| 格式化   | `format`     | Prettier（含 `.github` yml）        |
+
+CI `Lint` 工作流拆为 **web / shell / tooling** 三 job + gate。
+
+### 打包与发版 CI
+
+- **门控**：同提交改了 `webui/` 等时，push 上的 Package 会 skip，等 Build Web 成功后的 `workflow_run` 再打
+- **去重**：`module-input-digest.sh` 与 `ci-dist/INPUT_DIGEST` 相同则跳过重建
+- **发版**：`Release Module` 可选「晋升 CI」——从 `ci-dist` 拉 zip 只重盖正式 version（`promote-ci-module-zips.sh`）
 
 OpenSSL ABI 与发包版本：
 
@@ -65,12 +90,13 @@ PACKAGE_EDITIONS=both    # full | lite | both
 
 ## 工作流
 
-| 工作流           | 触发                                   | 职责                                     |
-| ---------------- | -------------------------------------- | ---------------------------------------- |
-| `Build Web`      | `webui/**`                             | 构建 Web Artifact                        |
-| `Build Docs`     | `docs/**`                              | 构建并部署 GitHub Pages                  |
-| `Package Module` | `module/**` / `webui/**` / `native/**` | 打 zip；push 时发布 `ci-dist`            |
-| `Release Module` | 手动 / `v*` 标签                       | 正式 Release + Pages `update.json` / zip |
+| 工作流           | 触发                                   | 职责                                                    |
+| ---------------- | -------------------------------------- | ------------------------------------------------------- |
+| `Lint`           | push / PR                              | 并行 web / shell / tooling + gate                       |
+| `Build Web`      | `webui/**`                             | 构建 Web Artifact                                       |
+| `Build Docs`     | `docs/**`                              | 构建并部署 GitHub Pages                                 |
+| `Package Module` | `module/**` / `webui/**` / `native/**` | 门控 + digest；打 zip；push 时发布 `ci-dist`            |
+| `Release Module` | 手动 / `v*` 标签                       | 重建或晋升 ci-dist；Release + Pages `update.json` / zip |
 
 ### 更新通道
 

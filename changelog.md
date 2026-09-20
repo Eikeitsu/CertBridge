@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-- **文档重写**：明按当前模块能力重写使用手册
+- **文档重写**：按当前模块能力重写使用手册
+- **CI**：同提交改 Web 时打包门控；`INPUT_DIGEST` 去重；Lint 并行 web/shell/tooling；发版可晋升 ci-dist；接入 `setup-ndk-clang`
+- **Lint/Format**：覆盖 Python（ruff）、Java（google-java-format）、C/C++（clang-format，有 native 时）
 
 ## v4.2.0
 

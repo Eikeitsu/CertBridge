@@ -15,7 +15,6 @@ import argparse
 import importlib.util
 import os
 import re
-import sys
 from pathlib import Path
 
 _SCRIPTS = Path(__file__).resolve().parent
@@ -73,7 +72,9 @@ def main() -> int:
         if env_run.isdigit() and int(env_run) >= 1:
             run = int(env_run)
         else:
-            raise SystemExit("missing run number: set GITHUB_RUN_NUMBER or pass --run N")
+            raise SystemExit(
+                "missing run number: set GITHUB_RUN_NUMBER or pass --run N"
+            )
 
     text = args.prop.read_text(encoding="utf-8")
     if args.code > 0:

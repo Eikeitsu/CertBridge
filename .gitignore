@@ -14,3 +14,7 @@ module/bin/openssl/openssl-arm
 module/bin/openssl/openssl-arm64
 module/bin/openssl/openssl-x64
 module/bin/openssl/openssl-x86
+# Zygisk so（由 npm run build:zygisk-hide 生成；勿提交）
+module/zygisk/*.so
+module/libcb_zn_hide.so
+module/zn_modules.txt

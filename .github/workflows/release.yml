@@ -12,6 +12,19 @@ on:
         required: false
         type: string
         default: ""
+      build_mode:
+        description: "构建方式"
+        required: true
+        type: choice
+        default: "重新构建 — 完整编译正式版（推荐）"
+        options:
+          - "重新构建 — 完整编译正式版（推荐）"
+          - "晋升 CI — 从 ci-dist 取 zip，仅重盖正式 version（更快）"
+      ci_promote_sha:
+        description: "晋升 CI 时记录的 commit SHA（可空=用 ci-dist tip；仅日志）"
+        required: false
+        type: string
+        default: ""
       prerelease:
         description: "GitHub Release 标记为预发布（不影响正式更新通道）"
         required: false
@@ -40,6 +53,7 @@ jobs:
       prerelease: ${{ steps.meta.outputs.prerelease }}
       draft: ${{ steps.meta.outputs.draft }}
       zip: ${{ steps.meta.outputs.zip }}
+      build_mode: ${{ steps.meta.outputs.build_mode }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -55,12 +69,19 @@ jobs:
             CUSTOM_NAME="${{ inputs.release_name }}"
             echo "prerelease=${{ inputs.prerelease }}" >> "$GITHUB_OUTPUT"
             echo "draft=${{ inputs.draft }}" >> "$GITHUB_OUTPUT"
+            MODE="${{ inputs.build_mode }}"
+            if [[ "$MODE" == 晋升* ]]; then
+              echo "build_mode=promote" >> "$GITHUB_OUTPUT"
+            else
+              echo "build_mode=rebuild" >> "$GITHUB_OUTPUT"
+            fi
           else
             TAG_NAME="${GITHUB_REF_NAME}"
             RAW="${TAG_NAME#v}"
             CUSTOM_NAME=""
             echo "prerelease=false" >> "$GITHUB_OUTPUT"
             echo "draft=false" >> "$GITHUB_OUTPUT"
+            echo "build_mode=rebuild" >> "$GITHUB_OUTPUT"
           fi
 
           eval "$(RAW="$RAW" python3 tooling/scripts/resolve-release-version.py)"
@@ -105,7 +126,30 @@ jobs:
           npm version "$NPM_VERSION" --no-git-tag-version --allow-same-version
           node -p "require('./package.json').version"
 
-      - run: npm run build:module
+      - name: Promote from ci-dist
+        if: steps.meta.outputs.build_mode == 'promote'
+        env:
+          RAW: ${{ steps.meta.outputs.raw }}
+          CODE: ${{ steps.meta.outputs.version_code }}
+          PROMOTE_SHA: ${{ inputs.ci_promote_sha }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          chmod +x tooling/scripts/promote-ci-module-zips.sh
+          tooling/scripts/promote-ci-module-zips.sh
+
+      - name: Setup NDK (Zygisk sources present)
+        if: steps.meta.outputs.build_mode != 'promote' && hashFiles('native/zygisk_hide/**') != ''
+        uses: ./.github/actions/setup-ndk-clang
+        id: ndk
+
+      - name: Build module (rebuild)
+        if: steps.meta.outputs.build_mode != 'promote'
+        env:
+          ANDROID_NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
+          SKIP_ZYGISK_HIDE: ${{ hashFiles('native/zygisk_hide/**') == '' && '1' || '0' }}
+          REQUIRE_ZYGISK_HIDE: ${{ hashFiles('tooling/scripts/build-zygisk-hide.mjs') != '' && hashFiles('native/zygisk_hide/**') != '' && '1' || '0' }}
+          ZYGISK_ABIS: arm64-v8a,armeabi-v7a
+        run: npm run build:module
 
       - name: Upload zip artifact
         uses: actions/upload-artifact@v4

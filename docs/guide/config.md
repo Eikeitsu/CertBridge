@@ -17,17 +17,17 @@ force_bind_capture=0
 late_inject=0
 ```
 
-| 键                       | 含义                                                         | 默认         |
-| ------------------------ | ------------------------------------------------------------ | ------------ |
-| `schema_version`         | 配置结构版本，请勿手动修改                                   | `4`          |
-| `reqable`                | 启用 Reqable（App 导入）CA                                   | `1`          |
-| `proxypin`               | 启用 ProxyPin CA（App 或内置兜底）                           | `1`          |
-| `mount_mode`             | 挂载模式：`compatible` 或 `magic`                            | `compatible` |
-| `experimental_14_system` | Android 14+（两种挂载模式均生效）：`auto` / `skip`（见下文） | `skip`       |
-| `tmpfs_style`            | 临时挂载路径：`dev` / `mnt` / `short` / `legacy`             | `dev`        |
-| `quiet_prop`             | `1`=管理器列表中性简介；`0`=动态写入运行状态                 | `1`          |
-| `force_bind_capture`     | `1`=强注 Reqable/ProxyPin（旧行为）；`0`=尊重卸载模块        | `0`          |
-| `late_inject`            | `1`=service 晚注入 namespaces；`0`=仅 boot 注入              | `0`          |
+| 键                       | 含义                                                                          | 默认         |
+| ------------------------ | ----------------------------------------------------------------------------- | ------------ |
+| `schema_version`         | 配置结构版本，请勿手动修改                                                    | `4`          |
+| `reqable`                | 启用 Reqable（App 导入）CA                                                    | `1`          |
+| `proxypin`               | 启用 ProxyPin CA（App 或内置兜底）                                            | `1`          |
+| `mount_mode`             | 挂载模式：`compatible` 或 `magic`                                             | `compatible` |
+| `experimental_14_system` | Android 14+（两种挂载模式均生效）：`auto` / `skip`（见下文）                  | `skip`       |
+| `tmpfs_style`            | 临时挂载路径：`dev` / `mnt` / `short` / `legacy`                              | `dev`        |
+| `quiet_prop`             | `1`=管理器列表中性简介；`0`=动态写入运行状态                                  | `1`          |
+| `force_bind_capture`     | `1`=强注 Reqable/ProxyPin（旧行为）；`0`=尊重卸载模块                         | `0`          |
+| `late_inject`            | `1`=service 晚注入 + 完整 zygote 复核；`0`=仅 boot、痕迹更少（状态只核 init） | `0`          |
 
 ### 挂载模式
 
@@ -301,11 +301,11 @@ WebUI 概览与简介只读开机写入的运行时状态缓存，不再后台�
 
 `/data/adb/certbridge/` 仅放**用完即删**的外部状态（不随模块目录常驻）：
 
-| 路径 | 用途 |
-| --- | --- |
-| `install_auto` | WebUI 无人值守刷入时的音量键跳过标记；安装读完即删 |
-| `hot_update_payload/` | 免重启更新时的模块完整副本 |
-| `hot_update.sh` | 热更新收尾 worker |
-| `*.hot_update.lock` | 热更新互斥锁 |
+| 路径                  | 用途                                               |
+| --------------------- | -------------------------------------------------- |
+| `install_auto`        | WebUI 无人值守刷入时的音量键跳过标记；安装读完即删 |
+| `hot_update_payload/` | 免重启更新时的模块完整副本                         |
+| `hot_update.sh`       | 热更新收尾 worker                                  |
+| `*.hot_update.lock`   | 热更新互斥锁                                       |
 
 空目录会在标记清除 / 热更新结束 / 卸载时删掉。历史上散落在 `/data/adb/.certbridge_*` 的文件也会被清理。

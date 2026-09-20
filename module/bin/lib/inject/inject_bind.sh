@@ -7,12 +7,19 @@ bind_current_once() {
   source_id=$(path_identity "$stage")
   [ -n "$source_id" ] || return 1
 
-  if verify_direct_store "$target"; then
+  # late_inject=0：跳过整库 cksum，减少无谓探测
+  lean=0
+  [ "$(read_conf late_inject 0)" = "0" ] && lean=1
+
+  if [ "$lean" = "0" ] && verify_direct_store "$target"; then
     if [ "$(path_identity "$target")" = "$source_id" ]; then
       log_debug "inject: current ns already valid ($target)"
       return 0
     fi
     log_debug "inject: current ns has compatible content; rebinding to owned tmpfs ($target)"
+  elif [ "$lean" = "1" ] && [ "$(path_identity "$target")" = "$source_id" ]; then
+    log_debug "inject: current ns already owned ($target)"
+    return 0
   fi
 
   mount --bind "$stage" "$target" 2>/dev/null || {
@@ -23,7 +30,7 @@ bind_current_once() {
   if [ "$(path_identity "$target")" != "$source_id" ]; then
     log_warn "inject: current ns ownership mismatch after bind ($target) (keep mount)"
   fi
-  if ! verify_direct_store "$target"; then
+  if [ "$lean" = "0" ] && ! verify_direct_store "$target"; then
     log_warn "inject: current ns content verify soft-fail ($target) (keep mount)"
   fi
   log_info "inject: current ns injected ($target)"
@@ -39,12 +46,18 @@ bind_pid_once() {
   source_id=$(path_identity "$stage")
   [ -n "$source_id" ] || return 1
 
-  if verify_namespace_store "$pid" "$target"; then
+  lean=0
+  [ "$(read_conf late_inject 0)" = "0" ] && lean=1
+
+  if [ "$lean" = "0" ] && verify_namespace_store "$pid" "$target"; then
     if [ "$(namespace_path_identity "$pid" "$target")" = "$source_id" ]; then
       log_debug "inject: $label pid=$pid already valid"
       return 0
     fi
     log_debug "inject: $label pid=$pid rebinding to owned tmpfs"
+  elif [ "$lean" = "1" ] && [ "$(namespace_path_identity "$pid" "$target")" = "$source_id" ]; then
+    log_debug "inject: $label pid=$pid already owned"
+    return 0
   fi
 
   src=$(stage_visible_for_pid "$pid" "$stage") || {
@@ -60,7 +73,7 @@ bind_pid_once() {
   if [ "$(namespace_path_identity "$pid" "$target")" != "$source_id" ]; then
     log_warn "inject: $label pid=$pid ownership mismatch after bind (keep mount)"
   fi
-  if ! verify_namespace_store "$pid" "$target"; then
+  if [ "$lean" = "0" ] && ! verify_namespace_store "$pid" "$target"; then
     log_warn "inject: $label pid=$pid content verify soft-fail (keep mount)"
   fi
   log_info "inject: $label pid=$pid injected"

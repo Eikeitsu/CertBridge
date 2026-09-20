@@ -94,21 +94,14 @@ is_certbridge_runtime_bind() {
 
 # bind 成功后卸掉 staging 挂载点，mountinfo 不再暴露临时路径。
 # 目标上的 bind 仍保留（同一 tmpfs 引用）。
+# 只在当前 / init 命名空间 umount，禁止再 nsenter zygote
+#（zygote 侧通常本就看不到 stage 挂载点，多一轮 nsenter 易触发 Found KSU）。
 orphan_tmpfs_stage() {
   stage="$1"
   [ -n "$stage" ] || return 0
-  if command -v nsenter >/dev/null 2>&1; then
-    for process in zygote zygote64; do
-      for pid in $(pidof "$process" 2>/dev/null) $(pgrep -x "$process" 2>/dev/null); do
-        [ -d "/proc/$pid/ns/mnt" ] || continue
-        nsenter --mount=/proc/"$pid"/ns/mnt -- umount "$stage" 2>/dev/null || \
-          nsenter --mount=/proc/"$pid"/ns/mnt -- umount -l "$stage" 2>/dev/null || true
-      done
-    done
-    if [ -d /proc/1/ns/mnt ]; then
-      nsenter --mount=/proc/1/ns/mnt -- umount "$stage" 2>/dev/null || \
-        nsenter --mount=/proc/1/ns/mnt -- umount -l "$stage" 2>/dev/null || true
-    fi
+  if command -v nsenter >/dev/null 2>&1 && [ -d /proc/1/ns/mnt ]; then
+    nsenter --mount=/proc/1/ns/mnt -- umount "$stage" 2>/dev/null || \
+      nsenter --mount=/proc/1/ns/mnt -- umount -l "$stage" 2>/dev/null || true
   fi
   umount "$stage" 2>/dev/null || umount -l "$stage" 2>/dev/null || true
   rmdir "$stage" 2>/dev/null || true

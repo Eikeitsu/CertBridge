@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Zygisk 挂载过滤**：`native/zygisk_hide`、构建脚本、默认 `zn_whitelist.txt`；`build:module` 会编 so；CI 装 NDK 并 `REQUIRE_ZYGISK_HIDE=1`
+
 ## v4.2.0
 
 > 解决了春秋检测词条：Found ksu/免解设备

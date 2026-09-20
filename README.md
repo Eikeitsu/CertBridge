@@ -2,13 +2,11 @@
 
 面向 Magisk / KernelSU / APatch 的 **系统 CA 注入**：把 Reqable / ProxyPin / 自定义证书合并进 Android 系统信任库，并提供挂载隐藏协助、可选 Zygisk 过滤与 WebUI。
 
-|             |                                                                         |
-| ----------- | ----------------------------------------------------------------------- |
-| 显示名 / ID | **证书桥** · `CertBridge`                                               |
-| 仓库        | [Eikeitsu/CertBridge](https://github.com/Eikeitsu/CertBridge)           |
-| 文档        | [eikeitsu.github.io/CertBridge](https://eikeitsu.github.io/CertBridge/) |
-| Releases    | [完整版 / Lite 下载](https://github.com/Eikeitsu/CertBridge/releases)   |
-| 酷安        | [许小墨](https://www.coolapk.com/u/7602666)                             |
+- **显示名 / ID**：证书桥 · `CertBridge`
+- **仓库**：[Eikeitsu/CertBridge](https://github.com/Eikeitsu/CertBridge)
+- **文档**：[eikeitsu.github.io/CertBridge](https://eikeitsu.github.io/CertBridge/)
+- **Releases**：[完整版 / Lite 下载](https://github.com/Eikeitsu/CertBridge/releases)
+- **酷安**：[许小墨](https://www.coolapk.com/u/7602666)
 
 ## WebUI 预览
 

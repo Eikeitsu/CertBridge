@@ -18,7 +18,14 @@ inject_one_target() {
     # namespaces（service 晚注入）：默认不再 nsenter zygote/init，减轻「Found KSU」类误伤；
     # 仅当 /proc/<pid>/mountinfo 看不到本模块 runtime bind 时才补注 zygote（开机过早未就绪的兜底）。
     if [ "$mode" = "boot" ]; then
-      bind_pid_once 1 init "$target" "$stage" || rc=1
+      # 当前 mount ns 已是 init 时，bind_current 已覆盖 pid 1，避免再 nsenter
+      _cur_ns=$(readlink /proc/self/ns/mnt 2>/dev/null)
+      _init_ns=$(readlink /proc/1/ns/mnt 2>/dev/null)
+      if [ -n "$_cur_ns" ] && [ "$_cur_ns" = "$_init_ns" ]; then
+        log_debug "inject: current ns is init, skip separate pid 1 bind"
+      else
+        bind_pid_once 1 init "$target" "$stage" || rc=1
+      fi
       # boot_bind_zygote=0：不进 zygote（仅 init），减轻 Found KSU；子进程一般继承，难机可保持默认 1
       if [ "$(read_conf boot_bind_zygote 0)" = "1" ]; then
         # 每个 zygote 名只取一组去重 PID，避免 pidof+pgrep 双扫重复 nsenter

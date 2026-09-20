@@ -6,7 +6,7 @@ const repoName =
 export default defineConfig({
   title: "证书桥",
   description:
-    "将 Reqable / ProxyPin / 自定义 CA 合并进 Android 系统信任库；完整版与 Lite 双包",
+    "Magisk / KernelSU / APatch 系统 CA 注入：Reqable / ProxyPin / 自定义证书，挂载隐藏与 WebUI",
   base: `/${repoName}/`,
   lang: "zh-CN",
   head: [
@@ -24,9 +24,23 @@ export default defineConfig({
     siteTitle: "证书桥",
     nav: [
       { text: "首页", link: "/" },
+      {
+        text: "下载",
+        link: "https://github.com/Eikeitsu/CertBridge/releases",
+      },
       { text: "功能介绍", link: "/guide/features" },
       { text: "安装", link: "/guide/install" },
-      { text: "配置说明", link: "/guide/config" },
+      { text: "常见问题", link: "/guide/faq" },
+      {
+        text: "更多",
+        items: [
+          { text: "配置说明", link: "/guide/config" },
+          { text: "挂载隐藏", link: "/guide/hide" },
+          { text: "WebUI", link: "/guide/webui" },
+          { text: "命令行 CLI", link: "/guide/cli" },
+          { text: "相关软件", link: "/guide/related" },
+        ],
+      },
       { text: "更新日志", link: "/guide/changelog" },
     ],
     sidebar: [
@@ -36,10 +50,23 @@ export default defineConfig({
           { text: "功能介绍", link: "/guide/features" },
           { text: "安装与升级", link: "/guide/install" },
           { text: "配置说明", link: "/guide/config" },
-          { text: "挂载隐藏说明", link: "/guide/hide" },
-          { text: "更新日志", link: "/guide/changelog" },
           { text: "常见问题", link: "/guide/faq" },
+        ],
+      },
+      {
+        text: "隐藏与界面",
+        items: [
+          { text: "挂载隐藏", link: "/guide/hide" },
+          { text: "WebUI", link: "/guide/webui" },
+          { text: "命令行 CLI", link: "/guide/cli" },
+        ],
+      },
+      {
+        text: "其它",
+        items: [
           { text: "相关软件", link: "/guide/related" },
+          { text: "更新日志", link: "/guide/changelog" },
+          { text: "致谢", link: "/guide/credits" },
         ],
       },
     ],
@@ -50,8 +77,12 @@ export default defineConfig({
       },
     ],
     footer: {
-      message: "CertBridge · 证书桥",
-      copyright: "许小墨",
+      message:
+        '证书桥 · <a href="https://github.com/Eikeitsu/CertBridge/releases">下载模块</a> · Magisk / KernelSU / APatch',
+      copyright: "由许小墨维护",
+    },
+    search: {
+      provider: "local",
     },
   },
 });

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { bindConfirmHost, type ConfirmRequest } from "@/shared/lib/confirmAction";
 import { haptic } from "@/shared/lib/haptic";
+import { BottomSheet } from "./BottomSheet";
 
 export function ConfirmHost() {
   const [request, setRequest] = useState<ConfirmRequest | null>(null);
@@ -10,53 +11,47 @@ export function ConfirmHost() {
     return () => bindConfirmHost(null);
   }, []);
 
-  if (!request) return null;
+  const open = Boolean(request);
 
   return (
-    <div className="bf-confirm" role="presentation">
-      <button
-        type="button"
-        className="bf-confirm__mask"
-        aria-label="关闭"
-        onClick={() => {
-          haptic("light");
-          request.reject();
-        }}
-      />
-      <div
-        className={`bf-confirm__sheet${request.danger ? " is-danger" : ""}`}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={`bf-confirm-title-${request.id}`}
-      >
-        <div className="bf-confirm__handle" aria-hidden />
-        <h2 id={`bf-confirm-title-${request.id}`} className="bf-confirm__title">
-          {request.title}
-        </h2>
-        <p className="bf-confirm__body">{request.content}</p>
-        <div className="bf-confirm__actions">
-          <button
-            type="button"
-            className="bf-confirm__btn is-ghost"
-            onClick={() => {
-              haptic("light");
-              request.reject();
-            }}
-          >
-            {request.cancelText || "取消"}
-          </button>
-          <button
-            type="button"
-            className={`bf-confirm__btn is-solid${request.danger ? " is-danger" : ""}`}
-            onClick={() => {
-              haptic(request.danger ? "error" : "success");
-              request.resolve();
-            }}
-          >
-            {request.okText}
-          </button>
-        </div>
-      </div>
-    </div>
+    <BottomSheet
+      open={open}
+      onClose={() => {
+        haptic("light");
+        request?.reject();
+      }}
+      title={request?.title || "确认"}
+      variant="confirm"
+      danger={Boolean(request?.danger)}
+      height="auto"
+      footer={
+        request ? (
+          <div className="bf-sheet__actions">
+            <button
+              type="button"
+              className="bf-sheet__btn is-ghost"
+              onClick={() => {
+                haptic("light");
+                request.reject();
+              }}
+            >
+              {request.cancelText || "取消"}
+            </button>
+            <button
+              type="button"
+              className={`bf-sheet__btn is-solid${request.danger ? " is-danger" : ""}`}
+              onClick={() => {
+                haptic(request.danger ? "error" : "success");
+                request.resolve();
+              }}
+            >
+              {request.okText}
+            </button>
+          </div>
+        ) : null
+      }
+    >
+      {request ? <p className="bf-sheet__copy">{request.content}</p> : null}
+    </BottomSheet>
   );
 }

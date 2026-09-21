@@ -1,5 +1,8 @@
 import { useAppSelector } from "@/app/store/hooks";
-import { selectModuleStatus } from "@/features/status/model/selectors";
+import {
+  selectModuleStatus,
+  selectStatusBootstrapped,
+} from "@/features/status/model/selectors";
 import { isFlagOn } from "@/shared/lib/flag";
 import { useHideAllow } from "@/features/hide/hooks/useHideAllow";
 import { useZnHideAllow } from "@/features/hide/hooks/useZnHideAllow";
@@ -17,9 +20,11 @@ export function DefaultHidePage() {
   const hide = useHideAllow();
   const zn = useZnHideAllow();
   const status = useAppSelector(selectModuleStatus);
+  const bootstrapped = useAppSelector(selectStatusBootstrapped);
   const { voice } = usePackVoice();
   const h = voice.hide;
   const loaderOk = isFlagOn(status.zygisk_loader_ok);
+  const anyHide = hide.hideSupported || zn.znHideSupported;
 
   return (
     <div className="pk-def-page pk-def-page--hide">
@@ -27,6 +32,13 @@ export function DefaultHidePage() {
         <h1>{DEFAULT_VOICE.hide.title}</h1>
         <p>{DEFAULT_VOICE.hide.sub}</p>
       </header>
+
+      {bootstrapped && !anyHide ? (
+        <section className="pk-def-section">
+          <h2 className="pk-def-section__title">{h.znMissingTitle}</h2>
+          <p className="pk-def-muted">{h.znMissingBody}</p>
+        </section>
+      ) : null}
 
       <HideCaptureWarning title={h.captureTitle} meta={h.captureMeta} />
       <CaptureChecklistCard
@@ -70,12 +82,12 @@ export function DefaultHidePage() {
             <p className="pk-def-muted pk-def-muted--tight">{h.znSwitchMeta}</p>
           ) : null}
         </section>
-      ) : (
+      ) : bootstrapped && hide.hideSupported ? (
         <section className="pk-def-section">
           <h2 className="pk-def-section__title">{h.znMissingTitle}</h2>
           <p className="pk-def-muted">{h.znMissingBody}</p>
         </section>
-      )}
+      ) : null}
 
       {zn.znHideSupported && !loaderOk ? (
         <div className="pk-def-banner is-warn">

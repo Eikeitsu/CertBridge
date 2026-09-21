@@ -2,7 +2,10 @@ import { Card } from "@/shared/ui/primitives";
 import { PageStack } from "@/shared/ui/layout";
 import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
 import { useAppSelector } from "@/app/store/hooks";
-import { selectModuleStatus } from "@/features/status/model/selectors";
+import {
+  selectModuleStatus,
+  selectStatusBootstrapped,
+} from "@/features/status/model/selectors";
 import { isFlagOn } from "@/shared/lib/flag";
 import { useHideAllow } from "../hooks/useHideAllow";
 import { useZnHideAllow } from "../hooks/useZnHideAllow";
@@ -19,9 +22,12 @@ export function HidePage() {
   const hide = useHideAllow();
   const zn = useZnHideAllow();
   const status = useAppSelector(selectModuleStatus);
+  const bootstrapped = useAppSelector(selectStatusBootstrapped);
   const { voice } = usePackVoice();
   const h = voice.hide;
   const loaderOk = isFlagOn(status.zygisk_loader_ok);
+  const anyHide =
+    hide.hideSupported || zn.znHideSupported;
   const loaderWarn =
     zn.znHideSupported && !loaderOk ? (
       <Card title={h.loaderWarnTitle} meta={h.loaderWarnMeta}>
@@ -35,6 +41,11 @@ export function HidePage() {
         <h1 className="bf-page-title">{voice.tabs.hide}</h1>
         <p className="bf-page-sub">{h.introBody}</p>
       </div>
+      {bootstrapped && !anyHide ? (
+        <Card title={h.znMissingTitle} meta={h.znMissingMeta}>
+          <p className="bf-page-sub">{h.znMissingBody}</p>
+        </Card>
+      ) : null}
       <HideCaptureWarning title={h.captureTitle} meta={h.captureMeta} />
       <CaptureChecklistCard
         title={h.checklistTitle}
@@ -64,11 +75,11 @@ export function HidePage() {
             descOff={h.znAllowOff}
           />
         </Card>
-      ) : (
+      ) : bootstrapped && hide.hideSupported ? (
         <Card title={h.znMissingTitle} meta={h.znMissingMeta}>
           <p className="bf-page-sub">{h.znMissingBody}</p>
         </Card>
-      )}
+      ) : null}
       {loaderWarn}
       {zn.znHideSupported ? (
         <ZnWhitelistEditor

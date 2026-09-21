@@ -11,8 +11,6 @@
 
 路径前缀：`/data/adb/modules/CertBridge/`。
 
----
-
 ## `certs.conf` 常用项
 
 ```text
@@ -104,8 +102,6 @@ service_probe=0
 
 冷门实验入口：WebUI **隐藏 → 冷门实验**。
 
----
-
 ## 热挂载 {#热挂载}
 
 需安装热挂载组件且 `hot_allow=1`。
@@ -118,15 +114,11 @@ service_probe=0
 
 临时层会合并当前已启用的永久 addon，避免盖掉 Reqable / ProxyPin。重启后临时会话消失。CLI：`cb hot_mount` / `cb hot_unmount`。
 
----
-
 ## Zygisk 白名单
 
 路径：`config/zn_whitelist.txt`。一行一个包名（可含 `:进程` 前缀匹配）；`#` 开头为注释。默认含 Reqable / ProxyPin 相关包名，名单内**不过滤** mount/maps，避免抓包 App 读不到系统 CA。
 
 WebUI「隐藏」页可编辑；保存后需**强停相关 App** 或重启生效。CLI：`cb get_zn_whitelist` / `cb set_zn_whitelist`。
-
----
 
 ## 相关文档
 

@@ -8,8 +8,6 @@
 
 两套能力**并行、互不替代**。
 
----
-
 ## 抓包必读
 
 证书要生效，进程必须能看到 cacerts 上的 **bind**。对某 App 开启「卸载模块 / Umount / DenyList+umount / 排除修改」后，该进程命名空间里证书层也会被卸掉。
@@ -20,8 +18,6 @@
 | 被抓包的目标 App      | TLS 看不到抓包 CA       | **断网**、证书错误         |
 
 **正确做法**：只对需要躲检测、且**不参与本次抓包**的 App 开卸载模块；抓包软件与目标 App 一律关闭。
-
----
 
 ## 挂载隐藏协助（SuSFS / 内核）
 
@@ -42,8 +38,6 @@
 
 无助手时：mountinfo 上的 bind 仍可能被检测发现。
 
----
-
 ## Zygisk 挂载痕迹过滤
 
 发布包可含 `zygisk/<abi>.so`。**默认安装不装**；自定义安装可选。勾选后 `zn_hide_allow` 默认开。
@@ -62,8 +56,6 @@
 | 未安装 | 无 so → `zn_hide_supported=0`；隐藏页仅在有协助或 Zygisk 时出现      |
 
 > so 仍在内存；PLT / Zygisk 底座本身仍可能被检测。过滤不是「隐身术」。
-
----
 
 ## 按 Root 方案
 
@@ -87,8 +79,6 @@
 2. 勿对抓包链路开启
 3. 可装 NeoZygisk / ReZygisk / ZygiskNext；或 NoHello 辅助
 
----
-
 ## WebUI「隐藏」页
 
 | 区域     | 内容                                            |
@@ -100,8 +90,6 @@
 | 冷门实验 | 强注 / 晚注入 / zygote / 多 APEX / service 探测 |
 
 详见 [WebUI](/guide/webui) 与 [配置说明](/guide/config)。
-
----
 
 ## 能力对照
 

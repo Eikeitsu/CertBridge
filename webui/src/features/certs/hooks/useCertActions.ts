@@ -42,6 +42,7 @@ export function useCertActions() {
     (kind: BuiltinCertKind, checked: boolean) => {
       // 与隐藏开关一致：先翻 UI，CLI 后台跑，不禁用开关卡交互
       const enabled = checked ? FLAG_ON : FLAG_OFF;
+      const previous = checked ? FLAG_OFF : FLAG_ON;
       dispatch(patchStatus({ [`${kind}_enabled`]: enabled }));
       void runExclusive(async () => {
         const result = await toggleBuiltin(kind, enabled);
@@ -49,7 +50,8 @@ export function useCertActions() {
         // 契约行有时在 stderr：以 enabled 回包为准，避免误 toast / 回弹
         if (isCliFailure(result) && kv[`${kind}_enabled`] !== enabled) {
           toast(errorFromResult(result.stdout, result.stderr), "bad");
-          void dispatch(refreshStatus(SILENT_REFRESH));
+          // 只回滚该开关，避免全量 refresh 把乐观状态瞬间盖成绿色
+          dispatch(patchStatus({ [`${kind}_enabled`]: previous }));
           return;
         }
         dispatch(mergeStatus(kv));

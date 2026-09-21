@@ -85,7 +85,8 @@ PACKAGE_EDITIONS=both    # full | lite | both
 ```
 
 产物：`CertBridge_v*_arm64.zip` / `_arm.zip` / `_x86.zip` / `_x64.zip` / `_lite.zip`。
-`updateJson` / Pages 默认指向 **arm64** 包。
+`updateJson` / Pages / ci-dist 默认指向 **arm64** 包（`CertBridge_arm64.zip` / `CertBridge_v*_arm64.zip`）。
+`PACKAGE_FAT=1` 时产物为 `*_fat.zip`。
 
 ## 版本约定
 
@@ -103,10 +104,10 @@ PACKAGE_EDITIONS=both    # full | lite | both
 
 ### 更新通道
 
-| 通道 | 检测                | 下载                       |
-| ---- | ------------------- | -------------------------- |
-| 正式 | Pages `update.json` | Pages `releases/*.zip`     |
-| CI   | `ci-dist` 根目录    | 同分支 `CertBridge.zip` 等 |
+| 通道 | 检测                | 下载                                             |
+| ---- | ------------------- | ------------------------------------------------ |
+| 正式 | Pages `update.json` | Pages `releases/*.zip`                           |
+| CI   | `ci-dist` 根目录    | 同分支 `CertBridge_arm64.zip` 等（均带架构后缀） |
 
 管理器自带更新始终跟正式通道。WebUI「更多」可切 CI。
 

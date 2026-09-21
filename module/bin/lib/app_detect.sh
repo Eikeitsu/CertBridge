@@ -45,7 +45,8 @@ _app_cert_first_existing() {
       echo "$p"
       return 0
     fi
-    if _app_cert_in_init_ns "$p"; then
+    # status 热路径传 try_init_ns=0，避免每次 nsenter
+    if [ "${_APP_CERT_TRY_INIT_NS:-1}" != "0" ] && _app_cert_in_init_ns "$p"; then
       echo "$p"
       return 0
     fi
@@ -54,8 +55,11 @@ _app_cert_first_existing() {
 }
 
 # 查找已安装抓包 App 导出的 CA 路径
+# try_init_ns：1=本 ns 没有时经 init mount ns 再探（WebUI 隔离 ns 需要）；0=仅本 ns（status 热路径）
 find_live_app_cert() {
   kind="$1"
+  try_init_ns="${2:-1}"
+  _APP_CERT_TRY_INIT_NS="$try_init_ns"
   case "$kind" in
     reqable)
       _app_cert_first_existing \

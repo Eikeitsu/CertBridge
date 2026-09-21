@@ -456,7 +456,7 @@ async function packageOne(edition, version, abi = null) {
   } else if (abi) {
     zipName = `CertBridge_${version}_${abi}.zip`;
   } else {
-    zipName = `CertBridge_${version}.zip`;
+    zipName = `CertBridge_${version}_fat.zip`;
   }
   const zipPath = join(releaseDir, zipName);
   const keepBinaries =

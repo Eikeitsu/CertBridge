@@ -3,7 +3,7 @@
 #
 # Early-CI layout (json and zips on the same branch tip):
 #   update.json
-#   CertBridge.zip          ← arm64 full (Magisk update 默认)
+#   CertBridge_arm64.zip    ← Magisk update 默认（完整版 arm64）
 #   CertBridge_arm.zip
 #   CertBridge_x86.zip
 #   CertBridge_x64.zip
@@ -66,9 +66,7 @@ else
   echo "warn: no lite zip; skipping CertBridge_lite.zip" >&2
 fi
 
-# Prefer per-ABI split: *_arm64.zip → CertBridge.zip (update 默认通道)
-# 完整版 4 包：arm / arm64 / x86 / x64
-# Fallback: fat CertBridge_*.zip（非 lite / 非架构后缀）
+# 完整版按 ABI 发布：一律带架构后缀（不再提供无后缀 CertBridge.zip）
 ARM64_SRC=""
 ARM_SRC=""
 X86_SRC=""
@@ -89,11 +87,12 @@ done
 shopt -u nullglob
 
 if [ -n "$ARM64_SRC" ] && [ -f "$ARM64_SRC" ]; then
-  cp "$ARM64_SRC" "$STAGE/CertBridge.zip"
-  echo "ci-dist: CertBridge.zip ← $ARM64_SRC (arm64)"
+  cp "$ARM64_SRC" "$STAGE/CertBridge_arm64.zip"
+  echo "ci-dist: CertBridge_arm64.zip ← $ARM64_SRC"
 elif [ -n "$FAT_SRC" ] && [ -f "$FAT_SRC" ]; then
-  cp "$FAT_SRC" "$STAGE/CertBridge.zip"
-  echo "ci-dist: CertBridge.zip ← $FAT_SRC (fat fallback)"
+  # 旧式合包：仍标 arm64 通道名（合包含多 ABI，供 updateJson 默认）
+  cp "$FAT_SRC" "$STAGE/CertBridge_arm64.zip"
+  echo "ci-dist: CertBridge_arm64.zip ← $FAT_SRC (fat fallback)"
 else
   echo "missing full release zip (need *_arm64.zip or fat CertBridge_*.zip)" >&2
   ls -la release/ >&2 || true
@@ -114,7 +113,8 @@ publish_abi_alias() {
 publish_abi_alias "$ARM_SRC" CertBridge_arm.zip arm
 publish_abi_alias "$X86_SRC" CertBridge_x86.zip x86
 publish_abi_alias "$X64_SRC" CertBridge_x64.zip x64
-rm -f "$STAGE/CertBridge_x86_64.zip"
+# 去掉历史无后缀 / 旧别名，避免列表里再出现「不明架构」包
+rm -f "$STAGE/CertBridge.zip" "$STAGE/CertBridge_x86_64.zip"
 
 PROP="module/module.prop"
 VERSION="$(sed -n 's/^version=//p' "$PROP" | head -n1 | tr -d '\r')"
@@ -130,7 +130,7 @@ path, version, code, zip_base, changelog = sys.argv[1:6]
 data = {
     "version": version if version.startswith("v") or ".ci." in version else f"v{version}",
     "versionCode": int(code),
-    "zipUrl": f"{zip_base.rstrip('/')}/CertBridge.zip",
+    "zipUrl": f"{zip_base.rstrip('/')}/CertBridge_arm64.zip",
     "changelog": changelog,
 }
 # Keep display version as stamped (may be 2.3.0.ci.N without leading v)
@@ -182,7 +182,7 @@ CertBridge **CI channel**: update manifest and module zips on the **same** branc
 | Path | Contents |
 |------|----------|
 | \`update.json\` | Magisk-compatible update check（默认 arm64 完整版） |
-| \`CertBridge.zip\` | Full module arm64（latest CI） |
+| \`CertBridge_arm64.zip\` | Full module arm64（latest CI；updateJson 默认） |
 | \`CertBridge_arm.zip\` | Full module arm |
 | \`CertBridge_x86.zip\` | Full module x86 |
 | \`CertBridge_x64.zip\` | Full module x64 |

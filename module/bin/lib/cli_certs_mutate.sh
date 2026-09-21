@@ -6,16 +6,12 @@ cmd_toggle() {
   value="$2"
   case "$name" in reqable|proxypin) ;; *) echo "error=invalid_toggle"; return 1 ;; esac
   [ "$value" = "1" ] || [ "$value" = "0" ] || { echo "error=invalid_value"; return 1; }
-  # 关闭前先快照：保证立刻再开不依赖 App / 生效集瞬时可读
-  if [ "$value" = "0" ]; then
-    stash_addon_source "$name" >/dev/null 2>&1 || true
-  fi
   # 开启：App 同步 → 生效集恢复 → 快照恢复；任一成功即可写配置
+  # 注意：关闭前不要做快照——会拖慢写 conf，WebUI 易误报保存失败；成功回包后再 stash
   if [ "$value" = "1" ]; then
     sync_source_from_app "$name" >/dev/null 2>&1 || true
     ensure_source_from_applied "$name" >/dev/null 2>&1 || true
     restore_addon_source_from_stash "$name" >/dev/null 2>&1 || true
-    # 仍无 source 时再试一次快照（兼容关断后 sources 被清空）
     find_source_cert "$name" >/dev/null 2>&1 || \
       restore_addon_source_from_stash "$name" >/dev/null 2>&1 || true
     if ! addon_can_enable "$name"; then
@@ -57,8 +53,12 @@ cmd_toggle() {
     echo "error=write_failed"
     return 1
   fi
-  # 读回校验：cat/mv 伪成功或并发覆盖时及时失败
-  got=$(read_conf "$name" "")
+  # 读回校验（轻量重试）：部分机写后瞬时读到旧值
+  got=$(read_conf "$name" "" | tr -d ' \t\r\n')
+  if [ "$got" != "$value" ]; then
+    sleep 0.05 2>/dev/null || sleep 1
+    got=$(read_conf "$name" "" | tr -d ' \t\r\n')
+  fi
   if [ "$got" != "$value" ]; then
     release_write_lock
     echo "error=write_failed"
@@ -71,7 +71,7 @@ cmd_toggle() {
   echo "${name}_enabled=$value"
   echo "pending_reboot=1"
   echo "$pending_line"
-  # 开/关后都刷新快照，便于下次关开
+  # 开/关成功后再刷新快照（关闭时 sources 仍在，足够支撑立刻再开）
   stash_addon_source "$name" >/dev/null 2>&1 || true
   log_info "config: $name=$value (reboot required)" 2>/dev/null || true
   return 0

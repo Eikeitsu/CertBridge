@@ -57,9 +57,17 @@ print("wrote", out)
 PY
 }
 
-echo "promote: fetch ${CI_BASE}/CertBridge.zip → CertBridge_${RAW}_arm64.zip"
-curl -fsSL -o "$STAGE/CertBridge.zip" "${CI_BASE}/CertBridge.zip"
-restamp_zip_file "$STAGE/CertBridge.zip" "CertBridge_${RAW}_arm64.zip"
+echo "promote: fetch arm64 from ci-dist → CertBridge_${RAW}_arm64.zip"
+# 优先带架构名；兼容历史 tip 上的无后缀 CertBridge.zip
+if curl -fsSL -o "$STAGE/CertBridge_arm64.zip" "${CI_BASE}/CertBridge_arm64.zip"; then
+  restamp_zip_file "$STAGE/CertBridge_arm64.zip" "CertBridge_${RAW}_arm64.zip"
+elif curl -fsSL -o "$STAGE/CertBridge.zip" "${CI_BASE}/CertBridge.zip"; then
+  echo "promote: fallback legacy CertBridge.zip"
+  restamp_zip_file "$STAGE/CertBridge.zip" "CertBridge_${RAW}_arm64.zip"
+else
+  echo "promote: missing CertBridge_arm64.zip (and legacy CertBridge.zip) on ci-dist" >&2
+  exit 1
+fi
 
 promote_optional() {
   local remote="$1" out="$2"

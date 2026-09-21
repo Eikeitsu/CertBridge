@@ -6,16 +6,25 @@ cmd_toggle() {
   value="$2"
   case "$name" in reqable|proxypin) ;; *) echo "error=invalid_toggle"; return 1 ;; esac
   [ "$value" = "1" ] || [ "$value" = "0" ] || { echo "error=invalid_value"; return 1; }
-  # 开启：App 同步 → 生效集恢复 → 快照恢复；任一成功即可写配置
-  # 注意：关闭前不要做快照——会拖慢写 conf，WebUI 易误报保存失败；成功回包后再 stash
+
+  # 关闭：先快照再写 conf（sources 仍在时拷贝很快；保证立刻再开不依赖 App）
+  if [ "$value" = "0" ]; then
+    stash_addon_source "$name" >/dev/null 2>&1 || true
+  fi
+
+  # 开启：先恢复本地源，再尝试 App 刷新（避免 sync 失败路径弄丢已有证）
   if [ "$value" = "1" ]; then
-    sync_source_from_app "$name" >/dev/null 2>&1 || true
-    ensure_source_from_applied "$name" >/dev/null 2>&1 || true
     restore_addon_source_from_stash "$name" >/dev/null 2>&1 || true
+    ensure_source_from_applied "$name" >/dev/null 2>&1 || true
+    # 已有 source / builtin 时仍可尝试刷新；失败保留旧文件
+    sync_source_from_app "$name" >/dev/null 2>&1 || true
+    # sync 后若仍空，再恢复一次快照
     find_source_cert "$name" >/dev/null 2>&1 || \
       restore_addon_source_from_stash "$name" >/dev/null 2>&1 || true
+    find_source_cert "$name" >/dev/null 2>&1 || \
+      ensure_source_from_applied "$name" >/dev/null 2>&1 || true
+
     if ! addon_can_enable "$name"; then
-      # 与安装阶段同一套 diagnose，避免一律报「未找到」
       diag=$(diagnose_app_cert_import "$name" 2>/dev/null)
       diag_rc=$?
       case "$diag_rc" in
@@ -45,7 +54,12 @@ cmd_toggle() {
           ;;
       esac
     fi
+    # 仅靠 stash/applied 判定可开时，落盘到 sources，避免下次再丢
+    find_addon_cert "$name" 0 >/dev/null 2>&1 || \
+      restore_addon_source_from_stash "$name" >/dev/null 2>&1 || \
+      ensure_source_from_applied "$name" >/dev/null 2>&1 || true
   fi
+
   # 写配置与 pending 互斥，避免与 status/sync 并发丢更新
   acquire_write_lock || { echo "error=busy"; return 1; }
   if ! write_conf "$name" "$value"; then
@@ -71,7 +85,6 @@ cmd_toggle() {
   echo "${name}_enabled=$value"
   echo "pending_reboot=1"
   echo "$pending_line"
-  # 开/关成功后再刷新快照（关闭时 sources 仍在，足够支撑立刻再开）
   stash_addon_source "$name" >/dev/null 2>&1 || true
   log_info "config: $name=$value (reboot required)" 2>/dev/null || true
   return 0

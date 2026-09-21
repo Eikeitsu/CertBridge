@@ -4,7 +4,10 @@
 stash_addon_source() {
   kind="$1"
   case "$kind" in reqable|proxypin) ;; *) return 1 ;; esac
-  src=$(find_addon_cert "$kind" 0 2>/dev/null) || src=$(find_applied_gen_cert "$kind" 2>/dev/null) || return 1
+  # 优先 sources，再 addon 查找（含 builtin），再生效集
+  src=$(find_source_cert "$kind" 2>/dev/null) || \
+    src=$(find_addon_cert "$kind" 0 2>/dev/null) || \
+    src=$(find_applied_gen_cert "$kind" 2>/dev/null) || return 1
   [ -f "$src" ] || return 1
   dest_dir="$STASH_DIR/$kind"
   mkdir -p "$dest_dir" 2>/dev/null || return 1
@@ -20,6 +23,8 @@ stash_addon_source() {
   chmod 0644 "$stage/$name" 2>/dev/null
   if [ -f "$src.meta" ]; then
     cp -f "$src.meta" "$stage/$name.meta" 2>/dev/null || true
+  elif [ -f "${src}.meta" ]; then
+    cp -f "${src}.meta" "$stage/$name.meta" 2>/dev/null || true
   fi
   # 清旧快照并原子换入
   for old in "$dest_dir"/*; do

@@ -71,19 +71,28 @@ sync_source_from_app() {
   fi
 
   new_dest="$dest.new.$$"
-  rm -rf "$new_dest"
+  bak="$dest.bak.$$"
+  rm -rf "$new_dest" "$bak"
   if ! mv "$stage" "$new_dest"; then
     rm -rf "$stage" "$new_dest"
     log_warn "sources: $kind stage promote failed"
     return 1
   fi
-  rm -rf "$dest"
+  # 先挪走旧目录再换入：失败则回滚，避免 rm 后留下空 sources
+  if [ -d "$dest" ] || [ -e "$dest" ]; then
+    mv "$dest" "$bak" 2>/dev/null || {
+      rm -rf "$new_dest"
+      log_warn "sources: $kind cannot park old dest"
+      return 1
+    }
+  fi
   if ! mv "$new_dest" "$dest"; then
-    # 极端情况：尽量把新目录挪回，避免空源
-    mv "$new_dest" "$dest" 2>/dev/null || true
-    log_error "sources: $kind dest swap failed"
+    mv "$bak" "$dest" 2>/dev/null || true
+    rm -rf "$new_dest"
+    log_error "sources: $kind dest swap failed (restored old if any)"
     return 1
   fi
+  rm -rf "$bak"
   log_info "sources: $kind updated from app ($name)"
   echo "$dest/$name"
 }

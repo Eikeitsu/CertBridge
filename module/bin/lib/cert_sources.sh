@@ -56,9 +56,11 @@ certbridge_ensure_state_sources() {
   SOURCES_LEGACY="$STATEDIR/addon-sources"
   STASH_LEGACY="$STATEDIR/source-stash"
 
+  # 安装早期 modules_update 可能还没有 data/state；必须先建目录再写 marker
   mkdir -p "$CB_EXT_DIR" \
     "$SOURCES_DIR/reqable" "$SOURCES_DIR/proxypin" \
     "$STASH_DIR/reqable" "$STASH_DIR/proxypin" 2>/dev/null || true
+  mkdir -p "$STATEDIR" 2>/dev/null || true
 
   for kind in reqable proxypin; do
     # stash：旧 state / 模块旁 → 外置
@@ -77,8 +79,13 @@ certbridge_ensure_state_sources() {
     fi
   done
 
-  : >"$CB_EXT_DIR/sources.migrated" 2>/dev/null || true
-  : >"$STATEDIR/addon-sources.migrated" 2>/dev/null || true
+  # set -e 下重定向失败会直接退出；先确认目录存在再 touch
+  if [ -d "$CB_EXT_DIR" ]; then
+    touch "$CB_EXT_DIR/sources.migrated" 2>/dev/null || true
+  fi
+  if [ -d "$STATEDIR" ]; then
+    touch "$STATEDIR/addon-sources.migrated" 2>/dev/null || true
+  fi
 }
 
 certbridge_ensure_state_sources

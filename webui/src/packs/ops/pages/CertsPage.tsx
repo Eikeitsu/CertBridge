@@ -40,7 +40,6 @@ export function OpsCertsPage() {
   const v = OPS_VOICE.certs;
   const {
     isPending,
-    pendingKind,
     handleToggleBuiltin,
     handleImportFile,
     handleImportPreset,
@@ -82,7 +81,6 @@ export function OpsCertsPage() {
                 </button>
                 <Switch
                   checked={cert.isEnabled}
-                  disabled={isPending && pendingKind === cert.kind}
                   onChange={(next) => void handleToggleBuiltin(cert.kind, next)}
                 />
               </div>

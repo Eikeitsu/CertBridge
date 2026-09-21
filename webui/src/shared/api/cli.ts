@@ -58,7 +58,7 @@ export async function listCustom(): Promise<CustomCertificate[]> {
 }
 
 export async function toggleBuiltin(kind: BuiltinCertKind, value: FlagValue) {
-  return cli(`toggle ${kind} ${value}`);
+  return cli(`toggle ${kind} ${value}`, CLI_TIMEOUT_MS.TOGGLE);
 }
 
 export async function syncAppSources(): Promise<{

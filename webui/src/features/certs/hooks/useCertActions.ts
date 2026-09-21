@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { useAppDispatch } from "@/app/store/hooks";
 import {
   mergeStatus,
@@ -19,7 +19,7 @@ import {
 } from "@/shared/api/cli";
 import { errorFromResult } from "@/shared/api/errors";
 import { toast } from "@/shared/api/ksu";
-import { isCliFailure } from "@/shared/lib/cliResult";
+import { cliOutput, isCliFailure } from "@/shared/lib/cliResult";
 import { confirmAction } from "@/shared/lib/confirmAction";
 import { copyText } from "@/shared/lib/copyText";
 import { fileToBase64, parseKv } from "@/shared/lib/parse";
@@ -37,30 +37,27 @@ export function useCertActions() {
   const { voice } = usePackVoice();
   const c = voice.certs;
   const { isPending, runExclusive } = useAsyncLock();
-  const [pendingKind, setPendingKind] = useState<string | null>(null);
 
   const handleToggleBuiltin = useCallback(
-    async (kind: BuiltinCertKind, checked: boolean) => {
-      await runExclusive(async () => {
-        setPendingKind(kind);
-        dispatch(patchStatus({ [`${kind}_enabled`]: checked ? FLAG_ON : FLAG_OFF }));
-        try {
-          const result = await toggleBuiltin(kind, checked ? FLAG_ON : FLAG_OFF);
-          if (isCliFailure(result)) {
-            toast(errorFromResult(result.stdout, result.stderr), "bad");
-            void dispatch(refreshStatus(SILENT_REFRESH));
-            return;
-          }
-          const kv = parseKv(result.stdout || "");
-          dispatch(mergeStatus(kv));
-          toastByRebootFlag(
-            kv,
-            checked ? "已开启，重启后生效" : "已关闭，重启后移除",
-            checked ? "已开启（与当前生效一致）" : "已关闭（与当前生效一致）",
-          );
-        } finally {
-          setPendingKind(null);
+    (kind: BuiltinCertKind, checked: boolean) => {
+      // 与隐藏开关一致：先翻 UI，CLI 后台跑，不禁用开关卡交互
+      const enabled = checked ? FLAG_ON : FLAG_OFF;
+      dispatch(patchStatus({ [`${kind}_enabled`]: enabled }));
+      void runExclusive(async () => {
+        const result = await toggleBuiltin(kind, enabled);
+        const kv = parseKv(cliOutput(result));
+        // 契约行有时在 stderr：以 enabled 回包为准，避免误 toast / 回弹
+        if (isCliFailure(result) && kv[`${kind}_enabled`] !== enabled) {
+          toast(errorFromResult(result.stdout, result.stderr), "bad");
+          void dispatch(refreshStatus(SILENT_REFRESH));
+          return;
         }
+        dispatch(mergeStatus(kv));
+        toastByRebootFlag(
+          kv,
+          checked ? "已开启，重启后生效" : "已关闭，重启后移除",
+          checked ? "已开启（与当前生效一致）" : "已关闭（与当前生效一致）",
+        );
       });
     },
     [dispatch, runExclusive],
@@ -249,7 +246,6 @@ export function useCertActions() {
 
   return {
     isPending,
-    pendingKind,
     handleToggleBuiltin,
     handleImportFile,
     handleImportPreset,

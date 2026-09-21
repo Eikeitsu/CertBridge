@@ -96,19 +96,6 @@
 
 .pk-def-pane.is-on {
   display: block;
-  animation: pk-def-in 0.26s ease;
-}
-
-@keyframes pk-def-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-
-  to {
-    opacity: 1;
-    transform: none;
-  }
 }
 
 .pk-def-dock {
@@ -818,4 +805,15 @@ html[data-pack="default"] .bf-update-flow__pulse {
 
 html[data-pack="default"] .bf-btn--busy.bf-btn--primary {
   animation: bf-update-pulse 1.2s ease-in-out infinite;
+}
+
+/* toast：默认包偏圆润 */
+html[data-pack="default"] .bf-snackbar {
+  border-radius: 16px;
+  bottom: calc(var(--bf-inset-bottom) + 78px);
+}
+
+html[data-pack="default"] .pk-def-group .bf-more-nav {
+  padding-left: 14px;
+  padding-right: 14px;
 }

@@ -6,8 +6,6 @@ type BuiltinCert = ReturnType<typeof useBuiltinCerts>[number];
 
 type BuiltinCertsPanelProps = {
   certs: BuiltinCert[];
-  isPending: boolean;
-  pendingKind: string | null;
   onToggle: (kind: BuiltinCertKind, checked: boolean) => void;
   onOpenDetail: (id: string, title: string) => void;
   title?: string;
@@ -25,15 +23,11 @@ function resolveCertDesc(cert: BuiltinCert) {
 
 function CertActions({
   cert,
-  isPending,
-  pendingKind,
   onToggle,
   onOpenDetail,
   detailLabel,
 }: {
   cert: BuiltinCert;
-  isPending: boolean;
-  pendingKind: string | null;
   onToggle: (kind: BuiltinCertKind, checked: boolean) => void;
   onOpenDetail: (id: string, title: string) => void;
   detailLabel: string;
@@ -51,7 +45,6 @@ function CertActions({
       </Button>
       <Switch
         checked={cert.isEnabled}
-        disabled={isPending && pendingKind === cert.kind}
         onChange={(checked) => onToggle(cert.kind, checked)}
       />
     </div>
@@ -60,8 +53,6 @@ function CertActions({
 
 export function BuiltinCertsPanel({
   certs,
-  isPending,
-  pendingKind,
   onToggle,
   onOpenDetail,
   title = "内置证书",
@@ -98,7 +89,6 @@ export function BuiltinCertsPanel({
                 <td>
                   <Switch
                     checked={cert.isEnabled}
-                    disabled={isPending && pendingKind === cert.kind}
                     onChange={(checked) => onToggle(cert.kind, checked)}
                   />
                 </td>
@@ -124,8 +114,6 @@ export function BuiltinCertsPanel({
             </div>
             <CertActions
               cert={cert}
-              isPending={isPending}
-              pendingKind={pendingKind}
               onToggle={onToggle}
               onOpenDetail={onOpenDetail}
               detailLabel={detailLabel}
@@ -147,8 +135,6 @@ export function BuiltinCertsPanel({
             extra={
               <CertActions
                 cert={cert}
-                isPending={isPending}
-                pendingKind={pendingKind}
                 onToggle={onToggle}
                 onOpenDetail={onOpenDetail}
                 detailLabel={detailLabel}

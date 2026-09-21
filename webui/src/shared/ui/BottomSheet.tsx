@@ -1,24 +1,40 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Loader } from "./Loader";
 
-type BottomSheetProps = {
+export type BottomSheetProps = {
   open: boolean;
   onClose: () => void;
+  /** 解析中等：叠在内容上，不卸载 children，避免闪一下 */
   loading?: boolean;
-  height?: string;
+  loadingLabel?: string;
+  /** 默认占满高度；confirm 用 auto */
+  height?: string | "auto";
   title?: string;
+  /** sheet = 详情抽屉；confirm = 确认条（同主题 chrome） */
+  variant?: "sheet" | "confirm";
+  danger?: boolean;
+  footer?: ReactNode;
   children: ReactNode;
 };
 
 export function BottomSheet({
   open,
   onClose,
-  loading,
+  loading = false,
+  loadingLabel = "加载中…",
   height = "min(92dvh, 860px)",
   title = "详情",
+  variant = "sheet",
+  danger = false,
+  footer,
   children,
 }: BottomSheetProps) {
+  const autoHeight = height === "auto" || variant === "confirm";
+  const sheetStyle = {
+    ["--bf-sheet-h" as string]: autoHeight ? "auto" : height,
+  } as CSSProperties;
+
   return (
     <Dialog.Root
       open={open}
@@ -27,34 +43,49 @@ export function BottomSheet({
       }}
     >
       <Dialog.Portal>
-        <div className="bf-sheet-overlay">
+        <div
+          className={`bf-sheet-overlay${variant === "confirm" ? " is-confirm" : ""}`}
+          data-state={open ? "open" : "closed"}
+        >
           <Dialog.Overlay asChild>
             <button type="button" className="bf-sheet-overlay__mask" aria-label="关闭" />
           </Dialog.Overlay>
           <Dialog.Content
-            className="bf-sheet"
-            style={{ height }}
+            className={`bf-sheet${variant === "confirm" ? " is-confirm" : ""}${
+              danger ? " is-danger" : ""
+            }${autoHeight ? " is-auto" : ""}`}
+            style={sheetStyle}
             aria-describedby={undefined}
             onOpenAutoFocus={(event) => event.preventDefault()}
+            onCloseAutoFocus={(event) => event.preventDefault()}
           >
             <div className="bf-sheet__chrome">
               <div className="bf-sheet__handle" aria-hidden />
               <div className="bf-sheet__bar">
                 <Dialog.Title className="bf-sheet__bar-title">{title}</Dialog.Title>
-                <Dialog.Close asChild>
-                  <button type="button" className="bf-sheet__close" aria-label="关闭" />
-                </Dialog.Close>
+                {variant === "sheet" ? (
+                  <Dialog.Close asChild>
+                    <button type="button" className="bf-sheet__close" aria-label="关闭" />
+                  </Dialog.Close>
+                ) : (
+                  <span className="bf-sheet__bar-spacer" aria-hidden />
+                )}
               </div>
             </div>
             <div className="bf-sheet__scroll">
+              <div
+                className={`bf-sheet__body${loading ? " is-busy" : ""}`}
+                aria-busy={loading || undefined}
+              >
+                {children}
+              </div>
               {loading ? (
-                <div className="bf-spin__mask is-embedded">
-                  <Loader label="正在解析证书" />
+                <div className="bf-sheet__loading" role="status">
+                  <Loader label={loadingLabel} />
                 </div>
-              ) : (
-                children
-              )}
+              ) : null}
             </div>
+            {footer ? <div className="bf-sheet__footer">{footer}</div> : null}
           </Dialog.Content>
         </div>
       </Dialog.Portal>

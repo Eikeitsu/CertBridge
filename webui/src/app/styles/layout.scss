@@ -116,7 +116,6 @@
 .bf-pane {
   display: none;
   padding: var(--bf-page-pad);
-  animation: bf-fade-in 0.26s var(--bf-ease);
 }
 
 .bf-pane.is-on {

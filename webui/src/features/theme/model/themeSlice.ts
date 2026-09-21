@@ -55,6 +55,12 @@ function initialFromStorage(): ThemeState {
 
 const initialState = initialFromStorage();
 
+// 首屏渲染前同步写入 data-theme / data-pack，避免默认包变量未生效导致「页面看不见」
+if (typeof document !== "undefined") {
+  applyThemeToDom(initialState);
+  syncChromeBars(initialState.resolved, false);
+}
+
 const themeSlice = createSlice({
   name: "theme",
   initialState,

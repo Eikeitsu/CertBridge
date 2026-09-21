@@ -78,12 +78,11 @@ const initialState: StatusState = {
 };
 
 export const bootstrapStatus = createAsyncThunk("status/bootstrap", async () => {
-  // 部分管理器（SukiSU 等）注入 ksu 略晚于首屏 JS
+  // 部分管理器（SukiSU 等）注入 ksu 略晚于首屏 JS：短轮询，避免固定 ~400ms 空等
   if (!hasBridge()) {
-    await new Promise((r) => window.setTimeout(r, 120));
-  }
-  if (!hasBridge()) {
-    await new Promise((r) => window.setTimeout(r, 280));
+    for (let i = 0; i < 4 && !hasBridge(); i += 1) {
+      await new Promise((r) => window.setTimeout(r, 40 + i * 40));
+    }
   }
   const [device, status, customCertificates] = await Promise.all([
     fetchDeviceInfo().catch(() => ({ label: "本机", name: "本机" })),

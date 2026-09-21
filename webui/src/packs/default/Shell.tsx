@@ -55,7 +55,7 @@ export function DefaultShell() {
   const refreshing = useAppSelector(selectStatusRefreshing);
   const resolved = useAppSelector(selectResolvedTheme);
   const { activeTab, switchTab } = useActiveTab();
-  const { tabs, hideSupported } = useVisibleTabs();
+  const { tabs, showHideTab } = useVisibleTabs();
   const v = DEFAULT_VOICE;
   const [seen, setSeen] = useState<Partial<Record<TabName, boolean>>>(() => ({
     [activeTab]: true,
@@ -68,8 +68,8 @@ export function DefaultShell() {
   }, [activeTab]);
 
   useEffect(() => {
-    if (!hideSupported && activeTab === TabName.Hide) switchTab(TabName.Home);
-  }, [hideSupported, activeTab, switchTab]);
+    if (!showHideTab && activeTab === TabName.Hide) switchTab(TabName.Home);
+  }, [showHideTab, activeTab, switchTab]);
 
   const dockTabs = useMemo(
     () => tabs.map((t) => ({ key: t.key, label: v.tabs[t.key] })),
@@ -102,7 +102,7 @@ export function DefaultShell() {
         <Pane tab={TabName.Log} active={activeTab} seen={!!seen[TabName.Log]}>
           <DefaultLogPage />
         </Pane>
-        {hideSupported ? (
+        {showHideTab ? (
           <Pane tab={TabName.Hide} active={activeTab} seen={!!seen[TabName.Hide]}>
             <DefaultHidePage />
           </Pane>

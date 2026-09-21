@@ -44,7 +44,6 @@ export function DefaultCertsPage() {
   const v = DEFAULT_VOICE.certs;
   const {
     isPending,
-    pendingKind,
     handleToggleBuiltin,
     handleImportFile,
     handleImportPreset,
@@ -84,7 +83,6 @@ export function DefaultCertsPage() {
                 </button>
                 <Switch
                   checked={cert.isEnabled}
-                  disabled={isPending && pendingKind === cert.kind}
                   onChange={(next) => void handleToggleBuiltin(cert.kind, next)}
                 />
               </div>

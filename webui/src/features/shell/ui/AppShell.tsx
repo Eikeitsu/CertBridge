@@ -27,7 +27,7 @@ export function AppShell() {
   const isRefreshing = useAppSelector(selectStatusRefreshing);
   const resolvedTheme = useAppSelector(selectResolvedTheme);
   const { activeTab, switchTab } = useActiveTab();
-  const { tabs, hideSupported } = useVisibleTabs();
+  const { tabs, showHideTab } = useVisibleTabs();
   const { voice } = usePackVoice();
   const [seen, setSeen] = useState<Partial<Record<TabName, boolean>>>(() => ({
     [activeTab]: true,
@@ -49,10 +49,8 @@ export function AppShell() {
   }, [activeTab]);
 
   useEffect(() => {
-    if (!hideSupported && activeTab === TabName.Hide) {
-      switchTab(TabName.Home);
-    }
-  }, [hideSupported, activeTab, switchTab]);
+    if (!showHideTab && activeTab === TabName.Hide) switchTab(TabName.Home);
+  }, [showHideTab, activeTab, switchTab]);
 
   return (
     <div className="bf-shell">
@@ -78,7 +76,7 @@ export function AppShell() {
         <AppTabPane tab={TabName.Log} activeTab={activeTab} seen={!!seen[TabName.Log]}>
           <LogPage />
         </AppTabPane>
-        {hideSupported ? (
+        {showHideTab ? (
           <AppTabPane
             tab={TabName.Hide}
             activeTab={activeTab}

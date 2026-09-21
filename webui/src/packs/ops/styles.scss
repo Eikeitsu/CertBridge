@@ -838,3 +838,13 @@ html[data-pack="ops"] .bf-btn--busy.bf-btn--primary {
     color-mix(in srgb, var(--pk-accent, var(--bf-primary)) 45%, transparent);
   animation: bf-update-pulse 0.9s ease-in-out infinite;
 }
+
+html[data-pack="ops"] .bf-snackbar {
+  border-radius: 10px;
+  font-size: 0.8rem;
+  bottom: calc(var(--bf-inset-bottom) + 72px);
+}
+
+html[data-pack="ops"] .bf-snackbar__mark {
+  border-radius: 6px;
+}

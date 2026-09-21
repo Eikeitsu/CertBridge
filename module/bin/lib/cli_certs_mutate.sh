@@ -6,10 +6,6 @@ cmd_toggle() {
   value="$2"
   case "$name" in reqable|proxypin) ;; *) echo "error=invalid_toggle"; return 1 ;; esac
   [ "$value" = "1" ] || [ "$value" = "0" ] || { echo "error=invalid_value"; return 1; }
-  # 关闭前快照当前证书，保证立刻再开不依赖 App 瞬时可读
-  if [ "$value" = "0" ]; then
-    stash_addon_source "$name" >/dev/null 2>&1 || true
-  fi
   # 开启：App 同步 → 生效集恢复 → 快照恢复；任一成功即可写配置
   if [ "$value" = "1" ]; then
     sync_source_from_app "$name" >/dev/null 2>&1 || true
@@ -20,17 +16,32 @@ cmd_toggle() {
       echo "hint=请先在对应 App 中生成根证书，或使用自定义导入"
       return 1
     fi
-    # 开启成功后再刷新一份快照，方便下次关开
-    stash_addon_source "$name" >/dev/null 2>&1 || true
   fi
-  write_conf "$name" "$value" || { echo "error=write_failed"; return 1; }
+  # 写配置与 pending 互斥，避免与 status/sync 并发丢更新
+  acquire_write_lock || { echo "error=busy"; return 1; }
+  if ! write_conf "$name" "$value"; then
+    release_write_lock
+    echo "error=write_failed"
+    return 1
+  fi
+  # 读回校验：cat/mv 伪成功或并发覆盖时及时失败
+  got=$(read_conf "$name" "")
+  if [ "$got" != "$value" ]; then
+    release_write_lock
+    echo "error=write_failed"
+    return 1
+  fi
   pending_line=$(note_conf_dirty)
-  log_info "config: $name=$value (reboot required)"
-  log_debug "config: toggle path conf=$CONF pending=1"
+  release_write_lock
+  # 先回包成功，再做快照/日志：避免后置步骤或 bridge errno 把成功当成失败
   echo "ok=1"
   echo "${name}_enabled=$value"
   echo "pending_reboot=1"
   echo "$pending_line"
+  # 关/开后都刷新快照，保证立刻再开不依赖 App 瞬时可读
+  stash_addon_source "$name" >/dev/null 2>&1 || true
+  log_info "config: $name=$value (reboot required)" 2>/dev/null || true
+  return 0
 }
 
 cmd_sync_apps() {

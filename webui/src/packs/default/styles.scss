@@ -807,7 +807,7 @@ html[data-pack="default"] .bf-btn--busy.bf-btn--primary {
   animation: bf-update-pulse 1.2s ease-in-out infinite;
 }
 
-/* toast��Ĭ�ϰ�ƫ��� */
+/* toast：默认包偏圆润 */
 html[data-pack="default"] .bf-snackbar {
   border-radius: 16px;
   bottom: calc(var(--bf-inset-bottom) + 78px);

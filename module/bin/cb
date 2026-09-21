@@ -1,4 +1,9 @@
 #!/system/bin/sh
-# Thin wrapper for adb / shell: cb status --live
+# Thin wrapper；推荐使用外部入口 /data/adb/certbridge/cb
 MODDIR=${0%/*}/..
+case "$MODDIR" in
+  /data/adb/certbridge)
+    MODDIR=/data/adb/modules/CertBridge
+    ;;
+esac
 exec sh "$MODDIR/bin/cert_manager.sh" "$@"

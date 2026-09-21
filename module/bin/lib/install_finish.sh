@@ -82,6 +82,30 @@ certbridge_install_print_summary() {
   ui_print "--------------------------------"
 }
 
+# CLI 入口装到模块外，终端直接用 /data/adb/certbridge/cb
+certbridge_install_cli_ext() {
+  CB_EXT_DIR="${CB_EXT_DIR:-/data/adb/certbridge}"
+  mkdir -p "$CB_EXT_DIR" 2>/dev/null || return 0
+  cat >"$CB_EXT_DIR/cb" <<'CB_EXT_EOF'
+#!/system/bin/sh
+# CertBridge CLI（模块外入口）
+MODDIR="/data/adb/modules/CertBridge"
+[ -f "$MODDIR/bin/cert_manager.sh" ] || {
+  echo "error=module_missing" >&2
+  echo "hint=模块未安装或路径异常" >&2
+  exit 1
+}
+exec sh "$MODDIR/bin/cert_manager.sh" "$@"
+CB_EXT_EOF
+  chmod 0755 "$CB_EXT_DIR/cb" 2>/dev/null || true
+  # 模块内 bin/cb 仍可用；优先提示外部路径
+  if [ -f "${MODPATH:-}/bin/cb" ] || [ -f "${MODDIR:-}/bin/cb" ]; then
+    :
+  fi
+  log_info "install: CLI → $CB_EXT_DIR/cb" 2>/dev/null || true
+  ui_print "- CLI：$CB_EXT_DIR/cb"
+}
+
 # 升级时保留用户证书与关键状态；conf 中部分键在不冲突时回填
 certbridge_install_preserve_user() {
   OLD_MOD="/data/adb/modules/CertBridge"
@@ -182,6 +206,7 @@ certbridge_run_install() {
   certbridge_install_write_config
   certbridge_install_trim_components
   certbridge_install_preserve_user
+  certbridge_install_cli_ext
   MODDIR="$MODPATH"
   tr -d '\r\n' </proc/sys/kernel/random/boot_id >"$INSTALL_BOOT_FILE" 2>/dev/null
   certbridge_install_dump_tree

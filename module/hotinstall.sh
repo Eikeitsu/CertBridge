@@ -34,6 +34,13 @@ fi
 if type certbridge_ensure_state_sources >/dev/null 2>&1; then
 	certbridge_ensure_state_sources >/dev/null 2>&1 || true
 fi
+if type certbridge_install_cli_ext >/dev/null 2>&1; then
+	certbridge_install_cli_ext >/dev/null 2>&1 || true
+elif [ -f "$MODDIR/bin/lib/install_finish.sh" ]; then
+	# shellcheck disable=SC1090
+	. "$MODDIR/bin/lib/install_finish.sh" 2>/dev/null
+	certbridge_install_cli_ext >/dev/null 2>&1 || true
+fi
 
 # 标记热更新路径：post-fs-data 在 rebuild 失败时会尝试把旧 generation 重新挂回去，
 # 避免「已卸绑定但新集合未建好」的空窗长期残留。

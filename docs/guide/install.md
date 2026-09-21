@@ -89,14 +89,13 @@
 ## 设备上目录（摘要）
 
 ```text
-/data/adb/certbridge/            # 模块外（开关 + 证书字节，避开叠层假写）
-├── user.conf
-├── addon-sources/               # Reqable/ProxyPin 工作副本
-└── source-stash/                # 关断快照
+/data/adb/certbridge/            # 模块外
+├── user.conf / addon-sources / …
+└── cb                           # CLI 入口（推荐）
 
 /data/adb/modules/CertBridge/
 ├── module.prop / post-fs-data.sh / service.sh / action.sh
-├── bin/                 # common、注入、cb、可选 hot / hide / openssl 或 cbx509
+├── bin/                 # common、注入、cert_manager、可选 hot / hide / openssl 或 cbx509
 ├── certs/
 │   ├── builtin/         # 仅 ProxyPin 兜底
 │   ├── sources/         # 旧路径（兼容，启动时迁到 /data/adb/certbridge）

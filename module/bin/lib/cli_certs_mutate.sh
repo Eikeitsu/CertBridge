@@ -39,7 +39,7 @@ _toggle_write_user_conf() {
   [ "$got" = "$value" ]
 }
 
-# 开之前保证 addon-sources 有证：本地 → App → builtin
+# 开之前保证 addon-sources 有证（与安装 certbridge_install_try_app 同一套探测/同步）
 addon_ensure_ready() {
   kind="$1"
   case "$kind" in reqable|proxypin) ;; *) return 1 ;; esac
@@ -52,8 +52,10 @@ addon_ensure_ready() {
   find_source_cert "$kind" >/dev/null 2>&1 && return 0
   find_addon_cert "$kind" 0 >/dev/null 2>&1 && return 0
 
-  sync_source_from_app "$kind" >/dev/null 2>&1 || true
-  find_source_cert "$kind" >/dev/null 2>&1 && return 0
+  # 与安装相同：diagnose → sync_source_from_app
+  if sync_source_from_app "$kind" >/dev/null 2>&1; then
+    find_source_cert "$kind" >/dev/null 2>&1 && return 0
+  fi
   return 1
 }
 
@@ -79,7 +81,7 @@ cmd_toggle() {
 
   if ! addon_ensure_ready "$name"; then
     echo "error=certificate_unavailable"
-    echo "hint=本地无证书且无法从 App 导入。可将根证书放到 Download/ 或使用「自定义导入」后重试"
+    echo "hint=本地无证书且无法从 App 导入（与安装扫描相同路径）；请先在 App 生成根证书或自定义导入"
     return 1
   fi
 

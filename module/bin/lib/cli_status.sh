@@ -80,8 +80,11 @@ hot_failed=0"
   elif is_addon_applied reqable; then
     echo "reqable_available=1"
     echo "reqable_display=$(get_applied_display reqable Reqable)"
-  elif find_live_app_cert reqable 0 >/dev/null 2>&1; then
-    # 安装时跳过导入后 sources 为空，但 App 侧已有证 → 仍标可用，便于 WebUI 开启
+  elif [ -d "$STASH_DIR/reqable" ]; then
+    echo "reqable_available=1"
+    echo "reqable_display=Reqable"
+  elif [ "$live" = "1" ] && find_live_app_cert reqable 0 >/dev/null 2>&1; then
+    # 仅 --live：安装跳过导入后 sources 空，但 App 侧已有证
     echo "reqable_available=1"
     echo "reqable_display=Reqable"
   else
@@ -98,7 +101,10 @@ hot_failed=0"
   elif is_addon_applied proxypin; then
     echo "proxypin_available=1"
     echo "proxypin_display=$(get_applied_display proxypin ProxyPin)"
-  elif find_live_app_cert proxypin 0 >/dev/null 2>&1; then
+  elif [ -d "$STASH_DIR/proxypin" ]; then
+    echo "proxypin_available=1"
+    echo "proxypin_display=ProxyPin"
+  elif [ "$live" = "1" ] && find_live_app_cert proxypin 0 >/dev/null 2>&1; then
     echo "proxypin_available=1"
     echo "proxypin_display=ProxyPin"
   else

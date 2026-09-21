@@ -4,7 +4,7 @@
 stash_addon_source() {
   kind="$1"
   case "$kind" in reqable|proxypin) ;; *) return 1 ;; esac
-  # 优先 sources，再 addon 查找（含 builtin），再生效集
+  # 热路径只吃本地文件：sources → builtin/addon → 生效集；绝不扫 App（避免 WebUI 卡住）
   src=$(find_source_cert "$kind" 2>/dev/null) || \
     src=$(find_addon_cert "$kind" 0 2>/dev/null) || \
     src=$(find_applied_gen_cert "$kind" 2>/dev/null) || return 1

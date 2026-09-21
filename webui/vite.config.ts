@@ -8,29 +8,52 @@ const repoRoot = resolve(root, "..");
 
 /**
  * Magisk / KernelSU WebUI 走自定义协议，通常不返回 CORS 头。
- * Vite 默认给 script/link 加 crossorigin + type="module"，会在 WebView 里被静默拦截 → 白屏。
- * 输出 IIFE 经典脚本，并去掉 crossorigin。
+ * ES module 即使用相对路径也会走 CORS 校验 → 静默失败白屏，故输出 IIFE。
+ * 同时去掉 crossorigin，并把 CSS 排到 JS 前面，首屏样式/loading 先可见。
  */
 function magiskWebUiHtml(): Plugin {
   return {
     name: "magisk-webui-html",
-    transformIndexHtml(html) {
-      let out = html
-        .replace(
-          /<head>/i,
-          '<head>\n    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />',
-        )
-        .replace(/\s+crossorigin(?:="[^"]*")?/gi, "")
-        .replace(/\s+type="module"/gi, "");
-      // 去掉 type=module 后不再自动 defer；head 里同步执行时 #root 尚不存在会白屏
-      out = out.replace(
-        /<script(\s[^>]*src="[^"]+"[^>]*)><\/script>/gi,
-        (_match, attrs: string) => {
-          if (/\sdefer\b/i.test(attrs)) return `<script${attrs}></script>`;
-          return `<script defer${attrs}></script>`;
-        },
-      );
-      return out;
+    transformIndexHtml: {
+      order: "post",
+      handler(html) {
+        let out = html
+          .replace(
+            /<head>/i,
+            '<head>\n    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />',
+          )
+          .replace(/\s+crossorigin(?:="[^"]*")?/gi, "")
+          .replace(/\s+type="module"/gi, "");
+
+        const links: string[] = [];
+        const scripts: string[] = [];
+        out = out.replace(/<link\b[^>]*rel=["']stylesheet["'][^>]*>/gi, (tag) => {
+          links.push(tag);
+          return "";
+        });
+        out = out.replace(
+          /<script\b[^>]*src=["'][^"']+["'][^>]*>\s*<\/script>/gi,
+          (tag) => {
+            scripts.push(tag);
+            return "";
+          },
+        );
+
+        const orderedScripts = scripts.map((tag) => {
+          if (/\sdefer\b/i.test(tag)) return tag;
+          return tag.replace(/<script\b/i, "<script defer");
+        });
+
+        const injection = [...links, ...orderedScripts].join("\n    ");
+        if (injection) {
+          if (/<\/head>/i.test(out)) {
+            out = out.replace(/<\/head>/i, `    ${injection}\n  </head>`);
+          } else {
+            out += injection;
+          }
+        }
+        return out;
+      },
     },
   };
 }
@@ -51,6 +74,8 @@ export default defineConfig(({ command }) => ({
     assetsDir: "assets",
     cssCodeSplit: false,
     modulePreload: false,
+    minify: "esbuild",
+    target: "es2019",
     chunkSizeWarningLimit: 500,
     rollupOptions: {
       output: {

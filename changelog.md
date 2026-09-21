@@ -6,6 +6,8 @@
 >
 > 多数人一般安装 `arm64` 架构的模块即可，模拟器虚拟机请自行选择合适的架构
 
+- **修复证书开关关不掉 / 保存失败**：关闭时先写 conf 再快照；写后读回失败会重试；迁移脚本已规范化则不再写 conf，避免与开关并发
+- **WebUI 首屏体验**：`index.html` 内联 loading（品牌 + 转圈），CSS 先于 JS；status 热路径不再扫 App（仅 `--live` / 开关时探测）。Magisk 协议无 CORS，不能用 ES module 分包，保持 tree-shake 单包 IIFE
 - **WebUI 首屏**：去掉整页开屏等待，先进壳层；顶栏进度条表示加载；status 优先拉取，设备名/自定义列表后台补齐
 - **WebUI**：`index.html` 注入首屏背景色，减轻 JS/CSS 加载前的白屏
 - **修复关后再开找不到证**：关闭前先快照；开启时先恢复 stash/生效集再 sync；sync 换目录失败会回滚，不再清空 sources

@@ -90,21 +90,38 @@ get_experimental_14_system() {
 }
 
 # 启动时迁旧键、统一为 auto|skip（缺省写 skip）
+# 已规范化则只读返回，避免与 WebUI toggle 并发写 conf 造成 readback 失败
 migrate_experimental_14_system_conf() {
   [ -f "$CONF" ] || return 0
+  need_write=0
   if ! grep -q '^experimental_14_system=' "$CONF" 2>/dev/null; then
-    write_conf experimental_14_system skip 2>/dev/null || true
+    need_write=1
   else
     case "$(read_conf experimental_14_system skip | tr 'A-Z' 'a-z')" in
-      off|default|follow|overlay|apex_overlay)
-        write_conf experimental_14_system auto 2>/dev/null || true
-        ;;
-      none|off_system|apex_only)
-        write_conf experimental_14_system skip 2>/dev/null || true
+      off|default|follow|overlay|apex_overlay|none|off_system|apex_only)
+        need_write=1
         ;;
     esac
   fi
-  if grep -q '^experimental_14_apex_only=' "$CONF" 2>/dev/null; then
+  drop_legacy=0
+  grep -q '^experimental_14_apex_only=' "$CONF" 2>/dev/null && drop_legacy=1
+  [ "$need_write" = "1" ] || [ "$drop_legacy" = "1" ] || return 0
+
+  if [ "$need_write" = "1" ]; then
+    if ! grep -q '^experimental_14_system=' "$CONF" 2>/dev/null; then
+      write_conf experimental_14_system skip 2>/dev/null || true
+    else
+      case "$(read_conf experimental_14_system skip | tr 'A-Z' 'a-z')" in
+        off|default|follow|overlay|apex_overlay)
+          write_conf experimental_14_system auto 2>/dev/null || true
+          ;;
+        none|off_system|apex_only)
+          write_conf experimental_14_system skip 2>/dev/null || true
+          ;;
+      esac
+    fi
+  fi
+  if [ "$drop_legacy" = "1" ]; then
     tmp="$CONFDIR/.migrate-exp14.$$"
     awk -F= '$1 != "experimental_14_apex_only" { print }' "$CONF" >"$tmp" 2>/dev/null && \
       cat "$tmp" >"$CONF" 2>/dev/null

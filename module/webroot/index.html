@@ -10,6 +10,62 @@
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#eef2f6" />
     <title>证书桥</title>
+    <!-- 关键首屏：不依赖 JS/CSS 包，立刻有反馈，避免白屏突兀 -->
+    <style>
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: #eef2f6;
+        color: #1a2332;
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      html[data-theme="dark"],
+      html[data-theme="dark"] body {
+        background: #0b1118;
+        color: #e8eef6;
+      }
+      #root {
+        margin: 0;
+        min-height: 100%;
+      }
+      .cb-boot {
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        min-height: 100vh;
+        min-height: 100dvh;
+        padding: 24px;
+        text-align: center;
+        user-select: none;
+      }
+      .cb-boot__brand {
+        font-size: 1.25rem;
+        font-weight: 650;
+        letter-spacing: 0.02em;
+      }
+      .cb-boot__spin {
+        width: 28px;
+        height: 28px;
+        border: 2.5px solid rgba(120, 140, 160, 0.28);
+        border-top-color: var(--bf-primary, #0d9488);
+        border-radius: 50%;
+        animation: cb-boot-spin 0.7s linear infinite;
+      }
+      .cb-boot__hint {
+        margin: 0;
+        font-size: 0.8125rem;
+        opacity: 0.62;
+      }
+      @keyframes cb-boot-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
     <script>
       (function () {
         try {
@@ -34,8 +90,8 @@
           var prefersDark =
             !!window.matchMedia &&
             window.matchMedia("(prefers-color-scheme: dark)").matches;
-          root.dataset.theme =
-            mode === "dark" || (mode !== "light" && prefersDark) ? "dark" : "light";
+          var dark = mode === "dark" || (mode !== "light" && prefersDark);
+          root.dataset.theme = dark ? "dark" : "light";
           root.dataset.pack = pack;
           root.dataset.compact =
             read("cb_compact", pack === "console" || pack === "ops" ? "1" : "0") === "1"
@@ -51,13 +107,23 @@
             root.style.setProperty("--bf-primary", pick);
           }
           if (hex.test(pair)) root.style.setProperty("--bf-accent-pair", pair);
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute("content", dark ? "#0b1118" : "#eef2f6");
         } catch (error) {}
       })();
     </script>
+    
+    
+      <link rel="stylesheet" href="./css/style.css">
     <script defer src="./js/app.js"></script>
-    <link rel="stylesheet" href="./css/style.css">
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="cb-boot" aria-busy="true" aria-live="polite">
+        <div class="cb-boot__brand">证书桥</div>
+        <div class="cb-boot__spin" aria-hidden="true"></div>
+        <p class="cb-boot__hint">正在加载界面…</p>
+      </div>
+    </div>
   </body>
 </html>

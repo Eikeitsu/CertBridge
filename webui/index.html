@@ -9,25 +9,64 @@
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#eef2f6" />
     <title>证书桥</title>
-    <!-- 关键首屏色：CSS 随 JS 模块加载前避免白闪 -->
+    <!-- 关键首屏：不依赖 JS/CSS 包，立刻有反馈，避免白屏突兀 -->
     <style>
       html,
-      body,
-      #root {
+      body {
         margin: 0;
         min-height: 100%;
         background: #eef2f6;
+        color: #1a2332;
+        font-family:
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
       }
       html[data-theme="dark"],
-      html[data-theme="dark"] body,
-      html[data-theme="dark"] #root {
+      html[data-theme="dark"] body {
         background: #0b1118;
         color: #e8eef6;
       }
-      #root .cb-boot {
+      #root {
+        margin: 0;
+        min-height: 100%;
+      }
+      .cb-boot {
         box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
         min-height: 100vh;
         min-height: 100dvh;
+        padding: 24px;
+        text-align: center;
+        user-select: none;
+      }
+      .cb-boot__brand {
+        font-size: 1.25rem;
+        font-weight: 650;
+        letter-spacing: 0.02em;
+      }
+      .cb-boot__spin {
+        width: 28px;
+        height: 28px;
+        border: 2.5px solid rgba(120, 140, 160, 0.28);
+        border-top-color: var(--bf-primary, #0d9488);
+        border-radius: 50%;
+        animation: cb-boot-spin 0.7s linear infinite;
+      }
+      .cb-boot__hint {
+        margin: 0;
+        font-size: 0.8125rem;
+        opacity: 0.62;
+      }
+      @keyframes cb-boot-spin {
+        to {
+          transform: rotate(360deg);
+        }
       }
     </style>
     <script>
@@ -78,7 +117,13 @@
     </script>
   </head>
   <body>
-    <div id="root"><div class="cb-boot" aria-busy="true"></div></div>
+    <div id="root">
+      <div class="cb-boot" aria-busy="true" aria-live="polite">
+        <div class="cb-boot__brand">证书桥</div>
+        <div class="cb-boot__spin" aria-hidden="true"></div>
+        <p class="cb-boot__hint">正在加载界面…</p>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -1,16 +1,31 @@
 #!/system/bin/sh
 # 由 cert_manager.sh 加载
 # 开关 / 同步 / 导入 / 删除
+
+# 写 conf 并读回；失败时再写一次，避免偶发旧值
+_toggle_write_conf() {
+  name="$1"
+  value="$2"
+  write_conf "$name" "$value" || return 1
+  got=$(read_conf "$name" "" | tr -d ' \t\r\n')
+  if [ "$got" = "$value" ]; then
+    return 0
+  fi
+  # 部分机写后瞬时读到旧值：短等再读，仍不对则重写一次
+  sleep 0.05 2>/dev/null || sleep 1
+  got=$(read_conf "$name" "" | tr -d ' \t\r\n')
+  [ "$got" = "$value" ] && return 0
+  write_conf "$name" "$value" || return 1
+  sleep 0.05 2>/dev/null || true
+  got=$(read_conf "$name" "" | tr -d ' \t\r\n')
+  [ "$got" = "$value" ]
+}
+
 cmd_toggle() {
   name="$1"
   value="$2"
   case "$name" in reqable|proxypin) ;; *) echo "error=invalid_toggle"; return 1 ;; esac
   [ "$value" = "1" ] || [ "$value" = "0" ] || { echo "error=invalid_value"; return 1; }
-
-  # 关闭：先快照再写 conf（sources 仍在时拷贝很快；保证立刻再开不依赖 App）
-  if [ "$value" = "0" ]; then
-    stash_addon_source "$name" >/dev/null 2>&1 || true
-  fi
 
   # 开启：先恢复本地源，再尝试 App 刷新（避免 sync 失败路径弄丢已有证）
   if [ "$value" = "1" ]; then
@@ -60,20 +75,9 @@ cmd_toggle() {
       ensure_source_from_applied "$name" >/dev/null 2>&1 || true
   fi
 
-  # 写配置与 pending 互斥，避免与 status/sync 并发丢更新
+  # 关闭/开启都先写 conf：不要在写前做重 I/O stash（易超时/误报 write_failed）
   acquire_write_lock || { echo "error=busy"; return 1; }
-  if ! write_conf "$name" "$value"; then
-    release_write_lock
-    echo "error=write_failed"
-    return 1
-  fi
-  # 读回校验（轻量重试）：部分机写后瞬时读到旧值
-  got=$(read_conf "$name" "" | tr -d ' \t\r\n')
-  if [ "$got" != "$value" ]; then
-    sleep 0.05 2>/dev/null || sleep 1
-    got=$(read_conf "$name" "" | tr -d ' \t\r\n')
-  fi
-  if [ "$got" != "$value" ]; then
+  if ! _toggle_write_conf "$name" "$value"; then
     release_write_lock
     echo "error=write_failed"
     return 1
@@ -85,6 +89,7 @@ cmd_toggle() {
   echo "${name}_enabled=$value"
   echo "pending_reboot=1"
   echo "$pending_line"
+  # 快照放成功之后：优先 sources，失败也不影响已写入的开关
   stash_addon_source "$name" >/dev/null 2>&1 || true
   log_info "config: $name=$value (reboot required)" 2>/dev/null || true
   return 0

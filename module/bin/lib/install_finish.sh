@@ -92,8 +92,10 @@ certbridge_install_preserve_user() {
     hot_update_preserve_paths "$OLD_MOD" "$MODPATH" \
       certs/custom \
       certs/sources \
+      data/state/addon-sources \
       data/state/source-stash \
       data/state/user.conf \
+      data/state/addon-sources.migrated \
       data/state/applied-certs.list \
       data/state/applied.conf \
       data/state/hide-assist.conf \

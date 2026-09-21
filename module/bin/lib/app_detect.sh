@@ -19,6 +19,8 @@ ensure_readable_cert_file() {
     echo "$src"
     return 0
   fi
+  # status 热路径可关 init 探测
+  [ "${_APP_CERT_TRY_INIT_NS:-1}" != "0" ] || return 1
   _app_cert_in_init_ns "$src" || return 1
   probe_dir="${DATADIR:-/data/local/tmp}/live_probe"
   mkdir -p "$probe_dir" 2>/dev/null || return 1
@@ -41,13 +43,9 @@ ensure_readable_cert_file() {
 _app_cert_first_existing() {
   for p in "$@"; do
     [ -n "$p" ] || continue
-    if [ -f "$p" ]; then
-      echo "$p"
-      return 0
-    fi
-    # status 热路径传 try_init_ns=0，避免每次 nsenter
-    if [ "${_APP_CERT_TRY_INIT_NS:-1}" != "0" ] && _app_cert_in_init_ns "$p"; then
-      echo "$p"
+    # 必须返回「当前 ns 可读」路径，否则后续 openssl 导入必失败
+    if readable=$(ensure_readable_cert_file "$p" 2>/dev/null); then
+      echo "$readable"
       return 0
     fi
   done

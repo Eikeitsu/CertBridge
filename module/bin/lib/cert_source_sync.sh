@@ -12,6 +12,11 @@ diagnose_app_cert_import() {
     echo "reason=live_not_found"
     return 2
   }
+  # find_live 已保证可读；再保险一次
+  live=$(ensure_readable_cert_file "$live") || {
+    echo "reason=live_not_found"
+    return 2
+  }
   echo "live=$live"
   errf="$DATADIR/diag_import.$$.err"
   mkdir -p "$DATADIR" 2>/dev/null
@@ -47,6 +52,7 @@ cert_same_fingerprint() {
 sync_source_from_app() {
   kind="$1"
   live=$(find_live_app_cert "$kind") || return 1
+  live=$(ensure_readable_cert_file "$live") || return 1
   label=$(app_cert_label "$kind")
   dest="$SOURCES_DIR/$kind"
   mkdir -p "$SOURCES_DIR" "$DATADIR" || return 1

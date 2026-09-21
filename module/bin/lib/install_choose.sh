@@ -35,6 +35,7 @@ certbridge_install_prepare_dirs() {
   mkdir -p "$MODPATH/bin" "$MODPATH/config" "$MODPATH/data/state"
   mkdir -p "$MODPATH/certs/builtin/proxypin"
   mkdir -p "$MODPATH/certs/sources/reqable" "$MODPATH/certs/sources/proxypin"
+  mkdir -p "$MODPATH/data/state/addon-sources/reqable" "$MODPATH/data/state/addon-sources/proxypin"
   mkdir -p "$MODPATH/certs/custom" "$MODPATH/certs/generation"
   rm -rf "$MODPATH/certs/builtin/reqable"
 }

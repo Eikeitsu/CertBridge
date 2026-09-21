@@ -94,7 +94,7 @@
 ├── bin/                 # common、注入、cb、可选 hot / hide / openssl 或 cbx509
 ├── certs/
 │   ├── builtin/         # 仅 ProxyPin 兜底
-│   ├── sources/         # 从 App 导入的 Reqable / ProxyPin
+│   ├── sources/         # 旧路径（兼容）；实际工作副本在 data/state/addon-sources
 │   ├── custom/          # 用户自定义
 │   ├── generation/      # 本次启动生成的完整证书集
 │   └── hot/             # 临时会话（卸载后删除）
@@ -102,6 +102,10 @@
 ├── config/zn_whitelist.txt   # Zygisk 白名单（有组件时）
 ├── zygisk/              # 可选 *.so
 ├── data/
+│   └── state/
+│       ├── user.conf          # WebUI 开关等可变配置
+│       ├── addon-sources/     # Reqable/ProxyPin 工作副本
+│       └── source-stash/      # 关断快照
 └── webroot/             # 可选 WebUI
 ```
 

@@ -22,7 +22,9 @@ certbridge_init_paths() {
   STATEDIR="$DATADIR/state"
   CERT_POOL="$MODDIR/certs"
   BUILTIN_DIR="$CERT_POOL/builtin"
-  SOURCES_DIR="$CERT_POOL/sources"
+  # 兼容旧路径变量；实际工作副本在 STATEDIR/addon-sources（见 cert_sources.sh）
+  MODULE_SOURCES_DIR="$CERT_POOL/sources"
+  SOURCES_DIR="$STATEDIR/addon-sources"
   CUSTOM_DIR="$CERT_POOL/custom"
   GEN_ROOT="$CERT_POOL/generation"
   GEN_CURRENT="$GEN_ROOT/current"

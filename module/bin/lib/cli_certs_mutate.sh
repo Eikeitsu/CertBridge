@@ -7,20 +7,11 @@
 # - 开 = 有本地证书（sources/stash/applied/builtin）即可写 conf=1
 # - App 同步只是可选刷新，失败不得导致「未找到证书」
 
-# 写 conf 并读回；失败时再写一次，避免偶发旧值
+# 写 conf 并确认读回（user.conf 为主）
 _toggle_write_conf() {
   name="$1"
   value="$2"
   write_conf "$name" "$value" || return 1
-  got=$(read_conf "$name" "" | tr -d ' \t\r\n')
-  if [ "$got" = "$value" ]; then
-    return 0
-  fi
-  sleep 0.05 2>/dev/null || sleep 1
-  got=$(read_conf "$name" "" | tr -d ' \t\r\n')
-  [ "$got" = "$value" ] && return 0
-  write_conf "$name" "$value" || return 1
-  sleep 0.05 2>/dev/null || true
   got=$(read_conf "$name" "" | tr -d ' \t\r\n')
   [ "$got" = "$value" ]
 }
@@ -71,13 +62,12 @@ cmd_toggle() {
   [ "$value" = "1" ] || [ "$value" = "0" ] || { echo "error=invalid_value"; return 1; }
 
   if [ "$value" = "0" ]; then
-    # 关：先快速本地快照（仅 sources，毫秒级），再写 conf；绝不因 stash 失败而关不掉
-    stash_addon_from_sources "$name" >/dev/null 2>&1 || \
-      stash_addon_source "$name" >/dev/null 2>&1 || true
+    # 关：先写 conf（user.conf），快照不影响成败
     acquire_write_lock || { echo "error=busy"; return 1; }
     if ! _toggle_write_conf "$name" "$value"; then
       release_write_lock
       echo "error=write_failed"
+      echo "hint=无法写入 data/state/user.conf"
       return 1
     fi
     pending_line=$(note_conf_dirty)
@@ -86,8 +76,8 @@ cmd_toggle() {
     echo "${name}_enabled=$value"
     echo "pending_reboot=1"
     echo "$pending_line"
-    # 再补一次完整快照；sources 本身保持不删
-    stash_addon_source "$name" >/dev/null 2>&1 || true
+    stash_addon_from_sources "$name" >/dev/null 2>&1 || \
+      stash_addon_source "$name" >/dev/null 2>&1 || true
     log_info "config: $name=$value (reboot required)" 2>/dev/null || true
     return 0
   fi

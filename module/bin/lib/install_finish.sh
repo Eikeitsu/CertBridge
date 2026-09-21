@@ -93,6 +93,7 @@ certbridge_install_preserve_user() {
       certs/custom \
       certs/sources \
       data/state/source-stash \
+      data/state/user.conf \
       data/state/applied-certs.list \
       data/state/applied.conf \
       data/state/hide-assist.conf \

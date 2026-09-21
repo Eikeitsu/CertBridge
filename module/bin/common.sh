@@ -35,6 +35,7 @@ certbridge_init_paths() {
   SOURCE_META="$STATEDIR/source.meta"
   PENDING_FILE="$STATEDIR/reboot-required"
   STASH_DIR="$STATEDIR/source-stash"
+  USER_CONF="$STATEDIR/user.conf"
   LOCK_DIR="$STATEDIR/write.lock"
   LOCK_OWNER="$LOCK_DIR/owner"
   INSTALL_BOOT_FILE="$STATEDIR/install-boot-id"

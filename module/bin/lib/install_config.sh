@@ -4,6 +4,25 @@
 certbridge_install_write_config() {
   sed -i "s/^reqable=.*/reqable=$INSTALL_REQABLE/" "$MODPATH/config/certs.conf"
   sed -i "s/^proxypin=.*/proxypin=$INSTALL_PROXYPIN/" "$MODPATH/config/certs.conf"
+  # 安装选项同步到 user.conf，避免旧开关覆盖本次安装选择
+  mkdir -p "$MODPATH/data/state" 2>/dev/null || true
+  _uc="$MODPATH/data/state/user.conf"
+  {
+    if [ -f "$_uc" ]; then
+      awk -F= -v rq="$INSTALL_REQABLE" -v pp="$INSTALL_PROXYPIN" '
+        $1 == "reqable" { print "reqable=" rq; rqdone=1; next }
+        $1 == "proxypin" { print "proxypin=" pp; ppdone=1; next }
+        { print }
+        END {
+          if (!rqdone) print "reqable=" rq
+          if (!ppdone) print "proxypin=" pp
+        }
+      ' "$_uc"
+    else
+      printf 'reqable=%s\nproxypin=%s\n' "$INSTALL_REQABLE" "$INSTALL_PROXYPIN"
+    fi
+  } >"$_uc.tmp" 2>/dev/null && mv -f "$_uc.tmp" "$_uc"
+  chmod 0600 "$_uc" 2>/dev/null || true
   if grep -q '^mount_mode=' "$MODPATH/config/certs.conf" 2>/dev/null; then
     sed -i "s/^mount_mode=.*/mount_mode=$INSTALL_MOUNT_MODE/" "$MODPATH/config/certs.conf"
   else

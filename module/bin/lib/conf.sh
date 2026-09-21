@@ -1,15 +1,75 @@
 #!/system/bin/sh
 # 配置读写
+#
+# 可变项写入 STATEDIR/user.conf（模块 data 下，热更新可保留），
+# 避免直接改 config/certs.conf：部分机 / 热更新后该文件写成功但读回仍是旧值 → 误报 write_failed。
+
+USER_CONF="${USER_CONF:-$STATEDIR/user.conf}"
+
+_conf_get_from_file() {
+  file="$1"
+  key="$2"
+  [ -f "$file" ] || return 1
+  val=$(awk -F= -v key="$key" '
+    $1 == key {
+      sub(/^[^=]*=/, "")
+      gsub(/\r/, "")
+      print
+      exit
+    }
+  ' "$file" 2>/dev/null)
+  [ -n "$val" ] || return 1
+  printf '%s\n' "$val"
+}
+
+_conf_set_in_file() {
+  file="$1"
+  key="$2"
+  value="$3"
+  dir=$(dirname "$file")
+  mkdir -p "$dir" 2>/dev/null || return 1
+  tmp="$dir/.write.$$.$(basename "$file").$key"
+  if [ -f "$file" ]; then
+    awk -F= -v key="$key" -v value="$value" '
+      BEGIN { done=0 }
+      $1 == key { print key "=" value; done=1; next }
+      { print }
+      END { if (!done) print key "=" value }
+    ' "$file" >"$tmp" 2>/dev/null || { rm -f "$tmp"; return 1; }
+  else
+    printf '%s=%s\n' "$key" "$value" >"$tmp" 2>/dev/null || return 1
+  fi
+  chmod 0600 "$tmp" 2>/dev/null
+  if cat "$tmp" >"$file" 2>/dev/null; then
+    rm -f "$tmp"
+  elif cp -f "$tmp" "$file" 2>/dev/null; then
+    rm -f "$tmp"
+  elif mv -f "$tmp" "$file" 2>/dev/null; then
+    :
+  else
+    rm -f "$tmp"
+    return 1
+  fi
+  # 读回确认（同一文件）
+  got=$(_conf_get_from_file "$file" "$key" | tr -d ' \t\r\n')
+  [ "$got" = "$value" ]
+}
 
 read_conf() {
   key="$1"
   default="${2:-}"
-  [ -f "$CONF" ] || { echo "$default"; return 0; }
-  val=$(awk -F= -v key="$key" '$1 == key { sub(/^[^=]*=/, ""); print; exit }' "$CONF" 2>/dev/null | tr -d '\r')
-  [ -n "$val" ] && echo "$val" || echo "$default"
+  if val=$(_conf_get_from_file "$USER_CONF" "$key" 2>/dev/null); then
+    printf '%s\n' "$val"
+    return 0
+  fi
+  if val=$(_conf_get_from_file "$CONF" "$key" 2>/dev/null); then
+    printf '%s\n' "$val"
+    return 0
+  fi
+  printf '%s\n' "$default"
 }
 
-# 原子写配置：同目录临时文件 + cat 落盘（避免跨挂载点 mv 失败导致 write_failed）
+# 原子写配置：优先 user.conf；成功后再尽力镜像到模块 certs.conf（失败忽略）
 write_conf() {
   key="$1"
   value="$2"
@@ -18,32 +78,50 @@ write_conf() {
       ;;
     *) return 1 ;;
   esac
-  mkdir -p "$CONFDIR" 2>/dev/null || return 1
-  tmp="$CONFDIR/.write.$$.$key"
+  mkdir -p "$STATEDIR" 2>/dev/null || return 1
+  USER_CONF="${USER_CONF:-$STATEDIR/user.conf}"
+  _conf_set_in_file "$USER_CONF" "$key" "$value" || return 1
+  # 镜像到模块模板，方便人眼查看；不作为成功条件
+  if [ -n "$CONF" ] && [ -d "$(dirname "$CONF")" ]; then
+    _conf_set_in_file "$CONF" "$key" "$value" 2>/dev/null || true
+  fi
+  return 0
+}
+
+# 生成生效快照用：模块模板 + user.conf 覆盖
+snapshot_effective_conf() {
+  dest="$1"
+  [ -n "$dest" ] || return 1
+  mkdir -p "$(dirname "$dest")" 2>/dev/null || return 1
+  tmp="$STATEDIR/.effective.$$"
   if [ -f "$CONF" ]; then
-    awk -F= -v key="$key" -v value="$value" '
-      BEGIN { done=0 }
-      $1 == key { print key "=" value; done=1; next }
-      { print }
-      END { if (!done) print key "=" value }
-    ' "$CONF" >"$tmp" 2>/dev/null || { rm -f "$tmp"; return 1; }
+    cp -f "$CONF" "$tmp" 2>/dev/null || cat "$CONF" >"$tmp" 2>/dev/null || : >"$tmp"
   else
-    printf '%s=%s\n' "$key" "$value" >"$tmp" 2>/dev/null || return 1
+    : >"$tmp"
+  fi
+  if [ -f "$USER_CONF" ]; then
+    while IFS= read -r line || [ -n "$line" ]; do
+      line=$(printf '%s' "$line" | tr -d '\r')
+      case "$line" in
+        ""|\#*) continue ;;
+      esac
+      key=${line%%=*}
+      [ -n "$key" ] && [ "$key" != "$line" ] || continue
+      value=${line#*=}
+      awk -F= -v key="$key" -v value="$value" '
+        BEGIN { done=0 }
+        $1 == key { print key "=" value; done=1; next }
+        { print }
+        END { if (!done) print key "=" value }
+      ' "$tmp" >"$tmp.new" 2>/dev/null && mv -f "$tmp.new" "$tmp"
+    done <"$USER_CONF"
   fi
   chmod 0600 "$tmp" 2>/dev/null
-  # 优先同卷 cat 覆盖；再 cp；最后 mv（跨挂载点时 mv 可能失败）
-  if cat "$tmp" >"$CONF" 2>/dev/null; then
-    rm -f "$tmp"
+  if cat "$tmp" >"$dest" 2>/dev/null || cp -f "$tmp" "$dest" 2>/dev/null || mv -f "$tmp" "$dest" 2>/dev/null; then
+    rm -f "$tmp" "$tmp.new" 2>/dev/null
     return 0
   fi
-  if cp -f "$tmp" "$CONF" 2>/dev/null; then
-    rm -f "$tmp"
-    return 0
-  fi
-  if mv -f "$tmp" "$CONF" 2>/dev/null; then
-    return 0
-  fi
-  rm -f "$tmp"
+  rm -f "$tmp" "$tmp.new" 2>/dev/null
   return 1
 }
 
@@ -92,26 +170,27 @@ get_experimental_14_system() {
 # 启动时迁旧键、统一为 auto|skip（缺省写 skip）
 # 已规范化则只读返回，避免与 WebUI toggle 并发写 conf 造成 readback 失败
 migrate_experimental_14_system_conf() {
-  [ -f "$CONF" ] || return 0
+  [ -f "$CONF" ] || [ -f "$USER_CONF" ] || return 0
   need_write=0
-  if ! grep -q '^experimental_14_system=' "$CONF" 2>/dev/null; then
+  cur=$(read_conf experimental_14_system "")
+  if [ -z "$cur" ]; then
     need_write=1
   else
-    case "$(read_conf experimental_14_system skip | tr 'A-Z' 'a-z')" in
+    case "$(printf '%s' "$cur" | tr 'A-Z' 'a-z')" in
       off|default|follow|overlay|apex_overlay|none|off_system|apex_only)
         need_write=1
         ;;
     esac
   fi
   drop_legacy=0
-  grep -q '^experimental_14_apex_only=' "$CONF" 2>/dev/null && drop_legacy=1
+  [ -f "$CONF" ] && grep -q '^experimental_14_apex_only=' "$CONF" 2>/dev/null && drop_legacy=1
   [ "$need_write" = "1" ] || [ "$drop_legacy" = "1" ] || return 0
 
   if [ "$need_write" = "1" ]; then
-    if ! grep -q '^experimental_14_system=' "$CONF" 2>/dev/null; then
+    if [ -z "$cur" ]; then
       write_conf experimental_14_system skip 2>/dev/null || true
     else
-      case "$(read_conf experimental_14_system skip | tr 'A-Z' 'a-z')" in
+      case "$(printf '%s' "$cur" | tr 'A-Z' 'a-z')" in
         off|default|follow|overlay|apex_overlay)
           write_conf experimental_14_system auto 2>/dev/null || true
           ;;
@@ -121,7 +200,7 @@ migrate_experimental_14_system_conf() {
       esac
     fi
   fi
-  if [ "$drop_legacy" = "1" ]; then
+  if [ "$drop_legacy" = "1" ] && [ -f "$CONF" ]; then
     tmp="$CONFDIR/.migrate-exp14.$$"
     awk -F= '$1 != "experimental_14_apex_only" { print }' "$CONF" >"$tmp" 2>/dev/null && \
       cat "$tmp" >"$CONF" 2>/dev/null

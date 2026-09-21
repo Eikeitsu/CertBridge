@@ -1,16 +1,12 @@
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
-import {
-  selectCustomCertificates,
-  selectStatusBootstrapped,
-  selectStatusLoading,
-} from "@/features/status/model/selectors";
+import { selectCustomCertificates } from "@/features/status/model/selectors";
 import { refreshStatus } from "@/features/status/model/statusSlice";
 import { useCertActions } from "@/features/certs/hooks/useCertActions";
 import { useBuiltinCerts } from "@/features/certs/hooks/useBuiltinCerts";
 import { useCertDetail } from "@/features/certs/hooks/useCertDetail";
 import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
 import { PageStack } from "@/shared/ui/layout";
-import { Button, Loader } from "@/shared/ui/primitives";
+import { Button } from "@/shared/ui/primitives";
 import { BuiltinCertsPanel } from "./BuiltinCertsPanel";
 import { CustomCertsPanel } from "./CustomCertsPanel";
 import { CertDetailSheet } from "./CertDetailSheet";
@@ -18,13 +14,10 @@ import { HotMountPanel } from "./HotMountPanel";
 
 export function CertsPage() {
   const dispatch = useAppDispatch();
-  const isStatusLoading = useAppSelector(selectStatusLoading);
-  const bootstrapped = useAppSelector(selectStatusBootstrapped);
   const customCertificates = useAppSelector(selectCustomCertificates);
   const builtinCerts = useBuiltinCerts();
   const { voice } = usePackVoice();
   const detail = useCertDetail();
-  const showBootSpin = isStatusLoading && !bootstrapped;
   const {
     isPending,
     handleToggleBuiltin,
@@ -36,8 +29,6 @@ export function CertsPage() {
     handleHotMount,
     handleHotUnmount,
   } = useCertActions();
-
-  if (showBootSpin) return <Loader label={voice.loadingHint} />;
 
   return (
     <PageStack className="bf-stack--loose">

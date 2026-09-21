@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { selectStatusBootstrapped } from "@/features/status/model/selectors";
 import { refreshStatus } from "@/features/status/model/statusSlice";
@@ -6,7 +6,6 @@ import { useTrustOverview } from "@/features/overview/hooks/useTrustOverview";
 import { TrustTone } from "@/entities/module/enums";
 import { confirmAction } from "@/shared/lib/confirmAction";
 import { rebootDevice } from "@/shared/api/cli";
-import { Loader } from "@/shared/ui/Loader";
 import { DEFAULT_VOICE } from "../voice";
 
 export function DefaultHomePage() {
@@ -14,7 +13,6 @@ export function DefaultHomePage() {
   const overview = useTrustOverview();
   const bootstrapped = useAppSelector(selectStatusBootstrapped);
   const v = DEFAULT_VOICE.home;
-  const showBoot = overview.isLoading && !bootstrapped;
 
   const stabilizing =
     overview.trust.tone === TrustTone.Idle &&
@@ -36,16 +34,11 @@ export function DefaultHomePage() {
       ? overview.activeNames.join(" · ")
       : overview.trust.hint || overview.description || v.empty);
 
-  const metrics = useMemo(
-    () => [
-      { label: v.metrics.active, value: overview.activeCount },
-      { label: v.metrics.custom, value: overview.customCount },
-      { label: v.metrics.baseline, value: overview.baselineCount },
-    ],
-    [overview, v],
-  );
-
-  if (showBoot) return <Loader label={DEFAULT_VOICE.loading} />;
+  const metrics = [
+    { label: v.metrics.active, value: overview.activeCount },
+    { label: v.metrics.custom, value: overview.customCount },
+    { label: v.metrics.baseline, value: overview.baselineCount },
+  ];
 
   return (
     <div className={`pk-def-page pk-def-page--home tone-${overview.trust.tone}`}>

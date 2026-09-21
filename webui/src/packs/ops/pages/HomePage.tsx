@@ -6,7 +6,6 @@ import { useTrustOverview } from "@/features/overview/hooks/useTrustOverview";
 import { TrustTone } from "@/entities/module/enums";
 import { confirmAction } from "@/shared/lib/confirmAction";
 import { rebootDevice } from "@/shared/api/cli";
-import { Loader } from "@/shared/ui/Loader";
 import { OPS_VOICE } from "../voice";
 
 export function OpsHomePage() {
@@ -14,7 +13,6 @@ export function OpsHomePage() {
   const overview = useTrustOverview();
   const bootstrapped = useAppSelector(selectStatusBootstrapped);
   const v = OPS_VOICE.home;
-  const showBoot = overview.isLoading && !bootstrapped;
 
   const stabilizing =
     overview.trust.tone === TrustTone.Idle &&
@@ -29,8 +27,6 @@ export function OpsHomePage() {
     );
     return () => timers.forEach((id) => window.clearTimeout(id));
   }, [bootstrapped, stabilizing, dispatch]);
-
-  if (showBoot) return <Loader label={OPS_VOICE.loading} />;
 
   const tone = overview.trust.tone;
 

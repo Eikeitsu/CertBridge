@@ -8,6 +8,7 @@ import { useImmersiveChrome } from "@/features/shell/hooks/useImmersiveChrome";
 import { selectResolvedTheme } from "@/features/theme/model/selectors";
 import {
   selectDeviceLabel,
+  selectStatusLoading,
   selectStatusRefreshing,
 } from "@/features/status/model/selectors";
 import { TabName } from "@/entities/module/enums";
@@ -53,6 +54,7 @@ function Pane({
 export function DefaultShell() {
   const deviceLabel = useAppSelector(selectDeviceLabel);
   const refreshing = useAppSelector(selectStatusRefreshing);
+  const loading = useAppSelector(selectStatusLoading);
   const resolved = useAppSelector(selectResolvedTheme);
   const { activeTab, switchTab } = useActiveTab();
   const { tabs, showHideTab } = useVisibleTabs();
@@ -78,7 +80,10 @@ export function DefaultShell() {
 
   return (
     <div className="pk-def-shell">
-      <div className={`pk-def-progress${refreshing ? " is-on" : ""}`} aria-hidden />
+      <div
+        className={`pk-def-progress${refreshing || loading ? " is-on" : ""}`}
+        aria-hidden
+      />
       <header className="pk-def-topbar">
         <div className="pk-def-topbar__brand">
           <img

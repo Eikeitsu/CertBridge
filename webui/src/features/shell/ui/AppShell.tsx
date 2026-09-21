@@ -7,6 +7,7 @@ import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
 import { selectResolvedTheme } from "@/features/theme/model/selectors";
 import {
   selectDeviceLabel,
+  selectStatusLoading,
   selectStatusRefreshing,
 } from "@/features/status/model/selectors";
 import { TabName } from "@/entities/module/enums";
@@ -25,6 +26,7 @@ import { AppTabPane } from "./AppTabPane";
 export function AppShell() {
   const deviceLabel = useAppSelector(selectDeviceLabel);
   const isRefreshing = useAppSelector(selectStatusRefreshing);
+  const isLoading = useAppSelector(selectStatusLoading);
   const resolvedTheme = useAppSelector(selectResolvedTheme);
   const { activeTab, switchTab } = useActiveTab();
   const { tabs, showHideTab } = useVisibleTabs();
@@ -54,7 +56,7 @@ export function AppShell() {
 
   return (
     <div className="bf-shell">
-      <AppProgressBar active={isRefreshing} />
+      <AppProgressBar active={isRefreshing || isLoading} />
       <AppTopbar
         brand={voice.brand}
         pageTitle={voice.tabs[activeTab]}

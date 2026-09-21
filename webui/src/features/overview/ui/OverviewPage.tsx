@@ -6,7 +6,7 @@ import { useTrustOverview } from "@/features/overview/hooks/useTrustOverview";
 import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
 import { ThemePack, TrustTone } from "@/entities/module/enums";
 import { PageStack } from "@/shared/ui/layout";
-import { Loader, Tag } from "@/shared/ui/primitives";
+import { Tag } from "@/shared/ui/primitives";
 import { HelpCollapse } from "@/shared/ui/HelpCollapse";
 import { StatusStage } from "@/shared/ui/StatusStage";
 import { OverviewAlerts } from "./OverviewAlerts";
@@ -18,7 +18,6 @@ export function OverviewPage() {
   const overview = useTrustOverview();
   const bootstrapped = useAppSelector(selectStatusBootstrapped);
   const { pack, voice } = usePackVoice();
-  const showBootSpin = overview.isLoading && !bootstrapped;
 
   const stabilizing =
     overview.trust.tone === TrustTone.Idle &&
@@ -57,8 +56,6 @@ export function OverviewPage() {
         : overview.trust.tone === TrustTone.Warn
           ? "warn"
           : "default";
-
-  if (showBootSpin) return <Loader label={voice.loadingHint} />;
 
   return (
     <PageStack className="bf-stack--loose bf-home">

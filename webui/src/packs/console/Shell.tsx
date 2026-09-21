@@ -12,7 +12,10 @@ import { useActiveTab } from "@/features/shell/hooks/useActiveTab";
 import { useVisibleTabs } from "@/features/shell/hooks/useVisibleTabs";
 import { useImmersiveChrome } from "@/features/shell/hooks/useImmersiveChrome";
 import { selectResolvedTheme } from "@/features/theme/model/selectors";
-import { selectStatusRefreshing } from "@/features/status/model/selectors";
+import {
+  selectStatusLoading,
+  selectStatusRefreshing,
+} from "@/features/status/model/selectors";
 import { TabName } from "@/entities/module/enums";
 import { AppSnackbar } from "@/shared/ui/AppSnackbar";
 import { ConfirmHost } from "@/shared/ui/ConfirmHost";
@@ -54,6 +57,7 @@ function Pane({
 
 export function ConsoleShell() {
   const refreshing = useAppSelector(selectStatusRefreshing);
+  const loading = useAppSelector(selectStatusLoading);
   const resolved = useAppSelector(selectResolvedTheme);
   const { activeTab, switchTab } = useActiveTab();
   const { tabs, showHideTab } = useVisibleTabs();
@@ -79,7 +83,10 @@ export function ConsoleShell() {
 
   return (
     <div className="pk-con-shell">
-      <div className={`pk-con-progress${refreshing ? " is-on" : ""}`} aria-hidden />
+      <div
+        className={`pk-con-progress${refreshing || loading ? " is-on" : ""}`}
+        aria-hidden
+      />
       <header className="pk-con-topbar">
         <code className="pk-con-topbar__path">
           ~/{v.brand}/{v.tabs[activeTab]}

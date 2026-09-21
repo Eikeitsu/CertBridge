@@ -1,7 +1,10 @@
 import { useEffect, type ReactNode } from "react";
 import { useAppDispatch } from "@/app/store/hooks";
 import { hydrateTheme, refreshSystemTheme } from "@/features/theme/model/themeSlice";
-import { bootstrapStatus } from "@/features/status/model/statusSlice";
+import {
+  bootstrapStatus,
+  enrichBootstrapMeta,
+} from "@/features/status/model/statusSlice";
 import { fetchActivityLog } from "@/features/log/model/logSlice";
 
 function deferIdle(fn: () => void) {
@@ -17,8 +20,10 @@ export function ThemeBootstrap({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     dispatch(hydrateTheme());
-    void dispatch(bootstrapStatus());
-    // 日志非首屏关键路径，空闲后再拉，减轻启动争用
+    // 先拉 status 进页；设备名 / 自定义列表 / 日志后台补
+    void dispatch(bootstrapStatus()).finally(() => {
+      void dispatch(enrichBootstrapMeta());
+    });
     deferIdle(() => {
       void dispatch(fetchActivityLog());
     });

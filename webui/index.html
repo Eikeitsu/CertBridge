@@ -26,24 +26,8 @@
       }
       #root .cb-boot {
         box-sizing: border-box;
-        display: flex;
-        align-items: center;
-        justify-content: center;
         min-height: 100vh;
         min-height: 100dvh;
-        padding: 24px;
-        font:
-          600 15px/1.4 system-ui,
-          "Segoe UI",
-          "PingFang SC",
-          "Microsoft YaHei",
-          sans-serif;
-        letter-spacing: 0.04em;
-        color: #94a3b8;
-        user-select: none;
-      }
-      html[data-theme="dark"] #root .cb-boot {
-        color: #6b7c93;
       }
     </style>
     <script>
@@ -94,7 +78,7 @@
     </script>
   </head>
   <body>
-    <div id="root"><div class="cb-boot" aria-busy="true">证书桥</div></div>
+    <div id="root"><div class="cb-boot" aria-busy="true"></div></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -1,16 +1,11 @@
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
-import {
-  selectCustomCertificates,
-  selectStatusBootstrapped,
-  selectStatusLoading,
-} from "@/features/status/model/selectors";
+import { selectCustomCertificates } from "@/features/status/model/selectors";
 import { refreshStatus } from "@/features/status/model/statusSlice";
 import { useCertActions } from "@/features/certs/hooks/useCertActions";
 import { useBuiltinCerts } from "@/features/certs/hooks/useBuiltinCerts";
 import { useCertDetail } from "@/features/certs/hooks/useCertDetail";
 import type { AppPresetKind } from "@/shared/api/cli";
 import { Switch } from "@/shared/ui/primitives";
-import { Loader } from "@/shared/ui/Loader";
 import { CertDetailSheet } from "@/features/certs/ui/CertDetailSheet";
 import { HotMountPanel } from "@/features/certs/ui/HotMountPanel";
 import { CONSOLE_VOICE } from "../voice";
@@ -32,8 +27,6 @@ function stateOf(cert: { isActive: boolean; isEnabled: boolean; isAvailable: boo
 
 export function ConsoleCertsPage() {
   const dispatch = useAppDispatch();
-  const loading = useAppSelector(selectStatusLoading);
-  const bootstrapped = useAppSelector(selectStatusBootstrapped);
   const customs = useAppSelector(selectCustomCertificates);
   const builtins = useBuiltinCerts();
   const detail = useCertDetail();
@@ -49,8 +42,6 @@ export function ConsoleCertsPage() {
     handleHotMount,
     handleHotUnmount,
   } = useCertActions();
-
-  if (loading && !bootstrapped) return <Loader label={CONSOLE_VOICE.loading} />;
 
   return (
     <div className="pk-con-page">

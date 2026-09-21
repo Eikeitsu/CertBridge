@@ -84,15 +84,20 @@ export const bootstrapStatus = createAsyncThunk("status/bootstrap", async () => 
       await new Promise((r) => window.setTimeout(r, 40 + i * 40));
     }
   }
-  const [device, status, customCertificates] = await Promise.all([
+  // 首屏只拉 status，尽快进页面；设备名 / 自定义列表后台补
+  const status = await fetchStatus();
+  return { status };
+});
+
+/** 非阻塞补齐：设备文案 + 自定义证书列表 */
+export const enrichBootstrapMeta = createAsyncThunk("status/enrichMeta", async () => {
+  const [device, customCertificates] = await Promise.all([
     fetchDeviceInfo().catch(() => ({ label: "本机", name: "本机" })),
-    fetchStatus(),
     listCustom().catch(() => [] as CustomCertificate[]),
   ]);
   return {
     deviceLabel: device.label,
     deviceName: device.name,
-    status,
     customCertificates,
   };
 });
@@ -165,10 +170,7 @@ const statusSlice = createSlice({
       .addCase(bootstrapStatus.fulfilled, (state, action) => {
         state.loading = false;
         state.bootstrapped = true;
-        state.deviceLabel = action.payload.deviceLabel;
-        state.deviceName = action.payload.deviceName;
         state.status = action.payload.status;
-        state.customCertificates = action.payload.customCertificates;
         state.lastRefreshedAt = formatClockTime();
       })
       .addCase(bootstrapStatus.rejected, (state, action) => {
@@ -176,6 +178,11 @@ const statusSlice = createSlice({
         state.bootstrapped = true;
         state.error = friendlyError(action.error.message);
         toast(state.error, "bad");
+      })
+      .addCase(enrichBootstrapMeta.fulfilled, (state, action) => {
+        state.deviceLabel = action.payload.deviceLabel;
+        state.deviceName = action.payload.deviceName;
+        state.customCertificates = action.payload.customCertificates;
       })
       .addCase(refreshStatus.pending, (state) => {
         state.refreshing = true;

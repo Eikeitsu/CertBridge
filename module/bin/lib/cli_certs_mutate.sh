@@ -78,7 +78,7 @@ cmd_toggle() {
     return 0
   fi
 
-  # 开：只认本地 materials；有本地绝不因 App 失败而报「未找到」
+  # 开：先凑本地（含旧路径回填）；没有再问 App；写开关与关相同（只写 user.conf）
   certbridge_ensure_state_sources >/dev/null 2>&1 || true
   prepare_addon_local "$name" >/dev/null 2>&1 || true
   if ! find_addon_cert "$name" 0 >/dev/null 2>&1; then
@@ -92,7 +92,7 @@ cmd_toggle() {
       echo "hint=本地快照无法写回 /data/adb/certbridge/addon-sources"
       return 1
     fi
-    # 确无本地：才走 App
+    # 确无本地：才走 App（探测已加强 /proc/1/root + 同盘 stage）
     if ! _toggle_import_from_app "$name"; then
       return 1
     fi
@@ -116,7 +116,9 @@ cmd_toggle() {
   echo "${name}_enabled=$value"
   echo "pending_reboot=1"
   echo "$pending_line"
-  stash_addon_source "$name" >/dev/null 2>&1 || true
+  # 开启成功立刻快照，保证下次关→开不依赖 App
+  stash_addon_from_sources "$name" >/dev/null 2>&1 || \
+    stash_addon_source "$name" >/dev/null 2>&1 || true
   log_info "config: $name=$value (reboot required)" 2>/dev/null || true
   return 0
 }

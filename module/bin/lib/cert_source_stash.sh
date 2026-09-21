@@ -125,9 +125,34 @@ restore_addon_source_from_stash() {
 prepare_addon_local() {
   kind="$1"
   case "$kind" in reqable|proxypin) ;; *) return 1 ;; esac
+  CB_EXT_DIR="${CB_EXT_DIR:-/data/adb/certbridge}"
+  SOURCES_DIR="${SOURCES_DIR:-$CB_EXT_DIR/addon-sources}"
+  STASH_DIR="${STASH_DIR:-$CB_EXT_DIR/source-stash}"
+  certbridge_ensure_state_sources >/dev/null 2>&1 || true
   find_source_cert "$kind" >/dev/null 2>&1 && return 0
   restore_addon_source_from_stash "$kind" >/dev/null 2>&1 && return 0
   ensure_source_from_applied "$kind" >/dev/null 2>&1 && return 0
+  # 旧路径再扫一遍（热更新后外置目录可能仍空）
+  for src_dir in \
+    "${STATEDIR:-}/addon-sources/$kind" \
+    "${STATEDIR:-}/source-stash/$kind" \
+    "${CERT_POOL:-}/sources/$kind" \
+    "$CB_EXT_DIR/source-stash/$kind"
+  do
+    [ -n "$src_dir" ] && [ -d "$src_dir" ] || continue
+    for f in "$src_dir"/*.*; do
+      [ -f "$f" ] || continue
+      case "$f" in *.meta) continue ;; esac
+      is_cert_filename "$(basename "$f")" || continue
+      dest_dir="$SOURCES_DIR/$kind"
+      mkdir -p "$dest_dir" 2>/dev/null || continue
+      name=$(basename "$f")
+      cp -f "$f" "$dest_dir/$name" 2>/dev/null || continue
+      [ -f "$f.meta" ] && cp -f "$f.meta" "$dest_dir/$name.meta" 2>/dev/null || true
+      chmod 0644 "$dest_dir/$name" 2>/dev/null
+      find_source_cert "$kind" >/dev/null 2>&1 && return 0
+    done
+  done
   # proxypin 可走 builtin；reqable 无 builtin
   find_addon_cert "$kind" 0 >/dev/null 2>&1 && return 0
   return 1

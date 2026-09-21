@@ -6,29 +6,49 @@
 _app_cert_in_init_ns() {
   p="$1"
   [ -n "$p" ] || return 1
+  # 优先 /proc/1/root（无需 nsenter，Magisk WebUI 更常见）
+  [ -e "/proc/1/root$p" ] && return 0
   command -v nsenter >/dev/null 2>&1 || return 1
   [ -d /proc/1/ns/mnt ] || return 1
   nsenter --mount=/proc/1/ns/mnt -- test -f "$p" 2>/dev/null
 }
 
-# 保证当前 ns 可读：本 ns 直接返回；否则从 init ns 拷到 DATADIR
+# 保证当前 ns 可读：本 ns 直接返回；否则从 init ns 拷到可读位置
 ensure_readable_cert_file() {
   src="$1"
   [ -n "$src" ] || return 1
+  case "$src" in /*) ;; *) return 1 ;; esac
   if [ -f "$src" ] && [ -r "$src" ]; then
     echo "$src"
     return 0
   fi
   # status 热路径可关 init 探测
   [ "${_APP_CERT_TRY_INIT_NS:-1}" != "0" ] || return 1
+
+  # 同 inode 视图：部分环境可直接读 /proc/1/root$src
+  if [ -f "/proc/1/root$src" ] && [ -r "/proc/1/root$src" ]; then
+    echo "/proc/1/root$src"
+    return 0
+  fi
+
   _app_cert_in_init_ns "$src" || return 1
-  probe_dir="${DATADIR:-/data/local/tmp}/live_probe"
-  mkdir -p "$probe_dir" 2>/dev/null || return 1
-  # 稳定短名，避免路径特殊字符
+  # 拷贝落到模块外，避免叠层目录不可写
+  probe_dir="${CB_EXT_DIR:-/data/adb/certbridge}/live_probe"
+  mkdir -p "$probe_dir" 2>/dev/null || {
+    probe_dir="${DATADIR:-/data/local/tmp}/live_probe"
+    mkdir -p "$probe_dir" 2>/dev/null || return 1
+  }
   tag=$(echo "$src" | cksum 2>/dev/null | awk '{print $1}')
   [ -n "$tag" ] || tag="x"
   dest="$probe_dir/ns_${tag}.crt"
-  nsenter --mount=/proc/1/ns/mnt -- cat "$src" >"$dest" 2>/dev/null || {
+  copied=0
+  if [ -f "/proc/1/root$src" ]; then
+    cp -f "/proc/1/root$src" "$dest" 2>/dev/null && copied=1
+  fi
+  if [ "$copied" != "1" ] && command -v nsenter >/dev/null 2>&1; then
+    nsenter --mount=/proc/1/ns/mnt -- cat "$src" >"$dest" 2>/dev/null && copied=1
+  fi
+  [ "$copied" = "1" ] || {
     rm -f "$dest"
     return 1
   }
@@ -65,8 +85,12 @@ find_live_app_cert() {
         "/storage/emulated/0/Android/data/com.reqable.android.pro/files/certificate/reqable-root.crt" \
         "/data/media/0/Android/data/com.reqable.android/files/certificate/reqable-root.crt" \
         "/data/media/0/Android/data/com.reqable.android.pro/files/certificate/reqable-root.crt" \
+        "/sdcard/Android/data/com.reqable.android/files/certificate/reqable-root.crt" \
+        "/sdcard/Android/data/com.reqable.android.pro/files/certificate/reqable-root.crt" \
         "/data/user/0/com.reqable.android/files/certificate/reqable-root.crt" \
-        "/data/user/0/com.reqable.android.pro/files/certificate/reqable-root.crt"
+        "/data/user/0/com.reqable.android.pro/files/certificate/reqable-root.crt" \
+        "/data/data/com.reqable.android/files/certificate/reqable-root.crt" \
+        "/data/data/com.reqable.android.pro/files/certificate/reqable-root.crt"
       ;;
     proxypin)
       _app_cert_first_existing \

@@ -1,10 +1,11 @@
 #!/system/bin/sh
 # 配置读写
 #
-# 可变项写入 STATEDIR/user.conf（模块 data 下，热更新可保留），
-# 避免直接改 config/certs.conf：部分机 / 热更新后该文件写成功但读回仍是旧值 → 误报 write_failed。
+# 可变项写入 /data/adb/certbridge/user.conf（模块目录外）。
+# 模块内 config/ 与 data/state/ 在部分机热更新后会出现「写成功但读回旧值」。
 
-USER_CONF="${USER_CONF:-$STATEDIR/user.conf}"
+USER_CONF="${USER_CONF:-${CB_EXT_DIR:-/data/adb/certbridge}/user.conf}"
+USER_CONF_LEGACY="${USER_CONF_LEGACY:-$STATEDIR/user.conf}"
 
 _conf_get_from_file() {
   file="$1"
@@ -22,13 +23,14 @@ _conf_get_from_file() {
   printf '%s\n' "$val"
 }
 
+# 写入并读回校验；优先 cp
 _conf_set_in_file() {
   file="$1"
   key="$2"
   value="$3"
   dir=$(dirname "$file")
   mkdir -p "$dir" 2>/dev/null || return 1
-  tmp="$dir/.write.$$.$(basename "$file").$key"
+  tmp="$dir/.cb_write.$$.$key"
   if [ -f "$file" ]; then
     awk -F= -v key="$key" -v value="$value" '
       BEGIN { done=0 }
@@ -40,25 +42,32 @@ _conf_set_in_file() {
     printf '%s=%s\n' "$key" "$value" >"$tmp" 2>/dev/null || return 1
   fi
   chmod 0600 "$tmp" 2>/dev/null
-  if cat "$tmp" >"$file" 2>/dev/null; then
-    rm -f "$tmp"
-  elif cp -f "$tmp" "$file" 2>/dev/null; then
-    rm -f "$tmp"
+  wrote=0
+  if cp -f "$tmp" "$file" 2>/dev/null; then
+    wrote=1
+  elif cat "$tmp" >"$file" 2>/dev/null; then
+    wrote=1
   elif mv -f "$tmp" "$file" 2>/dev/null; then
-    :
-  else
-    rm -f "$tmp"
-    return 1
+    wrote=1
+    tmp=""
   fi
-  # 读回确认（同一文件）
+  rm -f "$tmp" 2>/dev/null
+  [ "$wrote" = "1" ] || return 1
   got=$(_conf_get_from_file "$file" "$key" | tr -d ' \t\r\n')
-  [ "$got" = "$value" ]
+  [ "$got" = "$value" ] && return 0
+  grep -q "^${key}=${value}$" "$file" 2>/dev/null
 }
 
 read_conf() {
   key="$1"
   default="${2:-}"
+  USER_CONF="${USER_CONF:-${CB_EXT_DIR:-/data/adb/certbridge}/user.conf}"
+  USER_CONF_LEGACY="${USER_CONF_LEGACY:-$STATEDIR/user.conf}"
   if val=$(_conf_get_from_file "$USER_CONF" "$key" 2>/dev/null); then
+    printf '%s\n' "$val"
+    return 0
+  fi
+  if val=$(_conf_get_from_file "$USER_CONF_LEGACY" "$key" 2>/dev/null); then
     printf '%s\n' "$val"
     return 0
   fi
@@ -69,7 +78,7 @@ read_conf() {
   printf '%s\n' "$default"
 }
 
-# 原子写配置：优先 user.conf；成功后再尽力镜像到模块 certs.conf（失败忽略）
+# 只信任模块外 user.conf；不依赖 STATEDIR 可写
 write_conf() {
   key="$1"
   value="$2"
@@ -78,10 +87,15 @@ write_conf() {
       ;;
     *) return 1 ;;
   esac
-  mkdir -p "$STATEDIR" 2>/dev/null || return 1
-  USER_CONF="${USER_CONF:-$STATEDIR/user.conf}"
+  CB_EXT_DIR="${CB_EXT_DIR:-/data/adb/certbridge}"
+  USER_CONF="$CB_EXT_DIR/user.conf"
+  mkdir -p "$CB_EXT_DIR" 2>/dev/null || return 1
   _conf_set_in_file "$USER_CONF" "$key" "$value" || return 1
-  # 镜像到模块模板，方便人眼查看；不作为成功条件
+  # 可选镜像（失败忽略）
+  if [ -n "$STATEDIR" ]; then
+    mkdir -p "$STATEDIR" 2>/dev/null && \
+      _conf_set_in_file "$STATEDIR/user.conf" "$key" "$value" 2>/dev/null || true
+  fi
   if [ -n "$CONF" ] && [ -d "$(dirname "$CONF")" ]; then
     _conf_set_in_file "$CONF" "$key" "$value" 2>/dev/null || true
   fi
@@ -93,13 +107,14 @@ snapshot_effective_conf() {
   dest="$1"
   [ -n "$dest" ] || return 1
   mkdir -p "$(dirname "$dest")" 2>/dev/null || return 1
-  tmp="$STATEDIR/.effective.$$"
+  tmp="${STATEDIR:-/data/local/tmp}/.effective.$$"
   if [ -f "$CONF" ]; then
     cp -f "$CONF" "$tmp" 2>/dev/null || cat "$CONF" >"$tmp" 2>/dev/null || : >"$tmp"
   else
     : >"$tmp"
   fi
-  if [ -f "$USER_CONF" ]; then
+  for _uc in "$USER_CONF" "$USER_CONF_LEGACY"; do
+    [ -f "$_uc" ] || continue
     while IFS= read -r line || [ -n "$line" ]; do
       line=$(printf '%s' "$line" | tr -d '\r')
       case "$line" in
@@ -114,10 +129,10 @@ snapshot_effective_conf() {
         { print }
         END { if (!done) print key "=" value }
       ' "$tmp" >"$tmp.new" 2>/dev/null && mv -f "$tmp.new" "$tmp"
-    done <"$USER_CONF"
-  fi
+    done <"$_uc"
+  done
   chmod 0600 "$tmp" 2>/dev/null
-  if cat "$tmp" >"$dest" 2>/dev/null || cp -f "$tmp" "$dest" 2>/dev/null || mv -f "$tmp" "$dest" 2>/dev/null; then
+  if cp -f "$tmp" "$dest" 2>/dev/null || cat "$tmp" >"$dest" 2>/dev/null || mv -f "$tmp" "$dest" 2>/dev/null; then
     rm -f "$tmp" "$tmp.new" 2>/dev/null
     return 0
   fi
@@ -127,7 +142,6 @@ snapshot_effective_conf() {
 
 # WebUI 热路径：只打 pending，不做 generation_valid / 指纹扫描
 note_conf_dirty() {
-  # 永不因 pending 文件失败而中断调用方（部分环境 set -e）
   mark_reboot_required || true
   echo "reboot_required=1"
   return 0
@@ -137,8 +151,6 @@ is_enabled() {
   [ "$(read_conf "$1" "1")" = "1" ]
 }
 
-# compatible = 完整兼容：运行时整库 bind，不依赖 Magic Mount / 元模块（Magisk/KSU/APatch 均可用）
-# magic     = 轻量 Magic Mount：模块 system/ 仅叠 addon（依赖管理器叠层；KSU 常需元模块）；34+ 仍 bind APEX
 get_mount_mode() {
   mode=$(read_conf mount_mode compatible | tr 'A-Z' 'a-z')
   case "$mode" in
@@ -151,9 +163,6 @@ is_magic_mount_mode() {
   [ "$(get_mount_mode)" = "magic" ]
 }
 
-# 实验项：Android 14+ 是否跳过 system（compatible / magic 均生效；7–13 忽略——无 APEX 时仍须动 system）
-#   auto = 按 mount_mode 处理 system（compatible 脚本 bind；magic Magic Mount 叠 addon）
-#   skip = 默认：跳过 system，仅脚本 bind APEX（不 bind、不叠层）
 get_experimental_14_system() {
   val=$(read_conf experimental_14_system "" | tr 'A-Z' 'a-z')
   if [ -z "$val" ]; then
@@ -167,10 +176,8 @@ get_experimental_14_system() {
   esac
 }
 
-# 启动时迁旧键、统一为 auto|skip（缺省写 skip）
-# 已规范化则只读返回，避免与 WebUI toggle 并发写 conf 造成 readback 失败
 migrate_experimental_14_system_conf() {
-  [ -f "$CONF" ] || [ -f "$USER_CONF" ] || return 0
+  [ -f "$CONF" ] || [ -f "$USER_CONF" ] || [ -f "$USER_CONF_LEGACY" ] || return 0
   need_write=0
   cur=$(read_conf experimental_14_system "")
   if [ -z "$cur" ]; then
@@ -209,8 +216,6 @@ migrate_experimental_14_system_conf() {
   return 0
 }
 
-# Android 14+ 且 skip：任何模式都不对 system 脚本 bind。
-# 否则：magic 不 bind；compatible 整库 bind。
 binds_system_cacerts() {
   if [ "$(get_api)" -ge 34 ] && [ "$(get_experimental_14_system)" = "skip" ]; then
     return 1
@@ -219,15 +224,11 @@ binds_system_cacerts() {
   return 0
 }
 
-# late_inject=0：service 几乎空跑（不 namespaces / 不退避 / 不 heal）
-# service_probe 仅在 late_inject=1 时决定是否做退避校验与延迟 heal
 service_should_probe() {
   [ "$(read_conf late_inject 0)" = "1" ] || return 1
   [ "$(read_conf service_probe 0)" = "1" ]
 }
 
-# Android 14+ 且 skip：清空 system 叠层（magic 也不叠）。
-# 否则：仅 magic 同步 addon 叠层；compatible 清空（改走 bind）。
 needs_system_magic_overlay() {
   if [ "$(get_api)" -ge 34 ] && [ "$(get_experimental_14_system)" = "skip" ]; then
     return 1
@@ -236,10 +237,6 @@ needs_system_magic_overlay() {
   return 1
 }
 
-# mnt    = /mnt/.ca0 | .ca1（/mnt 下短名临时层）
-# dev    = /dev/.fs0 | .fs1（默认；避开 local/tmp 关键词，且无品牌路径前缀）
-# short  = /data/local/tmp/.fs0 | .fs1
-# legacy = /data/local/tmp/sys-ca-merge | sys-ca-merge-hot（可读旧路径）
 get_tmpfs_style() {
   style=$(read_conf tmpfs_style dev | tr 'A-Z' 'a-z')
   case "$style" in

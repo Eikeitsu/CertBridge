@@ -37,7 +37,10 @@ certbridge_init_paths() {
   SOURCE_META="$STATEDIR/source.meta"
   PENDING_FILE="$STATEDIR/reboot-required"
   STASH_DIR="$STATEDIR/source-stash"
-  USER_CONF="$STATEDIR/user.conf"
+  # 开关等可变项：写在模块目录外，避免 Magisk 模块树写回读不到
+  CB_EXT_DIR="${CB_EXT_DIR:-/data/adb/certbridge}"
+  USER_CONF="$CB_EXT_DIR/user.conf"
+  USER_CONF_LEGACY="$STATEDIR/user.conf"
   LOCK_DIR="$STATEDIR/write.lock"
   LOCK_OWNER="$LOCK_DIR/owner"
   INSTALL_BOOT_FILE="$STATEDIR/install-boot-id"
@@ -51,8 +54,6 @@ certbridge_init_paths() {
   HOT_RUNTIME_ROOT="/dev/.fs1"
   MIN_SAFE_CERTS=10
   MAX_CUSTOM_BYTES=65536
-  # 模块目录外的短时状态（无人值守标记、热更新副本/worker）；用完应清空，卸载时整目录删除
-  CB_EXT_DIR="${CB_EXT_DIR:-/data/adb/certbridge}"
 }
 
 # 外部目录空则删掉，避免 /data/adb 下残留空文件夹

@@ -55,14 +55,12 @@ cmd_toggle() {
   [ "$value" = "1" ] || [ "$value" = "0" ] || { echo "error=invalid_value"; return 1; }
 
   if [ "$value" = "0" ]; then
-    # 关：先把本地证拷进 stash（state 下），再写开关；绝不删 sources
-    stash_addon_from_sources "$name" >/dev/null 2>&1 || \
-      stash_addon_source "$name" >/dev/null 2>&1 || true
+    # 关：先写开关（模块外 user.conf），快照放后面，互不影响
     acquire_write_lock || { echo "error=busy"; return 1; }
     if ! _toggle_write_conf "$name" "$value"; then
       release_write_lock
       echo "error=write_failed"
-      echo "hint=无法写入 data/state/user.conf"
+      echo "hint=无法写入 /data/adb/certbridge/user.conf"
       return 1
     fi
     pending_line=$(note_conf_dirty)
@@ -71,7 +69,8 @@ cmd_toggle() {
     echo "${name}_enabled=$value"
     echo "pending_reboot=1"
     echo "$pending_line"
-    stash_addon_source "$name" >/dev/null 2>&1 || true
+    stash_addon_from_sources "$name" >/dev/null 2>&1 || \
+      stash_addon_source "$name" >/dev/null 2>&1 || true
     log_info "config: $name=$value (reboot required)" 2>/dev/null || true
     return 0
   fi
@@ -103,7 +102,7 @@ cmd_toggle() {
   if ! _toggle_write_conf "$name" "$value"; then
     release_write_lock
     echo "error=write_failed"
-    echo "hint=无法写入 data/state/user.conf"
+    echo "hint=无法写入 /data/adb/certbridge/user.conf"
     return 1
   fi
   pending_line=$(note_conf_dirty)

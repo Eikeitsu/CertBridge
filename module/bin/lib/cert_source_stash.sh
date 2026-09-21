@@ -1,18 +1,34 @@
 #!/system/bin/sh
 # 由 common / cert_domain 加载
 # addon 快照、可启用判断与批量同步
-stash_addon_source() {
+#
+# 不变量（关/开不能互斥）：
+# - conf 开关与证书字节分离；关断绝不删除 sources / stash
+# - stash 是 STATEDIR 持久备份；sources 是工作副本
+# - 开启：有 sources / stash / applied / builtin 即可；App 同步只是可选刷新
+
+STASH_DIR="${STASH_DIR:-$STATEDIR/source-stash}"
+
+stash_has_cert() {
   kind="$1"
-  case "$kind" in reqable|proxypin) ;; *) return 1 ;; esac
-  # 热路径只吃本地文件：sources → builtin/addon → 生效集；绝不扫 App（避免 WebUI 卡住）
-  src=$(find_source_cert "$kind" 2>/dev/null) || \
-    src=$(find_addon_cert "$kind" 0 2>/dev/null) || \
-    src=$(find_applied_gen_cert "$kind" 2>/dev/null) || return 1
+  [ -d "$STASH_DIR/$kind" ] || return 1
+  for cert in "$STASH_DIR/$kind"/*.*; do
+    [ -f "$cert" ] || continue
+    case "$cert" in *.meta) continue ;; esac
+    is_cert_filename "$(basename "$cert")" && return 0
+  done
+  return 1
+}
+
+# 把单个证书文件原子写入 stash/<kind>/（保留旧快照直到新文件就位）
+_stash_store_file() {
+  kind="$1"
+  src="$2"
   [ -f "$src" ] || return 1
   dest_dir="$STASH_DIR/$kind"
   mkdir -p "$dest_dir" 2>/dev/null || return 1
   name=$(basename "$src" | tr -d '\r')
-  # 先写临时文件再替换，避免 cp 失败时清空旧快照
+  is_cert_filename "$name" || return 1
   stage="$dest_dir/.stage.$$"
   rm -rf "$stage"
   mkdir -p "$stage" 2>/dev/null || return 1
@@ -26,30 +42,55 @@ stash_addon_source() {
   elif [ -f "${src}.meta" ]; then
     cp -f "${src}.meta" "$stage/$name.meta" 2>/dev/null || true
   fi
-  # 清旧快照并原子换入
-  for old in "$dest_dir"/*; do
-    [ -e "$old" ] || continue
-    case "$old" in */.stage.*) continue ;; esac
-    rm -rf "$old" 2>/dev/null
-  done
-  for f in "$stage"/*; do
-    [ -e "$f" ] || continue
-    mv -f "$f" "$dest_dir/" 2>/dev/null || cp -f "$f" "$dest_dir/" 2>/dev/null || {
+  # 新文件就位后再删其它旧证；失败则丢弃 stage，旧快照原样保留
+  if ! mv -f "$stage/$name" "$dest_dir/$name" 2>/dev/null; then
+    if ! cp -f "$stage/$name" "$dest_dir/$name" 2>/dev/null; then
       rm -rf "$stage"
       return 1
-    }
-  done
+    fi
+  fi
+  if [ -f "$stage/$name.meta" ]; then
+    mv -f "$stage/$name.meta" "$dest_dir/$name.meta" 2>/dev/null || \
+      cp -f "$stage/$name.meta" "$dest_dir/$name.meta" 2>/dev/null || true
+  fi
   rm -rf "$stage"
+  for old in "$dest_dir"/*.*; do
+    [ -f "$old" ] || continue
+    case "$old" in
+      */"$name"|*/"$name".meta) continue ;;
+      *.meta) continue ;;
+    esac
+    # 只清其它证书文件，保留刚写入的
+    is_cert_filename "$(basename "$old")" || continue
+    rm -f "$old" "$old.meta" 2>/dev/null
+  done
   return 0
+}
+
+# 仅从 sources 快照（纯本地 cp，供关断热路径，绝不扫 App）
+stash_addon_from_sources() {
+  kind="$1"
+  case "$kind" in reqable|proxypin) ;; *) return 1 ;; esac
+  src=$(find_source_cert "$kind" 2>/dev/null) || return 1
+  _stash_store_file "$kind" "$src"
+}
+
+# 完整快照：sources → addon/builtin → 生效集
+stash_addon_source() {
+  kind="$1"
+  case "$kind" in reqable|proxypin) ;; *) return 1 ;; esac
+  src=$(find_source_cert "$kind" 2>/dev/null) || \
+    src=$(find_addon_cert "$kind" 0 2>/dev/null) || \
+    src=$(find_applied_gen_cert "$kind" 2>/dev/null) || return 1
+  _stash_store_file "$kind" "$src"
 }
 
 restore_addon_source_from_stash() {
   kind="$1"
   case "$kind" in reqable|proxypin) ;; *) return 1 ;; esac
-  # 已有合法 source 则无需恢复
   find_source_cert "$kind" >/dev/null 2>&1 && return 0
+  stash_has_cert "$kind" || return 1
   stash="$STASH_DIR/$kind"
-  [ -d "$stash" ] || return 1
   src=""
   for cert in "$stash"/*.*; do
     [ -f "$cert" ] || continue
@@ -70,18 +111,25 @@ restore_addon_source_from_stash() {
   echo "$dest_dir/$name"
 }
 
+# 开启前凑齐本地工作副本（不碰 App）
+prepare_addon_local() {
+  kind="$1"
+  case "$kind" in reqable|proxypin) ;; *) return 1 ;; esac
+  find_source_cert "$kind" >/dev/null 2>&1 && return 0
+  restore_addon_source_from_stash "$kind" >/dev/null 2>&1 && return 0
+  ensure_source_from_applied "$kind" >/dev/null 2>&1 && return 0
+  # proxypin 可走 builtin；reqable 无 builtin
+  find_addon_cert "$kind" 0 >/dev/null 2>&1 && return 0
+  return 1
+}
+
 # 是否允许开启：sources / builtin / 仍在生效 / generation 残留 / 关断前快照
 addon_can_enable() {
   kind="$1"
   find_addon_cert "$kind" 0 >/dev/null 2>&1 && return 0
   is_addon_applied "$kind" && return 0
   find_applied_gen_cert "$kind" >/dev/null 2>&1 && return 0
-  [ -d "$STASH_DIR/$kind" ] || return 1
-  for cert in "$STASH_DIR/$kind"/*.*; do
-    [ -f "$cert" ] || continue
-    case "$cert" in *.meta) continue ;; esac
-    is_cert_filename "$(basename "$cert")" && return 0
-  done
+  stash_has_cert "$kind" && return 0
   return 1
 }
 

@@ -59,6 +59,10 @@ sync_source_from_app() {
     return 1
   }
   new_cert="$stage/$name"
+  is_cert_filename "$name" || {
+    rm -rf "$stage"
+    return 1
+  }
 
   if old=$(find_source_cert "$kind" 2>/dev/null); then
     if cert_same_fingerprint "$old" "$new_cert"; then
@@ -93,6 +97,12 @@ sync_source_from_app() {
     return 1
   fi
   rm -rf "$bak"
+  # 换入后必须仍有合法证书；否则从 stash/bak 语义上不可用——立刻尝试 stash 恢复
+  if ! find_source_cert "$kind" >/dev/null 2>&1; then
+    log_error "sources: $kind empty after swap; restoring stash"
+    restore_addon_source_from_stash "$kind" >/dev/null 2>&1 || true
+    find_source_cert "$kind" >/dev/null 2>&1 || return 1
+  fi
   log_info "sources: $kind updated from app ($name)"
   echo "$dest/$name"
 }
@@ -157,4 +167,5 @@ ensure_source_from_applied() {
 }
 
 # 将当前可用 addon 证书快照到 data/state，供关后再开时恢复（App 临时不可读也不丢）
-STASH_DIR="${STASH_DIR:-$STATEDIR/source-stash}"
+# STASH_DIR 在 cert_source_stash.sh 中定义
+

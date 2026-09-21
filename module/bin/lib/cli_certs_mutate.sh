@@ -1,6 +1,11 @@
 #!/system/bin/sh
 # 由 cert_manager.sh 加载
 # 开关 / 同步 / 导入 / 删除
+#
+# 关 / 开不互斥：
+# - 关 = 写 conf=0，并保住本地证书（sources 不删 + stash 备份）
+# - 开 = 有本地证书（sources/stash/applied/builtin）即可写 conf=1
+# - App 同步只是可选刷新，失败不得导致「未找到证书」
 
 # 写 conf 并读回；失败时再写一次，避免偶发旧值
 _toggle_write_conf() {
@@ -11,7 +16,6 @@ _toggle_write_conf() {
   if [ "$got" = "$value" ]; then
     return 0
   fi
-  # 部分机写后瞬时读到旧值：短等再读，仍不对则重写一次
   sleep 0.05 2>/dev/null || sleep 1
   got=$(read_conf "$name" "" | tr -d ' \t\r\n')
   [ "$got" = "$value" ] && return 0
@@ -21,61 +25,105 @@ _toggle_write_conf() {
   [ "$got" = "$value" ]
 }
 
+# 仅当完全没有本地材料时，才尝试从 App 导入
+_toggle_import_from_app_if_needed() {
+  name="$1"
+  prepare_addon_local "$name" >/dev/null 2>&1 && return 0
+  if addon_can_enable "$name"; then
+    prepare_addon_local "$name" >/dev/null 2>&1 || true
+    prepare_addon_local "$name" >/dev/null 2>&1 && return 0
+    find_addon_cert "$name" 0 >/dev/null 2>&1 && return 0
+  fi
+
+  diag=$(diagnose_app_cert_import "$name" 2>/dev/null)
+  diag_rc=$?
+  case "$diag_rc" in
+    0)
+      if sync_source_from_app "$name" >/dev/null 2>&1 && prepare_addon_local "$name" >/dev/null 2>&1; then
+        return 0
+      fi
+      echo "error=import_failed"
+      echo "hint=证书已找到但写入 sources 失败"
+      return 1
+      ;;
+    1)
+      echo "error=openssl_unavailable"
+      return 1
+      ;;
+    2)
+      echo "error=certificate_unavailable"
+      echo "hint=请先在对应 App 中生成根证书，或使用自定义导入"
+      return 1
+      ;;
+    *)
+      echo "error=import_failed"
+      echo "hint=找到证书文件但校验/转换失败"
+      [ -n "$diag" ] && echo "$diag" | awk -F= '$1=="import_err"{print; exit}'
+      return 1
+      ;;
+  esac
+}
+
 cmd_toggle() {
   name="$1"
   value="$2"
   case "$name" in reqable|proxypin) ;; *) echo "error=invalid_toggle"; return 1 ;; esac
   [ "$value" = "1" ] || [ "$value" = "0" ] || { echo "error=invalid_value"; return 1; }
 
-  # 开启：先恢复本地源，再尝试 App 刷新（避免 sync 失败路径弄丢已有证）
-  if [ "$value" = "1" ]; then
-    restore_addon_source_from_stash "$name" >/dev/null 2>&1 || true
-    ensure_source_from_applied "$name" >/dev/null 2>&1 || true
-    # 已有 source / builtin 时仍可尝试刷新；失败保留旧文件
-    sync_source_from_app "$name" >/dev/null 2>&1 || true
-    # sync 后若仍空，再恢复一次快照
-    find_source_cert "$name" >/dev/null 2>&1 || \
-      restore_addon_source_from_stash "$name" >/dev/null 2>&1 || true
-    find_source_cert "$name" >/dev/null 2>&1 || \
-      ensure_source_from_applied "$name" >/dev/null 2>&1 || true
-
-    if ! addon_can_enable "$name"; then
-      diag=$(diagnose_app_cert_import "$name" 2>/dev/null)
-      diag_rc=$?
-      case "$diag_rc" in
-        0)
-          if sync_source_from_app "$name" >/dev/null 2>&1 && addon_can_enable "$name"; then
-            :
-          else
-            echo "error=import_failed"
-            echo "hint=证书已找到但写入 sources 失败"
-            return 1
-          fi
-          ;;
-        1)
-          echo "error=openssl_unavailable"
-          return 1
-          ;;
-        2)
-          echo "error=certificate_unavailable"
-          echo "hint=请先在对应 App 中生成根证书，或使用自定义导入"
-          return 1
-          ;;
-        *)
-          echo "error=import_failed"
-          echo "hint=找到证书文件但校验/转换失败"
-          [ -n "$diag" ] && echo "$diag" | awk -F= '$1=="import_err"{print; exit}'
-          return 1
-          ;;
-      esac
+  if [ "$value" = "0" ]; then
+    # 关：先快速本地快照（仅 sources，毫秒级），再写 conf；绝不因 stash 失败而关不掉
+    stash_addon_from_sources "$name" >/dev/null 2>&1 || \
+      stash_addon_source "$name" >/dev/null 2>&1 || true
+    acquire_write_lock || { echo "error=busy"; return 1; }
+    if ! _toggle_write_conf "$name" "$value"; then
+      release_write_lock
+      echo "error=write_failed"
+      return 1
     fi
-    # 仅靠 stash/applied 判定可开时，落盘到 sources，避免下次再丢
-    find_addon_cert "$name" 0 >/dev/null 2>&1 || \
-      restore_addon_source_from_stash "$name" >/dev/null 2>&1 || \
-      ensure_source_from_applied "$name" >/dev/null 2>&1 || true
+    pending_line=$(note_conf_dirty)
+    release_write_lock
+    echo "ok=1"
+    echo "${name}_enabled=$value"
+    echo "pending_reboot=1"
+    echo "$pending_line"
+    # 再补一次完整快照；sources 本身保持不删
+    stash_addon_source "$name" >/dev/null 2>&1 || true
+    log_info "config: $name=$value (reboot required)" 2>/dev/null || true
+    return 0
   fi
 
-  # 关闭/开启都先写 conf：不要在写前做重 I/O stash（易超时/误报 write_failed）
+  # 开：先凑齐本地副本；有本地则可选刷新 App，刷新失败仍可开
+  prepare_addon_local "$name" >/dev/null 2>&1 || true
+  if prepare_addon_local "$name" >/dev/null 2>&1 || find_addon_cert "$name" 0 >/dev/null 2>&1; then
+    # 已有本地证：App 刷新失败也保持本地
+    had_src=0
+    find_source_cert "$name" >/dev/null 2>&1 && had_src=1
+    sync_source_from_app "$name" >/dev/null 2>&1 || true
+    if [ "$had_src" = "1" ] || stash_has_cert "$name"; then
+      find_source_cert "$name" >/dev/null 2>&1 || \
+        prepare_addon_local "$name" >/dev/null 2>&1 || true
+    fi
+  else
+    if ! _toggle_import_from_app_if_needed "$name"; then
+      return 1
+    fi
+  fi
+
+  # 落盘前必须能拿到 addon 文件（proxypin 可为 builtin）
+  if ! find_addon_cert "$name" 0 >/dev/null 2>&1; then
+    prepare_addon_local "$name" >/dev/null 2>&1 || true
+  fi
+  if ! find_addon_cert "$name" 0 >/dev/null 2>&1; then
+    if addon_can_enable "$name"; then
+      echo "error=import_failed"
+      echo "hint=本地证书恢复失败，请重试或自定义导入"
+      return 1
+    fi
+    echo "error=certificate_unavailable"
+    echo "hint=请先在对应 App 中生成根证书，或使用自定义导入"
+    return 1
+  fi
+
   acquire_write_lock || { echo "error=busy"; return 1; }
   if ! _toggle_write_conf "$name" "$value"; then
     release_write_lock
@@ -84,12 +132,10 @@ cmd_toggle() {
   fi
   pending_line=$(note_conf_dirty)
   release_write_lock
-  # 先回包成功，再做快照/日志：避免后置步骤或 bridge errno 把成功当成失败
   echo "ok=1"
   echo "${name}_enabled=$value"
   echo "pending_reboot=1"
   echo "$pending_line"
-  # 快照放成功之后：优先 sources，失败也不影响已写入的开关
   stash_addon_source "$name" >/dev/null 2>&1 || true
   log_info "config: $name=$value (reboot required)" 2>/dev/null || true
   return 0

@@ -80,7 +80,7 @@ hot_failed=0"
   elif is_addon_applied reqable; then
     echo "reqable_available=1"
     echo "reqable_display=$(get_applied_display reqable Reqable)"
-  elif [ -d "$STASH_DIR/reqable" ]; then
+  elif stash_has_cert reqable; then
     echo "reqable_available=1"
     echo "reqable_display=Reqable"
   elif [ "$live" = "1" ] && find_live_app_cert reqable 0 >/dev/null 2>&1; then
@@ -101,7 +101,7 @@ hot_failed=0"
   elif is_addon_applied proxypin; then
     echo "proxypin_available=1"
     echo "proxypin_display=$(get_applied_display proxypin ProxyPin)"
-  elif [ -d "$STASH_DIR/proxypin" ]; then
+  elif stash_has_cert proxypin; then
     echo "proxypin_available=1"
     echo "proxypin_display=ProxyPin"
   elif [ "$live" = "1" ] && find_live_app_cert proxypin 0 >/dev/null 2>&1; then

@@ -1,6 +1,6 @@
 {
-  "version": "4.2.0.ci.196",
-  "versionCode": 40213,
+  "version": "4.2.0.ci.197",
+  "versionCode": 40214,
   "zipUrl": "https://raw.githubusercontent.com/Eikeitsu/CertBridge/ci-dist/CertBridge_arm64.zip",
   "changelog": "https://raw.githubusercontent.com/Eikeitsu/CertBridge/ci-dist/changelog.md"
 }

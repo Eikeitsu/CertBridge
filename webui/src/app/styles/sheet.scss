@@ -163,6 +163,7 @@
 .bf-sheet__body.is-busy {
   opacity: 0.28;
   pointer-events: none;
+
   /* 预留高度，避免 loading 结束内容突然撑开 */
   min-height: 160px;
 }

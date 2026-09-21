@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { useAppDispatch } from "@/app/store/hooks";
 import {
   mergeStatus,
@@ -37,30 +37,25 @@ export function useCertActions() {
   const { voice } = usePackVoice();
   const c = voice.certs;
   const { isPending, runExclusive } = useAsyncLock();
-  const [pendingKind, setPendingKind] = useState<string | null>(null);
 
   const handleToggleBuiltin = useCallback(
-    async (kind: BuiltinCertKind, checked: boolean) => {
-      await runExclusive(async () => {
-        setPendingKind(kind);
-        dispatch(patchStatus({ [`${kind}_enabled`]: checked ? FLAG_ON : FLAG_OFF }));
-        try {
-          const result = await toggleBuiltin(kind, checked ? FLAG_ON : FLAG_OFF);
-          if (isCliFailure(result)) {
-            toast(errorFromResult(result.stdout, result.stderr), "bad");
-            void dispatch(refreshStatus(SILENT_REFRESH));
-            return;
-          }
-          const kv = parseKv(result.stdout || "");
-          dispatch(mergeStatus(kv));
-          toastByRebootFlag(
-            kv,
-            checked ? "已开启，重启后生效" : "已关闭，重启后移除",
-            checked ? "已开启（与当前生效一致）" : "已关闭（与当前生效一致）",
-          );
-        } finally {
-          setPendingKind(null);
+    (kind: BuiltinCertKind, checked: boolean) => {
+      // 与隐藏开关一致：先翻 UI，CLI 后台跑，不禁用开关卡交互
+      dispatch(patchStatus({ [`${kind}_enabled`]: checked ? FLAG_ON : FLAG_OFF }));
+      void runExclusive(async () => {
+        const result = await toggleBuiltin(kind, checked ? FLAG_ON : FLAG_OFF);
+        if (isCliFailure(result)) {
+          toast(errorFromResult(result.stdout, result.stderr), "bad");
+          void dispatch(refreshStatus(SILENT_REFRESH));
+          return;
         }
+        const kv = parseKv(result.stdout || "");
+        dispatch(mergeStatus(kv));
+        toastByRebootFlag(
+          kv,
+          checked ? "已开启，重启后生效" : "已关闭，重启后移除",
+          checked ? "已开启（与当前生效一致）" : "已关闭（与当前生效一致）",
+        );
       });
     },
     [dispatch, runExclusive],
@@ -249,7 +244,7 @@ export function useCertActions() {
 
   return {
     isPending,
-    pendingKind,
+    pendingKind: null as string | null,
     handleToggleBuiltin,
     handleImportFile,
     handleImportPreset,

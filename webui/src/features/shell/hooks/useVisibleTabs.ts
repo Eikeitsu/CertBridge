@@ -1,25 +1,33 @@
 import { useMemo } from "react";
 import { useAppSelector } from "@/app/store/hooks";
-import { selectModuleStatus, selectStatusBootstrapped } from "@/features/status/model/selectors";
+import {
+  selectModuleStatus,
+  selectStatusBootstrapped,
+} from "@/features/status/model/selectors";
+import { useShowHideTab } from "@/features/settings/hooks/useShowHideTab";
 import { isFlagOn } from "@/shared/lib/flag";
+import { TabName } from "@/entities/module/enums";
 import { TABS } from "@/shared/config/navigation";
 
 /**
- * 底部 Tab 始终 5 项（含隐藏），避免 status 回来后 4→5 突兀跳动。
- * hideSupported 仅供页面内展示「未安装隐藏组件」等状态。
+ * 底栏 Tab：可由更多页开关隐藏「隐藏」页；默认显示，避免 4↔5 跳动取决于 status。
  */
 export function useVisibleTabs() {
   const status = useAppSelector(selectModuleStatus);
   const bootstrapped = useAppSelector(selectStatusBootstrapped);
+  const { showHideTab } = useShowHideTab();
   const hideSupported =
     isFlagOn(status.hide_supported) || isFlagOn(status.zn_hide_supported);
 
-  const tabs = useMemo(() => TABS, []);
+  const tabs = useMemo(() => {
+    if (showHideTab) return TABS;
+    return TABS.filter((tab) => tab.key !== TabName.Hide);
+  }, [showHideTab]);
 
   return {
     tabs,
     hideSupported,
-    /** 尚未 bootstrap 时不要把隐藏页当成「不支持」 */
+    showHideTab,
     hideReady: bootstrapped,
   };
 }

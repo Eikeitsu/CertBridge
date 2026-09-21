@@ -48,11 +48,7 @@ export function BottomSheet({
           data-state={open ? "open" : "closed"}
         >
           <Dialog.Overlay asChild>
-            <button
-              type="button"
-              className="bf-sheet-overlay__mask"
-              aria-label="关闭"
-            />
+            <button type="button" className="bf-sheet-overlay__mask" aria-label="关闭" />
           </Dialog.Overlay>
           <Dialog.Content
             className={`bf-sheet${variant === "confirm" ? " is-confirm" : ""}${

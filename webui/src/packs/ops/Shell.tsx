@@ -54,7 +54,7 @@ export function OpsShell() {
   const refreshing = useAppSelector(selectStatusRefreshing);
   const resolved = useAppSelector(selectResolvedTheme);
   const { activeTab, switchTab } = useActiveTab();
-  const { tabs } = useVisibleTabs();
+  const { tabs, showHideTab } = useVisibleTabs();
   const v = OPS_VOICE;
   const [seen, setSeen] = useState<Partial<Record<TabName, boolean>>>(() => ({
     [activeTab]: true,
@@ -65,6 +65,10 @@ export function OpsShell() {
   useEffect(() => {
     setSeen((prev) => (prev[activeTab] ? prev : { ...prev, [activeTab]: true }));
   }, [activeTab]);
+
+  useEffect(() => {
+    if (!showHideTab && activeTab === TabName.Hide) switchTab(TabName.Home);
+  }, [showHideTab, activeTab, switchTab]);
 
   const dockTabs = useMemo(
     () => tabs.map((t) => ({ key: t.key, label: v.tabs[t.key] })),
@@ -92,9 +96,11 @@ export function OpsShell() {
         <Pane tab={TabName.Log} active={activeTab} seen={!!seen[TabName.Log]}>
           <OpsLogPage />
         </Pane>
-        <Pane tab={TabName.Hide} active={activeTab} seen={!!seen[TabName.Hide]}>
-          <OpsHidePage />
-        </Pane>
+        {showHideTab ? (
+          <Pane tab={TabName.Hide} active={activeTab} seen={!!seen[TabName.Hide]}>
+            <OpsHidePage />
+          </Pane>
+        ) : null}
         <Pane tab={TabName.More} active={activeTab} seen={!!seen[TabName.More]}>
           <OpsMorePage />
         </Pane>

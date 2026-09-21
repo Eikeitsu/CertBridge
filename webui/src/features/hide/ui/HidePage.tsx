@@ -26,8 +26,7 @@ export function HidePage() {
   const { voice } = usePackVoice();
   const h = voice.hide;
   const loaderOk = isFlagOn(status.zygisk_loader_ok);
-  const anyHide =
-    hide.hideSupported || zn.znHideSupported;
+  const anyHide = hide.hideSupported || zn.znHideSupported;
   const loaderWarn =
     zn.znHideSupported && !loaderOk ? (
       <Card title={h.loaderWarnTitle} meta={h.loaderWarnMeta}>

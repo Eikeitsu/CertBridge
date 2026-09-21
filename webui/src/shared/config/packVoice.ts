@@ -149,6 +149,13 @@ export type PackVoice = {
     appearanceTitle: string;
     appearanceMeta: string;
     aboutTitle: string;
+    hubMeta: string;
+    mountTitle: string;
+    mountMeta: string;
+    navTitle: string;
+    navMeta: string;
+    showHideTitle: string;
+    showHideDesc: string;
   };
   topbar: {
     showBrand: boolean;
@@ -327,6 +334,13 @@ const DEFAULT_VOICE: PackVoice = {
     appearanceTitle: "外观",
     appearanceMeta: "主题包、浅深色与强调色",
     aboutTitle: "关于证书桥",
+    hubMeta: "外观、挂载与更新；少用的选项放进二级页",
+    mountTitle: "挂载与注入",
+    mountMeta: "挂载模式、A14 路径、tmpfs、动态简介",
+    navTitle: "导航",
+    navMeta: "自定义底栏显示的页面",
+    showHideTitle: "显示「隐藏」页",
+    showHideDesc: "关闭后底栏不再出现隐藏 Tab",
   },
   topbar: { showBrand: true, showDevice: true },
 };
@@ -368,6 +382,13 @@ const CONSOLE_VOICE: PackVoice = {
     appearanceTitle: "APPEARANCE",
     appearanceMeta: "pack / mode / accent",
     aboutTitle: "ABOUT",
+    hubMeta: "settings hub — deep options in subviews",
+    mountTitle: "MOUNT",
+    mountMeta: "mode / a14 / tmpfs / quiet",
+    navTitle: "NAV",
+    navMeta: "dock visibility",
+    showHideTitle: "show HIDE tab",
+    showHideDesc: "off = hide dock entry",
   },
   topbar: { showBrand: false, showDevice: false },
 };

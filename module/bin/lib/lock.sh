@@ -2,7 +2,10 @@
 # 写锁（跨脚本互斥）
 
 acquire_write_lock() {
-  mkdir -p "$STATEDIR" 2>/dev/null
+  CB_EXT_DIR="${CB_EXT_DIR:-/data/adb/certbridge}"
+  LOCK_DIR="${LOCK_DIR:-$CB_EXT_DIR/write.lock}"
+  LOCK_OWNER="${LOCK_OWNER:-$LOCK_DIR/owner}"
+  mkdir -p "$CB_EXT_DIR" 2>/dev/null || return 1
   lock_boot=$(tr -d '\r\n' </proc/sys/kernel/random/boot_id 2>/dev/null)
   lock_start=$(awk '{print $22}' "/proc/$$/stat" 2>/dev/null)
   lock_identity="$$|$lock_boot|$lock_start"
@@ -44,6 +47,9 @@ acquire_write_lock() {
 }
 
 release_write_lock() {
+  CB_EXT_DIR="${CB_EXT_DIR:-/data/adb/certbridge}"
+  LOCK_DIR="${LOCK_DIR:-$CB_EXT_DIR/write.lock}"
+  LOCK_OWNER="${LOCK_OWNER:-$LOCK_DIR/owner}"
   lock_boot=$(tr -d '\r\n' </proc/sys/kernel/random/boot_id 2>/dev/null)
   lock_start=$(awk '{print $22}' "/proc/$$/stat" 2>/dev/null)
   lock_identity="$$|$lock_boot|$lock_start"

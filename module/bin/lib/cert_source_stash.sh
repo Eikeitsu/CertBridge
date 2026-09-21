@@ -86,16 +86,12 @@ stash_addon_source() {
   _stash_store_file "$kind" "$src"
 }
 
-# 关断专用：尽量留下可重开的本地字节（已有 stash 也算成功）
+# 关断专用：只做本地快照（sources / applied / 已有 stash），绝不扫 App
 stash_addon_for_disable() {
   kind="$1"
   case "$kind" in reqable|proxypin) ;; *) return 1 ;; esac
   stash_addon_from_sources "$kind" >/dev/null 2>&1 && return 0
   stash_addon_source "$kind" >/dev/null 2>&1 && return 0
-  # 本地全空时再扫 App，写入 sources 并快照（WebUI 隔离 ns 依赖 nsenter）
-  if sync_source_from_app "$kind" >/dev/null 2>&1; then
-    stash_addon_from_sources "$kind" >/dev/null 2>&1 && return 0
-  fi
   stash_has_cert "$kind"
 }
 

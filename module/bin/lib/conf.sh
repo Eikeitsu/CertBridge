@@ -78,7 +78,7 @@ read_conf() {
   printf '%s\n' "$default"
 }
 
-# 只信任模块外 user.conf；不依赖 STATEDIR 可写
+# 只信任模块外 user.conf；开关热路径绝不写模块树（叠层假写/卡死）
 write_conf() {
   key="$1"
   value="$2"
@@ -91,14 +91,6 @@ write_conf() {
   USER_CONF="$CB_EXT_DIR/user.conf"
   mkdir -p "$CB_EXT_DIR" 2>/dev/null || return 1
   _conf_set_in_file "$USER_CONF" "$key" "$value" || return 1
-  # 可选镜像（失败忽略）
-  if [ -n "$STATEDIR" ]; then
-    mkdir -p "$STATEDIR" 2>/dev/null && \
-      _conf_set_in_file "$STATEDIR/user.conf" "$key" "$value" 2>/dev/null || true
-  fi
-  if [ -n "$CONF" ] && [ -d "$(dirname "$CONF")" ]; then
-    _conf_set_in_file "$CONF" "$key" "$value" 2>/dev/null || true
-  fi
   return 0
 }
 

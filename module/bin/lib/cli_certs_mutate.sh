@@ -7,12 +7,14 @@
 # - 开 = 有本地证书（sources/stash/applied/builtin）即可写 conf=1
 # - App 同步只是可选刷新，失败不得导致「未找到证书」
 
-# 写 conf 并确认读回（user.conf 为主）
+# 写 conf 并只对模块外 user.conf 做读回校验（禁止 read_conf 回落到模块 certs.conf）
 _toggle_write_conf() {
   name="$1"
   value="$2"
+  CB_EXT_DIR="${CB_EXT_DIR:-/data/adb/certbridge}"
+  USER_CONF="$CB_EXT_DIR/user.conf"
   write_conf "$name" "$value" || return 1
-  got=$(read_conf "$name" "" | tr -d ' \t\r\n')
+  got=$(_conf_get_from_file "$USER_CONF" "$name" 2>/dev/null | tr -d ' \t\r\n')
   [ "$got" = "$value" ]
 }
 
@@ -55,8 +57,7 @@ cmd_toggle() {
   [ "$value" = "1" ] || [ "$value" = "0" ] || { echo "error=invalid_value"; return 1; }
 
   if [ "$value" = "0" ]; then
-    # 关：先保住本地字节，再写开关（模块外 user.conf）
-    stash_addon_for_disable "$name" >/dev/null 2>&1 || true
+    # 关：先写开关（必须快、只碰模块外）；快照纯本地、失败不影响关
     acquire_write_lock || { echo "error=busy"; return 1; }
     if ! _toggle_write_conf "$name" "$value"; then
       release_write_lock
@@ -70,8 +71,9 @@ cmd_toggle() {
     echo "${name}_enabled=$value"
     echo "pending_reboot=1"
     echo "$pending_line"
-    # 再快照一次（关前若刚有 sources 变化）
-    stash_addon_for_disable "$name" >/dev/null 2>&1 || true
+    # 关断快照：仅本地 cp，绝不 sync App（否则 WebUI 易超时 → 假「保存失败」）
+    stash_addon_from_sources "$name" >/dev/null 2>&1 || \
+      stash_addon_source "$name" >/dev/null 2>&1 || true
     log_info "config: $name=$value (reboot required)" 2>/dev/null || true
     return 0
   fi
@@ -94,12 +96,6 @@ cmd_toggle() {
     if ! _toggle_import_from_app "$name"; then
       return 1
     fi
-  fi
-  # 可选后台刷新：失败完全忽略，不得影响开启；弄丢则立刻从 stash 救回
-  if find_source_cert "$name" >/dev/null 2>&1; then
-    sync_source_from_app "$name" >/dev/null 2>&1 || true
-    find_source_cert "$name" >/dev/null 2>&1 || \
-      prepare_addon_local "$name" >/dev/null 2>&1 || true
   fi
   if ! find_addon_cert "$name" 0 >/dev/null 2>&1; then
     echo "error=import_failed"

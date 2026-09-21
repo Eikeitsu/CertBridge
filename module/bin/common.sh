@@ -35,13 +35,13 @@ certbridge_init_paths() {
   APPLIED_CONF="$STATEDIR/applied.conf"
   SOURCE_META="$STATEDIR/source.meta"
   PENDING_FILE="$STATEDIR/reboot-required"
-  # 开关 + 证书字节：模块外，避开叠层假写/读回空
+  # 开关 + 证书字节 + 写锁：模块外，避开叠层假写/卡死
   CB_EXT_DIR="${CB_EXT_DIR:-/data/adb/certbridge}"
   SOURCES_DIR="$CB_EXT_DIR/addon-sources"
   STASH_DIR="$CB_EXT_DIR/source-stash"
   USER_CONF="$CB_EXT_DIR/user.conf"
   USER_CONF_LEGACY="$STATEDIR/user.conf"
-  LOCK_DIR="$STATEDIR/write.lock"
+  LOCK_DIR="$CB_EXT_DIR/write.lock"
   LOCK_OWNER="$LOCK_DIR/owner"
   INSTALL_BOOT_FILE="$STATEDIR/install-boot-id"
   RUNTIME_STATUS_FILE="$STATEDIR/runtime-status.conf"

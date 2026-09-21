@@ -77,7 +77,7 @@ hot_failed=0"
   if req_file=$(find_addon_cert reqable 0 2>/dev/null); then
     echo "reqable_available=1"
     echo "reqable_display=$(read_cert_meta_display "$req_file" "Reqable")"
-  elif is_addon_applied reqable; then
+  elif find_applied_gen_cert reqable >/dev/null 2>&1; then
     echo "reqable_available=1"
     echo "reqable_display=$(get_applied_display reqable Reqable)"
   elif stash_has_cert reqable; then
@@ -98,7 +98,7 @@ hot_failed=0"
   if pp_file=$(find_addon_cert proxypin 0 2>/dev/null); then
     echo "proxypin_available=1"
     echo "proxypin_display=$(read_cert_meta_display "$pp_file" "ProxyPin")"
-  elif is_addon_applied proxypin; then
+  elif find_applied_gen_cert proxypin >/dev/null 2>&1; then
     echo "proxypin_available=1"
     echo "proxypin_display=$(get_applied_display proxypin ProxyPin)"
   elif stash_has_cert proxypin; then

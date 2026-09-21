@@ -55,7 +55,8 @@ cmd_toggle() {
   [ "$value" = "1" ] || [ "$value" = "0" ] || { echo "error=invalid_value"; return 1; }
 
   if [ "$value" = "0" ]; then
-    # 关：先写开关（模块外 user.conf），快照放后面，互不影响
+    # 关：先保住本地字节，再写开关（模块外 user.conf）
+    stash_addon_for_disable "$name" >/dev/null 2>&1 || true
     acquire_write_lock || { echo "error=busy"; return 1; }
     if ! _toggle_write_conf "$name" "$value"; then
       release_write_lock
@@ -69,24 +70,32 @@ cmd_toggle() {
     echo "${name}_enabled=$value"
     echo "pending_reboot=1"
     echo "$pending_line"
-    stash_addon_from_sources "$name" >/dev/null 2>&1 || \
-      stash_addon_source "$name" >/dev/null 2>&1 || true
+    # 再快照一次（关前若刚有 sources 变化）
+    stash_addon_for_disable "$name" >/dev/null 2>&1 || true
     log_info "config: $name=$value (reboot required)" 2>/dev/null || true
     return 0
   fi
 
-  # 开：有本地（sources / stash / applied / builtin）→ 直接开，禁止先 sync App
+  # 开：只认本地 materials；有本地绝不因 App 失败而报「未找到」
+  certbridge_ensure_state_sources >/dev/null 2>&1 || true
   prepare_addon_local "$name" >/dev/null 2>&1 || true
   if ! find_addon_cert "$name" 0 >/dev/null 2>&1; then
-    prepare_addon_local "$name" >/dev/null 2>&1 || true
+    if stash_has_cert "$name" || find_applied_gen_cert "$name" >/dev/null 2>&1; then
+      prepare_addon_local "$name" >/dev/null 2>&1 || true
+    fi
   fi
   if ! find_addon_cert "$name" 0 >/dev/null 2>&1; then
+    if stash_has_cert "$name"; then
+      echo "error=import_failed"
+      echo "hint=本地快照无法写回 /data/adb/certbridge/addon-sources"
+      return 1
+    fi
     # 确无本地：才走 App
     if ! _toggle_import_from_app "$name"; then
       return 1
     fi
   fi
-  # 可选后台刷新：失败完全忽略，不得影响开启
+  # 可选后台刷新：失败完全忽略，不得影响开启；弄丢则立刻从 stash 救回
   if find_source_cert "$name" >/dev/null 2>&1; then
     sync_source_from_app "$name" >/dev/null 2>&1 || true
     find_source_cert "$name" >/dev/null 2>&1 || \

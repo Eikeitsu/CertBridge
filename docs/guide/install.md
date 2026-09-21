@@ -80,32 +80,33 @@
 
 `module.prop` 的 `updateJson` 指向文档站正式通道。WebUI「更多」可切换 **正式 / CI** 通道（CI 来自 `ci-dist` 分支，便于尝鲜）。
 
-升级会尽量保留 `certs.conf` / `user.conf`、自定义证书、`certs/sources`、关断快照（`source-stash`）与安装档案；组件是否安装以本次刷入选择为准。
+升级会尽量保留 `certs.conf`、自定义证书、旧 `certs/sources` / `data/state` 快照，并迁到 `/data/adb/certbridge/`；组件是否安装以本次刷入选择为准。
 
 ## 热更新说明
 
-支持免重启热更新（管理器 / WebUI 安装模块时）。外部短时文件在 `/data/adb/certbridge/`；失败会回退到需重启的标准更新。热更新后 **WebUI / CLI 脚本立即生效**；开关状态写在 `data/state/user.conf`，与本地证书目录一并保留。
+支持免重启热更新（管理器 / WebUI 安装模块时）。外部目录 `/data/adb/certbridge/` 存放热更新临时文件、开关（`user.conf`）与证书工作副本 / 关断快照；失败会回退到需重启的标准更新。热更新后 **WebUI / CLI 脚本立即生效**。
 
 ## 设备上目录（摘要）
 
 ```text
+/data/adb/certbridge/            # 模块外（开关 + 证书字节，避开叠层假写）
+├── user.conf
+├── addon-sources/               # Reqable/ProxyPin 工作副本
+└── source-stash/                # 关断快照
+
 /data/adb/modules/CertBridge/
 ├── module.prop / post-fs-data.sh / service.sh / action.sh
 ├── bin/                 # common、注入、cb、可选 hot / hide / openssl 或 cbx509
 ├── certs/
 │   ├── builtin/         # 仅 ProxyPin 兜底
-│   ├── sources/         # 旧路径（兼容）；实际工作副本在 data/state/addon-sources
+│   ├── sources/         # 旧路径（兼容，启动时迁到 /data/adb/certbridge）
 │   ├── custom/          # 用户自定义
 │   ├── generation/      # 本次启动生成的完整证书集
 │   └── hot/             # 临时会话（卸载后删除）
 ├── config/certs.conf
 ├── config/zn_whitelist.txt   # Zygisk 白名单（有组件时）
 ├── zygisk/              # 可选 *.so
-├── data/
-│   └── state/
-│       ├── user.conf          # WebUI 开关等可变配置
-│       ├── addon-sources/     # Reqable/ProxyPin 工作副本
-│       └── source-stash/      # 关断快照
+├── data/state/          # applied 列表、运行时状态等
 └── webroot/             # 可选 WebUI
 ```
 

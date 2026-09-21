@@ -122,8 +122,11 @@ EOF
   CERT_POOL="$MODPATH/certs"
   CUSTOM_DIR="$CERT_POOL/custom"
   BUILTIN_DIR="$CERT_POOL/builtin"
-  SOURCES_DIR="$STATEDIR/addon-sources"
-  mkdir -p "$SOURCES_DIR/reqable" "$SOURCES_DIR/proxypin" 2>/dev/null || true
+  SOURCES_DIR="${CB_EXT_DIR:-/data/adb/certbridge}/addon-sources"
+  mkdir -p "$SOURCES_DIR/reqable" "$SOURCES_DIR/proxypin" \
+    "${CB_EXT_DIR:-/data/adb/certbridge}/source-stash/reqable" \
+    "${CB_EXT_DIR:-/data/adb/certbridge}/source-stash/proxypin" 2>/dev/null || true
+  mkdir -p "$MODPATH/data/state/addon-sources/reqable" "$MODPATH/data/state/addon-sources/proxypin" 2>/dev/null || true
   GEN_CERTS="$CERT_POOL/generation/current/cacerts"
   APPLIED_MAP="$STATEDIR/applied-certs.list"
   mkdir -p "$STATEDIR"

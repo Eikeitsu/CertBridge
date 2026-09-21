@@ -4,10 +4,11 @@
 #
 # 不变量（关/开不能互斥）：
 # - conf 开关与证书字节分离；关断绝不删除 sources / stash
-# - stash 是 STATEDIR 持久备份；sources 是工作副本
+# - stash / sources 在 /data/adb/certbridge（模块外持久）
 # - 开启：有 sources / stash / applied / builtin 即可；App 同步只是可选刷新
 
-STASH_DIR="${STASH_DIR:-$STATEDIR/source-stash}"
+CB_EXT_DIR="${CB_EXT_DIR:-/data/adb/certbridge}"
+STASH_DIR="${STASH_DIR:-$CB_EXT_DIR/source-stash}"
 
 stash_has_cert() {
   kind="$1"
@@ -85,6 +86,19 @@ stash_addon_source() {
   _stash_store_file "$kind" "$src"
 }
 
+# 关断专用：尽量留下可重开的本地字节（已有 stash 也算成功）
+stash_addon_for_disable() {
+  kind="$1"
+  case "$kind" in reqable|proxypin) ;; *) return 1 ;; esac
+  stash_addon_from_sources "$kind" >/dev/null 2>&1 && return 0
+  stash_addon_source "$kind" >/dev/null 2>&1 && return 0
+  # 本地全空时再扫 App，写入 sources 并快照（WebUI 隔离 ns 依赖 nsenter）
+  if sync_source_from_app "$kind" >/dev/null 2>&1; then
+    stash_addon_from_sources "$kind" >/dev/null 2>&1 && return 0
+  fi
+  stash_has_cert "$kind"
+}
+
 restore_addon_source_from_stash() {
   kind="$1"
   case "$kind" in reqable|proxypin) ;; *) return 1 ;; esac
@@ -123,11 +137,10 @@ prepare_addon_local() {
   return 1
 }
 
-# 是否允许开启：sources / builtin / 仍在生效 / generation 残留 / 关断前快照
+# 是否允许开启：sources / builtin / 仍在生效文件 / 关断前快照
 addon_can_enable() {
   kind="$1"
   find_addon_cert "$kind" 0 >/dev/null 2>&1 && return 0
-  is_addon_applied "$kind" && return 0
   find_applied_gen_cert "$kind" >/dev/null 2>&1 && return 0
   stash_has_cert "$kind" && return 0
   return 1

@@ -22,9 +22,8 @@ certbridge_init_paths() {
   STATEDIR="$DATADIR/state"
   CERT_POOL="$MODDIR/certs"
   BUILTIN_DIR="$CERT_POOL/builtin"
-  # 兼容旧路径变量；实际工作副本在 STATEDIR/addon-sources（见 cert_sources.sh）
+  # 兼容旧路径；工作副本 / 快照在模块外（见 cert_sources.sh）
   MODULE_SOURCES_DIR="$CERT_POOL/sources"
-  SOURCES_DIR="$STATEDIR/addon-sources"
   CUSTOM_DIR="$CERT_POOL/custom"
   GEN_ROOT="$CERT_POOL/generation"
   GEN_CURRENT="$GEN_ROOT/current"
@@ -36,9 +35,10 @@ certbridge_init_paths() {
   APPLIED_CONF="$STATEDIR/applied.conf"
   SOURCE_META="$STATEDIR/source.meta"
   PENDING_FILE="$STATEDIR/reboot-required"
-  STASH_DIR="$STATEDIR/source-stash"
-  # 开关等可变项：写在模块目录外，避免 Magisk 模块树写回读不到
+  # 开关 + 证书字节：模块外，避开叠层假写/读回空
   CB_EXT_DIR="${CB_EXT_DIR:-/data/adb/certbridge}"
+  SOURCES_DIR="$CB_EXT_DIR/addon-sources"
+  STASH_DIR="$CB_EXT_DIR/source-stash"
   USER_CONF="$CB_EXT_DIR/user.conf"
   USER_CONF_LEGACY="$STATEDIR/user.conf"
   LOCK_DIR="$STATEDIR/write.lock"

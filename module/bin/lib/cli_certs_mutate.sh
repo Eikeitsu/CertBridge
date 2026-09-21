@@ -6,15 +6,48 @@ cmd_toggle() {
   value="$2"
   case "$name" in reqable|proxypin) ;; *) echo "error=invalid_toggle"; return 1 ;; esac
   [ "$value" = "1" ] || [ "$value" = "0" ] || { echo "error=invalid_value"; return 1; }
+  # 关闭前先快照：保证立刻再开不依赖 App / 生效集瞬时可读
+  if [ "$value" = "0" ]; then
+    stash_addon_source "$name" >/dev/null 2>&1 || true
+  fi
   # 开启：App 同步 → 生效集恢复 → 快照恢复；任一成功即可写配置
   if [ "$value" = "1" ]; then
     sync_source_from_app "$name" >/dev/null 2>&1 || true
     ensure_source_from_applied "$name" >/dev/null 2>&1 || true
     restore_addon_source_from_stash "$name" >/dev/null 2>&1 || true
+    # 仍无 source 时再试一次快照（兼容关断后 sources 被清空）
+    find_source_cert "$name" >/dev/null 2>&1 || \
+      restore_addon_source_from_stash "$name" >/dev/null 2>&1 || true
     if ! addon_can_enable "$name"; then
-      echo "error=certificate_unavailable"
-      echo "hint=请先在对应 App 中生成根证书，或使用自定义导入"
-      return 1
+      # 与安装阶段同一套 diagnose，避免一律报「未找到」
+      diag=$(diagnose_app_cert_import "$name" 2>/dev/null)
+      diag_rc=$?
+      case "$diag_rc" in
+        0)
+          if sync_source_from_app "$name" >/dev/null 2>&1 && addon_can_enable "$name"; then
+            :
+          else
+            echo "error=import_failed"
+            echo "hint=证书已找到但写入 sources 失败"
+            return 1
+          fi
+          ;;
+        1)
+          echo "error=openssl_unavailable"
+          return 1
+          ;;
+        2)
+          echo "error=certificate_unavailable"
+          echo "hint=请先在对应 App 中生成根证书，或使用自定义导入"
+          return 1
+          ;;
+        *)
+          echo "error=import_failed"
+          echo "hint=找到证书文件但校验/转换失败"
+          [ -n "$diag" ] && echo "$diag" | awk -F= '$1=="import_err"{print; exit}'
+          return 1
+          ;;
+      esac
     fi
   fi
   # 写配置与 pending 互斥，避免与 status/sync 并发丢更新
@@ -38,7 +71,7 @@ cmd_toggle() {
   echo "${name}_enabled=$value"
   echo "pending_reboot=1"
   echo "$pending_line"
-  # 关/开后都刷新快照，保证立刻再开不依赖 App 瞬时可读
+  # 开/关后都刷新快照，便于下次关开
   stash_addon_source "$name" >/dev/null 2>&1 || true
   log_info "config: $name=$value (reboot required)" 2>/dev/null || true
   return 0

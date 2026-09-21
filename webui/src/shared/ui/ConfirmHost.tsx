@@ -3,15 +3,31 @@ import { bindConfirmHost, type ConfirmRequest } from "@/shared/lib/confirmAction
 import { haptic } from "@/shared/lib/haptic";
 import { BottomSheet } from "./BottomSheet";
 
+/** 关闭动画时长，需与 sheet.scss confirm-out 对齐 */
+const CONFIRM_EXIT_MS = 280;
+
 export function ConfirmHost() {
   const [request, setRequest] = useState<ConfirmRequest | null>(null);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    bindConfirmHost(setRequest);
+    bindConfirmHost((next) => {
+      if (next) {
+        setRequest(next);
+        setOpen(true);
+        return;
+      }
+      // 先关抽屉播退场，再清内容，避免瞬间消失
+      setOpen(false);
+    });
     return () => bindConfirmHost(null);
   }, []);
 
-  const open = Boolean(request);
+  useEffect(() => {
+    if (open || !request) return;
+    const timer = window.setTimeout(() => setRequest(null), CONFIRM_EXIT_MS);
+    return () => window.clearTimeout(timer);
+  }, [open, request]);
 
   return (
     <BottomSheet

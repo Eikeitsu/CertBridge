@@ -520,6 +520,14 @@ html[data-theme="light"] .pk-con-dock {
   box-sizing: border-box;
 }
 
+/* 更多页二级入口：与 terminal block / bf-row 左右对齐 */
+.pk-con-shell .bf-more-nav,
+.pk-con-block .bf-more-nav {
+  padding-left: 12px;
+  padding-right: 12px;
+  box-sizing: border-box;
+}
+
 .pk-con-shell .bf-segment--stack {
   padding: 0;
 }

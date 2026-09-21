@@ -3,25 +3,46 @@
 # 开关 / 同步 / 导入 / 删除
 #
 # 关 / 开不互斥：
-# - 关 = 写 conf=0，并保住本地证书（sources 不删 + stash 备份）
-# - 开 = 有本地证书（sources/stash/applied/builtin）即可写 conf=1
-# - App 同步只是可选刷新，失败不得导致「未找到证书」
+# - 关 = 只写 user.conf=0（不抢 generation 写锁；热更新后 post-fs 常占着锁）
+# - 开 = 有本地证书即可写 conf=1；没有再扫 App
+# - 快照在写成功后 best-effort，失败不影响开关结果
 
-# 写 conf 并只对模块外 user.conf 做读回校验（禁止 read_conf 回落到模块 certs.conf）
-_toggle_write_conf() {
+# 开关专用：直接写模块外 user.conf，不依赖 awk / 不抢 generation 写锁
+_toggle_write_user_conf() {
   name="$1"
   value="$2"
   CB_EXT_DIR="${CB_EXT_DIR:-/data/adb/certbridge}"
   USER_CONF="$CB_EXT_DIR/user.conf"
-  write_conf "$name" "$value" || return 1
-  got=$(_conf_get_from_file "$USER_CONF" "$name" 2>/dev/null | tr -d ' \t\r\n')
+  mkdir -p "$CB_EXT_DIR" 2>/dev/null || return 1
+  tmp="$CB_EXT_DIR/.user.conf.$$.$name"
+  if [ -f "$USER_CONF" ]; then
+    grep -v "^${name}=" "$USER_CONF" >"$tmp" 2>/dev/null || : >"$tmp"
+    printf '%s=%s\n' "$name" "$value" >>"$tmp" 2>/dev/null || {
+      rm -f "$tmp"
+      return 1
+    }
+  else
+    printf '%s=%s\n' "$name" "$value" >"$tmp" 2>/dev/null || return 1
+  fi
+  chmod 0600 "$tmp" 2>/dev/null
+  wrote=0
+  if cp -f "$tmp" "$USER_CONF" 2>/dev/null; then
+    wrote=1
+  elif cat "$tmp" >"$USER_CONF" 2>/dev/null; then
+    wrote=1
+  elif mv -f "$tmp" "$USER_CONF" 2>/dev/null; then
+    wrote=1
+    tmp=""
+  fi
+  rm -f "$tmp" 2>/dev/null
+  [ "$wrote" = "1" ] || return 1
+  got=$(grep "^${name}=" "$USER_CONF" 2>/dev/null | head -n1 | cut -d= -f2- | tr -d ' \t\r\n')
   [ "$got" = "$value" ]
 }
 
 # 开启：只在完全没有本地材料时才问 App
 _toggle_import_from_app() {
   name="$1"
-  # 先直接同步（跨 ns 探测已加强）；成功则不再走 diagnose
   if sync_source_from_app "$name" >/dev/null 2>&1 && find_source_cert "$name" >/dev/null 2>&1; then
     return 0
   fi
@@ -61,22 +82,13 @@ cmd_toggle() {
   [ "$value" = "1" ] || [ "$value" = "0" ] || { echo "error=invalid_value"; return 1; }
 
   if [ "$value" = "0" ]; then
-    # 关：先把仍在模块树 / generation / 系统库的证书落到外置并快照，再写开关
-    # （热更新后开关仍是开、字节却不在 CB_EXT 时，不先播种再开就会「未找到」）
-    # 绝不扫 App，避免拖死关开关
-    certbridge_ensure_state_sources >/dev/null 2>&1 || true
-    prepare_addon_local "$name" >/dev/null 2>&1 || true
-    stash_addon_from_sources "$name" >/dev/null 2>&1 || \
-      stash_addon_source "$name" >/dev/null 2>&1 || true
-    acquire_write_lock || { echo "error=busy"; return 1; }
-    if ! _toggle_write_conf "$name" "$value"; then
-      release_write_lock
+    # 关：只写 user.conf，不播种、不抢锁
+    if ! _toggle_write_user_conf "$name" "$value"; then
       echo "error=write_failed"
       echo "hint=无法写入 /data/adb/certbridge/user.conf"
       return 1
     fi
     pending_line=$(note_conf_dirty)
-    release_write_lock
     echo "ok=1"
     echo "${name}_enabled=$value"
     echo "pending_reboot=1"
@@ -87,7 +99,7 @@ cmd_toggle() {
     return 0
   fi
 
-  # 开：先凑本地（含旧路径回填）；没有再问 App；写开关与关相同（只写 user.conf）
+  # 开：先凑本地；没有再问 App；写开关同样不抢 generation 锁
   certbridge_ensure_state_sources >/dev/null 2>&1 || true
   prepare_addon_local "$name" >/dev/null 2>&1 || true
   if ! find_addon_cert "$name" 0 >/dev/null 2>&1; then
@@ -101,7 +113,6 @@ cmd_toggle() {
       echo "hint=本地快照无法写回 /data/adb/certbridge/addon-sources"
       return 1
     fi
-    # 确无本地：才走 App（探测已加强 /proc/1/root + 同盘 stage）
     if ! _toggle_import_from_app "$name"; then
       return 1
     fi
@@ -112,20 +123,16 @@ cmd_toggle() {
     return 1
   fi
 
-  acquire_write_lock || { echo "error=busy"; return 1; }
-  if ! _toggle_write_conf "$name" "$value"; then
-    release_write_lock
+  if ! _toggle_write_user_conf "$name" "$value"; then
     echo "error=write_failed"
     echo "hint=无法写入 /data/adb/certbridge/user.conf"
     return 1
   fi
   pending_line=$(note_conf_dirty)
-  release_write_lock
   echo "ok=1"
   echo "${name}_enabled=$value"
   echo "pending_reboot=1"
   echo "$pending_line"
-  # 开启成功立刻快照，保证下次关→开不依赖 App
   stash_addon_from_sources "$name" >/dev/null 2>&1 || \
     stash_addon_source "$name" >/dev/null 2>&1 || true
   log_info "config: $name=$value (reboot required)" 2>/dev/null || true

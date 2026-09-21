@@ -59,8 +59,9 @@ export function friendlyError(code?: string): string {
 }
 
 export function errorFromResult(stdout: string, stderr: string): string {
+  const combined = `${stdout || ""}\n${stderr || ""}`;
   const fields = Object.fromEntries(
-    String(stdout || "")
+    combined
       .split("\n")
       .map((line) => {
         const separatorIndex = line.indexOf("=");
@@ -73,5 +74,10 @@ export function errorFromResult(stdout: string, stderr: string): string {
       })
       .filter(Boolean) as [string, string][],
   );
-  return friendlyError(fields.error || stderr || "failed");
+  if (fields.error) return friendlyError(fields.error);
+  // stderr 可能是 shell 噪音，只取首行短码
+  const stderrCode = String(stderr || "")
+    .trim()
+    .split(/\s+/)[0];
+  return friendlyError(stderrCode || "failed");
 }

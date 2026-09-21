@@ -31,8 +31,12 @@ write_conf() {
     printf '%s=%s\n' "$key" "$value" >"$tmp" 2>/dev/null || return 1
   fi
   chmod 0600 "$tmp" 2>/dev/null
-  # 优先同卷 cat 覆盖；失败再尝试 mv
+  # 优先同卷 cat 覆盖；再 cp；最后 mv（跨挂载点时 mv 可能失败）
   if cat "$tmp" >"$CONF" 2>/dev/null; then
+    rm -f "$tmp"
+    return 0
+  fi
+  if cp -f "$tmp" "$CONF" 2>/dev/null; then
     rm -f "$tmp"
     return 0
   fi
@@ -45,8 +49,10 @@ write_conf() {
 
 # WebUI 热路径：只打 pending，不做 generation_valid / 指纹扫描
 note_conf_dirty() {
-  mark_reboot_required
+  # 永不因 pending 文件失败而中断调用方（部分环境 set -e）
+  mark_reboot_required || true
   echo "reboot_required=1"
+  return 0
 }
 
 is_enabled() {

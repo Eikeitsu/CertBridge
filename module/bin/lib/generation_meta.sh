@@ -2,9 +2,10 @@
 # 由 common 经 generation.sh 加载
 # 待重启标记与 applied 查询
 mark_reboot_required() {
-  mkdir -p "$STATEDIR" 2>/dev/null
-  echo "配置已变更，重启后生效" >"$PENDING_FILE"
-  chmod 0600 "$PENDING_FILE" 2>/dev/null
+  mkdir -p "$STATEDIR" 2>/dev/null || return 0
+  echo "配置已变更，重启后生效" >"$PENDING_FILE" 2>/dev/null || return 0
+  chmod 0600 "$PENDING_FILE" 2>/dev/null || true
+  return 0
 }
 
 clear_reboot_required() {

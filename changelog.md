@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **修复证书开关保存失败回弹**：toggle 写 conf 后读回校验并先回 `ok=1`；WebUI 合并识别 stdout/stderr 契约行，延长开关超时；避免误 toast 后开关弹回
 - **WebUI**：更多页拆「外观」「挂载与注入」二级页，并增加「显示隐藏页」开关；证书开关乐观更新不卡交互；Toast 按主题重做样式
 - **WebUI**：统一底部抽屉（确认/证书详情/实验项同一套 chrome）；消除详情抽屉加载闪动；底栏固定 5 Tab 避免隐藏页 4→5 跳动；首屏同步主题与延迟拉日志加快启动
 - **CI**：工作流升到 Node 24（`setup-node@v5` 默认 24、`checkout@v5`、artifact/pages 新版），消除 Node 20 弃用警告

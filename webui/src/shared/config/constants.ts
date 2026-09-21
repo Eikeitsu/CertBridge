@@ -4,6 +4,8 @@ export type FlagValue = typeof FLAG_ON | typeof FLAG_OFF;
 
 export const CLI_TIMEOUT_MS = {
   DEFAULT: 12_000,
+  /** 证书开关：加载 runtime lib + 写 conf，部分机 12s 易误超时 */
+  TOGGLE: 30_000,
   IMPORT: 60_000,
   HOT_MOUNT: 180_000,
 } as const;

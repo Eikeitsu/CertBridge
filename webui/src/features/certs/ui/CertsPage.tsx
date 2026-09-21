@@ -27,7 +27,6 @@ export function CertsPage() {
   const showBootSpin = isStatusLoading && !bootstrapped;
   const {
     isPending,
-    pendingKind,
     handleToggleBuiltin,
     handleImportFile,
     handleImportPreset,
@@ -48,8 +47,6 @@ export function CertsPage() {
       </div>
       <BuiltinCertsPanel
         certs={builtinCerts}
-        isPending={isPending}
-        pendingKind={pendingKind}
         onToggle={(kind, checked) => void handleToggleBuiltin(kind, checked)}
         onOpenDetail={(id, title) => void detail.openDetail(id, title)}
         title={voice.certs.builtinTitle}

@@ -40,7 +40,6 @@ export function ConsoleCertsPage() {
   const v = CONSOLE_VOICE.certs;
   const {
     isPending,
-    pendingKind,
     handleToggleBuiltin,
     handleImportFile,
     handleImportPreset,
@@ -87,7 +86,6 @@ export function ConsoleCertsPage() {
                 <td>
                   <Switch
                     checked={cert.isEnabled}
-                    disabled={isPending && pendingKind === cert.kind}
                     onChange={(next) => void handleToggleBuiltin(cert.kind, next)}
                   />
                 </td>

@@ -105,6 +105,7 @@ if git diff --cached --quiet; then
   exit 0
 fi
 git commit -m "chore: bump update.json to ${TAG} (versionCode ${CODE})"
-git push origin "HEAD:${DEFAULT_BRANCH}"
+# Bot 回写元数据，不跑本地 husky（CI=true 时 lint:py 会强制要 ruff，post 任务未装全量 lint 工具链）
+HUSKY=0 git push origin "HEAD:${DEFAULT_BRANCH}"
 # GITHUB_TOKEN 推送不会触发其它工作流，需显式拉起文档构建
 gh workflow run build-docs.yml --ref "$DEFAULT_BRANCH"

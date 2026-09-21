@@ -21,20 +21,32 @@ function walk(dir, out = []) {
   return out;
 }
 
-function runRuff(args) {
-  const viaPy = spawnSync("python3", ["-m", "ruff", ...args], {
-    encoding: "utf8",
-    stdio: "inherit",
-  });
-  if (viaPy.status === 0 || viaPy.status === 1) return viaPy.status;
-  const viaPyWin = spawnSync("python", ["-m", "ruff", ...args], {
-    encoding: "utf8",
-    stdio: "inherit",
-  });
-  if (viaPyWin.status === 0 || viaPyWin.status === 1) return viaPyWin.status;
-  const viaBin = spawnSync("ruff", args, { encoding: "utf8", stdio: "inherit" });
-  if (viaBin.error && viaBin.error.code === "ENOENT") return null;
-  return viaBin.status ?? 1;
+/** @returns {((args: string[]) => number) | null} */
+function resolveRuff() {
+  for (const py of ["python3", "python"]) {
+    // `python -m ruff` exits 1 both for lint findings and missing module —
+    // probe import so we do not treat ModuleNotFoundError as lint noise.
+    const probe = spawnSync(py, ["-c", "import ruff"], { encoding: "utf8" });
+    if (probe.error?.code === "ENOENT") continue;
+    if (probe.status === 0) {
+      return (args) => {
+        const r = spawnSync(py, ["-m", "ruff", ...args], {
+          encoding: "utf8",
+          stdio: "inherit",
+        });
+        return r.status ?? 1;
+      };
+    }
+  }
+  const binProbe = spawnSync("ruff", ["--version"], { encoding: "utf8" });
+  if (binProbe.error?.code === "ENOENT") return null;
+  if (binProbe.status === 0) {
+    return (args) => {
+      const r = spawnSync("ruff", args, { encoding: "utf8", stdio: "inherit" });
+      return r.status ?? 1;
+    };
+  }
+  return null;
 }
 
 const files = walk("tooling/scripts").filter((f) => f.endsWith(".py"));
@@ -43,8 +55,8 @@ if (!files.length) {
   process.exit(0);
 }
 
-const probe = runRuff(["--version"]);
-if (probe === null) {
+const runRuff = resolveRuff();
+if (!runRuff) {
   const msg = "[lint:py] ruff not installed";
   if (requireRuff) {
     console.error(msg);
@@ -56,7 +68,7 @@ if (probe === null) {
 
 const checkArgs = fix ? ["check", "--fix", ...files] : ["check", ...files];
 const checkStatus = runRuff(checkArgs);
-if (checkStatus !== 0) process.exit(checkStatus ?? 1);
+if (checkStatus !== 0) process.exit(checkStatus);
 
 const fmtArgs = fix ? ["format", ...files] : ["format", "--check", ...files];
-process.exit(runRuff(fmtArgs) ?? 1);
+process.exit(runRuff(fmtArgs));

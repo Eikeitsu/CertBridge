@@ -991,10 +991,10 @@
   transform: translateX(-50%) translateY(10px) scale(0.98);
   z-index: 95;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
   max-width: min(92vw, 360px);
-  padding: 12px 14px;
+  padding: 11px 14px;
   border-radius: 14px;
   border: 1px solid color-mix(in srgb, var(--bf-stroke-strong) 80%, transparent);
   background: color-mix(in srgb, var(--bf-surface) 92%, transparent);
@@ -1004,8 +1004,9 @@
     0 1px 0 color-mix(in srgb, #fff 35%, transparent) inset;
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  font-size: 0.84rem;
-  line-height: 1.4;
+  --bf-snack-fs: 0.84rem;
+  font-size: var(--bf-snack-fs);
+  line-height: 1.35;
   text-align: left;
   opacity: 0;
   pointer-events: none;
@@ -1022,14 +1023,16 @@
 
 .bf-snackbar__mark {
   flex-shrink: 0;
-  width: 22px;
-  height: 22px;
-  margin-top: 1px;
+  box-sizing: border-box;
+  width: calc(var(--bf-snack-fs) * 1.35);
+  height: calc(var(--bf-snack-fs) * 1.35);
   border-radius: 50%;
-  display: grid;
-  place-items: center;
-  font-size: 0.72rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--bf-snack-fs) * 0.78);
   font-weight: 700;
+  line-height: 1;
   background: color-mix(in srgb, var(--bf-ink) 8%, transparent);
   color: var(--bf-ink-2);
 }
@@ -1039,6 +1042,7 @@
   min-width: 0;
   font-weight: 600;
   letter-spacing: -0.01em;
+  line-height: 1.35;
 }
 
 .bf-snackbar.tone-ok {

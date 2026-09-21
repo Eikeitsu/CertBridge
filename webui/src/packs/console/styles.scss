@@ -700,7 +700,7 @@ html[data-pack="console"] .bf-btn--busy.bf-btn--primary::after {
 html[data-pack="console"] .bf-snackbar {
   border-radius: 4px;
   font-family: var(--bf-font-mono);
-  font-size: 0.78rem;
+  --bf-snack-fs: 0.78rem;
   letter-spacing: 0.02em;
   background: #0f1620;
   color: #d7e0ea;

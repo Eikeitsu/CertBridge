@@ -841,7 +841,7 @@ html[data-pack="ops"] .bf-btn--busy.bf-btn--primary {
 
 html[data-pack="ops"] .bf-snackbar {
   border-radius: 10px;
-  font-size: 0.8rem;
+  --bf-snack-fs: 0.8rem;
   bottom: calc(var(--bf-inset-bottom) + 72px);
 }
 

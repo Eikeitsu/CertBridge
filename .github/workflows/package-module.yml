@@ -66,7 +66,7 @@ jobs:
     outputs:
       run_package: ${{ steps.gate.outputs.run_package }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
           ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
@@ -98,7 +98,7 @@ jobs:
     if: needs.plan.outputs.run_package == '1'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
           ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
@@ -145,7 +145,7 @@ jobs:
           ZYGISK_ABIS: arm64-v8a,armeabi-v7a
         run: npm run build:module
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: steps.digest.outputs.unchanged != '1'
         with:
           name: magisk-module

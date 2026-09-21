@@ -55,7 +55,7 @@ jobs:
       zip: ${{ steps.meta.outputs.zip }}
       build_mode: ${{ steps.meta.outputs.build_mode }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -153,7 +153,7 @@ jobs:
         run: npm run build:module
 
       - name: Upload zip artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: magisk-module-${{ steps.meta.outputs.tag }}
           path: release/*.zip
@@ -163,11 +163,11 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: magisk-module-${{ needs.build.outputs.tag }}
           path: release/
@@ -201,12 +201,12 @@ jobs:
     if: ${{ needs.build.outputs.draft != 'true' && needs.build.outputs.prerelease != 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: magisk-module-${{ needs.build.outputs.tag }}
           path: release/

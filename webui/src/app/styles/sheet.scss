@@ -21,7 +21,14 @@
   inset: 0;
   border: 0;
   background: rgba(0, 0, 0, 0.45);
-  animation: bf-sheet-mask-in 0.2s var(--bf-ease) both;
+}
+
+.bf-sheet-overlay__mask[data-state="open"] {
+  animation: bf-sheet-mask-in 0.24s var(--bf-ease) both;
+}
+
+.bf-sheet-overlay__mask[data-state="closed"] {
+  animation: bf-sheet-mask-out 0.2s var(--bf-ease) both;
 }
 
 @keyframes bf-sheet-mask-in {
@@ -31,6 +38,16 @@
 
   to {
     opacity: 1;
+  }
+}
+
+@keyframes bf-sheet-mask-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
   }
 }
 
@@ -48,8 +65,15 @@
   border: 1px solid var(--bf-stroke);
   box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.18);
   overflow: hidden;
-  animation: bf-sheet-up 0.28s var(--bf-ease) both;
   will-change: transform, opacity;
+}
+
+.bf-sheet[data-state="open"] {
+  animation: bf-sheet-up 0.34s var(--bf-ease) both;
+}
+
+.bf-sheet[data-state="closed"] {
+  animation: bf-sheet-down 0.26s var(--bf-ease) both;
 }
 
 .bf-sheet.is-auto {
@@ -64,15 +88,59 @@
   background: var(--bf-chrome);
 }
 
+.bf-sheet.is-confirm[data-state="open"] {
+  animation: bf-sheet-confirm-in 0.3s var(--bf-ease) both;
+}
+
+.bf-sheet.is-confirm[data-state="closed"] {
+  animation: bf-sheet-confirm-out 0.22s var(--bf-ease) both;
+}
+
 @keyframes bf-sheet-up {
   from {
-    transform: translateY(18px);
-    opacity: 0;
+    transform: translateY(100%);
+    opacity: 0.86;
   }
 
   to {
     transform: translateY(0);
     opacity: 1;
+  }
+}
+
+@keyframes bf-sheet-down {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  to {
+    transform: translateY(100%);
+    opacity: 0.86;
+  }
+}
+
+@keyframes bf-sheet-confirm-in {
+  from {
+    transform: translateY(28px) scale(0.98);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes bf-sheet-confirm-out {
+  from {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+
+  to {
+    transform: translateY(20px) scale(0.98);
+    opacity: 0;
   }
 }
 

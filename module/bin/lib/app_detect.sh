@@ -1,10 +1,54 @@
 #!/system/bin/sh
 # 已安装抓包 App 的 CA 路径探测（不含导入 / 解析）
 
+# WebUI / 管理器进程常落在隔离 mount ns，看不到其它 App 的 Android/data；
+# 安装脚本多在全局 ns，故「刷入能扫到、WebUI 找不到」。经 init ns 探测/拷出。
+_app_cert_in_init_ns() {
+  p="$1"
+  [ -n "$p" ] || return 1
+  command -v nsenter >/dev/null 2>&1 || return 1
+  [ -d /proc/1/ns/mnt ] || return 1
+  nsenter --mount=/proc/1/ns/mnt -- test -f "$p" 2>/dev/null
+}
+
+# 保证当前 ns 可读：本 ns 直接返回；否则从 init ns 拷到 DATADIR
+ensure_readable_cert_file() {
+  src="$1"
+  [ -n "$src" ] || return 1
+  if [ -f "$src" ] && [ -r "$src" ]; then
+    echo "$src"
+    return 0
+  fi
+  _app_cert_in_init_ns "$src" || return 1
+  probe_dir="${DATADIR:-/data/local/tmp}/live_probe"
+  mkdir -p "$probe_dir" 2>/dev/null || return 1
+  # 稳定短名，避免路径特殊字符
+  tag=$(echo "$src" | cksum 2>/dev/null | awk '{print $1}')
+  [ -n "$tag" ] || tag="x"
+  dest="$probe_dir/ns_${tag}.crt"
+  nsenter --mount=/proc/1/ns/mnt -- cat "$src" >"$dest" 2>/dev/null || {
+    rm -f "$dest"
+    return 1
+  }
+  [ -s "$dest" ] || {
+    rm -f "$dest"
+    return 1
+  }
+  chmod 0644 "$dest" 2>/dev/null
+  echo "$dest"
+}
+
 _app_cert_first_existing() {
   for p in "$@"; do
     [ -n "$p" ] || continue
-    [ -f "$p" ] && { echo "$p"; return 0; }
+    if [ -f "$p" ]; then
+      echo "$p"
+      return 0
+    fi
+    if _app_cert_in_init_ns "$p"; then
+      echo "$p"
+      return 0
+    fi
   done
   return 1
 }

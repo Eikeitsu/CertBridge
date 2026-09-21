@@ -8,20 +8,40 @@ stash_addon_source() {
   [ -f "$src" ] || return 1
   dest_dir="$STASH_DIR/$kind"
   mkdir -p "$dest_dir" 2>/dev/null || return 1
-  # 清空旧快照，只留一份
-  rm -f "$dest_dir"/* 2>/dev/null
   name=$(basename "$src" | tr -d '\r')
-  cp -f "$src" "$dest_dir/$name" 2>/dev/null || return 1
-  chmod 0644 "$dest_dir/$name" 2>/dev/null
+  # 先写临时文件再替换，避免 cp 失败时清空旧快照
+  stage="$dest_dir/.stage.$$"
+  rm -rf "$stage"
+  mkdir -p "$stage" 2>/dev/null || return 1
+  cp -f "$src" "$stage/$name" 2>/dev/null || {
+    rm -rf "$stage"
+    return 1
+  }
+  chmod 0644 "$stage/$name" 2>/dev/null
   if [ -f "$src.meta" ]; then
-    cp -f "$src.meta" "$dest_dir/$name.meta" 2>/dev/null || true
+    cp -f "$src.meta" "$stage/$name.meta" 2>/dev/null || true
   fi
+  # 清旧快照并原子换入
+  for old in "$dest_dir"/*; do
+    [ -e "$old" ] || continue
+    case "$old" in */.stage.*) continue ;; esac
+    rm -rf "$old" 2>/dev/null
+  done
+  for f in "$stage"/*; do
+    [ -e "$f" ] || continue
+    mv -f "$f" "$dest_dir/" 2>/dev/null || cp -f "$f" "$dest_dir/" 2>/dev/null || {
+      rm -rf "$stage"
+      return 1
+    }
+  done
+  rm -rf "$stage"
   return 0
 }
 
 restore_addon_source_from_stash() {
   kind="$1"
   case "$kind" in reqable|proxypin) ;; *) return 1 ;; esac
+  # 已有合法 source 则无需恢复
   find_source_cert "$kind" >/dev/null 2>&1 && return 0
   stash="$STASH_DIR/$kind"
   [ -d "$stash" ] || return 1

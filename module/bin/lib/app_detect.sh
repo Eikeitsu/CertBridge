@@ -162,7 +162,12 @@ find_live_app_cert() {
         "/data/user/0/com.reqable.android/files/certificate/reqable-root.crt" \
         "/data/user/0/com.reqable.android.pro/files/certificate/reqable-root.crt" \
         "/data/data/com.reqable.android/files/certificate/reqable-root.crt" \
-        "/data/data/com.reqable.android.pro/files/certificate/reqable-root.crt"); then
+        "/data/data/com.reqable.android.pro/files/certificate/reqable-root.crt" \
+        "/storage/emulated/0/Download/reqable-root.crt" \
+        "/data/media/0/Download/reqable-root.crt" \
+        "/sdcard/Download/reqable-root.crt" \
+        "/storage/emulated/0/Download/reqable.crt" \
+        "/sdcard/Download/reqable.crt"); then
         echo "$path"
         return 0
       fi
@@ -178,7 +183,11 @@ find_live_app_cert() {
         "/storage/emulated/0/Android/data/com.network.proxy/files/ca.crt" \
         "/storage/emulated/0/Android/data/com.wangyu.proxypin/files/ca.crt" \
         "/data/media/0/Android/data/com.network.proxy/files/ca.crt" \
-        "/data/media/0/Android/data/com.wangyu.proxypin/files/ca.crt"); then
+        "/data/media/0/Android/data/com.wangyu.proxypin/files/ca.crt" \
+        "/storage/emulated/0/Download/proxypin-ca.crt" \
+        "/sdcard/Download/proxypin-ca.crt" \
+        "/storage/emulated/0/Download/ca.crt" \
+        "/sdcard/Download/ca.crt"); then
         echo "$path"
         return 0
       fi

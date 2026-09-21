@@ -9,7 +9,7 @@ export function friendlyError(code?: string): string {
     timeout: "操作超时，请稍后重试",
     status_failed: "状态读取失败，请下拉刷新",
     busy: "服务繁忙，请稍后再试",
-    certificate_unavailable: "未找到可用证书，请先在对应应用中生成",
+    certificate_unavailable: "未找到证书：请在 App 生成，或导出到 Download/，或用自定义导入",
     invalid_toggle: "无效的开关",
     invalid_value: "无效的参数",
     write_failed: "保存失败",

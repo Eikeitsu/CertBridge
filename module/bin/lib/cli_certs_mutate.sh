@@ -2,12 +2,11 @@
 # 由 cert_manager.sh 加载
 # 开关 / 同步 / 导入 / 删除
 #
-# 关 / 开不互斥：
-# - 关 = 只写 user.conf=0（不抢 generation 写锁；热更新后 post-fs 常占着锁）
-# - 开 = 有本地证书即可写 conf=1；没有再扫 App
-# - 快照在写成功后 best-effort，失败不影响开关结果
+# 极简开关模型：
+# - 证书文件常驻 /data/adb/certbridge/addon-sources/，关开关绝不删除
+# - 关 = 只写 user.conf=0（不抢锁、不播种、不快照）
+# - 开 = 本地有证或能从 App/下载目录/builtin 拿到 → 写 user.conf=1
 
-# 开关专用：直接写模块外 user.conf，不依赖 awk / 不抢 generation 写锁
 _toggle_write_user_conf() {
   name="$1"
   value="$2"
@@ -40,39 +39,22 @@ _toggle_write_user_conf() {
   [ "$got" = "$value" ]
 }
 
-# 开启：只在完全没有本地材料时才问 App
-_toggle_import_from_app() {
-  name="$1"
-  if sync_source_from_app "$name" >/dev/null 2>&1 && find_source_cert "$name" >/dev/null 2>&1; then
-    return 0
-  fi
-  diag=$(diagnose_app_cert_import "$name" 2>/dev/null)
-  diag_rc=$?
-  case "$diag_rc" in
-    0)
-      if sync_source_from_app "$name" >/dev/null 2>&1 && find_source_cert "$name" >/dev/null 2>&1; then
-        return 0
-      fi
-      echo "error=import_failed"
-      echo "hint=证书已找到但写入 /data/adb/certbridge/addon-sources 失败"
-      return 1
-      ;;
-    1)
-      echo "error=openssl_unavailable"
-      return 1
-      ;;
-    2)
-      echo "error=certificate_unavailable"
-      echo "hint=本地无证书且跨命名空间未找到 App 根证书；请确认 App 已生成证书，或自定义导入"
-      return 1
-      ;;
-    *)
-      echo "error=import_failed"
-      echo "hint=找到证书文件但校验/转换失败"
-      [ -n "$diag" ] && echo "$diag" | awk -F= '$1=="import_err"{print; exit}'
-      return 1
-      ;;
-  esac
+# 开之前保证 addon-sources 有证：本地 → App → builtin
+addon_ensure_ready() {
+  kind="$1"
+  case "$kind" in reqable|proxypin) ;; *) return 1 ;; esac
+  CB_EXT_DIR="${CB_EXT_DIR:-/data/adb/certbridge}"
+  SOURCES_DIR="${SOURCES_DIR:-$CB_EXT_DIR/addon-sources}"
+  mkdir -p "$SOURCES_DIR/$kind" 2>/dev/null || true
+
+  find_source_cert "$kind" >/dev/null 2>&1 && return 0
+  prepare_addon_local "$kind" >/dev/null 2>&1 || true
+  find_source_cert "$kind" >/dev/null 2>&1 && return 0
+  find_addon_cert "$kind" 0 >/dev/null 2>&1 && return 0
+
+  sync_source_from_app "$kind" >/dev/null 2>&1 || true
+  find_source_cert "$kind" >/dev/null 2>&1 && return 0
+  return 1
 }
 
 cmd_toggle() {
@@ -82,7 +64,6 @@ cmd_toggle() {
   [ "$value" = "1" ] || [ "$value" = "0" ] || { echo "error=invalid_value"; return 1; }
 
   if [ "$value" = "0" ]; then
-    # 关：只写 user.conf，不播种、不抢锁
     if ! _toggle_write_user_conf "$name" "$value"; then
       echo "error=write_failed"
       echo "hint=无法写入 /data/adb/certbridge/user.conf"
@@ -93,33 +74,12 @@ cmd_toggle() {
     echo "${name}_enabled=$value"
     echo "pending_reboot=1"
     echo "$pending_line"
-    stash_addon_from_sources "$name" >/dev/null 2>&1 || \
-      stash_addon_source "$name" >/dev/null 2>&1 || true
-    log_info "config: $name=$value (reboot required)" 2>/dev/null || true
     return 0
   fi
 
-  # 开：先凑本地；没有再问 App；写开关同样不抢 generation 锁
-  certbridge_ensure_state_sources >/dev/null 2>&1 || true
-  prepare_addon_local "$name" >/dev/null 2>&1 || true
-  if ! find_addon_cert "$name" 0 >/dev/null 2>&1; then
-    if stash_has_cert "$name" || find_applied_gen_cert "$name" >/dev/null 2>&1; then
-      prepare_addon_local "$name" >/dev/null 2>&1 || true
-    fi
-  fi
-  if ! find_addon_cert "$name" 0 >/dev/null 2>&1; then
-    if stash_has_cert "$name"; then
-      echo "error=import_failed"
-      echo "hint=本地快照无法写回 /data/adb/certbridge/addon-sources"
-      return 1
-    fi
-    if ! _toggle_import_from_app "$name"; then
-      return 1
-    fi
-  fi
-  if ! find_addon_cert "$name" 0 >/dev/null 2>&1; then
-    echo "error=import_failed"
-    echo "hint=本地证书不可用"
+  if ! addon_ensure_ready "$name"; then
+    echo "error=certificate_unavailable"
+    echo "hint=本地无证书且无法从 App 导入。可将根证书放到 Download/ 或使用「自定义导入」后重试"
     return 1
   fi
 
@@ -133,9 +93,6 @@ cmd_toggle() {
   echo "${name}_enabled=$value"
   echo "pending_reboot=1"
   echo "$pending_line"
-  stash_addon_from_sources "$name" >/dev/null 2>&1 || \
-    stash_addon_source "$name" >/dev/null 2>&1 || true
-  log_info "config: $name=$value (reboot required)" 2>/dev/null || true
   return 0
 }
 
@@ -147,7 +104,6 @@ cmd_sync_apps() {
   echo "$opt_out"
   opt_updated=$(echo "$opt_out" | awk -F= '$1 == "optional_updated" { print $2; exit }')
   total_updated=$((${updated:-0} + ${opt_updated:-0}))
-  # 汇总给 WebUI：含 Reqable/ProxyPin 与可选自定义导入
   echo "updated=$total_updated"
   if [ "${total_updated:-0}" -gt 0 ] 2>/dev/null; then
     pending_line=$(update_reboot_required_flag)

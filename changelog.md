@@ -7,7 +7,7 @@
 > 多数人一般安装 `arm64` 架构的模块即可，模拟器虚拟机请自行选择合适的架构
 
 - **按架构分包**：完整版默认 4 包 `*_arm64.zip` / `*_arm.zip` / `*_x86.zip` / `*_x64.zip`；另有 lite。`updateJson` / ci-dist 默认 `CertBridge_arm64.zip`。旧式合包 `PACKAGE_FAT=1` → `*_fat.zip`
-- **证书开关**：关/开写 `user.conf` 不抢 generation 写锁（避免热更新后 post-fs 占锁导致保存失败）；关不播种；开先本地再跨 ns 扫 App
+- **证书开关（简化）**：关=只写 `user.conf`；开=本地有证或从 App/Download 导入后再写；证书常驻 `/data/adb/certbridge/addon-sources/`，关不断删
 - **WebUI**：首屏内联 loading + 主题色，CSS 先于 JS，先进壳层再拉 status；更多页拆「外观」「挂载与注入」并支持「显示隐藏页」；统一底部抽屉动画；Toast / 开关交互与底栏 Tab 稳定性改进
 - **文档重写**：按当前模块能力重写使用手册
 - **CI / 工程**：Node 24；同提交改 Web 时打包门控；`INPUT_DIGEST` 去重；Lint 并行 web/shell/tooling；发版可晋升 ci-dist；接入 `setup-ndk-clang`；Lint/Format 覆盖 Python / Java / C/C++（有 native 时）

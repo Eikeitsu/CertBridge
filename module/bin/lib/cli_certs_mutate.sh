@@ -21,6 +21,10 @@ _toggle_write_conf() {
 # 开启：只在完全没有本地材料时才问 App
 _toggle_import_from_app() {
   name="$1"
+  # 先直接同步（跨 ns 探测已加强）；成功则不再走 diagnose
+  if sync_source_from_app "$name" >/dev/null 2>&1 && find_source_cert "$name" >/dev/null 2>&1; then
+    return 0
+  fi
   diag=$(diagnose_app_cert_import "$name" 2>/dev/null)
   diag_rc=$?
   case "$diag_rc" in
@@ -29,7 +33,7 @@ _toggle_import_from_app() {
         return 0
       fi
       echo "error=import_failed"
-      echo "hint=证书已找到但写入本地失败"
+      echo "hint=证书已找到但写入 /data/adb/certbridge/addon-sources 失败"
       return 1
       ;;
     1)
@@ -38,7 +42,7 @@ _toggle_import_from_app() {
       ;;
     2)
       echo "error=certificate_unavailable"
-      echo "hint=本地无证书且 App 侧未找到；请先在对应 App 生成根证书，或自定义导入"
+      echo "hint=本地无证书且跨命名空间未找到 App 根证书；请确认 App 已生成证书，或自定义导入"
       return 1
       ;;
     *)
@@ -57,7 +61,13 @@ cmd_toggle() {
   [ "$value" = "1" ] || [ "$value" = "0" ] || { echo "error=invalid_value"; return 1; }
 
   if [ "$value" = "0" ]; then
-    # 关：先写开关（必须快、只碰模块外）；快照纯本地、失败不影响关
+    # 关：先把仍在模块树 / generation / 系统库的证书落到外置并快照，再写开关
+    # （热更新后开关仍是开、字节却不在 CB_EXT 时，不先播种再开就会「未找到」）
+    # 绝不扫 App，避免拖死关开关
+    certbridge_ensure_state_sources >/dev/null 2>&1 || true
+    prepare_addon_local "$name" >/dev/null 2>&1 || true
+    stash_addon_from_sources "$name" >/dev/null 2>&1 || \
+      stash_addon_source "$name" >/dev/null 2>&1 || true
     acquire_write_lock || { echo "error=busy"; return 1; }
     if ! _toggle_write_conf "$name" "$value"; then
       release_write_lock
@@ -71,7 +81,6 @@ cmd_toggle() {
     echo "${name}_enabled=$value"
     echo "pending_reboot=1"
     echo "$pending_line"
-    # 关断快照：仅本地 cp，绝不 sync App（否则 WebUI 易超时 → 假「保存失败」）
     stash_addon_from_sources "$name" >/dev/null 2>&1 || \
       stash_addon_source "$name" >/dev/null 2>&1 || true
     log_info "config: $name=$value (reboot required)" 2>/dev/null || true

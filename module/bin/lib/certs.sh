@@ -108,6 +108,8 @@ install_addon_certs_into() {
   MAP_TMP="$2"
   addon_cert=""
   : >"$MAP_TMP" || return 1
+  # 热更新 / 软重启重建前再确保外置副本存在
+  certbridge_ensure_state_sources >/dev/null 2>&1 || true
   if is_enabled reqable; then
     # 开机优先从已安装 Reqable 刷新；找不到则用安装时导入的 sources
     if addon_cert=$(find_addon_cert reqable 1) || addon_cert=$(find_addon_cert reqable 0); then

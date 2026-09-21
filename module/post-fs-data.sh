@@ -55,6 +55,8 @@ fi
 # 否则已关闭的 ProxyPin 等 addon 会污染新 generation（日志里仍出现 243f0bfb.0）
 detach_runtime_cacert_binds || \
   log_msg "post-fs-data: detach runtime binds soft-fail"
+# 重建前播种外置 sources，避免热更新后开关仍开却丢 addon
+certbridge_ensure_state_sources >/dev/null 2>&1 || true
 if ! build_boot_generation; then
   write_inject_error generation_failed
   log_msg "post-fs-data: live generation failed, original store preserved"

@@ -92,6 +92,7 @@ certbridge_install_preserve_user() {
     hot_update_preserve_paths "$OLD_MOD" "$MODPATH" \
       certs/custom \
       certs/sources \
+      certs/generation/current \
       data/state/addon-sources \
       data/state/source-stash \
       data/state/user.conf \
@@ -100,6 +101,16 @@ certbridge_install_preserve_user() {
       data/state/applied.conf \
       data/state/hide-assist.conf \
       data/state/source.meta
+    # 开关「开着」时证书字节可能只在旧 generation；立刻播到模块外
+    if [ -f "$MODPATH/bin/common.sh" ]; then
+      (
+        MODDIR="$MODPATH"
+        # shellcheck disable=SC1090
+        . "$MODPATH/bin/common.sh" 2>/dev/null || exit 0
+        certbridge_seed_ext_from_module "$OLD_MOD" 2>/dev/null || true
+        certbridge_seed_ext_from_module "$MODPATH" 2>/dev/null || true
+      ) || true
+    fi
   fi
   # 用户改过的 conf 键：在新模板上覆盖同名项（安装向导写的 reqable/proxypin/mount 仍优先）
   if [ -f "$OLD_MOD/config/certs.conf" ] && [ -f "$MODPATH/config/certs.conf" ]; then

@@ -84,7 +84,8 @@ jobs:
             echo "build_mode=rebuild" >> "$GITHUB_OUTPUT"
           fi
 
-          eval "$(RAW="$RAW" python3 tooling/scripts/resolve-release-version.py)"
+          # versionCode：semver 映射；若 Pages/ci-dist 已见号更高则用已见+1
+          eval "$(RAW="$RAW" python3 tooling/scripts/resolve-release-version.py --fetch-remote)"
           TAG="${version}"
           if [ -n "$CUSTOM_NAME" ]; then
             NAME="$CUSTOM_NAME"
@@ -99,7 +100,7 @@ jobs:
           echo "version_code=$version_code" >> "$GITHUB_OUTPUT"
           echo "name=$NAME" >> "$GITHUB_OUTPUT"
           echo "zip=$ZIP" >> "$GITHUB_OUTPUT"
-          echo "Resolved release: $NAME ($TAG) versionCode=$version_code"
+          echo "Resolved release: $NAME ($TAG) versionCode=$version_code (semver_code=${semver_code:-?} seen_max=${seen_max_code:-none})"
 
       - name: Sync module.prop version
         shell: bash

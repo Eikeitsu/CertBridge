@@ -38,6 +38,7 @@ Actions → **Release Module**（或推送 `v*` tag）：
 - **正式**：Pages `update.json` + `releases/`；`module.prop` 始终指向 Pages
 - **CI**：`Package Module` push `master` 时 stamp `*.ci.N` 并推到 **`ci-dist`**
 - Release「预发布」勾选只影响 GitHub 标记，不另建更新通道
+- **versionCode**：正式先按 semver 映射；仅当 Pages/ci-dist 等已见号**高于**该映射时，改为「已见最大 + 1」，避免发版晚于 CI 却 versionCode 倒挂
 
 ## 本地命令（可选）
 

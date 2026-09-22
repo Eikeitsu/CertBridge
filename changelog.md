@@ -1,6 +1,7 @@
 # CertBridge CI
 
 
-- **产物后缀**：32 位 ARM 包由 `*_arm.zip` / `CertBridge_arm.zip` 改为 `*_arm32.zip` / `CertBridge_arm32.zip`（armeabi-v7a）；`OPENSSL_ABIS=arm` 仍兼容
-- **待重启提示**：证书开关 / 挂载模式 / 跳过 system / 路径风格等改回与开机生效快照一致时，清除「待重启」状态与主页提示
-- **CI**：Release 的版本号改为高于发版时最新的 CI 版本号
+- **国际化**：共享 `locales/` 文案；WebUI i18next；安装/简介跟随系统语言（非中英回落英语）
+- **首屏**：仅品牌字 + 细进度条，去掉「正在加载」文案与大转圈
+- **安装询问**：音量键提示改为短句
+- **仓库整理**：`scripts/` / `tools/` / `docs-dev/` / `legacy/`；changelog 中英双文件

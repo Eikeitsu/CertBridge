@@ -1,5 +1,12 @@
 # 更新日志
 
+## v4.3.0
+
+- **国际化**：共享 `locales/` 文案；WebUI i18next；安装/简介跟随系统语言（非中英回落英语）
+- **首屏**：仅品牌字 + 细进度条，去掉「正在加载」文案与大转圈
+- **安装询问**：音量键提示改为短句
+- **仓库整理**：`scripts/` / `tools/` / `docs-dev/` / `legacy/`；changelog 中英双文件
+
 ## v4.2.2
 
 - **产物后缀**：32 位 ARM 包由 `*_arm.zip` / `CertBridge_arm.zip` 改为 `*_arm32.zip` / `CertBridge_arm32.zip`（armeabi-v7a）；`OPENSSL_ABIS=arm` 仍兼容

@@ -1,4 +1,18 @@
-# 更新日志
+# 更新日志 / Changelog
+
+> Magisk `updateJson` 仅支持一个 changelog URL；本文件中英并列。
+> Magisk only accepts one changelog URL; Chinese and English are listed below.
+
+---
+
+## 中文
+
+## v4.3.0
+
+- **国际化**：共享 `locales/` 文案；WebUI i18next；安装/简介跟随系统语言（非中英回落英语）
+- **首屏**：仅品牌字 + 细进度条，去掉「正在加载」文案与大转圈
+- **安装询问**：音量键提示改为短句
+- **仓库整理**：`scripts/` / `tools/` / `docs-dev/` / `legacy/`；changelog 中英双文件
 
 ## v4.2.2
 
@@ -184,3 +198,22 @@
 - 内置 Reqable / ProxyPin CA，支持独立开关与自定义证书
 - 支持 Android 7–16；Android 14+ APEX Conscrypt 注入
 - WebUI 提供概览、证书管理、日志和显示选项
+
+---
+
+## English
+
+## v4.3.0
+
+- * * Internationalization * *: Shared `locales/` copy; WebUI i18next; Installation/Introduction Follow System Language (Non-Chinese English fallback)
+- * * First screen * *: brand word only + fine progress bar, remove "loading" copy and big circle
+- * * Installation inquiry * *: volume key tip changed to short sentence
+- * * Warehouse organization * *:⟦ 1⟧/⟦2/`docs-dev/` ⟧/`legacy/`; Changelog Chinese and English dual files
+
+## v4.2.2
+
+- ARM32 zip suffix rename (`*_arm32.zip`); clear pending-reboot when settings match boot snapshot; release versionCode above CI floor
+
+## Earlier
+
+See Chinese changelog for full history: `changelog/zh-CN.md`.

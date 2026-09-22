@@ -1,11 +1,13 @@
-﻿# Changelog
+# Changelog
 
 ## Unreleased
 
-- **i18n**: shared `locales/` JSON; WebUI i18next; install/status follow system language (non zh/en → en)
-- **Splash**: brand wordmark + slim bar only
-- **Install prompts**: shorter volume-key copy
-- **Repo layout**: `scripts/` / `tools/` / `docs-dev/` / `legacy/`; dual changelog files
+## v4.3.0
+
+- * * Internationalization * *: Shared `locales/` copy; WebUI i18next; Installation/Introduction Follow System Language (Non-Chinese English fallback)
+- * * First screen * *: brand word only + fine progress bar, remove "loading" copy and big circle
+- * * Installation inquiry * *: volume key tip changed to short sentence
+- * * Warehouse organization * *:⟦ 1⟧/⟦2/`docs-dev/` ⟧/`legacy/`; Changelog Chinese and English dual files
 
 ## v4.2.2
 

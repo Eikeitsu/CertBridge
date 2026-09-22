@@ -5,14 +5,14 @@
 
 ## 日志写哪里
 
-| 文件 | 用途 |
-| ---- | ---- |
-| 根目录 `changelog.md` | **唯一手写源（中文）** |
-| `changelog/en.md` | **发版机翻生成**；一般不要手改 |
-| `changelog/zh-CN.md` | 根文件镜像；勿手写 |
-| `docs/guide/changelog.md` | 中文站；发版生成 |
-| `docs/en/guide/changelog.md` | 英文站；发版生成（来自机翻） |
-| `docs/public/changelog.md` | Magisk `updateJson`；发版生成的中英并列文件 |
+| 文件                         | 用途                                        |
+| ---------------------------- | ------------------------------------------- |
+| 根目录 `changelog.md`        | **唯一手写源（中文）**                      |
+| `changelog/en.md`            | **发版机翻生成**；一般不要手改              |
+| `changelog/zh-CN.md`         | 根文件镜像；勿手写                          |
+| `docs/guide/changelog.md`    | 中文站；发版生成                            |
+| `docs/en/guide/changelog.md` | 英文站；发版生成（来自机翻）                |
+| `docs/public/changelog.md`   | Magisk `updateJson`；发版生成的中英并列文件 |
 
 ### Unreleased 写法
 
@@ -25,13 +25,13 @@
 
 ## 发版时工作流做什么
 
-1. 打包 zip + GitHub Release  
-2. `promote-changelog.py`：中文 Unreleased → `## vX.Y.Z`  
-3. `sync-changelog-en.py`：把该版本中文条目 **机翻成英文** 写入 `changelog/en.md`  
-   - 默认：Google 翻译（`deep-translator`，免 key）  
-   - 可选：仓库 Secret `DEEPL_AUTH_KEY` 走 DeepL（质量更好）  
-4. 导出文档站中/英页 + Magisk 双语 `docs/public/changelog.md`  
-5. 回写 `update.json` / `module.prop` / `package.json` 并触发 Build Docs  
+1. 打包 zip + GitHub Release
+2. `promote-changelog.py`：中文 Unreleased → `## vX.Y.Z`
+3. `sync-changelog-en.py`：把该版本中文条目 **机翻成英文** 写入 `changelog/en.md`
+   - 默认：Google 翻译（`deep-translator`，免 key）
+   - 可选：仓库 Secret `DEEPL_AUTH_KEY` 走 DeepL（质量更好）
+4. 导出文档站中/英页 + Magisk 双语 `docs/public/changelog.md`
+5. 回写 `update.json` / `module.prop` / `package.json` 并触发 Build Docs
 
 > Magisk 只有一个 `changelog` URL，无法按系统语言切两个链接；双语 = **同一文件上下两段**。
 
@@ -48,10 +48,10 @@ python3 scripts/promote-changelog.py --export-bilingual changelog.md changelog/e
 
 ## 检查清单
 
-1. 用户可见改动 → 只改 `changelog.md` → `## Unreleased`  
-2. 不要手写 `docs/**/changelog.md`  
-3. 不要删空的 `## Unreleased` stub  
-4. 正式发版用工作流  
+1. 用户可见改动 → 只改 `changelog.md` → `## Unreleased`
+2. 不要手写 `docs/**/changelog.md`
+3. 不要删空的 `## Unreleased` stub
+4. 正式发版用工作流
 
 相关：`promote-changelog.py`、`sync-changelog-en.py`、`post-release-update.sh`。  
 构建见 [`BUILD.md`](./BUILD.md)。

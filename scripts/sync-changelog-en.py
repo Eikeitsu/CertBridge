@@ -23,9 +23,7 @@ import time
 import importlib.util
 
 _HERE = pathlib.Path(__file__).resolve().parent
-_spec = importlib.util.spec_from_file_location(
-    "promote_changelog", _HERE / "promote-changelog.py"
-)
+_spec = importlib.util.spec_from_file_location("promote_changelog", _HERE / "promote-changelog.py")
 assert _spec and _spec.loader
 _pc = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_pc)
@@ -94,12 +92,8 @@ def _translate_text(text: str) -> str:
         try:
             from deep_translator import GoogleTranslator, MyMemoryTranslator  # type: ignore
 
-            backends.append(
-                ("Google", GoogleTranslator(source="zh-CN", target="en"))
-            )
-            backends.append(
-                ("MyMemory", MyMemoryTranslator(source="zh-CN", target="en-US"))
-            )
+            backends.append(("Google", GoogleTranslator(source="zh-CN", target="en")))
+            backends.append(("MyMemory", MyMemoryTranslator(source="zh-CN", target="en-US")))
         except Exception as exc:  # noqa: BLE001
             print(f"warn: deep-translator import failed ({exc})", file=sys.stderr)
 
@@ -176,9 +170,7 @@ def translate_markdown_body(body: str) -> str:
     return result
 
 
-def find_section(
-    sections: list[tuple[str, str]], version: str
-) -> tuple[str, str] | None:
+def find_section(sections: list[tuple[str, str]], version: str) -> tuple[str, str] | None:
     keys = version_keys(version)
     for heading, body in sections:
         if version_keys(heading) & keys:

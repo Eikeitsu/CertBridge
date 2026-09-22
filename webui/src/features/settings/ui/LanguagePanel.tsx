@@ -10,10 +10,7 @@ import { isCliFailure } from "@/shared/lib/cliResult";
 import { parseKv } from "@/shared/lib/parse";
 import { STORAGE_KEYS } from "@/shared/config/paths";
 import { writeStorage } from "@/shared/lib/storage";
-import {
-  resolveUiLang,
-  type UiLangPref,
-} from "@/shared/i18n";
+import { resolveUiLang, type UiLangPref } from "@/shared/i18n";
 import { useApplyUiLang } from "@/features/theme/hooks/usePackVoice";
 
 const OPTIONS: { id: UiLangPref; labelKey: string }[] = [

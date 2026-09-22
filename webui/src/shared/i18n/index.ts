@@ -14,7 +14,10 @@ export function normalizeBrowserLang(raw?: string | null): "zh-CN" | "en" {
   return "en";
 }
 
-export function resolveUiLang(pref: UiLangPref, browser = navigator.language): "zh-CN" | "en" {
+export function resolveUiLang(
+  pref: UiLangPref,
+  browser = navigator.language,
+): "zh-CN" | "en" {
   if (pref === "zh-CN") return "zh-CN";
   if (pref === "en") return "en";
   return normalizeBrowserLang(browser);

@@ -5,7 +5,7 @@ import type { PackVoice } from "@/shared/config/packVoice";
 
 /** Map i18n webui.json → legacy PackVoice shape used by hooks/pages */
 export function usePackVoice() {
-  const { t, i18n } = useTranslation("webui");
+  const { t } = useTranslation("webui");
   const pack = ThemePack.Default;
 
   const voice = useMemo((): PackVoice => {
@@ -177,7 +177,7 @@ export function usePackVoice() {
       },
       topbar: { showBrand: true, showDevice: true },
     };
-  }, [t, i18n.language]);
+  }, [t]);
 
   return { pack, voice };
 }

@@ -18,14 +18,14 @@ On each boot the module:
 
 It does **not** rewrite system partition files. If copy/validation fails, injection is skipped and the stock store stays intact.
 
-| Piece | Role |
-| ----- | ---- |
-| Magisk module | `post-fs-data` / `service` inject + optional late inject |
-| WebUI (optional) | Home / certs / logs / hide / more |
-| Hot mount (optional) | Temporary user/SD certs until reboot |
-| Hide assist (optional) | SuSFS / `ksud` / NoHello try_umount (installed by default, off) |
+| Piece                    | Role                                                             |
+| ------------------------ | ---------------------------------------------------------------- |
+| Magisk module            | `post-fs-data` / `service` inject + optional late inject         |
+| WebUI (optional)         | Home / certs / logs / hide / more                                |
+| Hot mount (optional)     | Temporary user/SD certs until reboot                             |
+| Hide assist (optional)   | SuSFS / `ksud` / NoHello try_umount (installed by default, off)  |
 | Zygisk filter (optional) | Filter this module’s mounts in target processes (off by default) |
-| CLI | `cb` → status / set / cert helpers |
+| CLI                      | `cb` → status / set / cert helpers                               |
 
 UI language follows the system (`zh*` → Chinese, otherwise English). Change under WebUI → Mount → Language.
 
@@ -39,10 +39,10 @@ Online update (`updateJson`) tracks the **arm64 full** zip. Docs: [Install](http
 
 ## Mount modes (short)
 
-| Mode | Notes |
-| ---- | ----- |
-| **Compatible** (default) | Full merge + bind; no Magic Mount meta-module required |
-| **Magic** | Overlay addons under `system/`; Magisk usually OK, KernelSU may need a correct stack |
+| Mode                     | Notes                                                                                |
+| ------------------------ | ------------------------------------------------------------------------------------ |
+| **Compatible** (default) | Full merge + bind; no Magic Mount meta-module required                               |
+| **Magic**                | Overlay addons under `system/`; Magisk usually OK, KernelSU may need a correct stack |
 
 Android 14+: prefer binding the main APEX and skip system when `experimental_14_system=skip` (default). Details in the [config guide](https://eikeitsu.github.io/CertBridge/en/guide/config).
 

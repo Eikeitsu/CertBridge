@@ -23,7 +23,8 @@ const cacheDir = join(repoRoot, ".build", "cbx509-cache");
 const outDir = join(repoRoot, "module", "bin", "cbx509");
 const srcMain = join(
   repoRoot,
-  "tools", "cbx509",
+  "tools",
+  "cbx509",
   "src",
   "com",
   "certbridge",

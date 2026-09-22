@@ -4,7 +4,7 @@ import { TabName } from "@/entities/module/enums";
 
 /** Pack chrome strings (tabs / page titles) from i18n */
 export function usePackChrome() {
-  const { t, i18n } = useTranslation("webui");
+  const { t } = useTranslation("webui");
   return useMemo(
     () => ({
       brand: t("brand"),
@@ -56,6 +56,6 @@ export function usePackChrome() {
         about: t("more.aboutTitle"),
       },
     }),
-    [t, i18n.language],
+    [t],
   );
 }

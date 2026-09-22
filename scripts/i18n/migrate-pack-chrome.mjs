@@ -40,10 +40,7 @@ for (const file of files) {
     'import { usePackChrome } from "@/features/theme/hooks/usePackChrome";\n',
   );
 
-  if (
-    /DEFAULT_VOICE|OPS_VOICE|CONSOLE_VOICE/.test(c) &&
-    !/usePackChrome\(\)/.test(c)
-  ) {
+  if (/DEFAULT_VOICE|OPS_VOICE|CONSOLE_VOICE/.test(c) && !/usePackChrome\(\)/.test(c)) {
     c = c.replace(
       /(export function \w+\([^)]*\) \{\n)/,
       "$1  const chrome = usePackChrome();\n",
@@ -61,7 +58,7 @@ for (const file of files) {
   c = c.replace(/CONSOLE_VOICE\./g, "chrome.");
 
   c = c.replace(
-    /const stabilizing =\n    overview\.trust\.tone === TrustTone\.Idle &&\n    \/[^/\n]+\/\.test\(overview\.trust\.title\);/g,
+    /const stabilizing =\n {4}overview\.trust\.tone === TrustTone\.Idle &&\n {4}\/[^/\n]+\/\.test\(overview\.trust\.title\);/g,
     `const title = overview.trust.title || "";
   const stabilizing =
     overview.trust.tone === TrustTone.Idle &&

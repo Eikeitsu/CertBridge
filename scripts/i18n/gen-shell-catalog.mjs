@@ -27,7 +27,7 @@ function flatten(obj, prefix = "", out = {}) {
 }
 
 function shellEscape(s) {
-  return `'${String(s).replace(/'/g, `'\"'\"'`)}'`;
+  return `'${String(s).replace(/'/g, `'"'"'`)}'`;
 }
 
 function msgVar(ns, flatKey) {

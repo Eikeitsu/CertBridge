@@ -1,7 +1,8 @@
+import { useTranslation } from "react-i18next";
 import { useAppSelector } from "@/app/store/hooks";
 import { selectModuleStatus } from "@/features/status/model/selectors";
 import { isFlagOn } from "@/shared/lib/flag";
-import { HIDE_PROVIDER_LABELS, MOUNT_MODES, TMPFS_STYLES } from "@/shared/config/mount";
+import { HIDE_PROVIDER_LABELS, TMPFS_STYLES } from "@/shared/config/mount";
 import { parseEnum } from "@/shared/lib/enum";
 import { MountMode, TmpfsStyle } from "@/entities/module/enums";
 import { Card, ListGroup, Row, Tag } from "@/shared/ui/primitives";
@@ -11,17 +12,17 @@ type HideStatusCardProps = {
   title?: string;
 };
 
-export function HideStatusCard({
-  variant = "list",
-  title = "挂载与隐藏实况",
-}: HideStatusCardProps) {
+export function HideStatusCard({ variant = "list", title }: HideStatusCardProps) {
+  const { t } = useTranslation("webui");
   const status = useAppSelector(selectModuleStatus);
   const mountMode = parseEnum(MountMode, status.mount_mode, MountMode.Compatible);
   const tmpfsStyle = parseEnum(TmpfsStyle, status.tmpfs_style, TmpfsStyle.Dev);
+  const providerKey = status.hide_provider || "none";
+  const providerLabelKey = HIDE_PROVIDER_LABELS[providerKey];
   const provider =
+    (providerLabelKey ? t(providerLabelKey) : undefined) ||
     status.hide_provider_label ||
-    HIDE_PROVIDER_LABELS[status.hide_provider || "none"] ||
-    "未检测到";
+    t("hide.status.notDetected");
   const hideApplied = isFlagOn(status.hide_applied);
   const hideSusfs = isFlagOn(status.hide_susfs);
   const hideKsud = isFlagOn(status.hide_ksud_umount);
@@ -44,54 +45,93 @@ export function HideStatusCard({
       ? false
       : isFlagOn(status.service_probe);
   const metaParts = [status.hide_summary, status.zn_hide_summary].filter(Boolean);
-  const meta = metaParts.length ? metaParts.join(" · ") : "基于当前设备探测";
+  const meta = metaParts.length ? metaParts.join(" · ") : t("hide.status.deviceProbe");
   const canRegister = hideSusfs || hideKsud || hideNohello;
   const tryUmountLabel = hideApplied
-    ? "已注册"
+    ? t("hide.status.registered")
     : canRegister
-      ? "未登记"
-      : "无 SuSFS/ksud/NoHello";
+      ? t("hide.status.notRegistered")
+      : t("hide.status.noProvider");
+  const mountModeLabel =
+    mountMode === MountMode.Magic
+      ? t("hide.status.mountModeMagic")
+      : t("hide.status.mountModeCompatible");
+  const tmpfsStyleLabel = t(
+    `hide.status.tmpfs${
+      tmpfsStyle === TmpfsStyle.Dev
+        ? "Dev"
+        : tmpfsStyle === TmpfsStyle.Mnt
+          ? "Mnt"
+          : tmpfsStyle === TmpfsStyle.Short
+            ? "Short"
+            : "Legacy"
+    }`,
+  );
 
   const rows = [
     { k: "Root", v: status.root || "—" },
-    { k: "挂载", v: MOUNT_MODES[mountMode].label },
+    { k: t("hide.status.mount"), v: mountModeLabel },
     { k: "STAGE", v: status.stage_root || TMPFS_STYLES[tmpfsStyle].paths[0] },
-    { k: "路径", v: TMPFS_STYLES[tmpfsStyle].label },
-    { k: "强注抓包", v: forceBind ? "开启（旧行为）" : "关闭（尊重卸载）" },
-    { k: "晚注入", v: lateInject ? "开启（service namespaces）" : "关闭（仅 boot）" },
-    { k: "开机Zygote", v: bootZygote ? "开启" : "关闭（仅 init）" },
-    { k: "boot目标", v: multiApex ? "完整（双模式）" : "精简（14+ 仅主 APEX）" },
-    { k: "晚注入复核", v: serviceProbe ? "开启（需晚注入）" : "关闭" },
-    { k: "助手", v: provider },
-    { k: "SuSFS", v: hideSusfs ? "TRY_UMOUNT 可用" : "未检测到" },
-    { k: "NoHello", v: hideNohello ? "已安装" : "未检测到" },
+    { k: t("hide.status.pathStyle"), v: tmpfsStyleLabel },
+    {
+      k: t("hide.status.forceBind"),
+      v: t(forceBind ? "hide.status.forceBindOn" : "hide.status.forceBindOff"),
+    },
+    {
+      k: t("hide.status.lateInject"),
+      v: t(lateInject ? "hide.status.lateInjectOn" : "hide.status.lateInjectOff"),
+    },
+    {
+      k: t("hide.status.bootZygote"),
+      v: t(bootZygote ? "hide.status.bootZygoteOn" : "hide.status.bootZygoteOff"),
+    },
+    {
+      k: t("hide.status.bootTargets"),
+      v: t(multiApex ? "hide.status.bootTargetsOn" : "hide.status.bootTargetsOff"),
+    },
+    {
+      k: t("hide.status.serviceProbe"),
+      v: t(serviceProbe ? "hide.status.serviceProbeOn" : "hide.status.serviceProbeOff"),
+    },
+    { k: t("hide.status.provider"), v: provider },
+    {
+      k: "SuSFS",
+      v: hideSusfs ? t("hide.status.susfsReady") : t("hide.status.notDetected"),
+    },
+    {
+      k: "NoHello",
+      v: hideNohello ? t("hide.status.noHelloReady") : t("hide.status.notDetected"),
+    },
     {
       k: "kernel_umount",
       v: hideKuFeat
-        ? "已开启"
+        ? t("hide.status.kernelUmountOn")
         : hideKsud || status.root?.includes("Kernel")
-          ? "未开启/未知"
+          ? t("hide.status.kernelUmountUnknown")
           : "—",
     },
     { k: "try_umount", v: tryUmountLabel },
   ];
   if (status.hide_try_umount_paths) {
-    rows.push({ k: "登记路径", v: status.hide_try_umount_paths });
+    rows.push({ k: t("hide.status.registeredPaths"), v: status.hide_try_umount_paths });
   }
   if (znSupported) {
-    rows.push({ k: "Zygisk过滤", v: znAllow ? "已开启" : "已关闭" });
     rows.push({
-      k: "Zygisk底座",
+      k: t("hide.status.zygiskFilter"),
+      v: t(znAllow ? "hide.status.enabled" : "hide.status.disabled"),
+    });
+    rows.push({
+      k: t("hide.status.zygiskBase"),
       v: status.zygisk_loader_label || status.zygisk_loader || "—",
     });
     if (isFlagOn(status.zn_hide_zn_module)) {
-      rows.push({ k: "ZN辅路径", v: "已声明" });
+      rows.push({ k: t("hide.status.znPath"), v: t("hide.status.declared") });
     }
   }
 
   if (variant === "table") {
     return (
-      <Card title={title} meta={meta}>
+      <Card title={title ?? t("hide.status.title")} meta={meta}>
         <table className="bf-table">
           <tbody>
             {rows.map((row) => (
@@ -107,57 +147,61 @@ export function HideStatusCard({
   }
 
   return (
-    <Card title={title} meta={meta}>
+    <Card title={title ?? t("hide.status.title")} meta={meta}>
       <ListGroup>
-        <Row title="Root 方案" extra={status.root || "—"} />
-        <Row title="证书挂载模式" extra={MOUNT_MODES[mountMode].label} />
+        <Row title={t("hide.status.root")} extra={status.root || "—"} />
+        <Row title={t("hide.status.mount")} extra={mountModeLabel} />
         <Row
-          title="临时层路径"
+          title={t("hide.status.stagePath")}
           extra={status.stage_root || TMPFS_STYLES[tmpfsStyle].paths[0]}
         />
-        <Row title="路径风格" extra={TMPFS_STYLES[tmpfsStyle].label} />
+        <Row title={t("hide.status.pathStyle")} extra={tmpfsStyleLabel} />
         <Row
-          title="强注抓包 App"
+          title={t("hide.status.forceBind")}
           extra={
             <Tag tone={forceBind ? "warn" : "ok"}>
-              {forceBind ? "开启（旧行为）" : "关闭（尊重卸载）"}
+              {t(forceBind ? "hide.status.forceBindOn" : "hide.status.forceBindOff")}
             </Tag>
           }
         />
         <Row
-          title="开机后晚注入"
+          title={t("hide.status.lateInject")}
           extra={
             <Tag tone={lateInject ? "warn" : "ok"}>
-              {lateInject ? "开启（service namespaces）" : "关闭（仅 boot）"}
+              {t(lateInject ? "hide.status.lateInjectOn" : "hide.status.lateInjectOff")}
             </Tag>
           }
         />
         <Row
-          title="开机注入 Zygote"
+          title={t("hide.status.bootZygote")}
           extra={
             <Tag tone={bootZygote ? "ok" : "warn"}>
-              {bootZygote ? "开启" : "关闭（仅 init）"}
+              {t(bootZygote ? "hide.status.bootZygoteOn" : "hide.status.bootZygoteOff")}
             </Tag>
           }
         />
         <Row
-          title="完整 boot 目标"
+          title={t("hide.status.bootTargets")}
           extra={
             <Tag tone={multiApex ? "ok" : "warn"}>
-              {multiApex ? "开启（双模式）" : "精简（14+ 仅主 APEX）"}
+              {t(multiApex ? "hide.status.bootTargetsOn" : "hide.status.bootTargetsOff")}
             </Tag>
           }
         />
         <Row
-          title="晚注入状态复核"
+          title={t("hide.status.serviceProbe")}
           extra={
             <Tag tone={serviceProbe ? "ok" : "warn"}>
-              {serviceProbe ? "开启（需晚注入）" : "关闭"}
+              {t(
+                serviceProbe
+                  ? "hide.status.serviceProbeOn"
+                  : "hide.status.serviceProbeOff",
+              )}
             </Tag>
           }
         />
         <Row
-          title="检测到的隐藏助手"
+          title={t("hide.status.provider")}
           extra={
             <Tag
               tone={
@@ -171,27 +215,33 @@ export function HideStatusCard({
         <Row
           title="SuSFS TRY_UMOUNT"
           extra={
-            <Tag tone={hideSusfs ? "ok" : "warn"}>{hideSusfs ? "可用" : "未检测到"}</Tag>
+            <Tag tone={hideSusfs ? "ok" : "warn"}>
+              {hideSusfs ? t("hide.status.susfsReady") : t("hide.status.notDetected")}
+            </Tag>
           }
         />
         <Row
           title="NoHello"
           extra={
             <Tag tone={hideNohello ? "ok" : "warn"}>
-              {hideNohello ? "已安装（可登记 point）" : "未检测到"}
+              {hideNohello
+                ? t("hide.status.noHelloPointReady")
+                : t("hide.status.notDetected")}
             </Tag>
           }
         />
         <Row
-          title="KSU kernel_umount 特性"
+          title="KSU kernel_umount"
           extra={
             <Tag tone={hideKuFeat ? "ok" : "warn"}>
-              {hideKuFeat ? "已开启" : "未开启（登记了也可能不卸）"}
+              {hideKuFeat
+                ? t("hide.status.kernelUmountOn")
+                : t("hide.status.kernelUmountWarning")}
             </Tag>
           }
         />
         <Row
-          title="本模块 try_umount"
+          title={t("hide.status.tryUmount")}
           extra={
             <Tag tone={hideApplied ? "ok" : canRegister ? "warn" : "default"}>
               {tryUmountLabel}
@@ -199,28 +249,35 @@ export function HideStatusCard({
           }
         />
         {status.hide_try_umount_paths ? (
-          <Row title="try_umount.txt 路径" extra={status.hide_try_umount_paths} />
+          <Row title="try_umount.txt" extra={status.hide_try_umount_paths} />
         ) : null}
         {znSupported ? (
           <Row
-            title="Zygisk 挂载过滤"
+            title={t("hide.status.zygiskFilter")}
             extra={
-              <Tag tone={znAllow ? "ok" : "default"}>{znAllow ? "已开启" : "已关闭"}</Tag>
+              <Tag tone={znAllow ? "ok" : "default"}>
+                {t(znAllow ? "hide.status.enabled" : "hide.status.disabled")}
+              </Tag>
             }
           />
         ) : null}
         {znSupported ? (
           <Row
-            title="Zygisk 底座"
+            title={t("hide.status.zygiskBase")}
             extra={
               <Tag tone={isFlagOn(status.zygisk_loader_ok) ? "ok" : "warn"}>
-                {status.zygisk_loader_label || status.zygisk_loader || "未检测"}
+                {status.zygisk_loader_label ||
+                  status.zygisk_loader ||
+                  t("hide.status.notDetected")}
               </Tag>
             }
           />
         ) : null}
         {znSupported && isFlagOn(status.zn_hide_zn_module) ? (
-          <Row title="ZN Module 辅路径" extra={<Tag tone="ok">已声明</Tag>} />
+          <Row
+            title={t("hide.status.znPath")}
+            extra={<Tag tone="ok">{t("hide.status.declared")}</Tag>}
+          />
         ) : null}
       </ListGroup>
     </Card>

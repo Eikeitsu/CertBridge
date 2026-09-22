@@ -1,11 +1,5 @@
+import { useTranslation } from "react-i18next";
 import type { ModuleUpdatePhase } from "@/shared/api/moduleUpdate";
-
-const PHASE_LABEL: Record<ModuleUpdatePhase, string> = {
-  download: "正在下载",
-  write: "正在写入",
-  install: "正在安装",
-  manager: "打开管理器",
-};
 
 type UpdateInstallProgressProps = {
   active: boolean;
@@ -24,8 +18,9 @@ export function UpdateInstallProgress({
   phase,
   percent,
 }: UpdateInstallProgressProps) {
+  const { t } = useTranslation("webui");
   if (!active || !phase) return null;
-  const label = PHASE_LABEL[phase];
+  const label = t(`more.update.${phase}`);
   const pct = Math.max(0, Math.min(100, Math.round(percent)));
 
   return (

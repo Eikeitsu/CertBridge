@@ -4,6 +4,8 @@ import zhWebui from "@locales/zh-CN/webui.json";
 import enWebui from "@locales/en/webui.json";
 import zhCommon from "@locales/zh-CN/common.json";
 import enCommon from "@locales/en/common.json";
+import zhErrors from "@locales/zh-CN/errors.json";
+import enErrors from "@locales/en/errors.json";
 
 export type UiLangPref = "system" | "zh-CN" | "en";
 
@@ -25,13 +27,13 @@ export function resolveUiLang(
 
 void i18n.use(initReactI18next).init({
   resources: {
-    "zh-CN": { webui: zhWebui, common: zhCommon },
-    en: { webui: enWebui, common: enCommon },
+    "zh-CN": { webui: zhWebui, common: zhCommon, errors: zhErrors },
+    en: { webui: enWebui, common: enCommon, errors: enErrors },
   },
   lng: resolveUiLang("system"),
   fallbackLng: "en",
   defaultNS: "webui",
-  ns: ["webui", "common"],
+  ns: ["webui", "common", "errors"],
   interpolation: { escapeValue: false },
   returnNull: false,
 });

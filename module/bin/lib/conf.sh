@@ -260,8 +260,8 @@ apply_tmpfs_style() {
 }
 
 is_quiet_prop() {
-  case "$(read_conf quiet_prop 1 | tr 'A-Z' 'a-z')" in
-    0|false|no|off) return 1 ;;
-    *) return 0 ;;
+  case "$(read_conf quiet_prop 0 | tr 'A-Z' 'a-z')" in
+    1|true|yes|on) return 0 ;;
+    *) return 1 ;;
   esac
 }

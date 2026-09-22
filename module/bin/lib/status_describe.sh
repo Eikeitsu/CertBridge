@@ -98,7 +98,9 @@ compose_module_description() {
     case "$n" in
       ""|*[!0-9]*) n=$(count_applied_certs) ;;
     esac
-    format_module_description "$(i18n_msg status.tag_ok)" "${n}" "$names"
+    format_module_description "$(i18n_msg status.tag_ok)" \
+      "$(i18n_fmt status.body_mounted n="$n")" \
+      "$(i18n_fmt status.body_active names="$names")"
     return 0
   fi
 
@@ -112,11 +114,14 @@ compose_webui_running_description() {
   while IFS='|' read -r label name checksum display; do
     [ -n "$label" ] || continue
     webui_total=$((webui_total + 1))
-    [ -n "$display" ] || display=$(applied_cert_fallback_display "$label" "$name")
+    case "$label" in
+      reqable|proxypin) display=$(applied_cert_fallback_display "$label" "$name") ;;
+      *) [ -n "$display" ] || display=$(applied_cert_fallback_display "$label" "$name") ;;
+    esac
     webui_names="${webui_names}${webui_names:+、}${display}"
   done <"$APPLIED_MAP"
   [ "$webui_total" -gt 0 ] || return 1
-  echo "[$(i18n_msg status.tag_ok) | ${webui_total}] ${webui_total} | ${webui_names}"
+  echo "[$(i18n_msg status.tag_ok)|$(i18n_fmt status.body_mounted n="$webui_total")] $(i18n_fmt status.body_active names="$webui_names")"
 }
 
 compose_webui_description() {

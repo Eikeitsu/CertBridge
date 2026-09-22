@@ -12,6 +12,7 @@ import { STORAGE_KEYS } from "@/shared/config/paths";
 import { writeStorage } from "@/shared/lib/storage";
 import { resolveUiLang, type UiLangPref } from "@/shared/i18n";
 import { useApplyUiLang } from "@/features/theme/hooks/usePackVoice";
+import { Card, Segment } from "@/shared/ui/primitives";
 
 const OPTIONS: { id: UiLangPref; labelKey: string }[] = [
   { id: "system", labelKey: "follow_system" },
@@ -19,7 +20,13 @@ const OPTIONS: { id: UiLangPref; labelKey: string }[] = [
   { id: "en", labelKey: "lang_en" },
 ];
 
-export function LanguagePanel({ dense }: { dense?: boolean }) {
+export function LanguagePanel({
+  dense,
+  surface = "card",
+}: {
+  dense?: boolean;
+  surface?: "card" | "plain";
+}) {
   const { t } = useTranslation(["webui", "common"]);
   const dispatch = useAppDispatch();
   const status = useAppSelector(selectModuleStatus);
@@ -59,24 +66,22 @@ export function LanguagePanel({ dense }: { dense?: boolean }) {
   );
 
   return (
-    <div className={dense ? "bf-panel is-dense" : "bf-panel"}>
-      <div className="bf-panel__head">
-        <strong>{t("webui:language")}</strong>
-        <span>{t("webui:languageMeta")}</span>
-      </div>
-      <div className="bf-seg" role="group" aria-label={t("webui:language")}>
-        {OPTIONS.map((opt) => (
-          <button
-            key={opt.id}
-            type="button"
-            className={`bf-seg__item${pref === opt.id ? " is-on" : ""}`}
-            disabled={pending}
-            onClick={() => void onPick(opt.id)}
-          >
-            {t(`common:${opt.labelKey}`)}
-          </button>
-        ))}
-      </div>
-    </div>
+    <Card
+      title={t("webui:language")}
+      meta={t("webui:languageMeta")}
+      surface={surface}
+      className={dense ? "bf-card--dense bf-appearance__lang" : "bf-appearance__lang"}
+    >
+      <Segment
+        layout="chips"
+        value={pref}
+        disabled={pending}
+        onChange={(v) => void onPick(v as UiLangPref)}
+        options={OPTIONS.map((opt) => ({
+          value: opt.id,
+          label: t(`common:${opt.labelKey}`),
+        }))}
+      />
+    </Card>
   );
 }

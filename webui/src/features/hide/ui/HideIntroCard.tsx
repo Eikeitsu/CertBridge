@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { LINKS } from "@/shared/config/brand";
 import { openUrl } from "@/shared/api/ksu";
 import { Button, Card } from "@/shared/ui/primitives";
@@ -9,16 +10,12 @@ type HideIntroCardProps = {
   compact?: boolean;
 };
 
-export function HideIntroCard({
-  title = "挂载隐藏",
-  body = "证书桥通过 bind mount 写入系统信任库。抓包软件与被抓包对象必须能看见该挂载，请先阅读上方「抓包注意」。",
-  docsCta = "查看完整文档",
-  compact,
-}: HideIntroCardProps) {
+export function HideIntroCard({ title, body, docsCta, compact }: HideIntroCardProps) {
+  const { t } = useTranslation("webui");
   if (compact) return null;
 
   return (
-    <Card title={title}>
+    <Card title={title ?? t("hide.introTitle")}>
       <p
         style={{
           margin: 0,
@@ -27,11 +24,11 @@ export function HideIntroCard({
           lineHeight: 1.55,
         }}
       >
-        {body}
+        {body ?? t("hide.introBody")}
       </p>
       <div className="bf-btn-row" style={{ marginTop: 12 }}>
         <Button variant="ghost" onClick={() => void openUrl(`${LINKS.docs}guide/hide`)}>
-          {docsCta}
+          {docsCta ?? t("hide.docsCta")}
         </Button>
       </div>
     </Card>

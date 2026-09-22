@@ -1,9 +1,6 @@
-import type { MountMode } from "@/entities/module/enums";
-import {
-  MOUNT_HELP_FOOTNOTE,
-  MOUNT_MODE_OPTIONS,
-  MOUNT_ROOT_NOTES,
-} from "@/shared/config/mount";
+import { useTranslation } from "react-i18next";
+import { MountMode } from "@/entities/module/enums";
+import { MOUNT_MODE_OPTIONS, MOUNT_ROOT_NOTES } from "@/shared/config/mount";
 import { Card, Segment } from "@/shared/ui/primitives";
 
 type MountModePanelProps = {
@@ -21,10 +18,11 @@ export function MountModePanel({
   dense,
   surface = "card",
 }: MountModePanelProps) {
+  const { t } = useTranslation("webui");
   return (
     <Card
-      title="证书挂载模式"
-      meta={MOUNT_HELP_FOOTNOTE}
+      title={t("more.mountMode")}
+      meta={t("more.mountConfig.modeFootnote")}
       surface={surface}
       className={dense ? "bf-card--dense" : undefined}
     >
@@ -33,15 +31,15 @@ export function MountModePanel({
         disabled={pending}
         options={MOUNT_MODE_OPTIONS.map((option) => ({
           value: option.value,
-          label: option.label,
-          hint: option.meta,
+          label: t(option.labelKey),
+          hint: t(option.metaKey),
         }))}
         onChange={(value) => onChange(value as MountMode)}
       />
       <ul className="bf-bullet-list">
-        {MOUNT_ROOT_NOTES.map((note) => (
-          <li key={note.name}>
-            <strong>{note.name}</strong>：{note.note}
+        {MOUNT_ROOT_NOTES.map((root) => (
+          <li key={root.name}>
+            <strong>{root.name}</strong>: {t(root.noteKey)}
           </li>
         ))}
       </ul>

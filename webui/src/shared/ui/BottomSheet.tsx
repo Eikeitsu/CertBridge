@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
+import { useTranslation } from "react-i18next";
 import { Loader } from "./Loader";
 
 export type BottomSheetProps = {
@@ -22,14 +23,17 @@ export function BottomSheet({
   open,
   onClose,
   loading = false,
-  loadingLabel = "加载中…",
+  loadingLabel,
   height = "min(92dvh, 860px)",
-  title = "详情",
+  title,
   variant = "sheet",
   danger = false,
   footer,
   children,
 }: BottomSheetProps) {
+  const { t } = useTranslation("webui");
+  const resolvedTitle = title ?? t("ui.detail");
+  const resolvedLoading = loadingLabel ?? t("ui.loading");
   const autoHeight = height === "auto" || variant === "confirm";
   const sheetStyle = {
     ["--bf-sheet-h" as string]: autoHeight ? "auto" : height,
@@ -57,10 +61,16 @@ export function BottomSheet({
             <div className="bf-sheet__chrome">
               <div className="bf-sheet__handle" aria-hidden />
               <div className="bf-sheet__bar">
-                <Dialog.Title className="bf-sheet__bar-title">{title}</Dialog.Title>
+                <Dialog.Title className="bf-sheet__bar-title">
+                  {resolvedTitle}
+                </Dialog.Title>
                 {variant === "sheet" ? (
                   <Dialog.Close asChild>
-                    <button type="button" className="bf-sheet__close" aria-label="关闭" />
+                    <button
+                      type="button"
+                      className="bf-sheet__close"
+                      aria-label={t("ui.close")}
+                    />
                   </Dialog.Close>
                 ) : (
                   <span className="bf-sheet__bar-spacer" aria-hidden />
@@ -76,7 +86,7 @@ export function BottomSheet({
               </div>
               {loading ? (
                 <div className="bf-sheet__loading" role="status">
-                  <Loader label={loadingLabel} />
+                  <Loader label={resolvedLoading} />
                 </div>
               ) : null}
             </div>

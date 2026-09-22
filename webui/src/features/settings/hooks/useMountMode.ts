@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { selectModuleStatus } from "@/features/status/model/selectors";
 import {
@@ -17,6 +18,7 @@ import { useAsyncLock } from "@/shared/hooks/useAsyncLock";
 import { MountMode } from "@/entities/module/enums";
 
 export function useMountMode() {
+  const { t } = useTranslation("webui");
   const dispatch = useAppDispatch();
   const status = useAppSelector(selectModuleStatus);
   const { isPending, runExclusive } = useAsyncLock();
@@ -43,14 +45,10 @@ export function useMountMode() {
         }
         const kv = parseKv(result.stdout || "");
         dispatch(mergeStatus(kv));
-        toastByRebootFlag(
-          kv,
-          "兼容策略已更新，重启后生效",
-          "兼容策略已恢复为当前生效配置",
-        );
+        toastByRebootFlag(kv, t("more.mountSaved"), t("more.mountRestored"));
       });
     },
-    [dispatch, isPending, mountMode, runExclusive],
+    [dispatch, isPending, mountMode, runExclusive, t],
   );
 
   return { mountMode, isPending, handleChange };

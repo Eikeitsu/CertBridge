@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useAppSelector } from "@/app/store/hooks";
 import {
   selectCustomCertificates,
@@ -34,6 +35,7 @@ export type BuiltinPipelineRow = {
 };
 
 export function useTrustOverview() {
+  const { t } = useTranslation("webui");
   const status = useAppSelector(selectModuleStatus);
   const customCertificates = useAppSelector(selectCustomCertificates);
   const deviceLabel = useAppSelector(selectDeviceLabel);
@@ -155,10 +157,10 @@ export function useTrustOverview() {
     deviceName: deviceName || deviceLabel || "本机",
     rootLabel: status.root || EMPTY_PLACEHOLDER,
     apexLabel: resolveApexLabel(status.apex_ok),
-    mountModeLabel: MOUNT_MODES[mountMode].shortLabel,
-    mountModeMeta: MOUNT_MODES[mountMode].meta,
-    tmpfsLabel: TMPFS_STYLES[tmpfsStyle].label,
-    tmpfsMeta: TMPFS_STYLES[tmpfsStyle].meta,
+    mountModeLabel: t(MOUNT_MODES[mountMode].shortLabelKey),
+    mountModeMeta: t(MOUNT_MODES[mountMode].metaKey),
+    tmpfsLabel: t(TMPFS_STYLES[tmpfsStyle].labelKey),
+    tmpfsMeta: t(TMPFS_STYLES[tmpfsStyle].metaKey),
     androidLabel: status.release
       ? `Android ${status.release}${status.api ? ` · API ${status.api}` : ""}`
       : EMPTY_PLACEHOLDER,

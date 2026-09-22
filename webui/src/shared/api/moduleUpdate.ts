@@ -2,6 +2,7 @@
 import { exec } from "./ksu";
 import { PATHS } from "@/shared/config/paths";
 import { toChannelAssetUrl } from "@/shared/lib/updateChannel";
+import i18n from "@/shared/i18n";
 
 export interface LocalModuleInfo {
   version: string;
@@ -249,14 +250,20 @@ export async function downloadAndInstallModule(
   const url = toChannelAssetUrl(String(zipUrl || "").trim());
   const zipPath = "/data/local/tmp/CertBridge_update.zip";
   if (!url) {
-    return { ok: false, error: "缺少下载地址", detail: "", zipPath, mode: "" };
+    return {
+      ok: false,
+      error: i18n.t("update.errors.missingUrl", { ns: "webui" }),
+      detail: "",
+      zipPath,
+      mode: "",
+    };
   }
 
   const dl = await downloadZip(url, zipPath, onProgress);
   if (!dl.ok) {
     return {
       ok: false,
-      error: "下载失败",
+      error: i18n.t("update.errors.downloadFailed", { ns: "webui" }),
       detail: dl.detail,
       zipPath,
       mode: "",
@@ -288,7 +295,7 @@ export async function downloadAndInstallModule(
 
   return {
     ok: false,
-    error: "安装失败：CLI 与打开管理器均未成功",
+    error: i18n.t("update.errors.installFailed", { ns: "webui" }),
     detail: `${cli.detail}\n---\n${mgr.detail}`,
     zipPath,
     mode: "",

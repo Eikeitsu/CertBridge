@@ -54,6 +54,16 @@ const enNav = [
   { text: "Features", link: "/en/guide/features" },
   { text: "Install", link: "/en/guide/install" },
   { text: "FAQ", link: "/en/guide/faq" },
+  {
+    text: "More",
+    items: [
+      { text: "Config", link: "/en/guide/config" },
+      { text: "Hide", link: "/en/guide/hide" },
+      { text: "WebUI", link: "/en/guide/webui" },
+      { text: "CLI", link: "/en/guide/cli" },
+      { text: "Related", link: "/en/guide/related" },
+    ],
+  },
   { text: "Changelog", link: "/en/guide/changelog" },
 ];
 
@@ -65,10 +75,22 @@ const enSidebar = [
       { text: "Install", link: "/en/guide/install" },
       { text: "Config", link: "/en/guide/config" },
       { text: "FAQ", link: "/en/guide/faq" },
+    ],
+  },
+  {
+    text: "Hide & UI",
+    items: [
       { text: "Hide", link: "/en/guide/hide" },
       { text: "WebUI", link: "/en/guide/webui" },
       { text: "CLI", link: "/en/guide/cli" },
+    ],
+  },
+  {
+    text: "Other",
+    items: [
+      { text: "Related", link: "/en/guide/related" },
       { text: "Changelog", link: "/en/guide/changelog" },
+      { text: "Credits", link: "/en/guide/credits" },
     ],
   },
 ];

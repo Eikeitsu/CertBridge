@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Notice, Card } from "@/shared/ui/primitives";
 
 type HideCaptureWarningProps = {
@@ -6,47 +7,39 @@ type HideCaptureWarningProps = {
   banner?: boolean;
 };
 
-export function HideCaptureWarning({
-  title = "抓包注意",
-  meta = "比开关更重要",
-  banner,
-}: HideCaptureWarningProps) {
+export function HideCaptureWarning({ title, meta, banner }: HideCaptureWarningProps) {
+  const { t } = useTranslation("webui");
+  const resolvedTitle = title ?? t("hide.captureTitle");
+  const resolvedMeta = meta ?? t("hide.captureMeta");
   if (banner) {
     return (
       <Notice tone="alert">
-        <strong>{title}</strong>：对 Reqable / ProxyPin 或被抓包目标开「卸载模块 /
-        Umount」会卸掉 cacerts 挂载，抓包软件常报「根证书未安装」。
+        <strong>{resolvedTitle}</strong>: {t("hide.captureWarning.banner")}
       </Notice>
     );
   }
 
   return (
-    <Card title={title} meta={meta}>
-      <Notice tone="alert">
-        对 Reqable / ProxyPin，或被抓包的目标 App 开启「卸载模块 /
-        Umount」、DenyList+umount、APatch 「排除修改」等，会卸掉 cacerts 上的证书挂载。
-      </Notice>
+    <Card title={resolvedTitle} meta={resolvedMeta}>
+      <Notice tone="alert">{t("hide.captureWarning.notice")}</Notice>
       <ul
         className="bf-bullet-list"
         style={{ color: "var(--bf-ink-2)", fontSize: "0.82rem" }}
       >
         <li>
-          <strong style={{ color: "var(--bf-ink)" }}>抓包软件</strong>
-          ：开了卸载模块 → 软件内常显示「根证书未安装」
+          <strong style={{ color: "var(--bf-ink)" }}>
+            {t("hide.captureWarning.toolLabel")}
+          </strong>
+          : {t("hide.captureWarning.toolText")}
         </li>
         <li>
-          <strong style={{ color: "var(--bf-ink)" }}>被抓包 App</strong>
-          ：开了卸载模块 → TLS 看不到抓包 CA → 断网 / 证书错误
+          <strong style={{ color: "var(--bf-ink)" }}>
+            {t("hide.captureWarning.targetLabel")}
+          </strong>
+          : {t("hide.captureWarning.targetText")}
         </li>
-        <li>
-          仅对
-          <strong style={{ color: "var(--bf-ink)" }}>需要躲检测、且不参与本次抓包</strong>
-          的应用开启隐藏；抓包链路相关包名一律关掉 umount
-        </li>
-        <li>
-          若必须对抓包 App 开着卸载模块又要看到证书：可开「强注抓包
-          App」（旧行为），会盖掉已卸挂载，削弱隐藏
-        </li>
+        <li>{t("hide.captureWarning.scope")}</li>
+        <li>{t("hide.captureWarning.force")}</li>
       </ul>
     </Card>
   );

@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { clearActivityLog, fetchActivityLog } from "@/features/log/model/logSlice";
 import { selectActivityLog } from "@/features/log/model/selectors";
@@ -13,15 +14,8 @@ import { Loader } from "@/shared/ui/Loader";
 import { Switch } from "@/shared/ui/primitives";
 import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
 
-const LEVELS: { id: string; label: string }[] = [
-  { id: "", label: "全部" },
-  { id: LogLevel.Info, label: "信息" },
-  { id: LogLevel.Warn, label: "警告" },
-  { id: LogLevel.Error, label: "错误" },
-  { id: LogLevel.Debug, label: "调试" },
-];
-
 export function DefaultLogPage() {
+  const { t } = useTranslation("webui");
   const chrome = usePackChrome();
   const dispatch = useAppDispatch();
   const { text, loading, bytes, lines } = useAppSelector(selectActivityLog);
@@ -34,19 +28,30 @@ export function DefaultLogPage() {
     [entries, levelFilter],
   );
 
+  const levels = useMemo(
+    () => [
+      { id: "", label: t("log.levelAll") },
+      { id: LogLevel.Info, label: t("log.levelInfo") },
+      { id: LogLevel.Warn, label: t("log.levelWarn") },
+      { id: LogLevel.Error, label: t("log.levelError") },
+      { id: LogLevel.Debug, label: t("log.levelDebug") },
+    ],
+    [t],
+  );
+
   return (
     <div className="pk-def-page">
       <header className="pk-def-pagehead">
         <h1>{v.title}</h1>
         <p>
-          {lines ? `最近 ${lines} 行` : v.empty}
+          {lines ? t("log.linesRecent", { count: lines }) : v.empty}
           {bytes > 0 ? ` · ${formatByteSize(bytes)}` : ""}
         </p>
       </header>
 
       <div className="pk-def-toolbar">
         <div className="pk-def-seg">
-          {LEVELS.map((lv) => (
+          {levels.map((lv) => (
             <button
               key={lv.id || "all"}
               type="button"
@@ -62,8 +67,8 @@ export function DefaultLogPage() {
       <div className="pk-def-group pk-def-log-wrap">
         <div className="pk-def-row">
           <div className="pk-def-row__main">
-            <strong>自动换行</strong>
-            <span>关闭后长行横向滚动，便于对齐排查</span>
+            <strong>{t("log.wrapTitle")}</strong>
+            <span>{t("log.wrapMeta")}</span>
           </div>
           <Switch checked={wrap} onChange={setWrap} />
         </div>
@@ -85,8 +90,8 @@ export function DefaultLogPage() {
           className="pk-def-btn is-ghost"
           onClick={() =>
             confirmAction({
-              title: "确认清空日志？",
-              content: "仅清除本机日志文件，不影响证书配置。",
+              title: t("log.clearConfirmTitle"),
+              content: t("log.clearConfirmBody"),
               okText: v.clear,
               danger: true,
               onOk: () => dispatch(clearActivityLog()),
@@ -98,7 +103,7 @@ export function DefaultLogPage() {
       </div>
 
       {loading ? (
-        <Loader label="读取日志…" />
+        <Loader label={t("log.loading")} />
       ) : filtered.length ? (
         <div className={`pk-def-log${wrap ? "" : " is-nowrap"}`}>
           {filtered.map((line, i) => (
@@ -108,7 +113,7 @@ export function DefaultLogPage() {
           ))}
         </div>
       ) : (
-        <p className="pk-def-empty">{levelFilter ? "没有该等级的日志" : v.empty}</p>
+        <p className="pk-def-empty">{levelFilter ? t("log.emptyFiltered") : v.empty}</p>
       )}
     </div>
   );

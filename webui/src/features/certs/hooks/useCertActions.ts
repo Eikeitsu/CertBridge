@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useAppDispatch } from "@/app/store/hooks";
 import {
   mergeStatus,
@@ -28,15 +29,29 @@ import { isSafeSdPath } from "@/shared/lib/sdPath";
 import { FLAG_OFF, FLAG_ON } from "@/shared/config/constants";
 import { useAsyncLock } from "@/shared/hooks/useAsyncLock";
 import { HotMountMode, type BuiltinCertKind } from "@/entities/module/enums";
-import { HOT_MOUNT_CONFIRM_LABEL } from "@/shared/config/certs";
 
 const SILENT_REFRESH = { syncApps: false } as const;
 
 export function useCertActions() {
+  const { t } = useTranslation("webui");
   const dispatch = useAppDispatch();
   const { voice } = usePackVoice();
   const c = voice.certs;
   const { isPending, runExclusive } = useAsyncLock();
+
+  const hotTargetLabel = useCallback(
+    (mode: HotMountMode) => {
+      switch (mode) {
+        case HotMountMode.User:
+          return t("certs.hotTargetUser");
+        case HotMountMode.Sd:
+          return t("certs.hotTargetSd");
+        default:
+          return t("certs.hotTargetAll");
+      }
+    },
+    [t],
+  );
 
   const handleToggleBuiltin = useCallback(
     (kind: BuiltinCertKind, checked: boolean) => {
@@ -57,12 +72,12 @@ export function useCertActions() {
         dispatch(mergeStatus(kv));
         toastByRebootFlag(
           kv,
-          checked ? "已开启，重启后生效" : "已关闭，重启后移除",
-          checked ? "已开启（与当前生效一致）" : "已关闭（与当前生效一致）",
+          checked ? t("toast.toggleOn") : t("toast.toggleOff"),
+          checked ? t("toast.toggleOnMatch") : t("toast.toggleOffMatch"),
         );
       });
     },
-    [dispatch, runExclusive],
+    [dispatch, runExclusive, t],
   );
 
   const handleImportFile = useCallback(
@@ -77,7 +92,7 @@ export function useCertActions() {
           }
           const kv = parseKv(result.stdout || "");
           dispatch(mergeStatus(kv));
-          toastByRebootFlag(kv, "已导入，重启后生效", "已导入（无需重启）");
+          toastByRebootFlag(kv, t("certs.importedReboot"), t("certs.importedOk"));
           void dispatch(refreshStatus(SILENT_REFRESH));
         } catch {
           toast(c.importReadFail, "bad");
@@ -85,7 +100,7 @@ export function useCertActions() {
       });
       return false;
     },
-    [c.importReadFail, dispatch, runExclusive],
+    [c.importReadFail, dispatch, runExclusive, t],
   );
 
   const handleImportPreset = useCallback(
@@ -101,12 +116,12 @@ export function useCertActions() {
         if (kv.unchanged === FLAG_ON) {
           toast(c.presetUnchanged, "ok");
         } else {
-          toastByRebootFlag(kv, "已导入，重启后生效", "已导入（无需重启）");
+          toastByRebootFlag(kv, t("certs.importedReboot"), t("certs.importedOk"));
         }
         void dispatch(refreshStatus(SILENT_REFRESH));
       });
     },
-    [c.presetUnchanged, dispatch, runExclusive],
+    [c.presetUnchanged, dispatch, runExclusive, t],
   );
 
   const handleExportFingerprints = useCallback(() => {
@@ -138,12 +153,12 @@ export function useCertActions() {
           }
           const kv = parseKv(result.stdout || "");
           dispatch(mergeStatus(kv));
-          toastByRebootFlag(kv, "已移除，重启后生效", "已移除（与当前生效一致）");
+          toastByRebootFlag(kv, t("certs.removedReboot"), t("certs.removedMatch"));
           void dispatch(refreshStatus(SILENT_REFRESH));
         },
       });
     },
-    [c.removeConfirmBody, c.removeConfirmOk, c.removeConfirmTitle, dispatch],
+    [c.removeConfirmBody, c.removeConfirmOk, c.removeConfirmTitle, dispatch, t],
   );
 
   const handleSetHotAllow = useCallback(
@@ -186,7 +201,7 @@ export function useCertActions() {
       }
 
       confirmAction({
-        title: `立即挂载${HOT_MOUNT_CONFIRM_LABEL[mode]}中的有效 CA？`,
+        title: t("certs.hotMountConfirmTitle", { target: hotTargetLabel(mode) }),
         content: c.hotMountConfirmBody,
         okText: c.hotMountConfirmOk,
         onOk: () =>
@@ -207,15 +222,18 @@ export function useCertActions() {
             const failedCount = Number(fields.hot_failed || 0);
             toast(
               failedCount > 0
-                ? `已挂载 ${addedCount} 张，${failedCount} 个会话未覆盖`
-                : `已免重启挂载 ${addedCount} 张证书`,
+                ? t("certs.hotMountedPartial", {
+                    added: addedCount,
+                    failed: failedCount,
+                  })
+                : t("certs.hotMounted", { count: addedCount }),
               failedCount > 0 ? "warn" : "ok",
             );
             void dispatch(refreshStatus(SILENT_REFRESH));
           }),
       });
     },
-    [c, dispatch, runExclusive],
+    [c, dispatch, hotTargetLabel, runExclusive, t],
   );
 
   const handleHotUnmount = useCallback(() => {
@@ -232,7 +250,9 @@ export function useCertActions() {
           if (isCliFailure(result) || fields.ok !== FLAG_ON) {
             toast(
               fields.hot_remaining
-                ? `卸载未完成，仍有 ${fields.hot_remaining} 个会话，请重试或重启`
+                ? t("certs.hotUnmountPartial", {
+                    remaining: fields.hot_remaining,
+                  })
                 : errorFromResult(result.stdout, result.stderr),
               "bad",
             );
@@ -244,7 +264,7 @@ export function useCertActions() {
           void dispatch(refreshStatus(SILENT_REFRESH));
         }),
     });
-  }, [c, dispatch, runExclusive]);
+  }, [c, dispatch, runExclusive, t]);
 
   return {
     isPending,

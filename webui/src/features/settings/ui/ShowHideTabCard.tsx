@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Card, Row, Switch } from "@/shared/ui/primitives";
 import { useShowHideTab } from "../hooks/useShowHideTab";
 
@@ -10,19 +11,24 @@ type ShowHideTabCardProps = {
 };
 
 export function ShowHideTabCard({
-  title = "导航",
-  meta = "自定义底栏显示的页面",
-  rowTitle = "显示「隐藏」页",
-  rowDesc = "关闭后底栏不再出现隐藏 Tab，功能仍可在安装组件后使用",
+  title,
+  meta,
+  rowTitle,
+  rowDesc,
   surface = "card",
 }: ShowHideTabCardProps) {
+  const { t } = useTranslation("webui");
   const { showHideTab, setShowHideTab } = useShowHideTab();
 
   return (
-    <Card title={title} meta={meta} surface={surface}>
+    <Card
+      title={title ?? t("more.navTitle")}
+      meta={meta ?? t("more.navMeta")}
+      surface={surface}
+    >
       <Row
-        title={rowTitle}
-        desc={rowDesc}
+        title={rowTitle ?? t("more.showHideTitle")}
+        desc={rowDesc ?? t("more.showHideDesc")}
         extra={<Switch checked={showHideTab} onChange={setShowHideTab} />}
       />
     </Card>

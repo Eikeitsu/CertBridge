@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import {
   setAccentId,
@@ -7,6 +8,7 @@ import {
 } from "@/features/theme/model/themeSlice";
 import { selectThemeState } from "@/features/theme/model/selectors";
 import { THEME_PACKS } from "@/shared/config/theme";
+import { LanguagePanel } from "../LanguagePanel";
 import { ThemeModePickerRow } from "./ThemeModePickerRow";
 import { AccentPickerRow } from "./AccentPickerRow";
 import { FontScaleRow } from "./FontScaleRow";
@@ -18,44 +20,51 @@ type AppearancePanelProps = {
   surface?: "card" | "plain";
 };
 
-export function AppearancePanel({
-  title = "外观",
-  meta = "主题包、浅深色与强调色",
-  surface = "card",
-}: AppearancePanelProps) {
+export function AppearancePanel({ title, meta, surface = "card" }: AppearancePanelProps) {
+  const { t } = useTranslation("webui");
   const dispatch = useAppDispatch();
   const theme = useAppSelector(selectThemeState);
+  const resolvedTitle = title ?? t("more.appearanceTitle");
+  const resolvedMeta = meta ?? t("more.appearanceMeta");
 
   return (
-    <Card title={title} meta={meta} surface={surface} className="bf-appearance">
-      <div className="bf-pack-grid">
-        {THEME_PACKS.map((pack) => (
-          <button
-            key={pack.id}
-            type="button"
-            className={`bf-pack-card${theme.pack === pack.id ? " is-active" : ""}`}
-            onClick={() => dispatch(setThemePack(pack.id))}
-          >
-            <div className="bf-pack-preview" data-pack={pack.id} aria-hidden />
-            <span className="bf-pack-card__body">
-              <strong>{pack.label}</strong>
-              <span className="bf-pack-card__hint">{pack.hint}</span>
-            </span>
-          </button>
-        ))}
-      </div>
-      <ThemeModePickerRow
-        value={theme.mode}
-        onChange={(value) => dispatch(setThemeMode(value))}
-      />
-      <AccentPickerRow
-        value={theme.accentId}
-        onChange={(value) => dispatch(setAccentId(value))}
-      />
-      <FontScaleRow
-        value={theme.fontScale}
-        onChange={(value) => dispatch(setFontScale(value))}
-      />
-    </Card>
+    <div className="bf-stack bf-stack--loose">
+      <LanguagePanel surface={surface} />
+      <Card
+        title={resolvedTitle}
+        meta={resolvedMeta}
+        surface={surface}
+        className="bf-appearance"
+      >
+        <div className="bf-pack-grid">
+          {THEME_PACKS.map((pack) => (
+            <button
+              key={pack.id}
+              type="button"
+              className={`bf-pack-card${theme.pack === pack.id ? " is-active" : ""}`}
+              onClick={() => dispatch(setThemePack(pack.id))}
+            >
+              <div className="bf-pack-preview" data-pack={pack.id} aria-hidden />
+              <span className="bf-pack-card__body">
+                <strong>{t(pack.labelKey)}</strong>
+                <span className="bf-pack-card__hint">{t(pack.hintKey)}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+        <ThemeModePickerRow
+          value={theme.mode}
+          onChange={(value) => dispatch(setThemeMode(value))}
+        />
+        <AccentPickerRow
+          value={theme.accentId}
+          onChange={(value) => dispatch(setAccentId(value))}
+        />
+        <FontScaleRow
+          value={theme.fontScale}
+          onChange={(value) => dispatch(setFontScale(value))}
+        />
+      </Card>
+    </div>
   );
 }

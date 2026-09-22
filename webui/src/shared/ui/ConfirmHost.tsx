@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { bindConfirmHost, type ConfirmRequest } from "@/shared/lib/confirmAction";
 import { haptic } from "@/shared/lib/haptic";
 import { BottomSheet } from "./BottomSheet";
@@ -7,6 +8,7 @@ import { BottomSheet } from "./BottomSheet";
 const CONFIRM_EXIT_MS = 280;
 
 export function ConfirmHost() {
+  const { t } = useTranslation("webui");
   const [request, setRequest] = useState<ConfirmRequest | null>(null);
   const [open, setOpen] = useState(false);
 
@@ -36,7 +38,7 @@ export function ConfirmHost() {
         haptic("light");
         request?.reject();
       }}
-      title={request?.title || "确认"}
+      title={request?.title || t("ui.confirm")}
       variant="confirm"
       danger={Boolean(request?.danger)}
       height="auto"
@@ -51,7 +53,7 @@ export function ConfirmHost() {
                 request.reject();
               }}
             >
-              {request.cancelText || "取消"}
+              {request.cancelText || t("ui.cancel")}
             </button>
             <button
               type="button"

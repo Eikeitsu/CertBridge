@@ -1,7 +1,7 @@
 #!/system/bin/sh
 # OpenSSL 定位：优先使用模块自带静态二进制（安装环境通常没有系统 openssl）
-# 发版默认 4 个完整版包：arm / arm64 / x86 / x64；合包：PACKAGE_FAT=1
-# 仅真机：OPENSSL_ABIS=arm,arm64 npm run package:module
+# 发版默认 4 个完整版包：arm32 / arm64 / x86 / x64；合包：PACKAGE_FAT=1
+# 仅真机：OPENSSL_ABIS=arm32,arm64 npm run package:module
 # 安装时若 zip 内仍有多份，trim 到当前 ABI
 
 OPENSSL_BUNDLE_NAMES="openssl-arm64 openssl-arm openssl-x64 openssl-x86"

@@ -78,7 +78,11 @@ promote_optional() {
   fi
 }
 
-promote_optional CertBridge_arm.zip "CertBridge_${RAW}_arm.zip"
+promote_optional CertBridge_arm32.zip "CertBridge_${RAW}_arm32.zip"
+# 晋升时兼容旧 tip 上的 CertBridge_arm.zip
+if [ ! -f "release/CertBridge_${RAW}_arm32.zip" ]; then
+  promote_optional CertBridge_arm.zip "CertBridge_${RAW}_arm32.zip"
+fi
 promote_optional CertBridge_x86.zip "CertBridge_${RAW}_x86.zip"
 promote_optional CertBridge_x64.zip "CertBridge_${RAW}_x64.zip"
 promote_optional CertBridge_lite.zip "CertBridge_${RAW}_lite.zip"

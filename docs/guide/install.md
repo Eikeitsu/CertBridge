@@ -5,7 +5,7 @@
 
 **[https://github.com/Eikeitsu/CertBridge/releases](https://github.com/Eikeitsu/CertBridge/releases)**
 
-真机下 `CertBridge_v*_arm64.zip`（推荐）或 `*_arm.zip`；模拟器用 `*_x64.zip` / `*_x86.zip`；体积敏感再选 `*_lite.zip`。不要在 Issues、讨论区或文档站目录里找 zip。
+真机下 `CertBridge_v*_arm64.zip`（推荐）或 `*_arm32.zip`；模拟器用 `*_x64.zip` / `*_x86.zip`；体积敏感再选 `*_lite.zip`。不要在 Issues、讨论区或文档站目录里找 zip。
 :::
 
 ## 环境要求
@@ -17,7 +17,7 @@
 ## 该下哪个？先看这三句
 
 1. **多数人（arm64 手机）**：下 `CertBridge_v*_arm64.zip`（完整版，仅含本架构 OpenSSL）。管理器「检查更新」也是拉这个。
-2. **其它架构**：下 `*_arm.zip` / `*_x86.zip` / `*_x64.zip`。
+2. **其它架构**：下 `*_arm32.zip` / `*_x86.zip` / `*_x64.zip`。
 3. **只要体积小**：下 `CertBridge_v*_lite.zip`（约 8KB `cbx509` dex，无 OpenSSL）。模块 id 相同（`CertBridge`），不要同时装；覆盖刷入即可切换。
 
 ## Release 文件一览
@@ -27,7 +27,7 @@
 | 文件名                    | 内容                                      | 适合谁                                 |
 | ------------------------- | ----------------------------------------- | -------------------------------------- |
 | `CertBridge_v*_arm64.zip` | 完整版：仅 arm64 OpenSSL（+ 对应 Zygisk） | **推荐默认**；多数真机                 |
-| `CertBridge_v*_arm.zip`   | 完整版：仅 arm OpenSSL                    | 32 位 arm 设备                         |
+| `CertBridge_v*_arm32.zip` | 完整版：仅 arm32 OpenSSL（armeabi-v7a）   | 32 位 ARM 设备                         |
 | `CertBridge_v*_x86.zip`   | 完整版：仅 x86 OpenSSL                    | x86 模拟器                             |
 | `CertBridge_v*_x64.zip`   | 完整版：仅 x64 OpenSSL（Android x86_64）  | x86_64 模拟器                          |
 | `CertBridge_v*_lite.zip`  | Lite：`cbx509` dex，无 OpenSSL            | 体积敏感；Recovery 导入 App 证可能受限 |

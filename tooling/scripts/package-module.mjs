@@ -109,15 +109,17 @@ const OPENSSL_ALL_BINARIES = [
   "openssl-x86",
 ];
 
-/** abi 短名 → openssl 文件名 / Magisk zygisk .so */
+/** abi 短名 → openssl 文件名 / Magisk zygisk .so（产物后缀用 arm32，二进制仍名 openssl-arm） */
 const OPENSSL_ABI_FILE = {
-  arm: "openssl-arm",
+  arm32: "openssl-arm",
+  arm: "openssl-arm", // 别名 → 产物名用 arm32
   arm64: "openssl-arm64",
   x86: "openssl-x86",
   x64: "openssl-x64",
   x86_64: "openssl-x64", // 别名 → 产物名用 x64
 };
 const ZYGISK_SO_BY_ABI = {
+  arm32: "armeabi-v7a.so",
   arm: "armeabi-v7a.so",
   arm64: "arm64-v8a.so",
   x86: "x86.so",
@@ -125,20 +127,22 @@ const ZYGISK_SO_BY_ABI = {
   x86_64: "x86_64.so",
 };
 
-/** OPENSSL_ABIS → 短名列表；默认 all = arm/arm64/x86/x64 */
+/** OPENSSL_ABIS → 短名列表；默认 all = arm32/arm64/x86/x64 */
 function resolvePackageAbis() {
   const raw = (process.env.OPENSSL_ABIS ?? "all").trim().toLowerCase();
   if (raw === "all") {
-    return ["arm", "arm64", "x86", "x64"];
+    return ["arm32", "arm64", "x86", "x64"];
   }
   const selected = [];
   for (const token of raw.split(/[,+\s]+/).filter(Boolean)) {
     if (!OPENSSL_ABI_FILE[token]) {
       throw new Error(
-        `unknown OPENSSL_ABIS token "${token}" (use arm,arm64,x86,x64 or all)`,
+        `unknown OPENSSL_ABIS token "${token}" (use arm32,arm64,x86,x64 or all; arm=arm32)`,
       );
     }
-    const abi = token === "x86_64" ? "x64" : token;
+    let abi = token;
+    if (token === "x86_64") abi = "x64";
+    else if (token === "arm") abi = "arm32";
     if (!selected.includes(abi)) selected.push(abi);
   }
   if (!selected.length) {
@@ -232,7 +236,7 @@ async function ensureOpensslBinaries() {
       "# Used when the install / runtime environment has no system openssl.",
       "# Packaging splits one zip per ABI by default (OPENSSL_ABIS=all).",
       "# Set PACKAGE_FAT=1 to ship all selected ABIs in one zip.",
-      "# Restrict with OPENSSL_ABIS=arm,arm64 if you only need phone ABIs.",
+      "# Restrict with OPENSSL_ABIS=arm32,arm64 if you only need phone ABIs.",
       "# Install still trims to the device ABI if a fat zip is used.",
       "# Source: MagiskBypassCertificateTransparencyError static builds",
       "# https://github.com/JelmerDeHen/MagiskBypassCertificateTransparencyError",

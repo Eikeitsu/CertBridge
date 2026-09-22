@@ -78,13 +78,13 @@ CI `Lint` 工作流拆为 **web / shell / tooling** 三 job + gate。
 OpenSSL ABI 与发包版本：
 
 ```bash
-OPENSSL_ABIS=all         # 默认 4 包：arm / arm64 / x86 / x64
-# OPENSSL_ABIS=arm,arm64 # 仅真机
+OPENSSL_ABIS=all         # 默认 4 包：arm32 / arm64 / x86 / x64
+# OPENSSL_ABIS=arm32,arm64 # 仅真机
 PACKAGE_FAT=0            # 默认分包；设为 1 则单 zip 含全部选中 ABI（旧行为）
 PACKAGE_EDITIONS=both    # full | lite | both
 ```
 
-产物：`CertBridge_v*_arm64.zip` / `_arm.zip` / `_x86.zip` / `_x64.zip` / `_lite.zip`。
+产物：`CertBridge_v*_arm64.zip` / `_arm32.zip` / `_x86.zip` / `_x64.zip` / `_lite.zip`。
 `updateJson` / Pages / ci-dist 默认指向 **arm64** 包（`CertBridge_arm64.zip` / `CertBridge_v*_arm64.zip`）。
 `PACKAGE_FAT=1` 时产物为 `*_fat.zip`。
 

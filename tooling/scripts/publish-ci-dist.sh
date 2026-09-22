@@ -4,7 +4,7 @@
 # Early-CI layout (json and zips on the same branch tip):
 #   update.json
 #   CertBridge_arm64.zip    ← Magisk update 默认（完整版 arm64）
-#   CertBridge_arm.zip
+#   CertBridge_arm32.zip    ← armeabi-v7a（32 位 ARM）
 #   CertBridge_x86.zip
 #   CertBridge_x64.zip
 #   CertBridge_lite.zip
@@ -68,7 +68,7 @@ fi
 
 # 完整版按 ABI 发布：一律带架构后缀（不再提供无后缀 CertBridge.zip）
 ARM64_SRC=""
-ARM_SRC=""
+ARM32_SRC=""
 X86_SRC=""
 X64_SRC=""
 FAT_SRC=""
@@ -77,7 +77,11 @@ for z in release/CertBridge_*.zip; do
   case "$z" in
     *_lite.zip) continue ;;
     *_arm64.zip) ARM64_SRC="$z" ;;
-    *_arm.zip) ARM_SRC="$z" ;;
+    *_arm32.zip) ARM32_SRC="$z" ;;
+    *_arm.zip)
+      # 兼容旧产物名；已有 arm32 时不覆盖
+      [ -z "$ARM32_SRC" ] && ARM32_SRC="$z"
+      ;;
     *_x86_64.zip) X64_SRC="$z" ;; # 兼容旧名 → 发布为 x64
     *_x64.zip) X64_SRC="$z" ;;
     *_x86.zip) X86_SRC="$z" ;;
@@ -110,11 +114,11 @@ publish_abi_alias() {
   fi
 }
 
-publish_abi_alias "$ARM_SRC" CertBridge_arm.zip arm
+publish_abi_alias "$ARM32_SRC" CertBridge_arm32.zip arm32
 publish_abi_alias "$X86_SRC" CertBridge_x86.zip x86
 publish_abi_alias "$X64_SRC" CertBridge_x64.zip x64
 # 去掉历史无后缀 / 旧别名，避免列表里再出现「不明架构」包
-rm -f "$STAGE/CertBridge.zip" "$STAGE/CertBridge_x86_64.zip"
+rm -f "$STAGE/CertBridge.zip" "$STAGE/CertBridge_x86_64.zip" "$STAGE/CertBridge_arm.zip"
 
 PROP="module/module.prop"
 VERSION="$(sed -n 's/^version=//p' "$PROP" | head -n1 | tr -d '\r')"
@@ -183,7 +187,7 @@ CertBridge **CI channel**: update manifest and module zips on the **same** branc
 |------|----------|
 | \`update.json\` | Magisk-compatible update check（默认 arm64 完整版） |
 | \`CertBridge_arm64.zip\` | Full module arm64（latest CI；updateJson 默认） |
-| \`CertBridge_arm.zip\` | Full module arm |
+| \`CertBridge_arm32.zip\` | Full module arm32（armeabi-v7a） |
 | \`CertBridge_x86.zip\` | Full module x86 |
 | \`CertBridge_x64.zip\` | Full module x64 |
 | \`CertBridge_lite.zip\` | Lite module (when built) |

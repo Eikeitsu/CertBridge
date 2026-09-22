@@ -31,7 +31,7 @@
 
 ## 快速开始
 
-1. 从 [Releases](https://github.com/Eikeitsu/CertBridge/releases) 下载对应架构包（`*_arm64.zip` 推荐；另有 arm / x86 / x64）或 `*_lite.zip`
+1. 从 [Releases](https://github.com/Eikeitsu/CertBridge/releases) 下载对应架构包（`*_arm64.zip` 推荐；另有 arm32 / x86 / x64）或 `*_lite.zip`
 2. 刷入：音量上 **默认安装**（WebUI + 热挂载 + 隐藏协助默认关）；音量下 **自定义**（可含 Zygisk 过滤、挂载模式等）
 3. **重启**后打开 WebUI 或执行 `bin/cb status --live` 确认状态
 
@@ -61,7 +61,7 @@ npm run dev:docs
 
 - 构建：[`tooling/BUILD.md`](tooling/BUILD.md)
 - 发版与 changelog：[`tooling/RELEASE.md`](tooling/RELEASE.md)（开发写根目录 `changelog.md` → `## Unreleased`）
-- 环境变量：`PACKAGE_EDITIONS=full|lite|both`，`OPENSSL_ABIS=all|arm,arm64,...`（按 ABI **分包**，默认全架构）；`PACKAGE_FAT=1` 可打旧式合包
+- 环境变量：`PACKAGE_EDITIONS=full|lite|both`，`OPENSSL_ABIS=all|arm32,arm64,...`（按 ABI **分包**，默认全架构；`arm` 仍作 arm32 别名）；`PACKAGE_FAT=1` 可打旧式合包
 
 发版：Actions → **Release Module** → Run workflow，或推送 `v*` 标签。
 

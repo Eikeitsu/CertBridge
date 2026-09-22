@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Row, Switch } from "@/shared/ui/primitives";
 
 type HideAllowRowProps = {
@@ -14,17 +15,21 @@ export function HideAllowRow({
   checked,
   disabled,
   onChange,
-  title = "启用挂载隐藏协助",
-  descOn = "注入 / 热挂载成功后登记 SuSFS / NoHello umount",
-  descOff = "关闭时不写隐藏状态、不注册 umount",
+  title,
+  descOn,
+  descOff,
   large,
 }: HideAllowRowProps) {
+  const { t } = useTranslation("webui");
+  const resolvedTitle = title ?? t("hide.allowTitle");
+  const resolvedDescOn = descOn ?? t("hide.allowOn");
+  const resolvedDescOff = descOff ?? t("hide.allowOff");
   if (large) {
     return (
       <div className="bf-hide-switch-card">
         <div className="bf-hide-switch-card__text">
-          <div className="bf-row__title">{title}</div>
-          <div className="bf-row__desc">{checked ? descOn : descOff}</div>
+          <div className="bf-row__title">{resolvedTitle}</div>
+          <div className="bf-row__desc">{checked ? resolvedDescOn : resolvedDescOff}</div>
         </div>
         <Switch checked={checked} disabled={disabled} onChange={onChange} />
       </div>
@@ -33,8 +38,8 @@ export function HideAllowRow({
 
   return (
     <Row
-      title={title}
-      desc={checked ? descOn : descOff}
+      title={resolvedTitle}
+      desc={checked ? resolvedDescOn : resolvedDescOff}
       extra={<Switch checked={checked} disabled={disabled} onChange={onChange} />}
     />
   );

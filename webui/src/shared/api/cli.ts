@@ -1,3 +1,4 @@
+import i18n from "@/shared/i18n";
 import { PATHS } from "@/shared/config/paths";
 import { exec } from "@/shared/api/ksu";
 import { parseKv } from "@/shared/lib/parse";
@@ -235,7 +236,8 @@ export async function rebootDevice() {
 export async function fetchDeviceInfo(): Promise<DeviceInfo> {
   const result = await exec(DEVICE_INFO_SHELL);
   if (result.errno === -1 && /no_bridge|no_ksu_bridge/.test(result.stderr || "")) {
-    return { label: "未检测到 WebUI 桥接", name: "未检测到 WebUI 桥接" };
+    const noBridge = i18n.t("ui.noBridge", { ns: "webui" });
+    return { label: noBridge, name: noBridge };
   }
   return formatDeviceInfo(result.stdout);
 }

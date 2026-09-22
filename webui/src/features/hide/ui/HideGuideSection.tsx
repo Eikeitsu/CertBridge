@@ -1,19 +1,22 @@
-import { HIDE_GUIDE_SECTIONS } from "@/shared/config/hideGuide";
-
-type HideGuideSectionConfig = (typeof HIDE_GUIDE_SECTIONS)[number];
+import { useTranslation } from "react-i18next";
+import type { HideGuideSectionId } from "@/shared/config/hideGuide";
 
 type HideGuideSectionProps = {
-  section: HideGuideSectionConfig;
+  section: HideGuideSectionId;
   defaultOpen?: boolean;
 };
 
 export function HideGuideSection({ section, defaultOpen }: HideGuideSectionProps) {
-  const open = defaultOpen ?? (section.id === "capture" || section.id === "limits");
+  const { t } = useTranslation("webui");
+  const open = defaultOpen ?? (section === "capture" || section === "limits");
+  const body = t(`hide.guideSections.${section}.body`, {
+    returnObjects: true,
+  }) as string[];
   return (
     <details open={open}>
-      <summary>{section.title}</summary>
+      <summary>{t(`hide.guideSections.${section}.title`)}</summary>
       <ul>
-        {section.body.map((line) => (
+        {body.map((line) => (
           <li key={line}>{line}</li>
         ))}
       </ul>

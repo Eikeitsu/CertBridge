@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Row } from "@/shared/ui/primitives";
 
 type FontScaleRowProps = {
@@ -6,10 +7,11 @@ type FontScaleRowProps = {
 };
 
 export function FontScaleRow({ value, onChange }: FontScaleRowProps) {
+  const { t } = useTranslation("webui");
   return (
     <div className="bf-appearance__scale">
       <Row
-        title="字号"
+        title={t("more.fontSize")}
         extra={
           <input
             type="range"

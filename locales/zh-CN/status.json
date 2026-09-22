@@ -3,6 +3,8 @@
   "prop_name": "证书桥",
   "tag_ok": "✅运行正常",
   "tag_ok_n": "✅运行正常 · {{n}} 张",
+  "body_mounted": "已挂载:{{n}}",
+  "body_active": "当前生效：{{names}}",
   "tag_disabled": "⛔已禁用",
   "tag_pending": "⏳待重启",
   "tag_hot": "🔥热挂载 +{{n}}",

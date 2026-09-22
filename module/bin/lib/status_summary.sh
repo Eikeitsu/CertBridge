@@ -31,7 +31,11 @@ compose_applied_cert_summary() {
         custom_n=$((custom_n + 1))
         ;;
       *)
-        [ -n "$display" ] || display=$(applied_cert_fallback_display "$label" "$name")
+        # 列表简介用短名（Reqable / ProxyPin），避免 CN 过长且与「已挂载:n」重复喧宾夺主
+        case "$label" in
+          reqable|proxypin) display=$(applied_cert_fallback_display "$label" "$name") ;;
+          *) [ -n "$display" ] || display=$(applied_cert_fallback_display "$label" "$name") ;;
+        esac
         names="${names}${names:+、}${display}"
         ;;
     esac

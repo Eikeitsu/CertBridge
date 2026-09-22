@@ -3,6 +3,8 @@
   "prop_name": "CertBridge",
   "tag_ok": "✅OK",
   "tag_ok_n": "✅OK · {{n}}",
+  "body_mounted": "mounted:{{n}}",
+  "body_active": "Active: {{names}}",
   "tag_disabled": "⛔Disabled",
   "tag_pending": "⏳Reboot",
   "tag_hot": "🔥Hot +{{n}}",

@@ -3,19 +3,19 @@ import { MountMode, Experimental14System, TmpfsStyle } from "@/entities/module/e
 export const MOUNT_MODES = {
   [MountMode.Compatible]: {
     value: MountMode.Compatible,
-    label: "完整兼容",
-    shortLabel: "兼容",
-    meta: "运行时整库 bind，适用 Magisk / KernelSU / APatch",
-    helpTitle: "完整兼容（默认）",
-    helpBody: "运行时整库合并后绑定，不写 system 叠层。不依赖 Magic Mount 元模块。",
+    labelKey: "mount.modes.compatible.label",
+    shortLabelKey: "mount.modes.compatible.short",
+    metaKey: "mount.modes.compatible.meta",
+    helpTitleKey: "mount.modes.compatible.helpTitle",
+    helpBodyKey: "mount.modes.compatible.helpBody",
   },
   [MountMode.Magic]: {
     value: MountMode.Magic,
-    label: "轻量 Magic",
-    shortLabel: "轻量",
-    meta: "仅叠附加证书；Android 14+ 仍对 APEX 做脚本注入",
-    helpTitle: "轻量 Magic Mount",
-    helpBody: "只把启用的附加证书叠进系统信任库。",
+    labelKey: "mount.modes.magic.label",
+    shortLabelKey: "mount.modes.magic.short",
+    metaKey: "mount.modes.magic.meta",
+    helpTitleKey: "mount.modes.magic.helpTitle",
+    helpBodyKey: "mount.modes.magic.helpBody",
   },
 } as const;
 
@@ -27,27 +27,27 @@ export const MOUNT_MODE_OPTIONS = [
 export const MOUNT_ROOT_NOTES = [
   {
     name: "Magisk",
-    note: "DenyList + NoHello / ZygiskNext；脚本 bind 需 NoHello point 规则",
+    noteKey: "mount.roots.magisk",
   },
   {
     name: "KernelSU",
-    note: "建议 SuSFS 或 ZygiskNext/ReZygisk umount；需 path_umount",
+    noteKey: "mount.roots.kernelsu",
   },
-  { name: "APatch", note: "排除修改 + NoHello / ZygiskNext（apd 无路径登记 API）" },
+  { name: "APatch", noteKey: "mount.roots.apatch" },
 ] as const;
 
-export const MOUNT_HELP_FOOTNOTE = "切换后需重启生效。";
+export const MOUNT_HELP_FOOTNOTE_KEY = "mount.modeFootnote";
 
 export const EXPERIMENTAL_14_SYSTEM = {
   [Experimental14System.Skip]: {
     value: Experimental14System.Skip,
-    label: "跳过 system",
-    meta: "默认：Android 14+ 不挂载 /system 证书路径，只脚本注入 APEX",
+    labelKey: "mount.experimental14.skip.label",
+    metaKey: "mount.experimental14.skip.meta",
   },
   [Experimental14System.Auto]: {
     value: Experimental14System.Auto,
-    label: "挂载 system",
-    meta: "按上方挂载模式处理 system（兼容 bind / Magic 叠层）",
+    labelKey: "mount.experimental14.auto.label",
+    metaKey: "mount.experimental14.auto.meta",
   },
 } as const;
 
@@ -56,36 +56,35 @@ export const EXPERIMENTAL_14_SYSTEM_OPTIONS = [
   EXPERIMENTAL_14_SYSTEM[Experimental14System.Auto],
 ];
 
-export const EXPERIMENTAL_14_SYSTEM_FOOTNOTE =
-  "仅 Android 14+ 生效，与挂载模式正交；7–13 忽略。切换后需重启。";
+export const EXPERIMENTAL_14_SYSTEM_FOOTNOTE_KEY = "mount.experimental14.footnote";
 
 export const TMPFS_STYLES = {
   [TmpfsStyle.Dev]: {
     value: TmpfsStyle.Dev,
-    label: "Dev 路径",
-    meta: "默认：/dev/.fs*，避开 local/tmp 关键词",
-    helpTitle: "Dev 路径（默认）",
+    labelKey: "mount.tmpfs.dev.label",
+    metaKey: "mount.tmpfs.dev.meta",
+    helpTitleKey: "mount.tmpfs.dev.helpTitle",
     paths: ["/dev/.fs0", "/dev/.fs1"],
   },
   [TmpfsStyle.Mnt]: {
     value: TmpfsStyle.Mnt,
-    label: "Mnt 路径",
-    meta: "/mnt 下短名临时层",
-    helpTitle: "Mnt 路径",
+    labelKey: "mount.tmpfs.mnt.label",
+    metaKey: "mount.tmpfs.mnt.meta",
+    helpTitleKey: "mount.tmpfs.mnt.helpTitle",
     paths: ["/mnt/.ca0", "/mnt/.ca1"],
   },
   [TmpfsStyle.Short]: {
     value: TmpfsStyle.Short,
-    label: "短路径",
-    meta: "local/tmp 下的 .fs0 / .fs1",
-    helpTitle: "短路径",
+    labelKey: "mount.tmpfs.short.label",
+    metaKey: "mount.tmpfs.short.meta",
+    helpTitleKey: "mount.tmpfs.short.helpTitle",
     paths: ["/data/local/tmp/.fs0", "/data/local/tmp/.fs1"],
   },
   [TmpfsStyle.Legacy]: {
     value: TmpfsStyle.Legacy,
-    label: "传统路径",
-    meta: "可读旧路径，便于排障",
-    helpTitle: "传统路径",
+    labelKey: "mount.tmpfs.legacy.label",
+    metaKey: "mount.tmpfs.legacy.meta",
+    helpTitleKey: "mount.tmpfs.legacy.helpTitle",
     paths: ["/data/local/tmp/sys-ca-merge", "/data/local/tmp/sys-ca-merge-hot"],
   },
 } as const;
@@ -97,19 +96,18 @@ export const TMPFS_STYLE_OPTIONS = [
   TMPFS_STYLES[TmpfsStyle.Legacy],
 ];
 
-export const TMPFS_HELP_FOOTNOTE =
-  "仅影响完整兼容与热挂载临时层；切换后需重启。换路径不能替代 umount 隐藏。";
+export const TMPFS_HELP_FOOTNOTE_KEY = "mount.tmpfsFootnote";
 
 export const HIDE_PROVIDER_LABELS: Record<string, string> = {
-  susfs: "SuSFS try_umount",
-  rezygisk: "ReZygisk",
-  neozygisk: "NeoZygisk",
-  zygisknext: "ZygiskNext",
-  shamiko: "Shamiko",
-  zygisk_assistant: "Zygisk Assistant",
-  nohello: "NoHello",
-  magisk_denylist: "Magisk 排除列表",
-  ksu_umount: "KernelSU 卸载模块",
-  apatch_exclude: "APatch 排除修改",
-  none: "未检测到",
+  susfs: "mount.providers.susfs",
+  rezygisk: "mount.providers.rezygisk",
+  neozygisk: "mount.providers.neozygisk",
+  zygisknext: "mount.providers.zygisknext",
+  shamiko: "mount.providers.shamiko",
+  zygisk_assistant: "mount.providers.zygiskAssistant",
+  nohello: "mount.providers.nohello",
+  magisk_denylist: "mount.providers.magiskDenylist",
+  ksu_umount: "mount.providers.ksuUmount",
+  apatch_exclude: "mount.providers.apatchExclude",
+  none: "mount.providers.none",
 };

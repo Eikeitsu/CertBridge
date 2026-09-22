@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { selectCustomCertificates } from "@/features/status/model/selectors";
 import { refreshStatus } from "@/features/status/model/statusSlice";
@@ -18,14 +19,8 @@ const PRESET_KINDS: AppPresetKind[] = [
   "pcapdroid",
 ];
 
-function stateOf(cert: { isActive: boolean; isEnabled: boolean; isAvailable: boolean }) {
-  if (cert.isActive) return "active";
-  if (cert.isEnabled) return "pending";
-  if (cert.isAvailable) return "ready";
-  return "missing";
-}
-
 export function ConsoleCertsPage() {
+  const { t } = useTranslation("webui");
   const chrome = usePackChrome();
   const dispatch = useAppDispatch();
   const customs = useAppSelector(selectCustomCertificates);
@@ -43,6 +38,17 @@ export function ConsoleCertsPage() {
     handleHotMount,
     handleHotUnmount,
   } = useCertActions();
+
+  const stateOf = (cert: {
+    isActive: boolean;
+    isEnabled: boolean;
+    isAvailable: boolean;
+  }) => {
+    if (cert.isActive) return t("certs.statusActive");
+    if (cert.isEnabled) return t("certs.statusPending");
+    if (cert.isAvailable) return t("certs.statusAvailable");
+    return t("certs.statusMissing");
+  };
 
   return (
     <div className="pk-con-page">

@@ -1,4 +1,5 @@
-import { HIDE_GUIDE_SECTIONS } from "@/shared/config/hideGuide";
+import { useTranslation } from "react-i18next";
+import { HIDE_GUIDE_SECTION_IDS } from "@/shared/config/hideGuide";
 import { Card } from "@/shared/ui/primitives";
 import { HideGuideSection } from "./HideGuideSection";
 
@@ -10,17 +11,15 @@ type HideGuidePanelProps = {
   bare?: boolean;
 };
 
-export function HideGuidePanel({
-  title,
-  meta = "按 Root 方案配置；换路径不能替代 umount",
-  accordion,
-  bare,
-}: HideGuidePanelProps) {
+export function HideGuidePanel({ title, meta, accordion, bare }: HideGuidePanelProps) {
+  const { t } = useTranslation("webui");
+  const resolvedTitle = title ?? t("hide.guideTitle");
+  const resolvedMeta = meta ?? t("hide.guideMeta");
   const body = (
     <div className={`bf-hide-guide${accordion ? " bf-hide-guide--accordion" : ""}`}>
-      {HIDE_GUIDE_SECTIONS.map((section) => (
+      {HIDE_GUIDE_SECTION_IDS.map((section) => (
         <HideGuideSection
-          key={section.id}
+          key={section}
           section={section}
           defaultOpen={accordion ? false : undefined}
         />
@@ -31,14 +30,14 @@ export function HideGuidePanel({
   if (bare) {
     return (
       <>
-        {meta ? <p className="bf-card-plain__meta">{meta}</p> : null}
+        {resolvedMeta ? <p className="bf-card-plain__meta">{resolvedMeta}</p> : null}
         {body}
       </>
     );
   }
 
   return (
-    <Card title={title} meta={meta}>
+    <Card title={resolvedTitle} meta={resolvedMeta}>
       {body}
     </Card>
   );

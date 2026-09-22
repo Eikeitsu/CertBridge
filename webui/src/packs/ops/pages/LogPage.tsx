@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { clearActivityLog, fetchActivityLog } from "@/features/log/model/logSlice";
 import { selectActivityLog } from "@/features/log/model/selectors";
@@ -12,15 +13,8 @@ import { LogLevel } from "@/entities/module/enums";
 import { Loader } from "@/shared/ui/Loader";
 import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
 
-const LEVELS: { id: string; label: string }[] = [
-  { id: "", label: "全部" },
-  { id: LogLevel.Info, label: "信息" },
-  { id: LogLevel.Warn, label: "警告" },
-  { id: LogLevel.Error, label: "错误" },
-  { id: LogLevel.Debug, label: "调试" },
-];
-
 export function OpsLogPage() {
+  const { t } = useTranslation("webui");
   const chrome = usePackChrome();
   const dispatch = useAppDispatch();
   const { text, loading, bytes, lines } = useAppSelector(selectActivityLog);
@@ -33,18 +27,29 @@ export function OpsLogPage() {
     [entries, levelFilter],
   );
 
+  const levels = useMemo(
+    () => [
+      { id: "", label: t("log.levelAll") },
+      { id: LogLevel.Info, label: t("log.levelInfo") },
+      { id: LogLevel.Warn, label: t("log.levelWarn") },
+      { id: LogLevel.Error, label: t("log.levelError") },
+      { id: LogLevel.Debug, label: t("log.levelDebug") },
+    ],
+    [t],
+  );
+
   return (
     <div className="pk-ops-page pk-ops-page--log">
       <header className="pk-ops-pagehead pk-ops-pagehead--meta">
         <p>
-          {lines ? `${lines} 行` : v.empty}
+          {lines ? t("log.linesCount", { count: lines }) : v.empty}
           {bytes > 0 ? ` · ${formatByteSize(bytes)}` : ""}
         </p>
       </header>
 
       <div className="pk-ops-toolbar">
         <div className="pk-ops-chips">
-          {LEVELS.map((lv) => (
+          {levels.map((lv) => (
             <button
               key={lv.id || "all"}
               type="button"
@@ -71,8 +76,8 @@ export function OpsLogPage() {
             className="pk-ops-btn"
             onClick={() =>
               confirmAction({
-                title: "确认清空日志？",
-                content: "仅清除本机日志文件，不影响证书配置。",
+                title: t("log.clearConfirmTitle"),
+                content: t("log.clearConfirmBody"),
                 okText: v.clear,
                 danger: true,
                 onOk: () => dispatch(clearActivityLog()),
@@ -87,13 +92,13 @@ export function OpsLogPage() {
               checked={wrap}
               onChange={(e) => setWrap(e.target.checked)}
             />
-            <span>折行</span>
+            <span>{t("log.wrap")}</span>
           </label>
         </div>
       </div>
 
       {loading ? (
-        <Loader label="读取日志…" />
+        <Loader label={t("log.loading")} />
       ) : (
         <pre className={`pk-ops-term${wrap ? "" : " is-nowrap"}`}>
           {filtered.length

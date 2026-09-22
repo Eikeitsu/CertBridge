@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { selectModuleStatus } from "@/features/status/model/selectors";
 import {
@@ -17,6 +18,7 @@ import { useAsyncLock } from "@/shared/hooks/useAsyncLock";
 import { Experimental14System } from "@/entities/module/enums";
 
 export function useExperimental14System() {
+  const { t } = useTranslation("webui");
   const dispatch = useAppDispatch();
   const status = useAppSelector(selectModuleStatus);
   const { isPending, runExclusive } = useAsyncLock();
@@ -50,13 +52,13 @@ export function useExperimental14System() {
         toastByRebootFlag(
           kv,
           next === Experimental14System.Skip
-            ? "已设为跳过 system，重启后生效"
-            : "已设为挂载 system，重启后生效",
-          "system 策略已恢复为当前生效配置",
+            ? t("more.systemSkipSaved")
+            : t("more.systemSaved"),
+          t("more.systemRestored"),
         );
       });
     },
-    [dispatch, isPending, mode, runExclusive],
+    [dispatch, isPending, mode, runExclusive, t],
   );
 
   return { mode, isPending, handleChange };

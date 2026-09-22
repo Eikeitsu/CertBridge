@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { selectStatusBootstrapped } from "@/features/status/model/selectors";
 import { refreshStatus } from "@/features/status/model/statusSlice";
@@ -14,6 +15,7 @@ import { OverviewActions } from "./OverviewActions";
 import { BuiltinPipelineCard } from "./BuiltinPipelineCard";
 
 export function OverviewPage() {
+  const { t } = useTranslation("webui");
   const dispatch = useAppDispatch();
   const overview = useTrustOverview();
   const bootstrapped = useAppSelector(selectStatusBootstrapped);
@@ -21,7 +23,8 @@ export function OverviewPage() {
 
   const stabilizing =
     overview.trust.tone === TrustTone.Idle &&
-    /稳定中|注入中|检测中/.test(overview.trust.title);
+    (/Stable|Inject|Check|Boot|Pending/.test(overview.trust.title) ||
+      /稳定中|注入中|检测中/.test(overview.trust.title));
 
   useEffect(() => {
     if (!bootstrapped || !stabilizing) return;
@@ -100,11 +103,11 @@ export function OverviewPage() {
       >
         <dl className="bf-env-grid">
           <div>
-            <dt>设备</dt>
+            <dt>{t("overview.envDevice")}</dt>
             <dd>{overview.deviceName}</dd>
           </div>
           <div>
-            <dt>系统</dt>
+            <dt>{t("overview.envSystem")}</dt>
             <dd>{overview.androidLabel}</dd>
           </div>
           <div>
@@ -112,19 +115,21 @@ export function OverviewPage() {
             <dd>{overview.rootLabel}</dd>
           </div>
           <div>
-            <dt>注入</dt>
+            <dt>{t("overview.envInject")}</dt>
             <dd>{overview.apexLabel}</dd>
           </div>
           <div>
-            <dt>挂载</dt>
+            <dt>{t("overview.envMount")}</dt>
             <dd>{overview.mountModeLabel}</dd>
           </div>
           <div>
-            <dt>版本</dt>
+            <dt>{t("overview.envVersion")}</dt>
             <dd>{overview.versionLabel}</dd>
           </div>
         </dl>
-        <p className="bf-env-meta">上次刷新 {overview.lastRefreshedAt}</p>
+        <p className="bf-env-meta">
+          {t("overview.lastRefresh", { time: overview.lastRefreshedAt })}
+        </p>
       </HelpCollapse>
     </PageStack>
   );

@@ -1,14 +1,21 @@
+import { useTranslation } from "react-i18next";
 import { EMPTY_PLACEHOLDER } from "@/shared/config/constants";
 import { useAppSelector } from "@/app/store/hooks";
 import { selectDeviceName, selectModuleStatus } from "@/features/status/model/selectors";
 import { isFlagOn } from "@/shared/lib/flag";
 import { parseEnum } from "@/shared/lib/enum";
-import { Experimental14System } from "@/entities/module/enums";
-import { EXPERIMENTAL_14_SYSTEM } from "@/shared/config/mount";
+import { Experimental14System, MountMode, TmpfsStyle } from "@/entities/module/enums";
+import { EXPERIMENTAL_14_SYSTEM, MOUNT_MODES, TMPFS_STYLES } from "@/shared/config/mount";
 
-function yesNo(flag: string | undefined, fallbackInstalled?: boolean) {
-  if (flag === "1" || flag === "0") return flag === "1" ? "已安装" : "未安装";
-  if (fallbackInstalled !== undefined) return fallbackInstalled ? "已安装" : "未安装";
+function yesNo(
+  flag: string | undefined,
+  installed: string,
+  notInstalled: string,
+  fallbackInstalled?: boolean,
+) {
+  if (flag === "1" || flag === "0") return flag === "1" ? installed : notInstalled;
+  if (fallbackInstalled !== undefined)
+    return fallbackInstalled ? installed : notInstalled;
   return EMPTY_PLACEHOLDER;
 }
 
@@ -20,6 +27,7 @@ type AboutRow = {
 };
 
 export function useAboutModuleRows(): AboutRow[] {
+  const { t } = useTranslation("webui");
   const status = useAppSelector(selectModuleStatus);
   const deviceName = useAppSelector(selectDeviceName);
   const androidLabel = status.release
@@ -28,9 +36,9 @@ export function useAboutModuleRows(): AboutRow[] {
 
   const modeLabel =
     status.profile_install_mode === "default"
-      ? "默认安装"
+      ? t("about.values.defaultInstall")
       : status.profile_install_mode === "custom"
-        ? "自定义安装"
+        ? t("about.values.customInstall")
         : status.profile_install_mode || EMPTY_PLACEHOLDER;
 
   const e14 = parseEnum(
@@ -38,21 +46,30 @@ export function useAboutModuleRows(): AboutRow[] {
     status.experimental_14_system,
     Experimental14System.Skip,
   );
+  const mountMode = parseEnum(MountMode, status.mount_mode, MountMode.Compatible);
+  const tmpfsStyle = parseEnum(TmpfsStyle, status.tmpfs_style, TmpfsStyle.Dev);
+  const installed = t("about.values.installed");
+  const notInstalled = t("about.values.notInstalled");
 
   return [
     {
       key: "version",
-      label: "版本",
+      label: t("about.labels.version"),
       value: status.version || EMPTY_PLACEHOLDER,
       group: "env",
     },
     {
       key: "device",
-      label: "设备",
+      label: t("about.labels.device"),
       value: deviceName || EMPTY_PLACEHOLDER,
       group: "env",
     },
-    { key: "system", label: "系统", value: androidLabel, group: "env" },
+    {
+      key: "system",
+      label: t("about.labels.system"),
+      value: androidLabel,
+      group: "env",
+    },
     {
       key: "root",
       label: "Root",
@@ -61,53 +78,77 @@ export function useAboutModuleRows(): AboutRow[] {
     },
     {
       key: "mount",
-      label: "挂载模式",
-      value: status.mount_mode || EMPTY_PLACEHOLDER,
+      label: t("about.labels.mount"),
+      value: t(MOUNT_MODES[mountMode].labelKey),
       group: "config",
     },
     {
       key: "e14",
       label: "14+ system",
-      value: EXPERIMENTAL_14_SYSTEM[e14].label,
+      value: t(EXPERIMENTAL_14_SYSTEM[e14].labelKey),
       group: "config",
     },
     {
       key: "tmpfs",
-      label: "临时路径",
-      value: status.tmpfs_style || EMPTY_PLACEHOLDER,
+      label: t("about.labels.tmpfs"),
+      value: t(TMPFS_STYLES[tmpfsStyle].labelKey),
       group: "config",
     },
-    { key: "mode", label: "安装方案", value: modeLabel, group: "config" },
+    {
+      key: "mode",
+      label: t("about.labels.installMode"),
+      value: modeLabel,
+      group: "config",
+    },
     {
       key: "webui",
-      label: "WebUI 组件",
-      value: yesNo(status.profile_webui, true),
+      label: t("about.labels.webui"),
+      value: yesNo(status.profile_webui, installed, notInstalled, true),
       group: "component",
     },
     {
       key: "hot",
-      label: "热挂载组件",
-      value: yesNo(status.profile_hot, isFlagOn(status.hot_supported)),
+      label: t("about.labels.hot"),
+      value: yesNo(
+        status.profile_hot,
+        installed,
+        notInstalled,
+        isFlagOn(status.hot_supported),
+      ),
       group: "component",
     },
     {
       key: "hide",
-      label: "挂载隐藏协助",
-      value: yesNo(status.profile_hide_assist, isFlagOn(status.hide_supported)),
+      label: t("about.labels.hide"),
+      value: yesNo(
+        status.profile_hide_assist,
+        installed,
+        notInstalled,
+        isFlagOn(status.hide_supported),
+      ),
       group: "component",
     },
     {
       key: "zn",
-      label: "Zygisk 挂载过滤",
-      value: yesNo(status.profile_zn_hide, isFlagOn(status.zn_hide_supported)),
+      label: t("about.labels.zygisk"),
+      value: yesNo(
+        status.profile_zn_hide,
+        installed,
+        notInstalled,
+        isFlagOn(status.zn_hide_supported),
+      ),
       group: "component",
     },
   ];
 }
 
-function toneOf(value: string): "ok" | "off" | "neutral" {
-  if (value === "已安装") return "ok";
-  if (value === "未安装") return "off";
+function toneOf(
+  value: string,
+  installed: string,
+  notInstalled: string,
+): "ok" | "off" | "neutral" {
+  if (value === installed) return "ok";
+  if (value === notInstalled) return "off";
   return "neutral";
 }
 
@@ -121,7 +162,10 @@ type AboutModuleInfoProps = {
 };
 
 export function AboutModuleInfo({ variant = "tiles" }: AboutModuleInfoProps) {
+  const { t } = useTranslation("webui");
   const rows = useAboutModuleRows();
+  const installed = t("about.values.installed");
+  const notInstalled = t("about.values.notInstalled");
   const resolved =
     variant === "list"
       ? "tiles"
@@ -133,11 +177,11 @@ export function AboutModuleInfo({ variant = "tiles" }: AboutModuleInfoProps) {
 
   if (resolved === "shell") {
     const lines = [
-      "# env",
+      `# ${t("about.groups.env")}`,
       ...groupRows(rows, "env").map((row) => `${row.key}=${row.value}`),
-      "# config",
+      `# ${t("about.groups.config")}`,
       ...groupRows(rows, "config").map((row) => `${row.key}=${row.value}`),
-      "# components",
+      `# ${t("about.groups.components")}`,
       ...groupRows(rows, "component").map((row) => `${row.key}=${row.value}`),
     ];
     return <pre className="bf-about-shell">{lines.join("\n")}</pre>;
@@ -148,11 +192,15 @@ export function AboutModuleInfo({ variant = "tiles" }: AboutModuleInfoProps) {
       <div className="bf-about-rail">
         {(
           [
-            { id: "env", title: "环境", items: groupRows(rows, "env") },
-            { id: "config", title: "配置", items: groupRows(rows, "config") },
+            { id: "env", title: t("about.groups.env"), items: groupRows(rows, "env") },
+            {
+              id: "config",
+              title: t("about.groups.config"),
+              items: groupRows(rows, "config"),
+            },
             {
               id: "component",
-              title: "组件",
+              title: t("about.groups.components"),
               items: groupRows(rows, "component"),
             },
           ] as const
@@ -161,7 +209,7 @@ export function AboutModuleInfo({ variant = "tiles" }: AboutModuleInfoProps) {
             <div className="bf-about-rail__label">{section.title}</div>
             <div className="bf-about-rail__grid">
               {section.items.map((row) => {
-                const tone = toneOf(row.value);
+                const tone = toneOf(row.value, installed, notInstalled);
                 return (
                   <div key={row.key} className={`bf-about-rail__cell is-${tone}`}>
                     <span className="bf-about-rail__key">{row.label}</span>
@@ -180,7 +228,7 @@ export function AboutModuleInfo({ variant = "tiles" }: AboutModuleInfoProps) {
   return (
     <div className="bf-about-tiles">
       <section className="bf-about-tiles__block">
-        <div className="bf-about-tiles__head">运行环境</div>
+        <div className="bf-about-tiles__head">{t("about.groups.runtime")}</div>
         <div className="bf-about-tiles__metrics">
           {groupRows(rows, "env").map((row) => (
             <div key={row.key} className="bf-about-metric">
@@ -192,7 +240,7 @@ export function AboutModuleInfo({ variant = "tiles" }: AboutModuleInfoProps) {
       </section>
 
       <section className="bf-about-tiles__block">
-        <div className="bf-about-tiles__head">配置</div>
+        <div className="bf-about-tiles__head">{t("about.groups.config")}</div>
         <div className="bf-about-tiles__stack">
           {groupRows(rows, "config").map((row) => (
             <div key={row.key} className="bf-about-stack-row">
@@ -204,10 +252,10 @@ export function AboutModuleInfo({ variant = "tiles" }: AboutModuleInfoProps) {
       </section>
 
       <section className="bf-about-tiles__block">
-        <div className="bf-about-tiles__head">组件状态</div>
+        <div className="bf-about-tiles__head">{t("about.groups.componentStatus")}</div>
         <div className="bf-about-tiles__status">
           {groupRows(rows, "component").map((row) => {
-            const tone = toneOf(row.value);
+            const tone = toneOf(row.value, installed, notInstalled);
             return (
               <div key={row.key} className={`bf-about-status is-${tone}`}>
                 <span className="bf-about-status__dot" aria-hidden />

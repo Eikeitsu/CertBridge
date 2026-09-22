@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { selectStatusBootstrapped } from "@/features/status/model/selectors";
 import { refreshStatus } from "@/features/status/model/statusSlice";
@@ -9,6 +10,7 @@ import { rebootDevice } from "@/shared/api/cli";
 import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
 
 export function ConsoleHomePage() {
+  const { t } = useTranslation("webui");
   const chrome = usePackChrome();
   const dispatch = useAppDispatch();
   const overview = useTrustOverview();
@@ -57,8 +59,8 @@ disabled=${overview.isDisabled ? 1 : 0} reboot_pending=${overview.isPendingReboo
           className="pk-con-btn"
           onClick={() =>
             confirmAction({
-              title: "reboot device?",
-              content: "apply permanent CA changes and clear hot layers.",
+              title: t("overview.rebootConfirmTitle"),
+              content: t("overview.rebootConfirmBody"),
               okText: v.reboot,
               danger: true,
               onOk: () => rebootDevice(),

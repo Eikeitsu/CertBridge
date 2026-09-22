@@ -20,7 +20,7 @@ proxypin=1
 mount_mode=compatible
 experimental_14_system=skip
 tmpfs_style=dev
-quiet_prop=1
+quiet_prop=0
 hot_allow=1
 force_bind_capture=0
 late_inject=0
@@ -92,7 +92,7 @@ service_probe=0
 
 | 键                   | 默认 | 含义                                                          |
 | -------------------- | ---- | ------------------------------------------------------------- |
-| `quiet_prop`         | `1`  | 管理器列表保持中性简介；`0`=写入运行状态标签                  |
+| `quiet_prop`         | `0`  | `0`=管理器列表写入运行状态标签（默认）；`1`=保持中性简介      |
 | `hot_allow`          | `1`  | 允许 WebUI / Action 发起临时热挂载（需已装组件）              |
 | `force_bind_capture` | `0`  | `1`=命名空间强注 Reqable/ProxyPin；默认尊重「卸载模块」       |
 | `late_inject`        | `0`  | `1`=`boot_completed` 后再补应用命名空间（兼容难机，痕迹更多） |

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 type MoreNavRowProps = {
   title: string;
@@ -27,12 +28,13 @@ type MoreSubHeaderProps = {
   backLabel?: string;
 };
 
-export function MoreSubHeader({ title, onBack, backLabel = "更多" }: MoreSubHeaderProps) {
+export function MoreSubHeader({ title, onBack, backLabel }: MoreSubHeaderProps) {
+  const { t } = useTranslation("webui");
   return (
     <div className="bf-more-subhead">
       <button type="button" className="bf-more-back" onClick={onBack}>
         <span className="bf-more-back__chev" aria-hidden />
-        {backLabel}
+        {backLabel ?? t("tabs.more")}
       </button>
       <h2 className="bf-more-subhead__title">{title}</h2>
     </div>

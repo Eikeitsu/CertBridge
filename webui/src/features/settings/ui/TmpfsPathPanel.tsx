@@ -1,5 +1,6 @@
-import type { TmpfsStyle } from "@/entities/module/enums";
-import { TMPFS_HELP_FOOTNOTE, TMPFS_STYLE_OPTIONS } from "@/shared/config/mount";
+import { useTranslation } from "react-i18next";
+import { TmpfsStyle } from "@/entities/module/enums";
+import { TMPFS_STYLE_OPTIONS } from "@/shared/config/mount";
 import { Card, Segment } from "@/shared/ui/primitives";
 
 type TmpfsPathPanelProps = {
@@ -17,10 +18,11 @@ export function TmpfsPathPanel({
   dense,
   surface = "card",
 }: TmpfsPathPanelProps) {
+  const { t } = useTranslation("webui");
   return (
     <Card
-      title="临时挂载路径"
-      meta={TMPFS_HELP_FOOTNOTE}
+      title={t("more.tmpfsPath")}
+      meta={t("more.mountConfig.tmpfsFootnote")}
       surface={surface}
       className={dense ? "bf-card--dense" : undefined}
     >
@@ -29,8 +31,8 @@ export function TmpfsPathPanel({
         disabled={pending}
         options={TMPFS_STYLE_OPTIONS.map((option) => ({
           value: option.value,
-          label: option.label,
-          hint: option.paths.join(" / "),
+          label: t(option.labelKey),
+          hint: t(option.metaKey),
         }))}
         onChange={(value) => onChange(value as TmpfsStyle)}
       />

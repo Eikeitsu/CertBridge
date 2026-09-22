@@ -48,7 +48,7 @@ certbridge_install_write_config() {
     echo "tmpfs_style=dev" >>"$MODPATH/config/certs.conf"
   fi
   if ! grep -q '^quiet_prop=' "$MODPATH/config/certs.conf" 2>/dev/null; then
-    echo "quiet_prop=1" >>"$MODPATH/config/certs.conf"
+    echo "quiet_prop=0" >>"$MODPATH/config/certs.conf"
   fi
   # 旧键迁移 / 缺省实验项
   if grep -q '^experimental_14_apex_only=' "$MODPATH/config/certs.conf" 2>/dev/null && \

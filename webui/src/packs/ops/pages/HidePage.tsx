@@ -69,7 +69,7 @@ export function OpsHidePage() {
       {zn.znHideSupported ? (
         <ZnWhitelistEditor
           title={h.whitelistTitle}
-          meta={`${h.whitelistMeta} · 一行一个包名，# 注释；保存后强停 App`}
+          meta={`${h.whitelistMeta} · ${h.whitelistHint}`}
           hint=""
           saveLabel={h.whitelistSave}
           rows={3}

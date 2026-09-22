@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { clearActivityLog, fetchActivityLog } from "@/features/log/model/logSlice";
 import { selectActivityLog } from "@/features/log/model/selectors";
@@ -15,6 +16,7 @@ import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
 const LEVELS = ["", LogLevel.Info, LogLevel.Warn, LogLevel.Error, LogLevel.Debug];
 
 export function ConsoleLogPage() {
+  const { t } = useTranslation("webui");
   const chrome = usePackChrome();
   const dispatch = useAppDispatch();
   const { text, loading, bytes, lines } = useAppSelector(selectActivityLog);
@@ -26,6 +28,15 @@ export function ConsoleLogPage() {
     () => filterLogEntries(entries, levelFilter),
     [entries, levelFilter],
   );
+
+  const levelLabel = (lv: string) => {
+    if (!lv) return t("log.levelAll");
+    if (lv === LogLevel.Info) return t("log.levelInfo");
+    if (lv === LogLevel.Warn) return t("log.levelWarn");
+    if (lv === LogLevel.Error) return t("log.levelError");
+    if (lv === LogLevel.Debug) return t("log.levelDebug");
+    return lv;
+  };
 
   return (
     <div className="pk-con-page pk-con-page--log">
@@ -42,7 +53,7 @@ export function ConsoleLogPage() {
             className={`pk-con-btn${levelFilter === lv ? " is-primary" : ""}`}
             onClick={() => setLevelFilter(lv)}
           >
-            {lv || "all"}
+            {levelLabel(lv)}
           </button>
         ))}
         <button
@@ -60,8 +71,8 @@ export function ConsoleLogPage() {
           className="pk-con-btn"
           onClick={() =>
             confirmAction({
-              title: "truncate journal?",
-              content: "only clears local log file.",
+              title: t("log.clearConfirmTitle"),
+              content: t("log.clearConfirmBody"),
               okText: v.clear,
               danger: true,
               onOk: () => dispatch(clearActivityLog()),
@@ -72,18 +83,18 @@ export function ConsoleLogPage() {
         </button>
       </div>
       {loading ? (
-        <Loader label="reading…" />
+        <Loader label={t("log.loading")} />
       ) : (
         <section className="pk-con-termframe">
           <div className="pk-con-termframe__bar">
-            <span>journal · {filtered.length} lines</span>
+            <span>journal · {t("log.linesCount", { count: filtered.length })}</span>
             <button
               type="button"
               className="pk-con-termframe__flag"
               aria-pressed={wrap}
               onClick={() => setWrap(!wrap)}
             >
-              wrap={wrap ? "on" : "off"}
+              {t("log.wrap")}={wrap ? "on" : "off"}
             </button>
           </div>
           <pre className={`pk-con-term${wrap ? "" : " is-nowrap"}`}>

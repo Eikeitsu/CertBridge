@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { BottomSheet } from "@/shared/ui/BottomSheet";
 import { Button } from "@/shared/ui/primitives";
 import { formatCertDetail } from "../lib/formatCertDetail";
@@ -21,6 +22,7 @@ export function CertDetailSheet({
   loading,
   onClose,
 }: CertDetailSheetProps) {
+  const { t } = useTranslation("webui");
   const detail =
     fields && Object.keys(fields).length ? formatCertDetail(fields, title) : null;
   const brandKind = resolveCertBrandKind(
@@ -35,24 +37,21 @@ export function CertDetailSheet({
       open={open}
       onClose={onClose}
       loading={loading}
-      loadingLabel="正在解析证书"
-      title="证书详情"
+      loadingLabel={t("certs.parseLoading")}
+      title={t("certs.detailTitle")}
     >
       {detail ? (
         <CertDetailBody detail={detail} brandKind={brandKind} />
       ) : showError ? (
         <>
-          <p className="bf-empty-text">
-            {fields?.error ||
-              "未能解析该证书。请确认文件为 PEM/DER，且设备上的解析器可用。"}
-          </p>
+          <p className="bf-empty-text">{fields?.error || t("certs.parseFail")}</p>
           {fields?.error ? (
             <Button
               variant="ghost"
               onClick={onClose}
               style={{ width: "100%", marginTop: 8 }}
             >
-              关闭
+              {t("ui.close")}
             </Button>
           ) : null}
         </>

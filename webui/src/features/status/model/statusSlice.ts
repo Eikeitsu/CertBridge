@@ -12,6 +12,7 @@ import type { CustomCertificate, ModuleStatus } from "@/entities/module/types";
 import { restoreChromeInsets } from "@/features/theme/lib/chrome";
 import { formatClockTime } from "@/shared/lib/clock";
 import { FLAG_ON } from "@/shared/config/constants";
+import i18n from "@/shared/i18n";
 
 type StatusState = {
   loading: boolean;
@@ -73,8 +74,8 @@ const initialState: StatusState = {
   bootstrapped: false,
   status: {},
   customCertificates: [],
-  deviceLabel: "本机",
-  deviceName: "本机",
+  deviceLabel: "Device",
+  deviceName: "Device",
   lastRefreshedAt: "--",
 };
 
@@ -93,7 +94,10 @@ export const bootstrapStatus = createAsyncThunk("status/bootstrap", async () => 
 /** 非阻塞补齐：设备文案 + 自定义证书列表 */
 export const enrichBootstrapMeta = createAsyncThunk("status/enrichMeta", async () => {
   const [device, customCertificates] = await Promise.all([
-    fetchDeviceInfo().catch(() => ({ label: "本机", name: "本机" })),
+    fetchDeviceInfo().catch(() => ({
+      label: i18n.t("ui.deviceLocal"),
+      name: i18n.t("ui.deviceLocal"),
+    })),
     listCustom().catch(() => [] as CustomCertificate[]),
   ]);
   return {
@@ -110,12 +114,12 @@ function formatSyncToast(sync: {
   rebootRequired?: boolean;
 }): string | null {
   if (sync.updated > 0) {
-    return sync.rebootRequired
-      ? `已从 App 更新 ${sync.updated} 张证书（含可选自定义），重启后生效`
-      : `已从 App 更新 ${sync.updated} 张证书（含可选自定义）`;
+    return i18n.t(sync.rebootRequired ? "toast.syncUpdatedReboot" : "toast.syncUpdated", {
+      count: sync.updated,
+    });
   }
   if (sync.miss > 0 && sync.kept === 0 && sync.updated === 0) {
-    return "未从 App 读到新证书（已保留现有）";
+    return i18n.t("toast.syncNone");
   }
   return null;
 }
@@ -137,7 +141,9 @@ export const refreshStatus = createAsyncThunk(
       listCustom().catch(() => [] as CustomCertificate[]),
     ]);
     if (showToast) {
-      toast(formatSyncToast(sync) || (live ? "已复核注入状态" : "状态已刷新"));
+      toast(
+        formatSyncToast(sync) || i18n.t(live ? "toast.statusLive" : "toast.statusOk"),
+      );
     }
     restoreChromeInsets();
     return { status, customCertificates };
@@ -145,7 +151,7 @@ export const refreshStatus = createAsyncThunk(
 );
 
 export const requestReboot = createAsyncThunk("status/reboot", async () => {
-  toast("正在重启…", "warn");
+  toast(i18n.t("toast.rebooting"), "warn");
   await rebootDevice();
 });
 

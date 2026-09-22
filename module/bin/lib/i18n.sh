@@ -97,6 +97,7 @@ i18n_msg() {
 }
 
 # 简单 {{name}} 替换：i18n_fmt 'install.ask_component' name=WebUI
+# 纯 shell 替换，避免每次起 sed（status / WebUI 热路径）
 i18n_fmt() {
   key="$1"
   shift
@@ -104,7 +105,15 @@ i18n_fmt() {
   for pair in "$@"; do
     k=${pair%%=*}
     v=${pair#*=}
-    text=$(printf '%s' "$text" | sed "s/{{$k}}/$v/g")
+    needle="{{${k}}}"
+    while :; do
+      case "$text" in
+        *"$needle"*)
+          text="${text%%"$needle"*}${v}${text#*"$needle"}"
+          ;;
+        *) break ;;
+      esac
+    done
   done
   printf '%s\n' "$text"
 }

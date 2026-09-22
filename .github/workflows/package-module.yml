@@ -145,7 +145,7 @@ jobs:
           ZYGISK_ABIS: arm64-v8a,armeabi-v7a
         run: npm run build:module
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: steps.digest.outputs.unchanged != '1'
         with:
           name: magisk-module

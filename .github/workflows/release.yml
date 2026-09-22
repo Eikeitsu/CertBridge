@@ -154,7 +154,7 @@ jobs:
         run: npm run build:module
 
       - name: Upload zip artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: magisk-module-${{ steps.meta.outputs.tag }}
           path: release/*.zip
@@ -168,7 +168,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           name: magisk-module-${{ needs.build.outputs.tag }}
           path: release/
@@ -184,7 +184,7 @@ jobs:
           cat .release-body.md || true
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ needs.build.outputs.tag }}
           name: ${{ needs.build.outputs.name }}
@@ -207,7 +207,7 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           name: magisk-module-${{ needs.build.outputs.tag }}
           path: release/

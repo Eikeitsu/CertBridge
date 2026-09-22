@@ -49,7 +49,7 @@ function resolveRefreshArg(arg: RefreshStatusArg) {
   return { toast: false, syncApps: true, live: false };
 }
 
-/** CLI 回包里的 reboot_required → pending_reboot，并过滤非状态键 */
+/** CLI 回包里的 reboot_required 优先于 pending_reboot，并过滤非状态键 */
 export function normalizeCliStatusPatch(
   kv: Record<string, string>,
 ): Record<string, string> {
@@ -57,11 +57,12 @@ export function normalizeCliStatusPatch(
   for (const [key, value] of Object.entries(kv)) {
     if (!key || key === "ok" || key === "error" || key === "hint" || key === "filename")
       continue;
-    if (key === "reboot_required") {
-      patch.pending_reboot = value === FLAG_ON || value === "1" ? "1" : "0";
-      continue;
-    }
+    if (key === "reboot_required") continue;
     patch[key] = value;
+  }
+  if (Object.prototype.hasOwnProperty.call(kv, "reboot_required")) {
+    const value = kv.reboot_required;
+    patch.pending_reboot = value === FLAG_ON || value === "1" ? "1" : "0";
   }
   return patch;
 }

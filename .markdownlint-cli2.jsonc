@@ -9,9 +9,14 @@
   "ignores": [
     "**/node_modules/**",
     "**/.build/**",
+    "**/legacy/**",
     "**/archives/**",
     "**/docs/.vitepress/dist/**",
+    // Generated / mirrored changelogs (release bot + machine translation)
     "**/docs/public/changelog.md",
     "**/docs/guide/changelog.md",
+    "**/docs/en/guide/changelog.md",
+    "**/changelog/en.md",
+    "**/changelog/zh-CN.md",
   ],
 }

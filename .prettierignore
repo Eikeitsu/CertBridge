@@ -3,8 +3,15 @@ node_modules
 .release
 module/webroot
 archives
+legacy
 docs/.vitepress/dist
 docs/.vitepress/cache
 package-lock.json
 *.min.js
 *.min.css
+# Release-generated changelogs (bot + machine translation)
+docs/public/changelog.md
+docs/guide/changelog.md
+docs/en/guide/changelog.md
+changelog/en.md
+changelog/zh-CN.md

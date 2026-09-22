@@ -124,7 +124,56 @@ def export_docs(text: str) -> str:
     return render(preamble, published)
 
 
+def export_bilingual(zh_text: str, en_text: str) -> str:
+    """Single Magisk-facing file: Chinese block then English block (no Unreleased)."""
+
+    def body_only(exported: str) -> str:
+        text = exported.strip() + "\n"
+        for prefix in ("# 更新日志\n", "# Changelog\n"):
+            if text.startswith(prefix):
+                text = text[len(prefix) :].lstrip("\n")
+                break
+        return text.rstrip() + "\n"
+
+    zh_body = body_only(export_docs(zh_text))
+    en_body = body_only(export_docs(en_text))
+    return (
+        "# 更新日志 / Changelog\n"
+        "\n"
+        "> Magisk `updateJson` 仅支持一个 changelog URL；本文件中英并列。\n"
+        "> Magisk only accepts one changelog URL; Chinese and English are listed below.\n"
+        "\n"
+        "---\n"
+        "\n"
+        "## 中文\n"
+        "\n"
+        f"{zh_body}"
+        "\n---\n\n"
+        "## English\n"
+        "\n"
+        f"{en_body}"
+    )
+
+
 def main() -> int:
+    if len(sys.argv) >= 2 and sys.argv[1] == "--export-bilingual":
+        if len(sys.argv) < 5:
+            print(
+                "usage: promote-changelog.py --export-bilingual <zh.md> <en.md> <dst.md>",
+                file=sys.stderr,
+            )
+            return 2
+        zh_path = pathlib.Path(sys.argv[2])
+        en_path = pathlib.Path(sys.argv[3])
+        dst = pathlib.Path(sys.argv[4])
+        zh_text = zh_path.read_text(encoding="utf-8") if zh_path.is_file() else "# 更新日志\n"
+        en_text = en_path.read_text(encoding="utf-8") if en_path.is_file() else "# Changelog\n"
+        out = export_bilingual(zh_text, en_text)
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        dst.write_text(out, encoding="utf-8")
+        print(f"exported bilingual Magisk changelog -> {dst}")
+        return 0
+
     if len(sys.argv) >= 2 and sys.argv[1] == "--export-docs":
         if len(sys.argv) < 4:
             print(

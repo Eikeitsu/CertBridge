@@ -6,7 +6,7 @@ CertBridge **CI channel**: update manifest and module zips on the **same** branc
 |------|----------|
 | `update.json` | Magisk-compatible update check（默认 arm64 完整版） |
 | `CertBridge_arm64.zip` | Full module arm64（latest CI；updateJson 默认） |
-| `CertBridge_arm.zip` | Full module arm |
+| `CertBridge_arm32.zip` | Full module arm32（armeabi-v7a） |
 | `CertBridge_x86.zip` | Full module x86 |
 | `CertBridge_x64.zip` | Full module x64 |
 | `CertBridge_lite.zip` | Lite module (when built) |
@@ -14,4 +14,4 @@ CertBridge **CI channel**: update manifest and module zips on the **same** branc
 
 Stable / release channel remains GitHub Pages (`update.json` + `releases/`).
 
-Last: 4.2.1.ci.211 @ 5e3cb67066bdb8ba07ee11eeb7174bddca25568e
+Last: 4.2.1.ci.212 @ 92822eaa3b9ff8f5df906f7a1082c605d230090b

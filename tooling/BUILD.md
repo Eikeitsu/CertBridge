@@ -90,7 +90,12 @@ PACKAGE_EDITIONS=both    # full | lite | both
 
 ## 版本约定
 
-语义化版本 **`vMAJOR.MINOR.PATCH`**；`versionCode = MAJOR*10000 + MINOR*100 + PATCH`。
+语义化版本 **`vMAJOR.MINOR.PATCH`**。
+
+| 通道         | `version` 显示       | `versionCode`                                                                                                          |
+| ------------ | -------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| 正式 Release | `vMAJOR.MINOR.PATCH` | 先按 `MAJOR*10000+MINOR*100+PATCH`；若 Pages/ci-dist 等**已见最大号更高**，则用「已见最大 + 1」，避免正式版低于最新 CI |
+| CI 包        | `<base>.ci.<run>`    | 全局单调：`已见最大+1`（`next-version-code.py`）                                                                       |
 
 ## 工作流
 

@@ -52,15 +52,17 @@ applied_custom_fingerprint() {
 }
 
 # 当前配置是否与开机已生效快照一致？一致则不应再「待重启」
+# 只比对会影响下次开机注入的项；不做 generation_valid（含大量 cksum，WebUI 热路径过慢）
 config_matches_applied() {
   [ -f "$APPLIED_CONF" ] || return 1
-  generation_valid 2>/dev/null || return 1
 
   cur_req=$(read_conf reqable 1)
   cur_pp=$(read_conf proxypin 1)
   cur_mm=$(get_mount_mode)
   cur_tf=$(get_tmpfs_style)
   cur_e14=$(get_experimental_14_system)
+  cur_bz=$(read_conf boot_bind_zygote 0)
+  cur_ba=$(read_conf boot_multi_apex 0)
   app_req=$(read_applied_conf reqable 1)
   app_pp=$(read_applied_conf proxypin 1)
   app_mm=$(read_applied_conf mount_mode compatible | tr 'A-Z' 'a-z')
@@ -77,12 +79,16 @@ config_matches_applied() {
     auto|off|default|follow|overlay|apex_overlay) app_e14=auto ;;
     *) app_e14=skip ;;
   esac
+  app_bz=$(read_applied_conf boot_bind_zygote 0)
+  app_ba=$(read_applied_conf boot_multi_apex 0)
 
   [ "$cur_req" = "$app_req" ] || return 1
   [ "$cur_pp" = "$app_pp" ] || return 1
   [ "$cur_mm" = "$app_mm" ] || return 1
   [ "$cur_tf" = "$app_tf" ] || return 1
   [ "$cur_e14" = "$app_e14" ] || return 1
+  [ "$cur_bz" = "$app_bz" ] || return 1
+  [ "$cur_ba" = "$app_ba" ] || return 1
 
   cur_custom=$(custom_certs_fingerprint)
   app_custom=$(applied_custom_fingerprint)
@@ -91,15 +97,17 @@ config_matches_applied() {
 }
 
 # 写配置后调用：与生效快照一致则清除 pending，否则标记待重启
-# stdout: reboot_required=0|1
+# stdout: reboot_required=0|1 与 pending_reboot=0|1（两行）
 update_reboot_required_flag() {
   if config_matches_applied; then
     clear_reboot_required
     echo "reboot_required=0"
+    echo "pending_reboot=0"
     return 0
   fi
   mark_reboot_required
   echo "reboot_required=1"
+  echo "pending_reboot=1"
 }
 
 get_applied_name() {

@@ -11,10 +11,9 @@ cmd_set_mount_mode() {
   # 立刻按新模式清理 / 同步 staged，避免下次开机前脏 overlay
   prepare_mount_mode_overlay "$MODDIR" 2>/dev/null || true
   pending_line=$(note_conf_dirty)
-  log_info "config: mount_mode=$mode (reboot required)"
+  log_info "config: mount_mode=$mode"
   echo "ok=1"
   echo "mount_mode=$mode"
-  echo "pending_reboot=1"
   echo "$pending_line"
 }
 
@@ -27,10 +26,9 @@ cmd_set_tmpfs_style() {
   write_conf tmpfs_style "$style" || { echo "error=write_failed"; return 1; }
   apply_tmpfs_style
   pending_line=$(note_conf_dirty)
-  log_info "config: tmpfs_style=$style (reboot required)"
+  log_info "config: tmpfs_style=$style"
   echo "ok=1"
   echo "tmpfs_style=$style"
-  echo "pending_reboot=1"
   echo "$pending_line"
 }
 
@@ -50,10 +48,9 @@ cmd_set_experimental_14_system() {
   write_conf experimental_14_system "$mode" || { echo "error=write_failed"; return 1; }
   prepare_mount_mode_overlay "$MODDIR" 2>/dev/null || true
   pending_line=$(note_conf_dirty)
-  log_info "config: experimental_14_system=$mode (reboot required; API34+ both mount modes)"
+  log_info "config: experimental_14_system=$mode (API34+ both mount modes)"
   echo "ok=1"
   echo "experimental_14_system=$mode"
-  echo "pending_reboot=1"
   echo "$pending_line"
 }
 
@@ -198,9 +195,11 @@ cmd_set_boot_bind_zygote() {
     *) echo "error=invalid_boot_bind_zygote"; return 1 ;;
   esac
   write_conf boot_bind_zygote "$val" || { echo "error=write_failed"; return 1; }
-  log_info "config: boot_bind_zygote=$val (reboot required)"
+  pending_line=$(note_conf_dirty)
+  log_info "config: boot_bind_zygote=$val"
   echo "ok=1"
   echo "boot_bind_zygote=$val"
+  echo "$pending_line"
   if [ "$val" = "0" ]; then
     echo "hint=已关闭开机 Zygote 注入；重启后仅 bind init，部分机可能缺证"
   else
@@ -215,9 +214,11 @@ cmd_set_boot_multi_apex() {
     *) echo "error=invalid_boot_multi_apex"; return 1 ;;
   esac
   write_conf boot_multi_apex "$val" || { echo "error=write_failed"; return 1; }
-  log_info "config: boot_multi_apex=$val (reboot required)"
+  pending_line=$(note_conf_dirty)
+  log_info "config: boot_multi_apex=$val"
   echo "ok=1"
   echo "boot_multi_apex=$val"
+  echo "$pending_line"
   if [ "$val" = "0" ]; then
     echo "hint=已改为精简 boot：14+ 仅主 APEX（跳过 @版本与 system）；重启后生效"
   else

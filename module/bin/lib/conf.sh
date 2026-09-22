@@ -132,11 +132,10 @@ snapshot_effective_conf() {
   return 1
 }
 
-# WebUI 热路径：只打 pending，不做 generation_valid / 指纹扫描
+# 写配置后：与开机 applied 快照比对；改回原值则清除待重启
+# stdout: reboot_required= / pending_reboot=（见 update_reboot_required_flag）
 note_conf_dirty() {
-  mark_reboot_required || true
-  echo "reboot_required=1"
-  return 0
+  update_reboot_required_flag
 }
 
 is_enabled() {

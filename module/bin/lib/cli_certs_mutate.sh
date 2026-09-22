@@ -71,11 +71,9 @@ cmd_toggle() {
       echo "hint=无法写入 /data/adb/certbridge/user.conf"
       return 1
     fi
-    pending_line=$(note_conf_dirty)
     echo "ok=1"
     echo "${name}_enabled=$value"
-    echo "pending_reboot=1"
-    echo "$pending_line"
+    note_conf_dirty
     return 0
   fi
 
@@ -90,11 +88,9 @@ cmd_toggle() {
     echo "hint=无法写入 /data/adb/certbridge/user.conf"
     return 1
   fi
-  pending_line=$(note_conf_dirty)
   echo "ok=1"
   echo "${name}_enabled=$value"
-  echo "pending_reboot=1"
-  echo "$pending_line"
+  note_conf_dirty
   return 0
 }
 
@@ -197,11 +193,10 @@ cmd_install_custom() {
   fi
   release_write_lock
   rm -f "$raw" "$normalized"
-  log_info "custom: installed $name ($display, reboot required)"
+  log_info "custom: installed $name ($display)"
   echo "ok=1"
   echo "filename=$name"
   echo "display_name=$display"
-  echo "pending_reboot=1"
   echo "$pending_line"
 }
 
@@ -224,8 +219,7 @@ cmd_remove_custom() {
     sync_magic_overlay "$MODDIR" >/dev/null 2>&1 || true
   fi
   release_write_lock
-  log_info "custom: removed $filename (reboot required)"
+  log_info "custom: removed $filename"
   echo "ok=1"
-  echo "pending_reboot=1"
   echo "$pending_line"
 }

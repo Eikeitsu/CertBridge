@@ -109,7 +109,7 @@ def next_version_code(
 
 
 def main() -> int:
-    repo = Path(__file__).resolve().parents[2]
+    repo = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--fetch-remote", action="store_true")
     parser.add_argument("--no-fetch-remote", action="store_true")

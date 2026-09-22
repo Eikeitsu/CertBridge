@@ -127,11 +127,21 @@ jobs:
         if: github.event_name != 'pull_request' && steps.digest.outputs.unchanged != '1'
         id: stamp
         run: |
+          set -euo pipefail
           chmod +x scripts/*.sh || true
           eval "$(python3 scripts/stamp-ci-module-version.py --fetch-remote | tee /dev/stderr | grep -E '^(version|version_code)=')"
+          test -n "${version:-}"
+          test -n "${version_code:-}"
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "version_code=$version_code" >> "$GITHUB_OUTPUT"
-          cat module/module.prop
+          grep -E '^(version|versionCode)=' module/module.prop
+          case "$version" in
+            *.ci.*) ;;
+            *)
+              echo "stamp did not produce a CI version (got: $version)" >&2
+              exit 1
+              ;;
+          esac
 
       - name: Setup NDK (Zygisk sources present)
         if: steps.digest.outputs.unchanged != '1' && hashFiles('native/zygisk_hide/**') != ''
@@ -168,5 +178,9 @@ jobs:
           GITHUB_SHA: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
           INPUT_DIGEST: ${{ steps.digest.outputs.digest }}
         run: |
+          set -euo pipefail
+          test -n "${{ steps.stamp.outputs.version }}"
+          test -n "${{ steps.stamp.outputs.version_code }}"
+          grep -E '\.ci\.' module/module.prop
           chmod +x scripts/publish-ci-dist.sh scripts/git-push-tree.sh
           scripts/publish-ci-dist.sh "${{ steps.stamp.outputs.version }}"

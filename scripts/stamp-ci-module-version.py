@@ -56,7 +56,7 @@ def load_next_version_code():
 
 
 def main() -> int:
-    repo = Path(__file__).resolve().parents[2]
+    repo = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--prop", type=Path, default=repo / "module" / "module.prop")
     parser.add_argument("--run", type=int, default=0)

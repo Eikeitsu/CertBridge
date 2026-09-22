@@ -26,7 +26,7 @@ import sys
 from pathlib import Path
 
 _SCRIPTS = Path(__file__).resolve().parent
-_REPO = Path(__file__).resolve().parents[2]
+_REPO = Path(__file__).resolve().parents[1]
 INT32_MAX = 2147483647
 
 

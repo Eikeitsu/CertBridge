@@ -6,6 +6,7 @@ import { MountModePanel } from "./MountModePanel";
 import { Experimental14SystemPanel } from "./Experimental14SystemPanel";
 import { QuietPropPanel } from "./QuietPropPanel";
 import { TmpfsPathPanel } from "./TmpfsPathPanel";
+import { LanguagePanel } from "./LanguagePanel";
 
 type MountInjectPanelsProps = {
   dense?: boolean;
@@ -27,6 +28,7 @@ export function MountInjectPanels({
 
   const body = (
     <>
+      <LanguagePanel dense={dense} />
       <MountModePanel
         mountMode={mount.mountMode}
         pending={mount.isPending}

@@ -1,0 +1,142 @@
+/* 更多页二级入口：与 terminal block / bf-row 左右对齐 */
+.pk-con-shell .bf-more-nav,
+.pk-con-block .bf-more-nav {
+  padding-left: 12px;
+  padding-right: 12px;
+  box-sizing: border-box;
+}
+
+.pk-con-shell .bf-segment--stack {
+  padding: 0;
+}
+
+.pk-con-shell .bf-segment--stack .bf-segment__option {
+  border-radius: 2px;
+  font-family: var(--bf-font-mono);
+}
+
+.pk-con-shell .bf-bullet-list {
+  margin: 10px 0 0;
+  padding-left: 1.1em;
+}
+
+.pk-con-shell .bf-notice {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 2px;
+}
+
+.pk-con-shell .bf-hide-guide details {
+  padding: 0;
+  margin-bottom: 8px;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.pk-con-shell .bf-hide-guide details > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  min-height: 40px;
+  padding: 10px 12px;
+  list-style: none;
+  font-family: var(--bf-font-mono);
+  font-size: 0.78rem;
+}
+
+.pk-con-shell .bf-hide-guide details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.pk-con-shell .bf-hide-guide details > summary::before {
+  content: "▶";
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  line-height: 1;
+  color: var(--pk-ink);
+  transition: transform 0.15s ease;
+}
+
+.pk-con-shell .bf-hide-guide details[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.pk-con-shell .bf-hide-guide details > ul,
+.pk-con-shell .bf-hide-guide details > ol {
+  margin: 0;
+  padding: 0 12px 10px 28px;
+}
+
+.pk-con-shell .bf-textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 2px;
+}
+
+.pk-con-block > .bf-row:first-of-type {
+  border-top: 0;
+}
+
+.pk-con-shell .bf-switch {
+  width: 36px;
+  height: 18px;
+  border-radius: 2px;
+  background: var(--pk-line-strong);
+}
+
+.pk-con-shell .bf-switch::after {
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 1px;
+  box-shadow: none;
+}
+
+.pk-con-shell .bf-switch.is-on {
+  background: var(--pk-accent);
+}
+
+.pk-con-shell .bf-switch.is-on::after {
+  transform: translateX(18px);
+  background: #04120a;
+}
+
+html[data-theme="light"] .pk-con-shell .bf-switch.is-on::after {
+  background: #fff;
+}
+
+html[data-pack="console"] {
+  --bf-bg: #070b10;
+  --bf-chrome: #070b10;
+  --bf-surface: #0c1219;
+  --bf-surface-2: #101820;
+  --bf-ink: #c8d2dc;
+  --bf-ink-2: #9fb0c0;
+  --bf-ink-3: #64748b;
+  --bf-stroke: #1f2a36;
+  --bf-stroke-strong: #2a3848;
+  --bf-shadow: none;
+  --bf-radius: 2px;
+  --bf-radius-sm: 2px;
+  --bf-radius-lg: 4px;
+  --bf-font-display: var(--bf-font-mono);
+
+  background: #070b10;
+}
+
+html[data-pack="console"][data-theme="light"] {
+  --bf-bg: #d7dde5;
+  --bf-chrome: #d7dde5;
+  --bf-surface: #eef2f6;
+  --bf-surface-2: #f8fafc;
+  --bf-ink: #0f172a;
+  --bf-ink-2: #334155;
+  --bf-ink-3: #64748b;
+  --bf-stroke: #b8c2ce;
+  --bf-stroke-strong: #94a3b8;
+
+  background: #d7dde5;
+}

@@ -1,0 +1,47 @@
+.bf-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 8px;
+  font-size: 0.68rem;
+  font-weight: 650;
+  border: 1px solid var(--bf-stroke-strong);
+  color: var(--bf-ink-2);
+}
+
+.bf-tag--ok {
+  color: var(--bf-ok);
+  border-color: color-mix(in srgb, var(--bf-ok) 35%, transparent);
+  background: color-mix(in srgb, var(--bf-ok) 10%, transparent);
+}
+
+.bf-tag--warn {
+  color: var(--bf-warn);
+  border-color: color-mix(in srgb, var(--bf-warn) 35%, transparent);
+  background: color-mix(in srgb, var(--bf-warn) 10%, transparent);
+}
+
+.bf-tag--bad {
+  color: var(--bf-bad);
+  border-color: color-mix(in srgb, var(--bf-bad) 35%, transparent);
+  background: color-mix(in srgb, var(--bf-bad) 10%, transparent);
+}
+
+.bf-notice {
+  padding: 12px var(--bf-space-md);
+  border-radius: var(--bf-radius-sm);
+  font-size: 0.84rem;
+  line-height: 1.45;
+  border: 1px solid var(--bf-stroke);
+  background: var(--bf-surface);
+}
+
+.bf-notice--alert {
+  border-color: color-mix(in srgb, var(--bf-warn) 40%, transparent);
+  background: color-mix(in srgb, var(--bf-warn) 9%, var(--bf-surface));
+}
+
+.bf-notice--error {
+  border-color: color-mix(in srgb, var(--bf-bad) 40%, transparent);
+  background: color-mix(in srgb, var(--bf-bad) 9%, var(--bf-surface));
+}

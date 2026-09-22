@@ -1,0 +1,241 @@
+/* iOS Settings 风格分组列表 */
+.pk-def-group {
+  border-radius: var(--pk-group-radius);
+  background: var(--bf-surface);
+  border: 1px solid color-mix(in srgb, var(--bf-stroke) 85%, transparent);
+  overflow: hidden;
+}
+
+.pk-def-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 52px;
+  padding: 12px 14px;
+  border-top: 1px solid var(--bf-stroke);
+}
+
+.pk-def-row:first-child {
+  border-top: 0;
+}
+
+.pk-def-row.is-on {
+  background: color-mix(in srgb, var(--bf-ok) 6%, transparent);
+}
+
+.pk-def-row__main {
+  min-width: 0;
+  flex: 1;
+}
+
+.pk-def-row__main strong {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+
+.pk-def-row__main span {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.75rem;
+  color: var(--bf-ink-3);
+  line-height: 1.35;
+  word-break: break-all;
+}
+
+.pk-def-row__ops {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.pk-def-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--bf-stroke-strong);
+  flex-shrink: 0;
+}
+
+.pk-def-dot.is-on {
+  background: var(--bf-ok);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--bf-ok) 22%, transparent);
+}
+
+.pk-def-fold > summary::-webkit-details-marker {
+  display: none;
+}
+
+.pk-def-fold > summary::after {
+  content: "›";
+  display: inline-block;
+  margin-left: 6px;
+  transition: transform 0.15s ease;
+  color: var(--bf-ink-3);
+}
+
+.pk-def-fold[open] > summary::after {
+  transform: rotate(90deg);
+}
+
+.pk-def-kv {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 12px;
+  margin: 8px 0 0;
+}
+
+.pk-def-kv dt {
+  font-size: 0.68rem;
+  color: var(--bf-ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pk-def-kv dd {
+  margin: 2px 0 0;
+  font-weight: 650;
+  font-size: 0.88rem;
+}
+
+.pk-def-banner {
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.pk-def-banner.is-warn {
+  background: var(--bf-warn-soft);
+  border: 1px solid color-mix(in srgb, var(--bf-warn) 28%, transparent);
+}
+
+.pk-def-banner.is-bad {
+  background: var(--bf-bad-soft);
+  border: 1px solid color-mix(in srgb, var(--bf-bad) 28%, transparent);
+}
+
+.pk-def-link {
+  border: 0;
+  background: transparent;
+  color: var(--bf-primary);
+  font-weight: 650;
+  font-size: 0.82rem;
+  cursor: pointer;
+  min-height: 44px;
+  padding: 0 4px;
+}
+
+.pk-def-link.is-danger {
+  color: var(--bf-bad);
+}
+
+.pk-def-link:disabled {
+  opacity: 0.4;
+}
+
+.pk-def-empty {
+  text-align: center;
+  color: var(--bf-ink-3);
+  padding: 18px 8px;
+  margin: 0;
+  font-size: 0.86rem;
+}
+
+.pk-def-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.pk-def-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 0 0;
+}
+
+.pk-def-chip {
+  border: 1px solid var(--bf-stroke);
+  background: transparent;
+  border-radius: 999px;
+  min-height: 36px;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  font-weight: 650;
+  cursor: pointer;
+  color: var(--bf-ink-2);
+}
+
+.pk-def-seg {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.pk-def-seg__item {
+  border: 0;
+  background: transparent;
+  border-radius: 999px;
+  min-height: 36px;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: var(--bf-ink-3);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pk-def-seg__item.is-on {
+  background: color-mix(in srgb, var(--bf-primary) 12%, var(--bf-surface));
+  color: var(--bf-primary);
+}
+
+.pk-def-log {
+  font-family: var(--bf-font-mono);
+  font-size: 0.76rem;
+  line-height: 1.6;
+  background: #0f172a;
+  color: #e2e8f0;
+  border-radius: 12px;
+  padding: 14px 12px;
+  max-height: 58vh;
+  overflow: auto;
+  margin-inline: 8px;
+  width: auto;
+  box-sizing: border-box;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.pk-def-log.is-nowrap {
+  white-space: pre;
+  word-break: normal;
+  overflow-x: auto;
+}
+
+.pk-def-log.is-nowrap .pk-def-log__line {
+  white-space: pre;
+}
+
+.pk-def-log-wrap {
+  margin-inline: 0;
+}
+
+.pk-def-log__line.lv-error {
+  color: #fca5a5;
+}
+
+.pk-def-log__line.lv-warn {
+  color: #fcd34d;
+}
+
+.pk-def-log__line.lv-debug {
+  color: #94a3b8;
+}

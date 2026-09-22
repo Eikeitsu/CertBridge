@@ -5,7 +5,7 @@ export default {
     "**/node_modules/**",
     "**/.build/**",
     "**/module/webroot/**",
-    "**/archives/**",
+    "**/legacy/**",
     "**/docs/.vitepress/dist/**",
   ],
   rules: {

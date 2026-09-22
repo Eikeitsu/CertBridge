@@ -1,21 +1,24 @@
 #!/system/bin/sh
 
-ui_print "********************************"
-ui_print " 证书桥 "
-ui_print " CertBridge "
-ui_print "********************************"
-
 MODDIR="$MODPATH"
 CERTBRIDGE_PROFILE=install
 if [ -f "$MODPATH/bin/common.sh" ]; then
   # shellcheck disable=SC1090
   . "$MODPATH/bin/common.sh"
 else
-  ui_print "! 缺少 bin/common.sh，安装包不完整"
+  ui_print "! Missing bin/common.sh"
   abort "! incomplete package" 2>/dev/null || exit 1
 fi
 
+i18n_load >/dev/null 2>&1 || true
+ui_print "********************************"
+ui_print " $(i18n_msg install.banner)"
+ui_print " CertBridge "
+ui_print "********************************"
+
 certbridge_run_install
+i18n_seed_user_lang
+i18n_load >/dev/null 2>&1 || true
 
 set_perm_recursive "$MODPATH/bin" root root 0755 0755
 set_perm_recursive "$MODPATH/config" root root 0700 0600

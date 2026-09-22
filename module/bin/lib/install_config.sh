@@ -145,6 +145,9 @@ certbridge_install_trim_components() {
   if [ "$INSTALL_HIDE" != "1" ]; then
     rm -f "$MODPATH/bin/lib/hide_assist.sh"
     rm -f "$MODPATH/bin/lib/hide_actions.sh"
+    rm -f "$MODPATH/bin/lib/hide_probe.sh"
+    rm -f "$MODPATH/bin/lib/hide_clear.sh"
+    rm -f "$MODPATH/bin/lib/hide_register.sh"
     rm -f "$MODPATH/bin/lib/hide_status.sh"
     rm -f "$MODPATH/data/state/hide-assist.conf" 2>/dev/null
   fi

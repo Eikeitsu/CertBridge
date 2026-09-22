@@ -1,0 +1,88 @@
+/* shared Card -> ops panel look */
+.pk-ops-shell .bf-card {
+  background: var(--pk-panel);
+  border: 1px solid var(--pk-line);
+  border-radius: var(--pk-radius);
+  box-shadow: none;
+  padding: 12px 14px 14px;
+  overflow: visible;
+}
+
+.pk-ops-shell .bf-card__title {
+  margin: 0 0 4px;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--pk-muted);
+  font-weight: 700;
+}
+
+.pk-ops-shell .bf-card__title::before,
+.pk-ops-shell .bf-card__title::after {
+  content: none;
+}
+
+.pk-ops-shell .bf-card__meta {
+  margin: 0 0 10px;
+  font-size: 0.74rem;
+  color: var(--pk-muted);
+}
+
+.pk-ops-shell .bf-card--dense {
+  padding: 12px 14px;
+}
+
+.pk-ops-shell .bf-card-plain {
+  padding: 0;
+}
+
+.pk-ops-shell .bf-card-plain__title {
+  margin: 0 0 6px;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--pk-muted);
+}
+
+.pk-ops-shell .bf-card-plain__title::before,
+.pk-ops-shell .bf-card-plain__title::after {
+  content: none;
+}
+
+.pk-ops-shell .bf-card-plain__meta {
+  margin: 0 0 10px;
+  font-size: 0.74rem;
+  color: var(--pk-muted);
+}
+
+.pk-ops-shell .bf-pack-card {
+  border-color: var(--pk-line);
+  background: color-mix(in srgb, var(--pk-panel) 70%, transparent);
+}
+
+.pk-ops-shell .bf-pack-card.is-active {
+  border-color: color-mix(in srgb, var(--pk-accent) 55%, transparent);
+  background: color-mix(in srgb, var(--pk-accent) 12%, transparent);
+  box-shadow: none;
+}
+
+.pk-ops-shell .bf-segment--chips .bf-segment__option {
+  background: transparent;
+  border-color: var(--pk-line);
+  color: var(--pk-muted);
+}
+
+.pk-ops-shell .bf-segment--chips .bf-segment__option.is-on {
+  color: var(--pk-accent);
+  border-color: color-mix(in srgb, var(--pk-accent) 50%, transparent);
+  background: color-mix(in srgb, var(--pk-accent) 12%, transparent);
+}
+
+.pk-ops-shell .bf-bullet-list {
+  color: var(--pk-muted);
+}
+
+.pk-ops-shell .bf-hide-switch-card {
+  padding: 4px 0;
+  min-height: 48px;
+}

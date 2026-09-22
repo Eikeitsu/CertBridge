@@ -1,0 +1,30 @@
+/* 默认包：共享 Card 降噪 — 变成分组外观 */
+.pk-def-shell .bf-card {
+  background: var(--bf-surface);
+  border: 1px solid color-mix(in srgb, var(--bf-stroke) 85%, transparent);
+  border-radius: var(--pk-group-radius);
+  box-shadow: none;
+  padding: 4px 0 14px;
+  overflow: visible;
+}
+
+.pk-def-shell .bf-card__title {
+  padding: 12px 14px 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--bf-ink-3);
+  font-weight: 700;
+}
+
+.pk-def-shell .bf-card__meta {
+  padding: 4px 14px 8px;
+  margin: 0;
+}
+
+.pk-def-shell .bf-card > :not(.bf-card__title, .bf-card__meta) {
+  margin-inline: 16px;
+  width: auto;
+  max-width: calc(100% - 32px);
+  box-sizing: border-box;
+}

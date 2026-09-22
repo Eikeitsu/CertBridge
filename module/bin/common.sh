@@ -81,8 +81,9 @@ certbridge_load_cert_domain() {
 
 certbridge_load_libs_install() {
   certbridge_load_lib log.sh
-  certbridge_load_lib keys.sh
   certbridge_load_lib conf.sh
+  certbridge_load_lib i18n.sh
+  certbridge_load_lib keys.sh
   certbridge_load_cert_domain
   certbridge_load_lib store.sh
   certbridge_load_lib install_flow.sh
@@ -92,6 +93,7 @@ certbridge_load_libs_runtime() {
   # keys.sh 仅安装用；Action / service / WebUI 后端不加载
   certbridge_load_lib log.sh
   certbridge_load_lib conf.sh
+  certbridge_load_lib i18n.sh
   certbridge_load_lib lock.sh
   certbridge_load_lib store.sh
   certbridge_load_cert_domain
@@ -115,13 +117,14 @@ certbridge_load_libs_runtime() {
       echo "hide_ksud_umount=0"
       echo "hide_nohello=0"
       echo "hide_provider=none"
-      echo "hide_provider_label=未安装隐藏组件"
+      echo "hide_provider_label=$(i18n_msg status.hide_provider_none 2>/dev/null || echo none)"
       echo "hide_applied=0"
-      echo "hide_summary=未安装挂载隐藏组件"
+      echo "hide_summary=$(i18n_msg status.hide_summary_none 2>/dev/null || echo none)"
     }
   fi
   # Zygisk / 安装档案 / 底座探测 → profile_status.sh
   certbridge_load_lib profile_status.sh
+  i18n_load >/dev/null 2>&1 || true
 }
 
 certbridge_init_paths "$0"

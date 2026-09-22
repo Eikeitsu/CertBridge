@@ -10,17 +10,18 @@ on:
       - "module/**"
       - "webui/**"
       - "native/**"
-      - "tooling/scripts/build-web.mjs"
-      - "tooling/scripts/build-cbx509.mjs"
-      - "tooling/scripts/build-zygisk-hide.mjs"
-      - "tooling/scripts/package-module.mjs"
-      - "tooling/scripts/stamp-ci-module-version.py"
-      - "tooling/scripts/next-version-code.py"
-      - "tooling/scripts/publish-ci-dist.sh"
-      - "tooling/scripts/git-push-tree.sh"
-      - "tooling/scripts/plan-packaging-deps.sh"
-      - "tooling/scripts/module-input-digest.sh"
-      - "tooling/cbx509/**"
+      - "scripts/build-web.mjs"
+      - "scripts/build-cbx509.mjs"
+      - "scripts/build-zygisk-hide.mjs"
+      - "scripts/package-module.mjs"
+      - "scripts/stamp-ci-module-version.py"
+      - "scripts/next-version-code.py"
+      - "scripts/publish-ci-dist.sh"
+      - "scripts/git-push-tree.sh"
+      - "scripts/plan-packaging-deps.sh"
+      - "scripts/module-input-digest.sh"
+      - "tools/cbx509/**"
+      - "locales/**"
       - "package.json"
       - "package-lock.json"
       - ".github/actions/setup-node-npm/**"
@@ -32,11 +33,12 @@ on:
       - "module/**"
       - "webui/**"
       - "native/**"
-      - "tooling/scripts/build-web.mjs"
-      - "tooling/scripts/build-cbx509.mjs"
-      - "tooling/scripts/build-zygisk-hide.mjs"
-      - "tooling/scripts/package-module.mjs"
-      - "tooling/cbx509/**"
+      - "scripts/build-web.mjs"
+      - "scripts/build-cbx509.mjs"
+      - "scripts/build-zygisk-hide.mjs"
+      - "scripts/package-module.mjs"
+      - "tools/cbx509/**"
+      - "locales/**"
       - "package.json"
       - "package-lock.json"
       - ".github/actions/setup-node-npm/**"
@@ -81,8 +83,8 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           set -euo pipefail
-          chmod +x tooling/scripts/plan-packaging-deps.sh
-          eval "$(tooling/scripts/plan-packaging-deps.sh)"
+          chmod +x scripts/plan-packaging-deps.sh
+          eval "$(scripts/plan-packaging-deps.sh)"
           echo "plan: web=$need_web ready=$siblings_ready → run=$run_package"
           echo "run_package=$run_package" >> "$GITHUB_OUTPUT"
           if [ "$run_package" != "1" ]; then
@@ -109,8 +111,8 @@ jobs:
         id: digest
         run: |
           set -euo pipefail
-          chmod +x tooling/scripts/module-input-digest.sh
-          DIGEST="$(tooling/scripts/module-input-digest.sh | tail -1)"
+          chmod +x scripts/module-input-digest.sh
+          DIGEST="$(scripts/module-input-digest.sh | tail -1)"
           echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
           echo "input digest=$DIGEST"
           tip="$(curl -fsSL "https://raw.githubusercontent.com/${{ github.repository }}/ci-dist/INPUT_DIGEST" 2>/dev/null || true)"
@@ -125,8 +127,8 @@ jobs:
         if: github.event_name != 'pull_request' && steps.digest.outputs.unchanged != '1'
         id: stamp
         run: |
-          chmod +x tooling/scripts/*.sh || true
-          eval "$(python3 tooling/scripts/stamp-ci-module-version.py --fetch-remote | tee /dev/stderr | grep -E '^(version|version_code)=')"
+          chmod +x scripts/*.sh || true
+          eval "$(python3 scripts/stamp-ci-module-version.py --fetch-remote | tee /dev/stderr | grep -E '^(version|version_code)=')"
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "version_code=$version_code" >> "$GITHUB_OUTPUT"
           cat module/module.prop
@@ -141,7 +143,7 @@ jobs:
         env:
           ANDROID_NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
           SKIP_ZYGISK_HIDE: ${{ hashFiles('native/zygisk_hide/**') == '' && '1' || '0' }}
-          REQUIRE_ZYGISK_HIDE: ${{ hashFiles('tooling/scripts/build-zygisk-hide.mjs') != '' && hashFiles('native/zygisk_hide/**') != '' && '1' || '0' }}
+          REQUIRE_ZYGISK_HIDE: ${{ hashFiles('scripts/build-zygisk-hide.mjs') != '' && hashFiles('native/zygisk_hide/**') != '' && '1' || '0' }}
           ZYGISK_ABIS: arm64-v8a,armeabi-v7a
         run: npm run build:module
 
@@ -149,7 +151,7 @@ jobs:
         if: steps.digest.outputs.unchanged != '1'
         with:
           name: magisk-module
-          path: release/*.zip
+          path: .build/release/*.zip
           if-no-files-found: error
 
       - name: Publish ci-dist (update.json + zips)
@@ -166,5 +168,5 @@ jobs:
           GITHUB_SHA: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
           INPUT_DIGEST: ${{ steps.digest.outputs.digest }}
         run: |
-          chmod +x tooling/scripts/publish-ci-dist.sh tooling/scripts/git-push-tree.sh
-          tooling/scripts/publish-ci-dist.sh "${{ steps.stamp.outputs.version }}"
+          chmod +x scripts/publish-ci-dist.sh scripts/git-push-tree.sh
+          scripts/publish-ci-dist.sh "${{ steps.stamp.outputs.version }}"

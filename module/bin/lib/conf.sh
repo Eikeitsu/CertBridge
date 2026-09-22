@@ -83,7 +83,7 @@ write_conf() {
   key="$1"
   value="$2"
   case "$key" in
-    reqable|proxypin|schema_version|mount_mode|tmpfs_style|quiet_prop|hot_allow|hide_allow|zn_hide_allow|experimental_14_system|force_bind_capture|late_inject|boot_bind_zygote|boot_multi_apex|service_probe)
+    reqable|proxypin|schema_version|mount_mode|tmpfs_style|quiet_prop|hot_allow|hide_allow|zn_hide_allow|experimental_14_system|force_bind_capture|late_inject|boot_bind_zygote|boot_multi_apex|service_probe|ui_lang)
       ;;
     *) return 1 ;;
   esac

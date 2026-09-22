@@ -1,0 +1,23 @@
+{
+  "write_failed": "写入失败",
+  "busy": "忙碌中，稍后重试",
+  "not_found": "未找到",
+  "invalid_toggle": "无效开关",
+  "invalid_value": "无效取值",
+  "certificate_unavailable": "无可用证书",
+  "invalid_mount_mode": "无效挂载模式",
+  "invalid_tmpfs_style": "无效路径风格",
+  "invalid_experimental_14_system": "无效 system 策略",
+  "hot_feature_not_installed": "未装热挂载",
+  "hide_feature_not_installed": "未装隐藏组件",
+  "zn_hide_feature_not_installed": "未装 Zygisk 过滤",
+  "hide_allow_off": "请先开启隐藏",
+  "decode_failed": "解码失败",
+  "invalid_size": "体积过大",
+  "install_failed": "安装失败",
+  "remove_failed": "移除失败",
+  "import_failed": "导入失败",
+  "invalid_filename": "无效文件名",
+  "too_many_collisions": "命名冲突过多",
+  "failed": "失败"
+}

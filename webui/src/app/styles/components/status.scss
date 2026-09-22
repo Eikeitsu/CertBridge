@@ -1,0 +1,27 @@
+.bf-metric {
+  text-align: center;
+  padding: 12px 4px;
+  border-radius: var(--bf-radius-sm);
+  background: var(--bf-surface);
+  border: 1px solid var(--bf-stroke);
+}
+
+.bf-metric strong {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.bf-metric span {
+  font-size: 0.62rem;
+  color: var(--bf-ink-3);
+  font-weight: 600;
+}
+
+.bf-empty {
+  text-align: center;
+  padding: var(--bf-space-lg);
+  color: var(--bf-ink-3);
+  font-size: 0.85rem;
+}

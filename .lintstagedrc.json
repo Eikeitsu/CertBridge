@@ -9,8 +9,8 @@
   ],
   "*.{json,html,yml,yaml}": ["prettier --write --ignore-unknown"],
   "*.md": ["prettier --write --ignore-unknown", "markdownlint-cli2 --fix"],
-  "*.py": ["node tooling/scripts/lint-py.mjs --fix"],
-  "*.java": ["node tooling/scripts/lint-java.mjs --fix"],
-  "*.{c,cc,cpp,h,hpp}": ["node tooling/scripts/lint-clang.mjs --fix"],
-  "*.sh": ["node tooling/scripts/lint-shell.mjs"]
+  "*.py": ["node scripts/lint-py.mjs --fix"],
+  "*.java": ["node scripts/lint-java.mjs --fix"],
+  "*.{c,cc,cpp,h,hpp}": ["node scripts/lint-clang.mjs --fix"],
+  "*.sh": ["node scripts/lint-shell.mjs"]
 }

@@ -1,0 +1,81 @@
+/* 行内指标，不是三枚小卡 */
+.pk-def-inline-stats {
+  margin: 0;
+  padding: 0 2px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 2px;
+  font-size: 0.84rem;
+  color: var(--bf-ink-3);
+  line-height: 1.4;
+}
+
+.pk-def-inline-stats strong {
+  color: var(--bf-ink);
+  font-weight: 750;
+  margin-right: 2px;
+}
+
+.pk-def-inline-stats__sep {
+  margin: 0 8px;
+  opacity: 0.45;
+}
+
+.pk-def-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pk-def-section__title {
+  margin: 0;
+  padding: 0 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--bf-ink-2);
+}
+
+.pk-def-muted {
+  margin: 12px 0 0;
+  color: var(--bf-ink-2);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.pk-def-muted--tight {
+  margin: 6px 0 0;
+  padding: 0 4px;
+}
+
+.pk-def-fold {
+  border: 0;
+  background: transparent;
+  padding: 0 4px;
+}
+
+.pk-def-fold__body {
+  margin-top: 8px;
+}
+
+.pk-def-fold > summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--bf-ink-2);
+  padding: 8px 0;
+  list-style: none;
+}
+
+.pk-def-section__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pk-def-section__bar .pk-def-section__title {
+  margin: 0;
+}

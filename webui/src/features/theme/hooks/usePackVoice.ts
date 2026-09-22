@@ -1,9 +1,194 @@
-import { useMemo } from "react";
-import { useAppSelector } from "@/app/store/hooks";
-import { selectThemePack } from "@/features/theme/model/selectors";
-import { getPackVoice } from "@/shared/config/packVoice";
+import { useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { TabName, ThemePack } from "@/entities/module/enums";
+import type { PackVoice } from "@/shared/config/packVoice";
 
+/** Map i18n webui.json → legacy PackVoice shape used by hooks/pages */
 export function usePackVoice() {
-  const pack = useAppSelector(selectThemePack);
-  return useMemo(() => ({ pack, voice: getPackVoice(pack) }), [pack]);
+  const { t, i18n } = useTranslation("webui");
+  const pack = ThemePack.Default;
+
+  const voice = useMemo((): PackVoice => {
+    const tabs = {
+      [TabName.Home]: t("tabs.home"),
+      [TabName.Certs]: t("tabs.certs"),
+      [TabName.Log]: t("tabs.log"),
+      [TabName.Hide]: t("tabs.hide"),
+      [TabName.More]: t("tabs.more"),
+    };
+    return {
+      brand: t("brand"),
+      loadingHint: t("loadingHint"),
+      tabs,
+      overview: {
+        kicker: t("overview.kicker"),
+        emptyActive: t("overview.emptyActive"),
+        metrics: {
+          active: t("overview.metrics.active"),
+          custom: t("overview.metrics.custom"),
+          baseline: t("overview.metrics.baseline"),
+          store: t("overview.metrics.store"),
+        },
+        pipelineTitle: t("overview.pipelineTitle"),
+        runtimeTitle: t("overview.runtimeTitle"),
+        refresh: t("overview.refresh"),
+        reboot: t("overview.reboot"),
+      },
+      certs: {
+        builtinTitle: t("certs.builtinTitle"),
+        builtinMeta: t("certs.builtinMeta"),
+        customTitle: t("certs.customTitle"),
+        customEmpty: t("certs.customEmpty"),
+        importLabel: t("certs.importLabel"),
+        detailLabel: t("certs.detailLabel"),
+        refresh: t("certs.refresh"),
+        hotTitle: t("certs.hotTitle"),
+        presetsTitle: t("certs.presetsTitle"),
+        presetsMeta: t("certs.presetsMeta"),
+        exportFps: t("certs.exportFps"),
+        exportFpsEmpty: t("certs.exportFpsEmpty"),
+        exportFpsOk: t("certs.exportFpsOk"),
+        presetUnchanged: t("certs.presetUnchanged"),
+        importReadFail: t("certs.importReadFail"),
+        removeConfirmTitle: t("certs.removeConfirmTitle"),
+        removeConfirmBody: t("certs.removeConfirmBody"),
+        removeConfirmOk: t("certs.removeConfirmOk"),
+        hotAllowOn: t("certs.hotAllowOn"),
+        hotAllowOff: t("certs.hotAllowOff"),
+        hotConfirmOffTitle: t("certs.hotConfirmOffTitle"),
+        hotConfirmOffBody: t("certs.hotConfirmOffBody"),
+        hotConfirmOffOk: t("certs.hotConfirmOffOk"),
+        hotSdPathBad: t("certs.hotSdPathBad"),
+        hotMountConfirmBody: t("certs.hotMountConfirmBody"),
+        hotMountConfirmOk: t("certs.hotMountConfirmOk"),
+        hotMounting: t("certs.hotMounting"),
+        hotUnmountConfirmTitle: t("certs.hotUnmountConfirmTitle"),
+        hotUnmountConfirmBody: t("certs.hotUnmountConfirmBody"),
+        hotUnmountConfirmOk: t("certs.hotUnmountConfirmOk"),
+        hotUnmounting: t("certs.hotUnmounting"),
+        hotUnmounted: t("certs.hotUnmounted"),
+      },
+      log: {
+        title: t("log.title"),
+        metaEmpty: t("log.metaEmpty"),
+        refresh: t("log.refresh"),
+        clear: t("log.clear"),
+        emptyFiltered: t("log.emptyFiltered"),
+        emptyAll: t("log.emptyAll"),
+      },
+      hide: Object.fromEntries(
+        [
+          "switchTitle",
+          "switchMeta",
+          "allowTitle",
+          "allowOn",
+          "allowOff",
+          "toastOn",
+          "toastOff",
+          "confirmOffTitle",
+          "confirmOffBody",
+          "confirmOffOk",
+          "forceBindTitle",
+          "forceBindOn",
+          "forceBindOff",
+          "forceBindToastOn",
+          "forceBindToastOff",
+          "forceBindConfirmOnTitle",
+          "forceBindConfirmOnBody",
+          "forceBindConfirmOnOk",
+          "lateInjectTitle",
+          "lateInjectOn",
+          "lateInjectOff",
+          "lateInjectToastOn",
+          "lateInjectToastOff",
+          "lateInjectConfirmOnTitle",
+          "lateInjectConfirmOnBody",
+          "lateInjectConfirmOnOk",
+          "experimentEntryTitle",
+          "experimentEntryMeta",
+          "experimentEntryCta",
+          "experimentSheetTitle",
+          "experimentIntro",
+          "bootZygoteTitle",
+          "bootZygoteOn",
+          "bootZygoteOff",
+          "bootZygoteToastOn",
+          "bootZygoteToastOff",
+          "bootZygoteConfirmOnTitle",
+          "bootZygoteConfirmOnBody",
+          "bootZygoteConfirmOnOk",
+          "bootMultiApexTitle",
+          "bootMultiApexOn",
+          "bootMultiApexOff",
+          "bootMultiApexToastOn",
+          "bootMultiApexToastOff",
+          "bootMultiApexConfirmOnTitle",
+          "bootMultiApexConfirmOnBody",
+          "bootMultiApexConfirmOnOk",
+          "serviceProbeTitle",
+          "serviceProbeOn",
+          "serviceProbeOff",
+          "serviceProbeToastOn",
+          "serviceProbeToastOff",
+          "znSwitchTitle",
+          "znSwitchMeta",
+          "znAllowTitle",
+          "znAllowOn",
+          "znAllowOff",
+          "znToastOn",
+          "znToastOff",
+          "znConfirmOffTitle",
+          "znConfirmOffBody",
+          "znConfirmOffOk",
+          "znMissingTitle",
+          "znMissingMeta",
+          "znMissingBody",
+          "loaderWarnTitle",
+          "loaderWarnMeta",
+          "loaderWarnBody",
+          "whitelistTitle",
+          "whitelistMeta",
+          "whitelistHint",
+          "whitelistSave",
+          "whitelistSaved",
+          "checklistTitle",
+          "checklistMeta",
+          "checklistDismiss",
+          "captureTitle",
+          "captureMeta",
+          "introTitle",
+          "introBody",
+          "guideTitle",
+          "guideMeta",
+          "docsCta",
+        ].map((k) => [k, t(`hide.${k}`)]),
+      ) as PackVoice["hide"],
+      more: {
+        appearanceTitle: t("more.appearanceTitle"),
+        appearanceMeta: t("more.appearanceMeta"),
+        aboutTitle: t("more.aboutTitle"),
+        hubMeta: t("more.hubMeta"),
+        mountTitle: t("more.mountTitle"),
+        mountMeta: t("more.mountMeta"),
+        navTitle: t("more.navTitle"),
+        navMeta: t("more.navMeta"),
+        showHideTitle: t("more.showHideTitle"),
+        showHideDesc: t("more.showHideDesc"),
+      },
+      topbar: { showBrand: true, showDevice: true },
+    };
+  }, [t, i18n.language]);
+
+  return { pack, voice };
+}
+
+export function useApplyUiLang() {
+  const { i18n } = useTranslation();
+  return useCallback(
+    (lng: "zh-CN" | "en") => {
+      void i18n.changeLanguage(lng);
+      document.documentElement.lang = lng === "zh-CN" ? "zh-CN" : "en";
+    },
+    [i18n],
+  );
 }

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta
@@ -8,8 +8,7 @@
     />
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#eef2f6" />
-    <title>证书桥</title>
-    <!-- 关键首屏：不依赖 JS/CSS 包，立刻有反馈，避免白屏突兀 -->
+    <title>CertBridge</title>
     <style>
       html,
       body {
@@ -38,7 +37,7 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 14px;
+        gap: 18px;
         min-height: 100vh;
         min-height: 100dvh;
         padding: 24px;
@@ -46,26 +45,35 @@
         user-select: none;
       }
       .cb-boot__brand {
-        font-size: 1.25rem;
-        font-weight: 650;
-        letter-spacing: 0.02em;
-      }
-      .cb-boot__spin {
-        width: 28px;
-        height: 28px;
-        border: 2.5px solid rgba(120, 140, 160, 0.28);
-        border-top-color: var(--bf-primary, #0d9488);
-        border-radius: 50%;
-        animation: cb-boot-spin 0.7s linear infinite;
-      }
-      .cb-boot__hint {
         margin: 0;
-        font-size: 0.8125rem;
-        opacity: 0.62;
+        font-size: 1.375rem;
+        font-weight: 650;
+        letter-spacing: 0.04em;
+        line-height: 1.2;
       }
-      @keyframes cb-boot-spin {
-        to {
-          transform: rotate(360deg);
+      .cb-boot__bar {
+        width: 42px;
+        height: 2px;
+        border-radius: 999px;
+        background: rgba(120, 140, 160, 0.22);
+        overflow: hidden;
+        position: relative;
+      }
+      .cb-boot__bar::after {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 40%;
+        border-radius: inherit;
+        background: var(--bf-primary, #0d9488);
+        animation: cb-boot-slide 1.05s ease-in-out infinite;
+      }
+      @keyframes cb-boot-slide {
+        0% {
+          transform: translateX(-120%);
+        }
+        100% {
+          transform: translateX(320%);
         }
       }
     </style>
@@ -112,18 +120,40 @@
           if (hex.test(pair)) root.style.setProperty("--bf-accent-pair", pair);
           var meta = document.querySelector('meta[name="theme-color"]');
           if (meta) meta.setAttribute("content", dark ? "#0b1118" : "#eef2f6");
+
+          var pref = read("cb_ui_lang", "system");
+          var nav = (navigator.language || "en").toLowerCase();
+          var lng =
+            pref === "zh-CN" || pref === "zh"
+              ? "zh-CN"
+              : pref === "en"
+                ? "en"
+                : nav.indexOf("zh") === 0
+                  ? "zh-CN"
+                  : "en";
+          root.lang = lng === "zh-CN" ? "zh-CN" : "en";
+          var brand = lng === "zh-CN" ? "证书桥" : "CertBridge";
+          document.title = brand;
+          window.__CB_BOOT_BRAND__ = brand;
         } catch (error) {}
       })();
     </script>
   </head>
   <body>
     <div id="root">
-      <div class="cb-boot" aria-busy="true" aria-live="polite">
-        <div class="cb-boot__brand">证书桥</div>
-        <div class="cb-boot__spin" aria-hidden="true"></div>
-        <p class="cb-boot__hint">正在加载界面…</p>
+      <div class="cb-boot" aria-busy="true" aria-live="polite" aria-label="Loading">
+        <p class="cb-boot__brand" id="cb-boot-brand">CertBridge</p>
+        <div class="cb-boot__bar" aria-hidden="true"></div>
       </div>
     </div>
+    <script>
+      (function () {
+        try {
+          var el = document.getElementById("cb-boot-brand");
+          if (el && window.__CB_BOOT_BRAND__) el.textContent = window.__CB_BOOT_BRAND__;
+        } catch (e) {}
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

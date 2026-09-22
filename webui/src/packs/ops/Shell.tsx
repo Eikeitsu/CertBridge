@@ -14,7 +14,7 @@ import {
 import { TabName } from "@/entities/module/enums";
 import { AppSnackbar } from "@/shared/ui/AppSnackbar";
 import { ConfirmHost } from "@/shared/ui/ConfirmHost";
-import { OPS_VOICE } from "./voice";
+import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
 import { OpsHomePage } from "./pages/HomePage";
 import { OpsCertsPage } from "./pages/CertsPage";
 import { OpsLogPage } from "./pages/LogPage";
@@ -51,13 +51,14 @@ function Pane({
 }
 
 export function OpsShell() {
+  const chrome = usePackChrome();
   const deviceLabel = useAppSelector(selectDeviceLabel);
   const refreshing = useAppSelector(selectStatusRefreshing);
   const loading = useAppSelector(selectStatusLoading);
   const resolved = useAppSelector(selectResolvedTheme);
   const { activeTab, switchTab } = useActiveTab();
   const { tabs, showHideTab } = useVisibleTabs();
-  const v = OPS_VOICE;
+  const v = chrome;
   const [seen, setSeen] = useState<Partial<Record<TabName, boolean>>>(() => ({
     [activeTab]: true,
   }));

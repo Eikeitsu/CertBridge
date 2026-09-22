@@ -1,0 +1,47 @@
+/* 说明条目：右侧箭头（几何绘制，避免 › 字形基线偏上） */
+.pk-def-shell .bf-hide-guide details {
+  padding: 0;
+  overflow: hidden;
+}
+
+.pk-def-shell .bf-hide-guide details > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 12px 14px;
+  list-style: none;
+}
+
+.pk-def-shell .bf-hide-guide details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.pk-def-shell .bf-hide-guide details > summary::after {
+  content: "";
+  flex-shrink: 0;
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-inline: 2px;
+  border-right: 2.5px solid var(--bf-ink-3);
+  border-bottom: 2.5px solid var(--bf-ink-3);
+  transform: rotate(-45deg);
+  transform-origin: center;
+  transition: transform 0.15s ease;
+}
+
+.pk-def-shell .bf-hide-guide details[open] > summary::after {
+  transform: rotate(45deg);
+}
+
+.pk-def-shell .bf-hide-guide details > ul,
+.pk-def-shell .bf-hide-guide details > ol {
+  margin: 0;
+  padding: 0 14px 12px;
+}
+
+html[data-pack="default"] .bf-shell {
+  display: none;
+}

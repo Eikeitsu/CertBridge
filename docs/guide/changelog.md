@@ -111,7 +111,7 @@
 - WebUI「更多」可切换挂载模式，并说明 Magisk / KernelSU 与挂载元模块关系
 - 开机注入与热挂载的临时层改到 `/data/local/tmp/sys-ca-merge{,-hot}`，降低 mountinfo 中的模块路径暴露
 - 发版时自动将 `changelog.md` 的 `Unreleased` 提升为版本号；文档站两份 changelog **不含 Unreleased**
-- 发版约定见 `tooling/RELEASE.md`
+- 发版约定见 `docs-dev/RELEASE.md`
 
 ## v2.0.0
 

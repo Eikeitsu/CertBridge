@@ -8,7 +8,7 @@ import type { AppPresetKind } from "@/shared/api/cli";
 import { Switch } from "@/shared/ui/primitives";
 import { CertDetailSheet } from "@/features/certs/ui/CertDetailSheet";
 import { HotMountPanel } from "@/features/certs/ui/HotMountPanel";
-import { CONSOLE_VOICE } from "../voice";
+import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
 
 const PRESET_KINDS: AppPresetKind[] = [
   "httpcanary",
@@ -26,11 +26,12 @@ function stateOf(cert: { isActive: boolean; isEnabled: boolean; isAvailable: boo
 }
 
 export function ConsoleCertsPage() {
+  const chrome = usePackChrome();
   const dispatch = useAppDispatch();
   const customs = useAppSelector(selectCustomCertificates);
   const builtins = useBuiltinCerts();
   const detail = useCertDetail();
-  const v = CONSOLE_VOICE.certs;
+  const v = chrome.certs;
   const {
     isPending,
     handleToggleBuiltin,

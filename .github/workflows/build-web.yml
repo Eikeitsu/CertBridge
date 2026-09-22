@@ -6,7 +6,8 @@ on:
     paths:
       - "webui/**"
       - "module/webroot/**"
-      - "tooling/scripts/build-web.mjs"
+      - "locales/**"
+      - "scripts/build-web.mjs"
       - "package.json"
       - "package-lock.json"
       - ".github/actions/setup-node-npm/**"
@@ -16,7 +17,8 @@ on:
     paths:
       - "webui/**"
       - "module/webroot/**"
-      - "tooling/scripts/build-web.mjs"
+      - "locales/**"
+      - "scripts/build-web.mjs"
       - "package.json"
       - "package-lock.json"
       - ".github/actions/setup-node-npm/**"

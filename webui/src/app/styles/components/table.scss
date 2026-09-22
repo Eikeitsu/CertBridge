@@ -1,0 +1,21 @@
+.bf-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.bf-table th,
+
+.bf-table td {
+  text-align: left;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--bf-stroke);
+}
+
+.bf-table th {
+  font-size: 0.68rem;
+  color: var(--bf-ink-3);
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}

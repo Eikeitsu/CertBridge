@@ -6,17 +6,21 @@ import { useTrustOverview } from "@/features/overview/hooks/useTrustOverview";
 import { TrustTone } from "@/entities/module/enums";
 import { confirmAction } from "@/shared/lib/confirmAction";
 import { rebootDevice } from "@/shared/api/cli";
-import { CONSOLE_VOICE } from "../voice";
+import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
 
 export function ConsoleHomePage() {
+  const chrome = usePackChrome();
   const dispatch = useAppDispatch();
   const overview = useTrustOverview();
   const bootstrapped = useAppSelector(selectStatusBootstrapped);
-  const v = CONSOLE_VOICE.home;
+  const v = chrome.home;
 
+  const title = overview.trust.title || "";
   const stabilizing =
     overview.trust.tone === TrustTone.Idle &&
-    /稳定中|注入中|检测中/.test(overview.trust.title);
+    (/Stable|Inject|Check|Boot|Pending/.test(title) ||
+      title.includes("\u2728") ||
+      title.includes("\u{1F50D}"));
 
   useEffect(() => {
     if (!bootstrapped || !stabilizing) return;

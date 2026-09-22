@@ -1,0 +1,115 @@
+/* Shared panels inside console more/hide */
+.pk-con-shell .bf-card,
+.pk-con-shell .bf-card-plain {
+  border: 1px solid var(--pk-line);
+  border-radius: 2px;
+  box-shadow: none;
+  background: var(--pk-panel);
+  padding: 0;
+  overflow: hidden;
+}
+
+.pk-con-shell .bf-card {
+  padding: 12px;
+}
+
+.pk-con-shell .bf-card-plain__title,
+.pk-con-shell .bf-card__title {
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+  box-sizing: border-box;
+  min-height: 36px;
+  font-family: var(--bf-font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--pk-accent);
+  margin: 0;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--pk-line);
+  background: color-mix(in srgb, var(--pk-accent) 6%, transparent);
+}
+
+.pk-con-shell .bf-card-plain__title::before,
+.pk-con-shell .bf-card__title::before {
+  content: "▶";
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  line-height: 1;
+  color: var(--pk-accent);
+}
+
+.pk-con-shell .bf-card__title {
+  margin: -12px -12px 12px;
+}
+
+.pk-con-shell .bf-card:has(> .bf-card__meta) > .bf-card__title {
+  margin-bottom: 0;
+}
+
+.pk-con-shell .bf-card-plain__meta,
+.pk-con-shell .bf-card__meta {
+  font-family: var(--bf-font-mono);
+  font-size: 0.7rem;
+  margin: 0;
+  padding: 8px 12px 6px;
+  color: var(--pk-dim);
+  line-height: 1.45;
+  text-align: left;
+}
+
+.pk-con-shell .bf-card__meta {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.pk-con-shell .bf-card-plain.bf-appearance {
+  padding-bottom: 10px;
+}
+
+.pk-con-shell .bf-appearance .bf-pack-grid {
+  margin: 10px 12px 0;
+  margin-bottom: 8px;
+}
+
+.pk-con-shell .bf-appearance__row {
+  margin: 8px 12px 0;
+}
+
+.pk-con-shell .bf-appearance__scale {
+  margin: 10px 12px 0;
+  padding-top: 10px;
+  border-top-color: var(--pk-line);
+}
+
+.pk-con-shell
+  .bf-card-plain:not(.bf-appearance)
+  > *:not(.bf-card-plain__title, .bf-card-plain__meta) {
+  padding: 6px 12px 12px;
+}
+
+.pk-con-shell .bf-card-plain:not(.bf-appearance) > .bf-card-plain__meta + * {
+  padding-top: 4px;
+}
+
+.pk-con-shell .bf-card > .bf-card__meta + * {
+  margin-top: 2px;
+}
+
+.pk-con-shell .bf-about-hero-wrap {
+  border-bottom-color: var(--pk-line);
+}
+
+.pk-con-shell .bf-list {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.pk-con-shell .bf-row {
+  padding: 10px 12px;
+  min-height: 44px;
+  border-top-color: var(--pk-line);
+  box-sizing: border-box;
+}

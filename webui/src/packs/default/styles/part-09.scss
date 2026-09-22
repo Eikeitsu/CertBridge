@@ -1,0 +1,10 @@
+/* toast：默认包偏圆润 */
+html[data-pack="default"] .bf-snackbar {
+  border-radius: 16px;
+  bottom: calc(var(--bf-inset-bottom) + 78px);
+}
+
+html[data-pack="default"] .pk-def-group .bf-more-nav {
+  padding-left: 14px;
+  padding-right: 14px;
+}

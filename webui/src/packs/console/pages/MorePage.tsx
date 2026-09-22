@@ -6,14 +6,15 @@ import { MoreNavRow, MoreSubHeader } from "@/features/settings/ui/MoreNav";
 import { ShowHideTabCard } from "@/features/settings/ui/ShowHideTabCard";
 import { MountInjectPanels } from "@/features/settings/ui/MountInjectPanels";
 import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
-import { CONSOLE_VOICE } from "../voice";
+import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
 
 type MoreView = "hub" | "appearance" | "mount";
 
 export function ConsoleMorePage() {
+  const chrome = usePackChrome();
   const { voice } = usePackVoice();
   const m = voice.more;
-  const v = CONSOLE_VOICE.more;
+  const v = chrome.more;
   const [view, setView] = useState<MoreView>("hub");
 
   if (view === "appearance") {
@@ -21,7 +22,7 @@ export function ConsoleMorePage() {
       <div className="pk-con-page">
         <MoreSubHeader
           title={m.appearanceTitle}
-          backLabel={CONSOLE_VOICE.tabs.more}
+          backLabel={chrome.tabs.more}
           onBack={() => setView("hub")}
         />
         <AppearancePanel
@@ -38,7 +39,7 @@ export function ConsoleMorePage() {
       <div className="pk-con-page">
         <MoreSubHeader
           title={m.mountTitle}
-          backLabel={CONSOLE_VOICE.tabs.more}
+          backLabel={chrome.tabs.more}
           onBack={() => setView("hub")}
         />
         <MountInjectPanels dense surface="plain" />

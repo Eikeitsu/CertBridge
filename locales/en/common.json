@@ -1,0 +1,19 @@
+{
+  "brand": "CertBridge",
+  "brand_en": "CertBridge",
+  "yes": "Yes",
+  "no": "No",
+  "ok": "OK",
+  "cancel": "Cancel",
+  "save": "Save",
+  "on": "On",
+  "off": "Off",
+  "skip": "Skip",
+  "vol_up": "Vol+",
+  "vol_down": "Vol-",
+  "timeout_20": "20s → default",
+  "loading": "Loading",
+  "follow_system": "System",
+  "lang_zh": "中文",
+  "lang_en": "English"
+}

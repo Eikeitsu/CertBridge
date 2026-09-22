@@ -10,16 +10,17 @@ import { confirmAction } from "@/shared/lib/confirmAction";
 import { filterLogEntries, parseLogText } from "@/shared/lib/log";
 import { LogLevel } from "@/entities/module/enums";
 import { Loader } from "@/shared/ui/Loader";
-import { CONSOLE_VOICE } from "../voice";
+import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
 
 const LEVELS = ["", LogLevel.Info, LogLevel.Warn, LogLevel.Error, LogLevel.Debug];
 
 export function ConsoleLogPage() {
+  const chrome = usePackChrome();
   const dispatch = useAppDispatch();
   const { text, loading, bytes, lines } = useAppSelector(selectActivityLog);
   const [levelFilter, setLevelFilter] = useLogLevelFilter();
   const [wrap, setWrap] = useLogWrap();
-  const v = CONSOLE_VOICE.log;
+  const v = chrome.log;
   const entries = useMemo(() => parseLogText(text), [text]);
   const filtered = useMemo(
     () => filterLogEntries(entries, levelFilter),

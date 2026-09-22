@@ -1,0 +1,125 @@
+.bf-appearance {
+  /* Keep appearance controls dimensionally stable across packs (esp. console mono). */
+  font-family: var(--bf-font-body);
+
+  --bf-radius: 12px;
+  --bf-radius-sm: 10px;
+  --bf-radius-lg: 16px;
+}
+
+.bf-appearance__row {
+  margin-top: 12px;
+}
+
+.bf-appearance .bf-segment--chips .bf-segment__option {
+  height: 36px;
+  min-height: 36px;
+  max-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--bf-stroke);
+  font-family: var(--bf-font-body);
+}
+
+.bf-appearance .bf-pack-card {
+  height: 64px;
+  min-height: 64px;
+  border-radius: 12px;
+  font-family: var(--bf-font-body);
+}
+
+.bf-more-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--bf-stroke);
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  padding: 14px 4px;
+  min-height: 52px;
+  cursor: pointer;
+}
+
+.bf-more-nav:last-child {
+  border-bottom: 0;
+}
+
+.bf-more-nav__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bf-more-nav__text strong {
+  font-size: 0.92rem;
+  font-weight: 680;
+}
+
+.bf-more-nav__text span {
+  font-size: 0.74rem;
+  color: var(--bf-ink-3);
+  line-height: 1.35;
+}
+
+.bf-more-nav__chev {
+  flex-shrink: 0;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 2px solid var(--bf-ink-3);
+  border-bottom: 2px solid var(--bf-ink-3);
+  transform: rotate(-45deg);
+}
+
+.bf-more-subhead {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.bf-more-back {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  color: var(--bf-primary);
+  font-weight: 650;
+  font-size: 0.86rem;
+  min-height: 36px;
+  padding: 0 2px;
+  cursor: pointer;
+}
+
+.bf-more-back__chev {
+  width: 0.48rem;
+  height: 0.48rem;
+  border-left: 2px solid currentcolor;
+  border-bottom: 2px solid currentcolor;
+  transform: rotate(45deg);
+}
+
+.bf-more-subhead__title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 740;
+  letter-spacing: -0.02em;
+}
+
+.bf-appearance__scale {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--bf-stroke);
+}
+
+.bf-appearance__scale .bf-row {
+  border-top: 0;
+  padding: 0;
+  min-height: 40px;
+}

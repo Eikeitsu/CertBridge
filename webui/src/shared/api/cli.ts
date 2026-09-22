@@ -168,6 +168,10 @@ export async function setServiceProbe(value: FlagValue) {
   return cli(`set_service_probe ${value}`);
 }
 
+export async function setUiLang(value: "system" | "zh-CN" | "en") {
+  return cli(`set_ui_lang ${value}`);
+}
+
 function textToBase64(text: string): string {
   const bytes = new TextEncoder().encode(text);
   let binary = "";

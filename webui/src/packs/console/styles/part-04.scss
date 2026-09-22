@@ -1,0 +1,62 @@
+/* 更新下载：终端 ASCII 进度 */
+html[data-pack="console"] .bf-update-flow {
+  padding: 8px 10px;
+  border: 1px solid var(--bf-stroke-strong);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--pk-accent, #3ddc84) 6%, var(--bf-surface-2));
+}
+
+html[data-pack="console"] .bf-update-flow__head,
+html[data-pack="console"] .bf-update-flow__track {
+  display: none;
+}
+
+html[data-pack="console"] .bf-update-flow__term {
+  display: block;
+  color: var(--pk-accent, #3ddc84);
+}
+
+html[data-pack="console"] .bf-update-flow__term::after {
+  content: "█";
+  margin-left: 2px;
+  animation: bf-update-blink 0.85s step-end infinite;
+}
+
+html[data-pack="console"] .bf-update-flow.is-install .bf-update-flow__term,
+html[data-pack="console"] .bf-update-flow.is-manager .bf-update-flow__term {
+  animation: bf-update-pulse 1s ease-in-out infinite;
+}
+
+html[data-pack="console"] .bf-btn--busy.bf-btn--primary::after {
+  content: " …";
+  animation: bf-update-blink 0.7s step-end infinite;
+}
+
+html[data-pack="console"] .bf-snackbar {
+  border-radius: 4px;
+  font-family: var(--bf-font-mono);
+
+  --bf-snack-fs: 0.78rem;
+
+  letter-spacing: 0.02em;
+  background: #0f1620;
+  color: #d7e0ea;
+  border-color: #2a3848;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+html[data-pack="console"] .bf-snackbar.tone-ok {
+  border-color: #1f6f4a;
+  background: #0f1c16;
+}
+
+html[data-pack="console"] .bf-snackbar.tone-bad {
+  border-color: #8b2e2e;
+  background: #1a1010;
+}
+
+html[data-pack="console"] .bf-snackbar.tone-warn {
+  border-color: #8a6a1a;
+  background: #1a160c;
+}

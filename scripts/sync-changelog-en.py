@@ -15,12 +15,12 @@ Env (optional):
 
 from __future__ import annotations
 
+import importlib.util
 import os
 import pathlib
 import re
 import sys
 import time
-import importlib.util
 
 _HERE = pathlib.Path(__file__).resolve().parent
 _spec = importlib.util.spec_from_file_location("promote_changelog", _HERE / "promote-changelog.py")
@@ -180,9 +180,7 @@ def find_section(sections: list[tuple[str, str]], version: str) -> tuple[str, st
 
 def upsert_en(en_text: str, version: str, en_body: str) -> str:
     preamble, sections = parse(en_text if en_text.strip() else "# Changelog\n")
-    if preamble.strip().startswith("# 更新日志"):
-        preamble = "# Changelog\n"
-    elif not preamble.strip().startswith("#"):
+    if preamble.strip().startswith("# 更新日志") or not preamble.strip().startswith("#"):
         preamble = "# Changelog\n"
 
     other: list[tuple[str, str]] = []

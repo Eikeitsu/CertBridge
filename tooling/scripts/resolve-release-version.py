@@ -114,8 +114,7 @@ def main() -> int:
         print(f"seen_max_code={seen_max}")
     if code != semver_code:
         print(
-            f"# versionCode raised {semver_code} → {code} "
-            f"(above seen max {seen_max})",
+            f"# versionCode raised {semver_code} → {code} (above seen max {seen_max})",
             file=sys.stderr,
         )
     return 0

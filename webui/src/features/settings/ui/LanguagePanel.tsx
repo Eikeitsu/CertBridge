@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { selectModuleStatus } from "@/features/status/model/selectors";
@@ -9,7 +9,7 @@ import { toast } from "@/shared/api/ksu";
 import { isCliFailure } from "@/shared/lib/cliResult";
 import { parseKv } from "@/shared/lib/parse";
 import { STORAGE_KEYS } from "@/shared/config/paths";
-import { writeStorage } from "@/shared/lib/storage";
+import { writeStorage, readStorage } from "@/shared/lib/storage";
 import { resolveUiLang, type UiLangPref } from "@/shared/i18n";
 import { useApplyUiLang } from "@/features/theme/hooks/usePackVoice";
 import { Card, Segment } from "@/shared/ui/primitives";
@@ -19,6 +19,15 @@ const OPTIONS: { id: UiLangPref; labelKey: string }[] = [
   { id: "zh-CN", labelKey: "lang_zh" },
   { id: "en", labelKey: "lang_en" },
 ];
+
+function readPref(statusPref?: string): UiLangPref {
+  if (statusPref === "system" || statusPref === "zh-CN" || statusPref === "en") {
+    return statusPref;
+  }
+  const stored = readStorage(STORAGE_KEYS.uiLang);
+  if (stored === "system" || stored === "zh-CN" || stored === "en") return stored;
+  return "system";
+}
 
 export function LanguagePanel({
   dense,
@@ -31,38 +40,35 @@ export function LanguagePanel({
   const dispatch = useAppDispatch();
   const status = useAppSelector(selectModuleStatus);
   const apply = useApplyUiLang();
-  const [pref, setPref] = useState<UiLangPref>(
-    () => (status.ui_lang as UiLangPref) || "system",
-  );
-  const [pending, setPending] = useState(false);
+  const [pref, setPref] = useState<UiLangPref>(() => readPref(status.ui_lang));
+  const reqSeq = useRef(0);
 
   useEffect(() => {
-    const raw = (status.ui_lang as UiLangPref) || "system";
-    if (raw === "system" || raw === "zh-CN" || raw === "en") setPref(raw);
-    const resolved =
-      (status.ui_lang_resolved as "zh-CN" | "en") ||
-      resolveUiLang(raw === "system" || raw === "zh-CN" || raw === "en" ? raw : "system");
-    apply(resolved);
-  }, [status.ui_lang, status.ui_lang_resolved, apply]);
+    const next = readPref(status.ui_lang);
+    setPref(next);
+  }, [status.ui_lang]);
 
   const onPick = useCallback(
-    async (next: UiLangPref) => {
-      if (next === pref || pending) return;
+    (next: UiLangPref) => {
+      if (next === pref) return;
       setPref(next);
-      setPending(true);
       writeStorage(STORAGE_KEYS.uiLang, next);
+      // 先切 UI；CLI 后台落盘，不锁 Segment
       apply(resolveUiLang(next));
-      const result = await setUiLang(next);
-      setPending(false);
-      if (isCliFailure(result)) {
-        toast(errorFromResult(result.stdout, result.stderr), "bad");
-        return;
-      }
-      const kv = parseKv(result.stdout || "");
-      dispatch(mergeStatus(kv));
-      toast(t("webui:language"), "ok");
+      const seq = ++reqSeq.current;
+      void (async () => {
+        const result = await setUiLang(next);
+        if (seq !== reqSeq.current) return;
+        if (isCliFailure(result)) {
+          toast(errorFromResult(result.stdout, result.stderr), "bad");
+          return;
+        }
+        const kv = parseKv(result.stdout || "");
+        dispatch(mergeStatus(kv));
+        toast(t("webui:language"), "ok");
+      })();
     },
-    [apply, dispatch, pending, pref, t],
+    [apply, dispatch, pref, t],
   );
 
   return (
@@ -75,8 +81,7 @@ export function LanguagePanel({
       <Segment
         layout="chips"
         value={pref}
-        disabled={pending}
-        onChange={(v) => void onPick(v as UiLangPref)}
+        onChange={(v) => onPick(v as UiLangPref)}
         options={OPTIONS.map((opt) => ({
           value: opt.id,
           label: t(`common:${opt.labelKey}`),

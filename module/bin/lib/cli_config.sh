@@ -254,7 +254,8 @@ cmd_set_ui_lang() {
   esac
   write_conf ui_lang "$val" || { echo "error=write_failed"; return 1; }
   i18n_load >/dev/null 2>&1 || true
-  update_module_description 2>/dev/null || true
+  # 简介/模块名刷新较重：后台做，避免 WebUI 切语言卡住
+  (update_module_description >/dev/null 2>&1 || true) &
   log_info "config: ui_lang=$val resolved=$(resolve_ui_lang)"
   echo "ok=1"
   echo "ui_lang=$val"

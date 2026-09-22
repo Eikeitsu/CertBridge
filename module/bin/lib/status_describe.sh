@@ -124,16 +124,31 @@ compose_webui_running_description() {
   echo "[$(i18n_msg status.tag_ok)|$(i18n_fmt status.body_mounted n="$webui_total")] $(i18n_fmt status.body_active names="$webui_names")"
 }
 
+# 正常运行：直接拼 WebUI 描述，避免先 compose_module_description 再扫一遍 APPLIED_MAP
+compose_webui_description_fast_ok() {
+  [ -f "$MODDIR/disable" ] && return 1
+  [ -f "$PENDING_FILE" ] && return 1
+  hot_session_recorded 2>/dev/null && return 1
+  if [ -f "$STATEDIR/hot-update" ]; then
+    clear_stale_hot_update_marker || return 1
+  fi
+  generation_valid || return 1
+  inject_error_present && return 1
+  if runtime_status_fresh; then
+    cached_tag=$(read_runtime_status tag)
+    case "$cached_tag" in
+      *失败*|*Error*|⚠️*|异常|*注入*|*Inject*|*启动*|*Boot*|*检测*|*Check*|✨*|🔎*|*稳定*|*Stable*)
+        return 1
+        ;;
+    esac
+  fi
+  compose_webui_running_description
+}
+
 compose_webui_description() {
-  desc=$(compose_module_description)
-  ok_tag=$(i18n_msg status.tag_ok)
-  case "$desc" in
-    *"${ok_tag}"*)
-      if webui_desc=$(compose_webui_running_description); then
-        echo "$webui_desc"
-        return 0
-      fi
-      ;;
-  esac
-  echo "$desc"
+  if webui_desc=$(compose_webui_description_fast_ok); then
+    echo "$webui_desc"
+    return 0
+  fi
+  compose_module_description
 }

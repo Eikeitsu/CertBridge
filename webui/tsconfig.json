@@ -17,8 +17,9 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@locales/*": ["../locales/*"]
     }
   },
-  "include": ["src", "env.d.ts"]
+  "include": ["src", "env.d.ts", "../locales/**/*.json"]
 }

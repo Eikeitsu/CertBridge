@@ -36,6 +36,7 @@ export const STORAGE_KEYS = {
   updateChannel: "cb_update_channel",
   /** 底栏是否显示「隐藏」页 */
   showHideTab: "cb_show_hide_tab",
+  uiLang: "cb_ui_lang",
 } as const;
 
 export { LINKS } from "./brand";

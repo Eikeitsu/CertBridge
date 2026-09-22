@@ -1,0 +1,69 @@
+/* 内层：未展开 +，展开 −（按每条自己的 open，不跟外层 fold） */
+.pk-ops-shell .bf-hide-guide details > summary::after {
+  content: "+";
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--pk-muted) 14%, transparent);
+  font-family: var(--bf-font-mono, ui-monospace, monospace);
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--pk-muted);
+}
+
+.pk-ops-shell .bf-hide-guide details[open] > summary::after {
+  content: "−";
+}
+
+.pk-ops-shell .bf-hide-guide p,
+.pk-ops-shell .bf-hide-guide li {
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.pk-ops-shell .bf-textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.pk-ops-page--hide .bf-btn-row {
+  margin-top: 10px;
+}
+
+html[data-pack="ops"] {
+  --bf-bg: #0b1118;
+  --bf-chrome: #0b1118;
+  --bf-surface: #121a24;
+  --bf-surface-2: #182231;
+  --bf-ink: #e2e8f0;
+  --bf-ink-2: #cbd5e1;
+  --bf-ink-3: #94a3b8;
+  --bf-stroke: rgba(148, 163, 184, 0.22);
+  --bf-stroke-strong: rgba(148, 163, 184, 0.35);
+  --bf-shadow: none;
+  --bf-radius: 12px;
+  --bf-radius-sm: 8px;
+  --bf-radius-lg: 14px;
+
+  background: #0b1118;
+}
+
+html[data-pack="ops"][data-theme="light"] {
+  --bf-bg: #dbe3ec;
+  --bf-chrome: #dbe3ec;
+  --bf-surface: #f4f7fa;
+  --bf-surface-2: #e8edf3;
+  --bf-ink: #0f172a;
+  --bf-ink-2: #334155;
+  --bf-ink-3: #64748b;
+  --bf-stroke: rgba(15, 23, 42, 0.1);
+  --bf-stroke-strong: rgba(15, 23, 42, 0.18);
+
+  background: #dbe3ec;
+}

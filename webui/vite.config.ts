@@ -66,6 +66,7 @@ export default defineConfig(({ command }) => ({
   resolve: {
     alias: {
       "@": resolve(root, "src"),
+      "@locales": resolve(repoRoot, "locales"),
     },
   },
   build: {

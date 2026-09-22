@@ -1,77 +1,63 @@
-# 证书桥（CertBridge）
+# CertBridge
 
-面向 Magisk / KernelSU / APatch 的 **系统 CA 注入**：把 Reqable / ProxyPin / 自定义证书合并进 Android 系统信任库，并提供挂载隐藏协助、可选 Zygisk 过滤与 WebUI。
+System **CA inject** for Magisk / KernelSU / APatch: merge Reqable / ProxyPin / custom certs into the Android trust store. Optional WebUI, hot mount, hide assist, and Zygisk mount filter.
 
-- **显示名 / ID**：证书桥 · `CertBridge`
-- **仓库**：[Eikeitsu/CertBridge](https://github.com/Eikeitsu/CertBridge)
-- **文档**：[eikeitsu.github.io/CertBridge](https://eikeitsu.github.io/CertBridge/)
-- **Releases**：[完整版 / Lite 下载](https://github.com/Eikeitsu/CertBridge/releases)
-- **酷安**：[许小墨](https://www.coolapk.com/u/7602666)
+- **Display name / ID**: CertBridge · `CertBridge`
+- **Repo**: [Eikeitsu/CertBridge](https://github.com/Eikeitsu/CertBridge)
+- **Docs**: [中文](https://eikeitsu.github.io/CertBridge/) · [English](https://eikeitsu.github.io/CertBridge/en/)
+- **Releases**: [Download](https://github.com/Eikeitsu/CertBridge/releases)
+- **中文说明**: [README.zh-CN.md](./README.zh-CN.md)
 
-## WebUI 预览
+## What it does
 
-|                        首页                         |                       证书                       |
-| :-------------------------------------------------: | :----------------------------------------------: |
-| ![首页](docs/public/screenshots/webui-overview.svg) | ![证书](docs/public/screenshots/webui-certs.svg) |
+On each boot the module:
 
-|                      日志                      |                      隐藏                       |                      更多                       |
-| :--------------------------------------------: | :---------------------------------------------: | :---------------------------------------------: |
-| ![日志](docs/public/screenshots/webui-log.svg) | ![隐藏](docs/public/screenshots/webui-hide.svg) | ![更多](docs/public/screenshots/webui-more.svg) |
+1. Reads the live system / Conscrypt APEX trust store (without saving a baseline)
+2. Merges enabled addons (Reqable from app, ProxyPin, custom PEMs, …)
+3. Bind-mounts the full set onto the trust-store paths (compatible mode)
 
-## 功能概览
+It does **not** rewrite system partition files. If copy/validation fails, injection is skipped and the stock store stays intact.
 
-- **系统 CA 注入**：每次开机从实时信任库完整合并 + addon，校验通过后 bind；失败则不挂载，保留系统原库（不保存基线、不改系统分区）
-- **证书来源**：Reqable / ProxyPin 从 App 同步（**不内置 Reqable**；ProxyPin 可内置兜底）；HttpCanary / ADGuard 安装时可询问导入；WebUI 上传 PEM / DER
-- **挂载模式**：默认完整兼容（运行时 bind，不依赖元模块）；自定义可选轻量 Magic；Android 14+ 默认痕迹较少（主 APEX）
-- **挂载隐藏（可选）**：默认安装含 SuSFS / 内核 try_umount 协助（开关默认关）；自定义可选 Zygisk 过滤 mountinfo
-- **热挂载（可选）**：用户凭据区 / 存储卡证书免重启临时注入，可按会话卸载
-- **WebUI / CLI**：首页 · 证书 · 日志 · 隐藏 · 更多；`bin/cb`（`status` / `set` / `sync_apps` …）
+| Piece                    | Role                                                             |
+| ------------------------ | ---------------------------------------------------------------- |
+| Magisk module            | `post-fs-data` / `service` inject + optional late inject         |
+| WebUI (optional)         | Home / certs / logs / hide / more                                |
+| Hot mount (optional)     | Temporary user/SD certs until reboot                             |
+| Hide assist (optional)   | SuSFS / `ksud` / NoHello try_umount (installed by default, off)  |
+| Zygisk filter (optional) | Filter this module’s mounts in target processes (off by default) |
+| CLI                      | `cb` → status / set / cert helpers                               |
 
-抓包前请勿对 Reqable、被抓包 App 开「卸载模块」，否则会出现「根证书未安装」或断网。说明见 [挂载隐藏](docs/guide/hide.md)、[常见问题](docs/guide/faq.md)。
+UI language follows the system (`zh*` → Chinese, otherwise English). Change under WebUI → Mount → Language.
 
-## 快速开始
+## Quick start
 
-1. 从 [Releases](https://github.com/Eikeitsu/CertBridge/releases) 下载对应架构包（`*_arm64.zip` 推荐；另有 arm32 / x86 / x64）或 `*_lite.zip`
-2. 刷入：音量上 **默认安装**（WebUI + 热挂载 + 隐藏协助默认关）；音量下 **自定义**（可含 Zygisk 过滤、挂载模式等）
-3. **重启**后打开 WebUI 或执行 `bin/cb status --live` 确认状态
+1. From [Releases](https://github.com/Eikeitsu/CertBridge/releases) download `CertBridge_v*_arm64.zip` (most phones). Use `arm32` / `x86` / `x64` for other ABIs, or `*_lite.zip` for a tiny package without OpenSSL.
+2. Flash in your manager → within ~20s: **Vol+** default (recommended) / **Vol-** custom → **reboot**.
+3. Open WebUI, or run `cb status --live`.
 
-包说明、组件选项与升级见 [安装与升级](docs/guide/install.md)。完整指南见 [在线文档](https://eikeitsu.github.io/CertBridge/) 或 [`docs/`](docs/)。
+Online update (`updateJson`) tracks the **arm64 full** zip. Docs: [Install](https://eikeitsu.github.io/CertBridge/en/guide/install) · [Features](https://eikeitsu.github.io/CertBridge/en/guide/features) · [FAQ](https://eikeitsu.github.io/CertBridge/en/guide/faq).
 
-## 仓库结构
+## Mount modes (short)
+
+| Mode                     | Notes                                                                                |
+| ------------------------ | ------------------------------------------------------------------------------------ |
+| **Compatible** (default) | Full merge + bind; no Magic Mount meta-module required                               |
+| **Magic**                | Overlay addons under `system/`; Magisk usually OK, KernelSU may need a correct stack |
+
+Android 14+: prefer binding the main APEX and skip system when `experimental_14_system=skip` (default). Details in the [config guide](https://eikeitsu.github.io/CertBridge/en/guide/config).
+
+## Layout
 
 ```text
-module/     # Magisk 模块本体（脚本、证书、可选 webroot / zygisk）
-webui/      # WebUI 源码（React）
-native/     # Zygisk 挂载过滤源码（可选构建）
-docs/       # VitePress 用户文档 → GitHub Pages
-archives/   # 历史原生 WebUI 归档（不打包）
-tooling/    # 构建与发版脚本
-.github/    # CI
+module/      Magisk module
+webui/       React WebUI
+docs/        VitePress (zh root + /en)
+locales/     Shared i18n JSON
+scripts/     Build / release / i18n gen
+tools/       cbx509 and helpers
+docs-dev/    Maintainer notes (BUILD / RELEASE)
+changelog.md Handwritten changelog (Chinese only; release auto-translates EN)
+legacy/      Archived WebUI sources
 ```
 
-## 本地开发
-
-```bash
-npm install
-npm run dev:web
-npm run build:module          # 默认完整版 + Lite
-npm run build:cbx509          # 仅 Lite 用 dex
-npm run dev:docs
-```
-
-- 构建：[`tooling/BUILD.md`](tooling/BUILD.md)
-- 发版与 changelog：[`tooling/RELEASE.md`](tooling/RELEASE.md)（开发写根目录 `changelog.md` → `## Unreleased`）
-- 环境变量：`PACKAGE_EDITIONS=full|lite|both`，`OPENSSL_ABIS=all|arm32,arm64,...`（按 ABI **分包**，默认全架构；`arm` 仍作 arm32 别名）；`PACKAGE_FAT=1` 可打旧式合包
-
-发版：Actions → **Release Module** → Run workflow，或推送 `v*` 标签。
-
-## 相关软件
-
-- [Reqable](https://reqable.com)
-- [ProxyPin](https://github.com/wanghongenpin/proxypin)
-
-导入方式、HttpCanary / ADGuard 等见 [相关软件](docs/guide/related.md)。维护者说明见 [致谢](docs/guide/credits.md)。
-
-## License
-
-MIT
+Build & release: [docs-dev/BUILD.md](./docs-dev/BUILD.md) · [docs-dev/RELEASE.md](./docs-dev/RELEASE.md).

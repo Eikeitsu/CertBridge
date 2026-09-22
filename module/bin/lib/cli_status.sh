@@ -128,6 +128,8 @@ hot_failed=0"
   echo "boot_bind_zygote=$(read_conf boot_bind_zygote 0)"
   echo "boot_multi_apex=$(read_conf boot_multi_apex 0)"
   echo "service_probe=$(read_conf service_probe 0)"
+  echo "ui_lang=$(read_conf ui_lang system)"
+  echo "ui_lang_resolved=$(resolve_ui_lang 2>/dev/null || echo en)"
   echo "version=$(grep '^version=' "$MODDIR/module.prop" 2>/dev/null | cut -d= -f2-)"
   echo "$hot_status"
 }

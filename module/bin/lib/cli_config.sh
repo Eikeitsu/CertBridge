@@ -237,10 +237,28 @@ cmd_set_service_probe() {
   echo "ok=1"
   echo "service_probe=$val"
   if [ "$val" = "0" ]; then
-    echo "hint=已关闭状态复核；仅 late_inject=1 时本项有意义，下次开机生效"
+    echo "hint=probe off"
   else
-    echo "hint=已开启状态复核（需同时 late_inject=1 才会退避/heal）；下次开机生效"
+    echo "hint=probe on (needs late_inject=1)"
   fi
+}
+
+cmd_set_ui_lang() {
+  val="$1"
+  case "$val" in
+    system|zh-CN|en) ;;
+    zh|zh_CN) val=zh-CN ;;
+    en-US|en_US) val=en ;;
+    auto) val=system ;;
+    *) echo "error=invalid_ui_lang"; return 1 ;;
+  esac
+  write_conf ui_lang "$val" || { echo "error=write_failed"; return 1; }
+  i18n_load >/dev/null 2>&1 || true
+  update_module_description 2>/dev/null || true
+  log_info "config: ui_lang=$val resolved=$(resolve_ui_lang)"
+  echo "ok=1"
+  echo "ui_lang=$val"
+  echo "ui_lang_resolved=$(resolve_ui_lang)"
 }
 
 ZN_WHITELIST_FILE="$CONFDIR/zn_whitelist.txt"

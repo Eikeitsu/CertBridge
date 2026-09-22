@@ -10,9 +10,10 @@ import { HideGuidePanel } from "@/features/hide/ui/HideGuidePanel";
 import { ZnWhitelistEditor } from "@/features/hide/ui/ZnWhitelistEditor";
 import { HideExperimentPanel } from "@/features/hide/ui/HideExperimentPanel";
 import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
-import { OPS_VOICE } from "../voice";
+import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
 
 export function OpsHidePage() {
+  const chrome = usePackChrome();
   const hide = useHideAllow();
   const zn = useZnHideAllow();
   const status = useAppSelector(selectModuleStatus);
@@ -23,7 +24,7 @@ export function OpsHidePage() {
   return (
     <div className="pk-ops-page pk-ops-page--hide">
       <header className="pk-ops-pagehead pk-ops-pagehead--meta">
-        <p>{OPS_VOICE.hide.sub}</p>
+        <p>{chrome.hide.sub}</p>
       </header>
 
       <HideCaptureWarning title={h.captureTitle} meta={h.captureMeta} banner />

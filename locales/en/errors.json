@@ -1,0 +1,23 @@
+{
+  "write_failed": "Write failed",
+  "busy": "Busy, retry",
+  "not_found": "Not found",
+  "invalid_toggle": "Bad toggle",
+  "invalid_value": "Bad value",
+  "certificate_unavailable": "No cert",
+  "invalid_mount_mode": "Bad mount mode",
+  "invalid_tmpfs_style": "Bad path style",
+  "invalid_experimental_14_system": "Bad system policy",
+  "hot_feature_not_installed": "Hot mount missing",
+  "hide_feature_not_installed": "Hide missing",
+  "zn_hide_feature_not_installed": "Zygisk filter missing",
+  "hide_allow_off": "Enable hide first",
+  "decode_failed": "Decode failed",
+  "invalid_size": "Too large",
+  "install_failed": "Install failed",
+  "remove_failed": "Remove failed",
+  "import_failed": "Import failed",
+  "invalid_filename": "Bad filename",
+  "too_many_collisions": "Name clash",
+  "failed": "Failed"
+}

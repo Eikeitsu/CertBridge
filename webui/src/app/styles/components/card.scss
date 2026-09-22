@@ -1,0 +1,41 @@
+.bf-card {
+  background: var(--bf-surface);
+  border: 1px solid var(--bf-stroke);
+  border-radius: var(--bf-radius);
+  padding: var(--bf-space-md);
+  box-shadow: var(--bf-shadow);
+}
+
+.bf-card-plain__title {
+  margin: 0 0 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--bf-ink-3);
+}
+
+.bf-card-plain__meta {
+  margin: 0 0 10px;
+  font-size: 0.75rem;
+  color: var(--bf-ink-3);
+  line-height: 1.4;
+}
+
+.bf-card__title {
+  margin: 0 0 var(--bf-space-sm);
+  font-size: 0.9rem;
+  font-weight: 650;
+  color: var(--bf-ink);
+  letter-spacing: -0.01em;
+}
+
+.bf-card__meta {
+  margin: -4px 0 var(--bf-space-sm);
+  font-size: 0.75rem;
+  color: var(--bf-ink-3);
+  line-height: 1.4;
+}
+
+.bf-card--dense {
+  padding: 12px;
+}

@@ -37,7 +37,7 @@ compose_applied_cert_summary() {
     esac
   done <"$APPLIED_MAP"
   if [ "$mode" = "compact" ] && [ "$custom_n" -gt 0 ]; then
-    names="${names}${names:+、}自定义×${custom_n}"
+    names="${names}${names:+、}$(i18n_fmt status.custom_x n="$custom_n")"
   fi
   [ "$total" -gt 0 ] || return 1
   echo "${total}|${names}"
@@ -81,7 +81,7 @@ compose_pending_cert_summary() {
     custom_n=$((custom_n + 1))
   done
   if [ "$custom_n" -gt 0 ]; then
-    names="${names}${names:+、}自定义×${custom_n}"
+    names="${names}${names:+、}$(i18n_fmt status.custom_x n="$custom_n")"
     total=$((total + custom_n))
   fi
   [ "$total" -gt 0 ] || return 1
@@ -102,7 +102,11 @@ hot_mode_label() {
 #   emoji 后无空格；方括号内 | 两侧不加空格；括号外若用 | 则两侧加空格
 # 例：[✅运行正常|已挂载:2] 当前生效：Reqable、ProxyPin
 # 模块定位仅写入「首次尚未真正跑起来」时的括号外文案
-DESC_INTRO="让系统信任抓包 CA，支持 Reqable / ProxyPin / 自定义；兼容 Magisk、KernelSU、APatch，Android 7–17"
+desc_intro() {
+  i18n_msg status.intro 2>/dev/null || echo "CertBridge"
+}
+# 兼容旧引用
+DESC_INTRO="$(desc_intro 2>/dev/null || true)"
 
 # $1=大状态  $2=括号内子状态（可空）  $3=括号外说明（必填）
 format_module_description() {
@@ -116,8 +120,7 @@ format_module_description() {
     head="[${major}]"
   fi
 
-  # 括号外不允许空白：缺省时回退到模块定位
-  [ -n "$outer" ] || outer="$DESC_INTRO"
+  [ -n "$outer" ] || outer="$(desc_intro)"
   echo "${head} ${outer}"
 }
 

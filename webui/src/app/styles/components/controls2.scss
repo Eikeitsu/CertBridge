@@ -1,0 +1,62 @@
+.bf-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.bf-chip-row__label {
+  font-size: 0.72rem;
+  font-weight: 650;
+  color: var(--bf-ink-3);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-right: 4px;
+}
+
+.bf-collapse {
+  border: 1px solid var(--bf-stroke);
+  border-radius: var(--bf-radius);
+  overflow: hidden;
+  background: var(--bf-surface);
+}
+
+.bf-collapse.is-inset {
+  background: var(--bf-surface-2);
+}
+
+.bf-collapse__trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 0;
+  background: transparent;
+  color: var(--bf-ink);
+  font-weight: 650;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.bf-collapse__chevron {
+  transition: transform var(--bf-ease);
+  color: var(--bf-ink-3);
+}
+
+.bf-collapse__trigger[data-state="open"] .bf-collapse__chevron {
+  transform: rotate(180deg);
+}
+
+.bf-collapse__content {
+  overflow: hidden;
+}
+
+.bf-collapse__body {
+  padding: 0 16px 16px;
+  color: var(--bf-ink-2);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}

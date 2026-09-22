@@ -59,6 +59,7 @@ case "$CMD" in
   set_service_probe) cmd_set_service_probe "$2" ;;
   get_zn_whitelist) cmd_get_zn_whitelist ;;
   set_zn_whitelist) cmd_set_zn_whitelist "$2" ;;
+  set_ui_lang) cmd_set_ui_lang "$2" ;;
   reinject)
     echo "error=hot_reload_disabled"
     echo "reboot_required=1"

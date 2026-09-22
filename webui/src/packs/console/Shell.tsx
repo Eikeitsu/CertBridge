@@ -19,7 +19,7 @@ import {
 import { TabName } from "@/entities/module/enums";
 import { AppSnackbar } from "@/shared/ui/AppSnackbar";
 import { ConfirmHost } from "@/shared/ui/ConfirmHost";
-import { CONSOLE_VOICE } from "./voice";
+import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
 import { ConsoleHomePage } from "./pages/HomePage";
 import { ConsoleCertsPage } from "./pages/CertsPage";
 import { ConsoleLogPage } from "./pages/LogPage";
@@ -56,12 +56,13 @@ function Pane({
 }
 
 export function ConsoleShell() {
+  const chrome = usePackChrome();
   const refreshing = useAppSelector(selectStatusRefreshing);
   const loading = useAppSelector(selectStatusLoading);
   const resolved = useAppSelector(selectResolvedTheme);
   const { activeTab, switchTab } = useActiveTab();
   const { tabs, showHideTab } = useVisibleTabs();
-  const v = CONSOLE_VOICE;
+  const v = chrome;
   const [seen, setSeen] = useState<Partial<Record<TabName, boolean>>>(() => ({
     [activeTab]: true,
   }));

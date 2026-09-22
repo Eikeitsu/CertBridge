@@ -11,7 +11,7 @@ import { filterLogEntries, parseLogText } from "@/shared/lib/log";
 import { LogLevel } from "@/entities/module/enums";
 import { Loader } from "@/shared/ui/Loader";
 import { Switch } from "@/shared/ui/primitives";
-import { DEFAULT_VOICE } from "../voice";
+import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
 
 const LEVELS: { id: string; label: string }[] = [
   { id: "", label: "全部" },
@@ -22,11 +22,12 @@ const LEVELS: { id: string; label: string }[] = [
 ];
 
 export function DefaultLogPage() {
+  const chrome = usePackChrome();
   const dispatch = useAppDispatch();
   const { text, loading, bytes, lines } = useAppSelector(selectActivityLog);
   const [levelFilter, setLevelFilter] = useLogLevelFilter();
   const [wrap, setWrap] = useLogWrap();
-  const v = DEFAULT_VOICE.log;
+  const v = chrome.log;
   const entries = useMemo(() => parseLogText(text), [text]);
   const filtered = useMemo(
     () => filterLogEntries(entries, levelFilter),

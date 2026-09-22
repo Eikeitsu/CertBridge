@@ -113,12 +113,12 @@ certbridge_volume_choice() {
     if [ -s "$event_file" ]; then
       if certbridge_volume_match_up "$event_file"; then
         rm -f "$event_file"
-        echo "  → 音量上"
+        echo "  $(i18n_msg install.vol_up_label 2>/dev/null || echo '→ Vol+')"
         return 0
       fi
       if certbridge_volume_match_down "$event_file"; then
         rm -f "$event_file"
-        echo "  → 音量下"
+        echo "  $(i18n_msg install.vol_down_label 2>/dev/null || echo '→ Vol-')"
         return 1
       fi
     fi
@@ -136,6 +136,6 @@ certbridge_volume_choice() {
   done
 
   rm -f "$event_file"
-  echo "  → 等待超时"
+  echo "  $(i18n_msg install.vol_timeout_label 2>/dev/null || echo '→ timeout')"
   return 2
 }

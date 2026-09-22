@@ -14,9 +14,10 @@ import { CaptureChecklistCard } from "@/features/hide/ui/CaptureChecklistCard";
 import { ZnWhitelistEditor } from "@/features/hide/ui/ZnWhitelistEditor";
 import { HideExperimentPanel } from "@/features/hide/ui/HideExperimentPanel";
 import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
-import { DEFAULT_VOICE } from "../voice";
+import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
 
 export function DefaultHidePage() {
+  const chrome = usePackChrome();
   const hide = useHideAllow();
   const zn = useZnHideAllow();
   const status = useAppSelector(selectModuleStatus);
@@ -29,8 +30,8 @@ export function DefaultHidePage() {
   return (
     <div className="pk-def-page pk-def-page--hide">
       <header className="pk-def-pagehead">
-        <h1>{DEFAULT_VOICE.hide.title}</h1>
-        <p>{DEFAULT_VOICE.hide.sub}</p>
+        <h1>{chrome.hide.title}</h1>
+        <p>{chrome.hide.sub}</p>
       </header>
 
       {bootstrapped && !anyHide ? (

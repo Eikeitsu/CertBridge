@@ -15,7 +15,7 @@ import { TabName } from "@/entities/module/enums";
 import { brandModuleIconSrc } from "@/shared/config/brand";
 import { AppSnackbar } from "@/shared/ui/AppSnackbar";
 import { ConfirmHost } from "@/shared/ui/ConfirmHost";
-import { DEFAULT_VOICE } from "./voice";
+import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
 import { DefaultHomePage } from "./pages/HomePage";
 import { DefaultCertsPage } from "./pages/CertsPage";
 import { DefaultLogPage } from "./pages/LogPage";
@@ -52,13 +52,14 @@ function Pane({
 }
 
 export function DefaultShell() {
+  const chrome = usePackChrome();
   const deviceLabel = useAppSelector(selectDeviceLabel);
   const refreshing = useAppSelector(selectStatusRefreshing);
   const loading = useAppSelector(selectStatusLoading);
   const resolved = useAppSelector(selectResolvedTheme);
   const { activeTab, switchTab } = useActiveTab();
   const { tabs, showHideTab } = useVisibleTabs();
-  const v = DEFAULT_VOICE;
+  const v = chrome;
   const [seen, setSeen] = useState<Partial<Record<TabName, boolean>>>(() => ({
     [activeTab]: true,
   }));

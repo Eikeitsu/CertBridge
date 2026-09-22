@@ -1,0 +1,32 @@
+.bf-log {
+  font-family: var(--bf-font-mono);
+  font-size: 0.72rem;
+  line-height: 1.55;
+  background: #0b1220;
+  color: #cbd5e1;
+  border-radius: var(--bf-radius);
+  padding: var(--bf-space-md);
+  max-height: 58vh;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.bf-log--terminal {
+  max-height: calc(100dvh - 220px);
+  border-radius: 0;
+  margin-inline: calc(-1 * var(--bf-page-pad));
+  width: calc(100% + 2 * var(--bf-page-pad));
+}
+
+.bf-log-line.lv-error {
+  color: #f87171;
+}
+
+.bf-log-line.lv-warn {
+  color: #fbbf24;
+}
+
+.bf-log-line.lv-debug {
+  color: #64748b;
+}

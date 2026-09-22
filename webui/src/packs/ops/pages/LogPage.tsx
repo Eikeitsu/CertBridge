@@ -10,7 +10,7 @@ import { confirmAction } from "@/shared/lib/confirmAction";
 import { filterLogEntries, parseLogText } from "@/shared/lib/log";
 import { LogLevel } from "@/entities/module/enums";
 import { Loader } from "@/shared/ui/Loader";
-import { OPS_VOICE } from "../voice";
+import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
 
 const LEVELS: { id: string; label: string }[] = [
   { id: "", label: "全部" },
@@ -21,11 +21,12 @@ const LEVELS: { id: string; label: string }[] = [
 ];
 
 export function OpsLogPage() {
+  const chrome = usePackChrome();
   const dispatch = useAppDispatch();
   const { text, loading, bytes, lines } = useAppSelector(selectActivityLog);
   const [levelFilter, setLevelFilter] = useLogLevelFilter();
   const [wrap, setWrap] = useLogWrap();
-  const v = OPS_VOICE.log;
+  const v = chrome.log;
   const entries = useMemo(() => parseLogText(text), [text]);
   const filtered = useMemo(
     () => filterLogEntries(entries, levelFilter),

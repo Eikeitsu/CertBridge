@@ -1,0 +1,20 @@
+/* 隐藏页：说明条目更密；白名单输入铺满 */
+.pk-ops-shell .bf-hide-guide details {
+  padding: 8px 10px;
+  margin-bottom: 6px;
+}
+
+.pk-ops-shell .bf-hide-guide details > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.35;
+  list-style: none;
+}
+
+.pk-ops-shell .bf-hide-guide details > summary::-webkit-details-marker {
+  display: none;
+}

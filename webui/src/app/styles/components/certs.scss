@@ -1,0 +1,14 @@
+.bf-cert-tile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-radius: var(--bf-radius);
+  background: var(--bf-surface);
+  border: 1px solid var(--bf-stroke);
+}
+
+.bf-cert-tile__body {
+  flex: 1;
+  min-width: 0;
+}

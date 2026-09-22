@@ -1,0 +1,13 @@
+.bf-textarea {
+  width: 100%;
+  font-family: var(--bf-font-mono);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--bf-stroke);
+  background: var(--bf-surface-2);
+  color: var(--bf-ink);
+  box-sizing: border-box;
+  resize: vertical;
+}

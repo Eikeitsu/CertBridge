@@ -14,4 +14,4 @@ CertBridge **CI channel**: update manifest and module zips on the **same** branc
 
 Stable / release channel remains GitHub Pages (`update.json` + `releases/`).
 
-Last: 4.2.0.ci.207 @ 67c39dda5aa5861d0a5846fc30753d3be04f0299
+Last: 4.2.1.ci.211 @ 5e3cb67066bdb8ba07ee11eeb7174bddca25568e

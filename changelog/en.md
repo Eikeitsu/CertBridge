@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## v4.3.1
+
+- **WebUI 性能**: first screen `status --quick`; certificate switch no longer fully refreshes and introduces background writing; cut language with startTransition
+- **多语言**: home trust state/pipeline/environment card/log empty state and other hard-coded Chinese access i18n
+
 ## v4.3.0
 
 - **Internationalization**: Shared `locales/` copy; WebUI i18next; install/prop follow system language (non-zh/en fall back to English)

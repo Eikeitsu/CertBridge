@@ -59,6 +59,8 @@ export function normalizeCliStatusPatch(
     if (!key || key === "ok" || key === "error" || key === "hint" || key === "filename")
       continue;
     if (key === "reboot_required") continue;
+    // toggle 诊断字段，勿写入 status
+    if (key === "match_certs" || key.startsWith("boot_") || key.startsWith("cur_")) continue;
     patch[key] = value;
   }
   if (Object.prototype.hasOwnProperty.call(kv, "reboot_required")) {

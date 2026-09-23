@@ -75,10 +75,8 @@ export function useCertActions() {
           checked ? t("toast.toggleOn") : t("toast.toggleOff"),
           checked ? t("toast.toggleOnMatch") : t("toast.toggleOffMatch"),
         );
-        // 开关关再开后以 status 实况为准，避免 pending 契约行丢失时首页横幅卡住
-        if (!Object.prototype.hasOwnProperty.call(kv, "reboot_required")) {
-          void dispatch(refreshStatus(SILENT_REFRESH));
-        }
+        // 始终再拉一次 status，确保首页 pending 横幅与磁盘标记一致
+        void dispatch(refreshStatus(SILENT_REFRESH));
       });
     },
     [dispatch, runExclusive, t],

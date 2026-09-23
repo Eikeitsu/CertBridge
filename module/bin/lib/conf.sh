@@ -105,7 +105,7 @@ snapshot_effective_conf() {
   else
     : >"$tmp"
   fi
-  for _uc in "$USER_CONF" "$USER_CONF_LEGACY"; do
+  for _uc in "$USER_CONF_LEGACY" "$USER_CONF"; do
     [ -f "$_uc" ] || continue
     while IFS= read -r line || [ -n "$line" ]; do
       line=$(printf '%s' "$line" | tr -d '\r')

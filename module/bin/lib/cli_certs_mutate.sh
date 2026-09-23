@@ -65,17 +65,24 @@ cmd_toggle() {
   case "$name" in reqable|proxypin) ;; *) echo "error=invalid_toggle"; return 1 ;; esac
   [ "$value" = "1" ] || [ "$value" = "0" ] || { echo "error=invalid_value"; return 1; }
 
+  _toggle_finish() {
+    echo "ok=1"
+    echo "${name}_enabled=$value"
+    echo "boot_${name}=$(_boot_cert_enabled "$name")"
+    echo "cur_${name}=$(_cur_cert_enabled "$name")"
+    echo "match_certs=$(cert_state_matches_applied && echo 1 || echo 0)"
+    pending_line=$(update_reboot_required_flag_certs)
+    echo "$pending_line"
+    refresh_module_description_light >/dev/null 2>&1 || true
+  }
+
   if [ "$value" = "0" ]; then
     if ! _toggle_write_user_conf "$name" "$value"; then
       echo "error=write_failed"
       echo "hint=无法写入 /data/adb/certbridge/user.conf"
       return 1
     fi
-    echo "ok=1"
-    echo "${name}_enabled=$value"
-    pending_line=$(note_conf_dirty)
-    echo "$pending_line"
-    refresh_module_description_light >/dev/null 2>&1 || true
+    _toggle_finish
     return 0
   fi
 
@@ -90,11 +97,7 @@ cmd_toggle() {
     echo "hint=无法写入 /data/adb/certbridge/user.conf"
     return 1
   fi
-  echo "ok=1"
-  echo "${name}_enabled=$value"
-  pending_line=$(note_conf_dirty)
-  echo "$pending_line"
-  refresh_module_description_light >/dev/null 2>&1 || true
+  _toggle_finish
   return 0
 }
 

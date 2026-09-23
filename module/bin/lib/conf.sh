@@ -167,13 +167,55 @@ get_experimental_14_system() {
   esac
 }
 
+# 去掉与模块模板完全相同的冗余覆盖，避免「未改过的项」挡住证书开关回清 pending
+prune_redundant_user_conf_defaults() {
+  USER_CONF="${USER_CONF:-${CB_EXT_DIR:-/data/adb/certbridge}/user.conf}"
+  [ -f "$USER_CONF" ] || return 0
+  [ -f "$CONF" ] || return 0
+  changed=0
+  tmp="$CB_EXT_DIR/.user.conf.prune.$$"
+  mkdir -p "$CB_EXT_DIR" 2>/dev/null || return 0
+  : >"$tmp"
+  while IFS= read -r line || [ -n "$line" ]; do
+    line=$(printf '%s' "$line" | tr -d '\r')
+    case "$line" in
+      ""|\#*)
+        printf '%s\n' "$line" >>"$tmp"
+        continue
+        ;;
+    esac
+    key=${line%%=*}
+    val=${line#*=}
+    [ -n "$key" ] && [ "$key" != "$line" ] || continue
+    # 证书开关始终保留；其余若与模板相同则删
+    case "$key" in
+      reqable|proxypin)
+        printf '%s\n' "$line" >>"$tmp"
+        continue
+        ;;
+    esac
+    def=$(awk -F= -v key="$key" '$1 == key { sub(/^[^=]*=/, ""); print; exit }' "$CONF" 2>/dev/null | tr -d '\r')
+    if [ -n "$def" ] && [ "$val" = "$def" ]; then
+      changed=1
+      continue
+    fi
+    printf '%s\n' "$line" >>"$tmp"
+  done <"$USER_CONF"
+  if [ "$changed" = "1" ]; then
+    chmod 0600 "$tmp" 2>/dev/null
+    cp -f "$tmp" "$USER_CONF" 2>/dev/null || cat "$tmp" >"$USER_CONF" 2>/dev/null || true
+  fi
+  rm -f "$tmp" 2>/dev/null
+  return 0
+}
+
 migrate_experimental_14_system_conf() {
   [ -f "$CONF" ] || [ -f "$USER_CONF" ] || [ -f "$USER_CONF_LEGACY" ] || return 0
   need_write=0
   cur=$(read_conf experimental_14_system "")
-  if [ -z "$cur" ]; then
-    need_write=1
-  else
+  # 空值时 get_experimental_14_system 已回落 skip，勿写入 user.conf
+  # （否则会让 config_matches_applied 误开比对，证书关开也无法清 pending）
+  if [ -n "$cur" ]; then
     case "$(printf '%s' "$cur" | tr 'A-Z' 'a-z')" in
       off|default|follow|overlay|apex_overlay|none|off_system|apex_only)
         need_write=1
@@ -182,21 +224,20 @@ migrate_experimental_14_system_conf() {
   fi
   drop_legacy=0
   [ -f "$CONF" ] && grep -q '^experimental_14_apex_only=' "$CONF" 2>/dev/null && drop_legacy=1
-  [ "$need_write" = "1" ] || [ "$drop_legacy" = "1" ] || return 0
+  [ "$need_write" = "1" ] || [ "$drop_legacy" = "1" ] || {
+    prune_redundant_user_conf_defaults 2>/dev/null || true
+    return 0
+  }
 
   if [ "$need_write" = "1" ]; then
-    if [ -z "$cur" ]; then
-      write_conf experimental_14_system skip 2>/dev/null || true
-    else
-      case "$(printf '%s' "$cur" | tr 'A-Z' 'a-z')" in
-        off|default|follow|overlay|apex_overlay)
-          write_conf experimental_14_system auto 2>/dev/null || true
-          ;;
-        none|off_system|apex_only)
-          write_conf experimental_14_system skip 2>/dev/null || true
-          ;;
-      esac
-    fi
+    case "$(printf '%s' "$cur" | tr 'A-Z' 'a-z')" in
+      off|default|follow|overlay|apex_overlay)
+        write_conf experimental_14_system auto 2>/dev/null || true
+        ;;
+      none|off_system|apex_only)
+        write_conf experimental_14_system skip 2>/dev/null || true
+        ;;
+    esac
   fi
   if [ "$drop_legacy" = "1" ] && [ -f "$CONF" ]; then
     tmp="$CONFDIR/.migrate-exp14.$$"
@@ -204,6 +245,7 @@ migrate_experimental_14_system_conf() {
       cat "$tmp" >"$CONF" 2>/dev/null
     rm -f "$tmp"
   fi
+  prune_redundant_user_conf_defaults 2>/dev/null || true
   return 0
 }
 

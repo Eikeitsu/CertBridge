@@ -1,4 +1,5 @@
 # CertBridge CI
 
 
-- **证书开关**：修复开启时 `addon_ensure_ready`/`sync` 污染全局 `name`，把错误键写入 user.conf 导致开关弹回；关开回原时正确清除待重启
+- **WebUI 性能**：首屏 `status --quick`；证书开关不再全量刷新且简介后台写；切语言用 startTransition
+- **多语言**：首页信任态 / 流水线 / 环境卡 / 日志空态等硬编码中文接入 i18n

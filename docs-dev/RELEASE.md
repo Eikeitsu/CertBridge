@@ -5,14 +5,14 @@
 
 ## 日志写哪里
 
-| 文件                         | 用途                                        |
-| ---------------------------- | ------------------------------------------- |
-| 根目录 `changelog.md`        | **唯一手写源（中文）**                      |
-| `changelog/en.md`            | **发版机翻生成**；一般不要手改              |
-| `changelog/zh-CN.md`         | 根文件镜像；勿手写                          |
-| `docs/guide/changelog.md`    | 中文站；发版生成                            |
-| `docs/en/guide/changelog.md` | 英文站；发版生成（来自机翻）                |
-| `docs/public/changelog.md`   | Magisk `updateJson`；发版生成的中英并列文件 |
+| 文件                         | 用途                                                          |
+| ---------------------------- | ------------------------------------------------------------- |
+| 根目录 `changelog.md`        | **唯一手写源（中文）**                                        |
+| `changelog/en.md`            | **发版机翻生成**；一般不要手改                                |
+| `changelog/zh-CN.md`         | 根文件镜像；勿手写                                            |
+| `docs/guide/changelog.md`    | 中文站；发版生成                                              |
+| `docs/en/guide/changelog.md` | 英文站；发版生成（来自机翻）                                  |
+| `docs/public/changelog.md`   | Magisk `updateJson`；发版生成，**按版本中英对照**（最新在上） |
 
 ### Unreleased 写法
 
@@ -33,13 +33,16 @@
 4. 导出文档站中/英页 + Magisk 双语 `docs/public/changelog.md`
 5. 回写 `update.json` / `module.prop` / `package.json` 并触发 Build Docs
 
-> Magisk 只有一个 `changelog` URL，无法按系统语言切两个链接；双语 = **同一文件上下两段**。
+> Magisk 只有一个 `changelog` URL，无法按系统语言切两个链接。  
+> 双语布局 = **每个版本下先中文再英文**（最新版始终在文件顶部），避免英文用户滑到全文末尾才看到更新。
 
-机翻偶发不通时：脚本会告警并尽量保留可发布状态；你可事后改 `changelog/en.md` 再推，或本地重跑：
+机翻会保护 `` `code` `` / `**粗体**` / URL，再按行翻译，减少 `* * bold * *`、占位符泄漏等 MD 损坏。偶发不通时：脚本会告警并尽量保留可发布状态；你可事后改 `changelog/en.md` 再推，或本地重跑：
 
 ```bash
 pip install deep-translator
 python3 scripts/sync-changelog-en.py v4.2.3 changelog.md changelog/en.md
+python3 scripts/promote-changelog.py --export-docs changelog.md docs/guide/changelog.md
+python3 scripts/promote-changelog.py --export-docs changelog/en.md docs/en/guide/changelog.md
 python3 scripts/promote-changelog.py --export-bilingual changelog.md changelog/en.md \
   docs/public/changelog.md
 ```

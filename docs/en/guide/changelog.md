@@ -2,15 +2,17 @@
 
 ## v4.3.0
 
-- * * Internationalization * *: Shared `locales/` copy; WebUI i18next; Installation/Introduction Follow System Language (Non-Chinese English fallback)
-- * * First screen * *: brand word only + fine progress bar, remove "loading" copy and big circle
-- * * Installation inquiry * *: volume key tip changed to short sentence
-- * * Warehouse organization * *:⟦ 1⟧/⟦2/`docs-dev/` ⟧/`legacy/`; Changelog Chinese and English dual files
+- **Internationalization**: Shared `locales/` copy; WebUI i18next; install/prop follow system language (non-zh/en fall back to English)
+- **Splash screen**: Brand wordmark + thin progress bar only; remove "Loading" copy and large spinner
+- **Install prompts**: Volume-key tips shortened to brief lines
+- **Repo layout**: `scripts/` / `tools/` / `docs-dev/` / `legacy/`; dual Chinese/English changelog files
 
 ## v4.2.2
 
-- ARM32 zip suffix rename (`*_arm32.zip`); clear pending-reboot when settings match boot snapshot; release versionCode above CI floor
+- **Artifact suffix**: 32-bit ARM zips renamed from `*_arm.zip` / `CertBridge_arm.zip` to `*_arm32.zip` / `CertBridge_arm32.zip` (armeabi-v7a); `OPENSSL_ABIS=arm` still supported
+- **Pending-reboot banner**: Clear pending-reboot state and home tip when cert toggles / mount mode / skip-system / path style again match the boot-applied snapshot
+- **CI**: Release versionCode must be above the latest CI versionCode at publish time
 
 ## Earlier
 
-See Chinese changelog for full history: `changelog/zh-CN.md`.
+English entries above cover recent releases. Full older history remains in the Chinese changelog (`changelog.md` / docs site).

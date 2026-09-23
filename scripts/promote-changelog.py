@@ -125,34 +125,76 @@ def export_docs(text: str) -> str:
 
 
 def export_bilingual(zh_text: str, en_text: str) -> str:
-    """Single Magisk-facing file: Chinese block then English block (no Unreleased)."""
+    """Single Magisk-facing file: per-version 中文 then English (newest first).
 
-    def body_only(exported: str) -> str:
-        text = exported.strip() + "\n"
-        for prefix in ("# 更新日志\n", "# Changelog\n"):
-            if text.startswith(prefix):
-                text = text[len(prefix) :].lstrip("\n")
-                break
-        return text.rstrip() + "\n"
+    Magisk only has one changelog URL, so both languages share this file.
+    Interleaving by version keeps the latest release at the top for every reader
+    instead of forcing English users to scroll past the full Chinese history.
+    """
 
-    zh_body = body_only(export_docs(zh_text))
-    en_body = body_only(export_docs(en_text))
-    return (
-        "# 更新日志 / Changelog\n"
-        "\n"
-        "> Magisk `updateJson` 仅支持一个 changelog URL；本文件中英并列。\n"
-        "> Magisk only accepts one changelog URL; Chinese and English are listed below.\n"
-        "\n"
-        "---\n"
-        "\n"
-        "## 中文\n"
-        "\n"
-        f"{zh_body}"
-        "\n---\n\n"
-        "## English\n"
-        "\n"
-        f"{en_body}"
-    )
+    def published(text: str, fallback_title: str) -> list[tuple[str, str]]:
+        _, sections = parse(text if text.strip() else f"{fallback_title}\n")
+        return [(h, b) for h, b in sections if not is_unreleased(h)]
+
+    def is_meta_heading(heading: str) -> bool:
+        key = heading.strip().lower()
+        return key in {"中文", "chinese", "english", "en", "earlier", "更早"}
+
+    zh_sections = [(h, b) for h, b in published(zh_text, "# 更新日志") if not is_meta_heading(h)]
+    en_map: dict[str, str] = {}
+    en_order: list[str] = []
+    for heading, body in published(en_text, "# Changelog"):
+        if is_meta_heading(heading):
+            continue
+        bare = heading.strip().lstrip("vV")
+        en_map[bare] = body.strip("\n")
+        en_order.append(heading)
+
+    parts = [
+        "# 更新日志 / Changelog",
+        "",
+        "> English notes are under each version's Chinese block — scroll down a bit to find them.",
+        "> English text is machine-translated (e.g. Google Translate) and may be awkward or imprecise.",
+        "",
+        "---",
+        "",
+    ]
+
+    seen_en: set[str] = set()
+    for heading, zh_body in zh_sections:
+        bare = heading.strip().lstrip("vV")
+        parts.append(f"## {heading}")
+        parts.append("")
+        parts.append("### 中文")
+        parts.append("")
+        cleaned_zh = zh_body.strip("\n")
+        if cleaned_zh.strip():
+            parts.append(cleaned_zh)
+            parts.append("")
+        en_body = en_map.get(bare, "").strip("\n")
+        if en_body.strip():
+            parts.append("### English")
+            parts.append("")
+            parts.append(en_body)
+            parts.append("")
+            seen_en.add(bare)
+
+    # EN-only versions (rare): append after Chinese-ordered history
+    for heading in en_order:
+        bare = heading.strip().lstrip("vV")
+        if bare in seen_en:
+            continue
+        en_body = en_map.get(bare, "").strip("\n")
+        if not en_body.strip():
+            continue
+        parts.append(f"## {heading}")
+        parts.append("")
+        parts.append("### English")
+        parts.append("")
+        parts.append(en_body)
+        parts.append("")
+
+    return "\n".join(parts).rstrip() + "\n"
 
 
 def main() -> int:

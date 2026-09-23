@@ -5,8 +5,8 @@ Usage:
   sync-changelog-en.py <version> [zh.md] [en.md]
 
 Reads the ## <version> body from the Chinese changelog, machine-translates it
-to English (preserving markdown structure / `code` / URLs), and upserts that
-section into the English changelog.
+to English (preserving markdown structure / `code` / URLs / **bold**), and
+upserts that section into the English changelog.
 
 Env (optional):
   DEEPL_AUTH_KEY       — prefer DeepL when set
@@ -33,19 +33,29 @@ render = _pc.render
 version_keys = _pc.version_keys
 is_unreleased = _pc.is_unreleased
 
+# Inline spans that MT engines routinely break (** → * *, `code` → mangled).
 CODE_SPAN_RE = re.compile(r"`[^`]+`")
+BOLD_SPAN_RE = re.compile(r"\*\*[^*]+?\*\*")
 URL_RE = re.compile(r"https?://[^\s)>\]]+")
 CJK_RE = re.compile(r"[\u4e00-\u9fff]")
+# ASCII-only tokens; Google/DeepL almost never insert spaces inside these.
+PH_FMT = "XXCBPH{0}XX"
+PH_RESTORE_RE = re.compile(r"XX\s*CB\s*PH\s*(\d+)\s*XX", re.IGNORECASE)
+# Common MT damage if a bold span was not protected
+SPACED_BOLD_RE = re.compile(r"\*\s+\*\s*([^*\n]+?)\s*\*\s+\*")
 
 
 def _protect(text: str) -> tuple[str, list[str]]:
+    """Replace fragile markdown spans with opaque placeholders before MT."""
     held: list[str] = []
 
     def stash(m: re.Match[str]) -> str:
         held.append(m.group(0))
-        return f"⟦{len(held) - 1}⟧"
+        return PH_FMT.format(len(held) - 1)
 
+    # Order matters: code first (may sit inside bold), then bold, then URLs.
     out = CODE_SPAN_RE.sub(stash, text)
+    out = BOLD_SPAN_RE.sub(stash, out)
     out = URL_RE.sub(stash, out)
     return out, held
 
@@ -55,7 +65,12 @@ def _restore(text: str, held: list[str]) -> str:
         idx = int(m.group(1))
         return held[idx] if 0 <= idx < len(held) else m.group(0)
 
-    return re.sub(r"⟦(\d+)⟧", unstash, text)
+    return PH_RESTORE_RE.sub(unstash, text)
+
+
+def _fix_md_artifacts(text: str) -> str:
+    """Repair leftover MT damage on markdown emphasis."""
+    return SPACED_BOLD_RE.sub(r"**\1**", text)
 
 
 def _translate_text(text: str) -> str:
@@ -120,51 +135,57 @@ def _translate_text(text: str) -> str:
             )
             out = protected
 
-    return _restore(out, held)
+    restored = _restore(str(out), held)
+    # Drop any placeholders the MT engine mangled beyond recognition
+    leftover = PH_RESTORE_RE.findall(restored)
+    if leftover:
+        print(
+            f"warn: {len(leftover)} placeholder(s) still present after restore",
+            file=sys.stderr,
+        )
+    # Orphan tokens like XXCBPH0XX that failed the spaced regex entirely
+    for i, original in enumerate(held):
+        token = PH_FMT.format(i)
+        if token in restored:
+            restored = restored.replace(token, original)
+    return _fix_md_artifacts(restored)
 
 
 def translate_markdown_body(body: str) -> str:
-    """Translate in larger chunks (paragraph groups) to avoid per-line rate limits."""
+    """Translate line-by-line for list items to keep bullet structure intact."""
     lines = body.splitlines()
-    chunks: list[list[str]] = []
-    cur: list[str] = []
-
-    def flush() -> None:
-        nonlocal cur
-        if cur:
-            chunks.append(cur)
-            cur = []
+    out_lines: list[str] = []
+    in_fence = False
 
     for line in lines:
-        # Keep code fences as their own chunks (do not translate)
-        if line.strip().startswith("```"):
-            flush()
-            chunks.append([line])
+        stripped = line.strip()
+        if stripped.startswith("```"):
+            in_fence = not in_fence
+            out_lines.append(line)
             continue
-        cur.append(line)
-        # Split on blank lines into paragraph-sized batches
-        if not line.strip() and len(cur) >= 6:
-            flush()
-    flush()
+        if in_fence or not CJK_RE.search(line):
+            out_lines.append(line)
+            continue
 
-    out_lines: list[str] = []
-    for group in chunks:
-        joined = "\n".join(group)
-        if not CJK_RE.search(joined):
-            out_lines.extend(group)
-            continue
-        if all(g.strip().startswith("```") for g in group):
-            out_lines.extend(group)
-            continue
-        # Translate whole paragraph block once
-        translated = _translate_text(joined)
-        # Preserve line count when possible; otherwise take translator output as-is
-        t_lines = translated.splitlines()
-        if len(t_lines) == len(group):
-            out_lines.extend(t_lines)
+        translated = _translate_text(line)
+        # Prefer single-line output for list / quote rows
+        t_lines = [t for t in translated.splitlines() if t.strip() or not stripped]
+        if len(t_lines) == 1:
+            out_lines.append(t_lines[0])
+        elif not t_lines:
+            out_lines.append(line)
         else:
-            out_lines.extend(t_lines if t_lines else group)
-        time.sleep(0.4)
+            # Keep leading list/quote marker from the source when MT wraps
+            prefix_m = re.match(r"^(\s*(?:[-*]|\d+\.|>)\s+)", line)
+            if prefix_m and not any(
+                t.lstrip().startswith(("-", "*", ">")) or re.match(r"\d+\.", t.lstrip())
+                for t in t_lines
+            ):
+                out_lines.append(prefix_m.group(1) + t_lines[0].lstrip())
+                out_lines.extend(t_lines[1:])
+            else:
+                out_lines.extend(t_lines)
+        time.sleep(0.25)
 
     result = "\n".join(out_lines).rstrip() + "\n"
     return result

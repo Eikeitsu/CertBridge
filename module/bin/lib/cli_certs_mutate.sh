@@ -8,20 +8,20 @@
 # - 开 = 本地有证或能从 App/下载目录/builtin 拿到 → 写 user.conf=1
 
 _toggle_write_user_conf() {
-  name="$1"
-  value="$2"
+  tog_key="$1"
+  tog_val="$2"
   CB_EXT_DIR="${CB_EXT_DIR:-/data/adb/certbridge}"
   USER_CONF="$CB_EXT_DIR/user.conf"
   mkdir -p "$CB_EXT_DIR" 2>/dev/null || return 1
-  tmp="$CB_EXT_DIR/.user.conf.$$.$name"
+  tmp="$CB_EXT_DIR/.user.conf.$$.$tog_key"
   if [ -f "$USER_CONF" ]; then
-    grep -v "^${name}=" "$USER_CONF" >"$tmp" 2>/dev/null || : >"$tmp"
-    printf '%s=%s\n' "$name" "$value" >>"$tmp" 2>/dev/null || {
+    grep -v "^${tog_key}=" "$USER_CONF" >"$tmp" 2>/dev/null || : >"$tmp"
+    printf '%s=%s\n' "$tog_key" "$tog_val" >>"$tmp" 2>/dev/null || {
       rm -f "$tmp"
       return 1
     }
   else
-    printf '%s=%s\n' "$name" "$value" >"$tmp" 2>/dev/null || return 1
+    printf '%s=%s\n' "$tog_key" "$tog_val" >"$tmp" 2>/dev/null || return 1
   fi
   chmod 0600 "$tmp" 2>/dev/null
   wrote=0
@@ -35,8 +35,8 @@ _toggle_write_user_conf() {
   fi
   rm -f "$tmp" 2>/dev/null
   [ "$wrote" = "1" ] || return 1
-  got=$(grep "^${name}=" "$USER_CONF" 2>/dev/null | head -n1 | cut -d= -f2- | tr -d ' \t\r\n')
-  [ "$got" = "$value" ]
+  got=$(grep "^${tog_key}=" "$USER_CONF" 2>/dev/null | head -n1 | cut -d= -f2- | tr -d ' \t\r\n')
+  [ "$got" = "$tog_val" ]
 }
 
 # 开之前保证 addon-sources 有证（与安装 certbridge_install_try_app 同一套探测/同步）
@@ -60,44 +60,31 @@ addon_ensure_ready() {
 }
 
 cmd_toggle() {
-  name="$1"
-  value="$2"
-  case "$name" in reqable|proxypin) ;; *) echo "error=invalid_toggle"; return 1 ;; esac
-  [ "$value" = "1" ] || [ "$value" = "0" ] || { echo "error=invalid_value"; return 1; }
+  # 禁用 name/value：sync/import 会污染全局 name，导致写成错误键、开关弹回
+  tog_kind="$1"
+  tog_val="$2"
+  case "$tog_kind" in reqable|proxypin) ;; *) echo "error=invalid_toggle"; return 1 ;; esac
+  [ "$tog_val" = "1" ] || [ "$tog_val" = "0" ] || { echo "error=invalid_value"; return 1; }
 
-  _toggle_finish() {
-    echo "ok=1"
-    echo "${name}_enabled=$value"
-    echo "boot_${name}=$(_boot_cert_enabled "$name")"
-    echo "cur_${name}=$(_cur_cert_enabled "$name")"
-    echo "match_certs=$(cert_state_matches_applied && echo 1 || echo 0)"
-    pending_line=$(update_reboot_required_flag_certs)
-    echo "$pending_line"
-    refresh_module_description_light >/dev/null 2>&1 || true
-  }
-
-  if [ "$value" = "0" ]; then
-    if ! _toggle_write_user_conf "$name" "$value"; then
-      echo "error=write_failed"
-      echo "hint=无法写入 /data/adb/certbridge/user.conf"
+  if [ "$tog_val" = "1" ]; then
+    if ! addon_ensure_ready "$tog_kind"; then
+      echo "error=certificate_unavailable"
+      echo "hint=本地无证书且无法从 App 导入（与安装扫描相同路径）；请先在 App 生成根证书或自定义导入"
       return 1
     fi
-    _toggle_finish
-    return 0
   fi
 
-  if ! addon_ensure_ready "$name"; then
-    echo "error=certificate_unavailable"
-    echo "hint=本地无证书且无法从 App 导入（与安装扫描相同路径）；请先在 App 生成根证书或自定义导入"
-    return 1
-  fi
-
-  if ! _toggle_write_user_conf "$name" "$value"; then
+  if ! _toggle_write_user_conf "$tog_kind" "$tog_val"; then
     echo "error=write_failed"
     echo "hint=无法写入 /data/adb/certbridge/user.conf"
     return 1
   fi
-  _toggle_finish
+
+  echo "ok=1"
+  echo "${tog_kind}_enabled=$tog_val"
+  # 先回契约再刷简介，避免简介路径改全局变量影响回包
+  update_reboot_required_flag_certs
+  refresh_module_description_light >/dev/null 2>&1 || true
   return 0
 }
 

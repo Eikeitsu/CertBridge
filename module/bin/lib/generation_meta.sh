@@ -195,9 +195,6 @@ config_matches_applied() {
 
 # 证书开关专用：只看证书态，避免其它配置误伤「关开回原」
 update_reboot_required_flag_certs() {
-  if type prune_redundant_user_conf_defaults >/dev/null 2>&1; then
-    prune_redundant_user_conf_defaults 2>/dev/null || true
-  fi
   if cert_state_matches_applied; then
     clear_reboot_required
     echo "reboot_required=0"

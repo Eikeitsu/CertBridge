@@ -64,12 +64,12 @@ sync_source_from_app() {
   stage="$CB_EXT_DIR/.sync_stage.$$.$kind"
   rm -rf "$stage"
   mkdir -p "$stage" || return 1
-  name=$(import_ca_into_dir "$live" "$stage" "$label") || {
+  _imp_name=$(import_ca_into_dir "$live" "$stage" "$label") || {
     rm -rf "$stage"
     return 1
   }
-  new_cert="$stage/$name"
-  is_cert_filename "$name" || {
+  new_cert="$stage/$_imp_name"
+  is_cert_filename "$_imp_name" || {
     rm -rf "$stage"
     return 1
   }

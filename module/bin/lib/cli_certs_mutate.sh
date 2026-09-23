@@ -73,7 +73,9 @@ cmd_toggle() {
     fi
     echo "ok=1"
     echo "${name}_enabled=$value"
-    note_conf_dirty
+    pending_line=$(note_conf_dirty)
+    echo "$pending_line"
+    refresh_module_description_light >/dev/null 2>&1 || true
     return 0
   fi
 
@@ -90,7 +92,9 @@ cmd_toggle() {
   fi
   echo "ok=1"
   echo "${name}_enabled=$value"
-  note_conf_dirty
+  pending_line=$(note_conf_dirty)
+  echo "$pending_line"
+  refresh_module_description_light >/dev/null 2>&1 || true
   return 0
 }
 

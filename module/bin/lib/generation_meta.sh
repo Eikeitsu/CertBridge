@@ -21,7 +21,7 @@ read_applied_conf() {
   [ -n "$val" ] && echo "$val" || echo "$default"
 }
 
-# 自定义证书指纹：文件名 + cksum，排序后拼接
+# 自定义证书指纹：仅内容 cksum 集合（排序），避免文件名与 applied 目标名不一致时误判
 custom_certs_fingerprint() {
   [ -d "$CUSTOM_DIR" ] || { echo ""; return 0; }
   (
@@ -30,21 +30,20 @@ custom_certs_fingerprint() {
       base=$(basename "$f")
       case "$base" in *.meta) continue ;; esac
       is_cert_filename "$base" 2>/dev/null || continue
-      sum=$(cksum "$f" 2>/dev/null | awk '{print $1 ":" $2}')
-      echo "${base}|${sum}"
+      cksum "$f" 2>/dev/null | awk '{print $1 ":" $2}'
     done
   ) | sort | tr '\n' ';'
 }
 
-# 生效快照中的自定义证书指纹（applied-certs.list 的 custom:* 行）
+# 生效快照中的自定义证书指纹（applied-certs.list 的 custom:* 行，第 3 列为 cksum）
 applied_custom_fingerprint() {
   [ -s "$APPLIED_MAP" ] || { echo ""; return 0; }
   (
-    while IFS='|' read -r label name checksum display; do
+    while IFS='|' read -r label name checksum display || [ -n "$label" ]; do
       case "$label" in
         custom:*)
-          [ -n "$name" ] || continue
-          echo "${name}|${checksum}"
+          [ -n "$checksum" ] || continue
+          echo "$checksum"
           ;;
       esac
     done <"$APPLIED_MAP"
@@ -54,33 +53,48 @@ applied_custom_fingerprint() {
 # 当前配置是否与开机已生效快照一致？一致则不应再「待重启」
 # 只比对会影响下次开机注入的项；不做 generation_valid（含大量 cksum，WebUI 热路径过慢）
 config_matches_applied() {
-  [ -f "$APPLIED_CONF" ] || return 1
+  # applied.conf 缺失时，仍可用 applied-certs.list 判断证书开关是否回到开机态
+  if [ -f "$APPLIED_CONF" ]; then
+    app_req=$(read_applied_conf reqable 1 | tr -d ' \t\r\n')
+    app_pp=$(read_applied_conf proxypin 1 | tr -d ' \t\r\n')
+    app_mm=$(read_applied_conf mount_mode compatible | tr 'A-Z' 'a-z' | tr -d ' \t\r\n')
+    case "$app_mm" in magic|builtin|lightweight) app_mm=magic ;; *) app_mm=compatible ;; esac
+    app_tf=$(read_applied_conf tmpfs_style dev | tr 'A-Z' 'a-z' | tr -d ' \t\r\n')
+    case "$app_tf" in
+      legacy|classic|verbose|long) app_tf=legacy ;;
+      short|tmp) app_tf=short ;;
+      mnt) app_tf=mnt ;;
+      *) app_tf=dev ;;
+    esac
+    app_e14=$(read_applied_conf experimental_14_system skip | tr 'A-Z' 'a-z' | tr -d ' \t\r\n')
+    case "$app_e14" in
+      auto|off|default|follow|overlay|apex_overlay) app_e14=auto ;;
+      *) app_e14=skip ;;
+    esac
+    app_bz=$(read_applied_conf boot_bind_zygote 0 | tr -d ' \t\r\n')
+    app_ba=$(read_applied_conf boot_multi_apex 0 | tr -d ' \t\r\n')
+  elif [ -s "$APPLIED_MAP" ]; then
+    app_req=0
+    app_pp=0
+    grep -q '^reqable|' "$APPLIED_MAP" 2>/dev/null && app_req=1
+    grep -q '^proxypin|' "$APPLIED_MAP" 2>/dev/null && app_pp=1
+    # 无 applied.conf 时非证书项以当前值为准（只拦证书开关回转）
+    app_mm=$(get_mount_mode)
+    app_tf=$(get_tmpfs_style)
+    app_e14=$(get_experimental_14_system)
+    app_bz=$(read_conf boot_bind_zygote 0 | tr -d ' \t\r\n')
+    app_ba=$(read_conf boot_multi_apex 0 | tr -d ' \t\r\n')
+  else
+    return 1
+  fi
 
-  cur_req=$(read_conf reqable 1)
-  cur_pp=$(read_conf proxypin 1)
+  cur_req=$(read_conf reqable 1 | tr -d ' \t\r\n')
+  cur_pp=$(read_conf proxypin 1 | tr -d ' \t\r\n')
   cur_mm=$(get_mount_mode)
   cur_tf=$(get_tmpfs_style)
   cur_e14=$(get_experimental_14_system)
-  cur_bz=$(read_conf boot_bind_zygote 0)
-  cur_ba=$(read_conf boot_multi_apex 0)
-  app_req=$(read_applied_conf reqable 1)
-  app_pp=$(read_applied_conf proxypin 1)
-  app_mm=$(read_applied_conf mount_mode compatible | tr 'A-Z' 'a-z')
-  case "$app_mm" in magic|builtin|lightweight) app_mm=magic ;; *) app_mm=compatible ;; esac
-  app_tf=$(read_applied_conf tmpfs_style dev | tr 'A-Z' 'a-z')
-  case "$app_tf" in
-    legacy|classic|verbose|long) app_tf=legacy ;;
-    short|tmp) app_tf=short ;;
-    mnt) app_tf=mnt ;;
-    *) app_tf=dev ;;
-  esac
-  app_e14=$(read_applied_conf experimental_14_system skip | tr 'A-Z' 'a-z')
-  case "$app_e14" in
-    auto|off|default|follow|overlay|apex_overlay) app_e14=auto ;;
-    *) app_e14=skip ;;
-  esac
-  app_bz=$(read_applied_conf boot_bind_zygote 0)
-  app_ba=$(read_applied_conf boot_multi_apex 0)
+  cur_bz=$(read_conf boot_bind_zygote 0 | tr -d ' \t\r\n')
+  cur_ba=$(read_conf boot_multi_apex 0 | tr -d ' \t\r\n')
 
   [ "$cur_req" = "$app_req" ] || return 1
   [ "$cur_pp" = "$app_pp" ] || return 1

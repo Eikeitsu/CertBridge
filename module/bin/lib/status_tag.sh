@@ -6,7 +6,8 @@
 format_running_ok_tag() {
   n=""
   if summary=$(compose_applied_cert_summary); then
-    n=$(printf '%s' "${summary%%|*}" | tr -d ' \r\n')
+    parse_cert_summary "$summary"
+    n=$_sum_n
   fi
   case "$n" in
     ""|*[!0-9]*) n=$(count_applied_certs) ;;

@@ -34,9 +34,8 @@ compose_module_description() {
 
   if [ -f "$PENDING_FILE" ]; then
     if summary=$(compose_pending_cert_summary); then
-      n=${summary%%|*}
-      names=${summary#*|}
-      format_module_description "$(i18n_msg status.tag_pending)" "pending:${n}" "$names"
+      parse_cert_summary "$summary"
+      format_module_description "$(i18n_msg status.tag_pending)" "pending:${_sum_n}" "$_sum_names"
     else
       format_module_description "$(i18n_msg status.tag_pending)" "" "$(desc_intro)"
     fi
@@ -93,8 +92,9 @@ compose_module_description() {
   fi
 
   if summary=$(compose_applied_cert_summary); then
-    n=$(printf '%s' "${summary%%|*}" | tr -d ' \r\n')
-    names=${summary#*|}
+    parse_cert_summary "$summary"
+    n=$_sum_n
+    names=$_sum_names
     case "$n" in
       ""|*[!0-9]*) n=$(count_applied_certs) ;;
     esac

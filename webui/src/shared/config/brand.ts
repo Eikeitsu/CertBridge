@@ -15,32 +15,25 @@ export const LINKS = {
   proxypin: "https://github.com/wanghongenpin/proxypin",
 } as const;
 
-export const ABOUT_LINKS = [
-  { id: "docs", url: LINKS.docs, label: "使用指南" },
-  { id: "repo", url: LINKS.repo, label: "开源仓库" },
-  { id: "coolapk", url: LINKS.coolapk, label: "酷安主页" },
-  { id: BuiltinCertKind.Reqable, url: LINKS.reqable, label: "Reqable 官网" },
-  { id: BuiltinCertKind.Proxypin, url: LINKS.proxypin, label: "ProxyPin 仓库" },
-] as const;
+export type AboutLinkId = "docs" | "repo" | "coolapk" | BuiltinCertKind.Reqable | BuiltinCertKind.Proxypin;
 
-export const ABOUT_TIP = {
-  title: "打赏作者",
-  body: `${BRAND.author} · 微信 / 支付宝。如果证书桥帮到了你，欢迎请作者喝杯奶茶。`,
-} as const;
+export const ABOUT_LINKS = [
+  { id: "docs" as const, url: LINKS.docs },
+  { id: "repo" as const, url: LINKS.repo },
+  { id: "coolapk" as const, url: LINKS.coolapk },
+  { id: BuiltinCertKind.Reqable, url: LINKS.reqable },
+  { id: BuiltinCertKind.Proxypin, url: LINKS.proxypin },
+] as const;
 
 export const ABOUT_TIP_CHANNELS = [
   {
-    id: "wechat",
-    label: "微信支付",
+    id: "wechat" as const,
     labelEn: "wechat",
-    alt: "微信收款码",
     src: ASSETS.tipWechat,
   },
   {
-    id: "alipay",
-    label: "支付宝",
+    id: "alipay" as const,
     labelEn: "alipay",
-    alt: "支付宝收款码",
     src: ASSETS.tipAlipay,
   },
 ] as const;

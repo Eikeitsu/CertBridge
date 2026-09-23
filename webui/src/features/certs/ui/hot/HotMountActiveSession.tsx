@@ -1,5 +1,5 @@
+import { useTranslation } from "react-i18next";
 import type { ModuleStatus } from "@/entities/module/types";
-import { HOT_MOUNT_ACTIVE_META } from "@/shared/config/certs";
 import { MetricGrid } from "@/shared/ui/layout";
 import { Button, Tag } from "@/shared/ui/primitives";
 
@@ -16,6 +16,8 @@ export function HotMountActiveSession({
   disabled,
   onUnmount,
 }: HotMountActiveSessionProps) {
+  const { t } = useTranslation("webui");
+
   return (
     <>
       <p
@@ -25,19 +27,19 @@ export function HotMountActiveSession({
           margin: "8px 0",
         }}
       >
-        {HOT_MOUNT_ACTIVE_META}
+        {t("certs.hotActiveMeta")}
       </p>
       <MetricGrid
         columns={2}
         items={[
-          { label: "已加入", value: status.hot_added || "0" },
-          { label: "命名空间", value: status.hot_namespaces || "0" },
+          { label: t("certs.hotMetricAdded"), value: status.hot_added || "0" },
+          { label: t("certs.hotMetricNamespaces"), value: status.hot_namespaces || "0" },
         ]}
       />
       <div className="bf-btn-row" style={{ marginTop: 12 }}>
-        {isPartial ? <Tag tone="warn">部分未覆盖</Tag> : null}
+        {isPartial ? <Tag tone="warn">{t("certs.hotPartialTag")}</Tag> : null}
         <Button disabled={disabled} onClick={onUnmount}>
-          无痕卸载
+          {t("certs.hotSilentUnmount")}
         </Button>
       </div>
     </>

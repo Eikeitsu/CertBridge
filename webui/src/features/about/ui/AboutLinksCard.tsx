@@ -1,4 +1,5 @@
 import { ExternalLink } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { ABOUT_LINKS } from "@/shared/config/brand";
 import { openUrl } from "@/shared/api/ksu";
 import { Button, Card } from "@/shared/ui/primitives";
@@ -9,9 +10,13 @@ type AboutLinksCardProps = {
 };
 
 export function AboutLinksCard({ variant = "dashboard" }: AboutLinksCardProps) {
+  const { t } = useTranslation("webui");
+  const linkLabel = (id: (typeof ABOUT_LINKS)[number]["id"]) => t(`about.links.${id}`);
+
   if (variant === "terminal") {
     return (
       <section className="pk-con-block bf-about-links">
+        {/* terminal chrome stays English by design */}
         <div className="pk-con-block__head">links</div>
         <div className="pk-con-actions bf-about-links__grid">
           {ABOUT_LINKS.map((link) => (
@@ -21,7 +26,7 @@ export function AboutLinksCard({ variant = "dashboard" }: AboutLinksCardProps) {
               className="pk-con-btn"
               onClick={() => void openUrl(link.url)}
             >
-              {link.label}
+              {linkLabel(link.id)}
             </button>
           ))}
         </div>
@@ -33,7 +38,7 @@ export function AboutLinksCard({ variant = "dashboard" }: AboutLinksCardProps) {
   if (variant === "ops") {
     return (
       <section className="pk-ops-panel bf-about-links bf-about-links--ops">
-        <h3 className="pk-ops-panel__title">链接</h3>
+        <h3 className="pk-ops-panel__title">{t("about.linksTitle")}</h3>
         <div className="bf-about-links__menu">
           {ABOUT_LINKS.map((link) => (
             <button
@@ -42,7 +47,7 @@ export function AboutLinksCard({ variant = "dashboard" }: AboutLinksCardProps) {
               className="bf-about-links__menu-item"
               onClick={() => void openUrl(link.url)}
             >
-              <span className="bf-about-links__menu-label">{link.label}</span>
+              <span className="bf-about-links__menu-label">{linkLabel(link.id)}</span>
               <ExternalLink size={14} strokeWidth={1.75} aria-hidden />
             </button>
           ))}
@@ -53,7 +58,7 @@ export function AboutLinksCard({ variant = "dashboard" }: AboutLinksCardProps) {
   }
 
   return (
-    <Card title="链接" className="bf-about-links">
+    <Card title={t("about.linksTitle")} className="bf-about-links">
       <div className="bf-about-links__tiles">
         {ABOUT_LINKS.map((link) => (
           <Button
@@ -62,7 +67,7 @@ export function AboutLinksCard({ variant = "dashboard" }: AboutLinksCardProps) {
             className="bf-about-link-tile"
             onClick={() => void openUrl(link.url)}
           >
-            {link.label}
+            {linkLabel(link.id)}
           </Button>
         ))}
       </div>

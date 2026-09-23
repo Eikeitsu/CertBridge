@@ -1,16 +1,21 @@
 import { isFlagOn } from "@/shared/lib/flag";
 import { parseEnum } from "@/shared/lib/enum";
 import { HotMountMode } from "@/entities/module/enums";
-import { HOT_MODE_LABEL } from "@/shared/config/certs";
+import { HOT_MODE_LABEL_KEY } from "@/shared/config/certs";
 import type { ModuleStatus } from "@/entities/module/types";
+import type { TFunction } from "i18next";
 
-export function resolveHotSessionLabel(status: ModuleStatus): string {
+export function resolveHotSessionLabel(
+  status: ModuleStatus,
+  t: TFunction<"webui">,
+): string {
   if (isFlagOn(status.hot_active)) {
     const mode = parseEnum(HotMountMode, status.hot_mode, HotMountMode.User);
-    const modeLabel = HOT_MODE_LABEL[mode];
-    const state = isFlagOn(status.hot_partial) ? "部分挂载" : "已挂载";
-    return `${state}（${modeLabel}）`;
+    const modeLabel = t(HOT_MODE_LABEL_KEY[mode]);
+    return isFlagOn(status.hot_partial)
+      ? t("certs.hotSessionPartial", { mode: modeLabel })
+      : t("certs.hotSessionMounted", { mode: modeLabel });
   }
-  if (isFlagOn(status.hot_stale)) return "状态异常（建议卸载或重启）";
-  return "未挂载";
+  if (isFlagOn(status.hot_stale)) return t("certs.hotSessionStale");
+  return t("certs.hotSessionIdle");
 }

@@ -108,34 +108,22 @@ export const BUILTIN_CERTS = [
 ] as const;
 
 export const HOT_MOUNT_ACTIONS = [
-  { mode: HotMountMode.User, label: "用户证书", needsSdPath: false },
-  { mode: HotMountMode.Sd, label: "存储卡", needsSdPath: true },
-  { mode: HotMountMode.All, label: "合并", needsSdPath: true },
+  { mode: HotMountMode.User, needsSdPath: false, labelKey: "certs.hotModeUser" as const },
+  { mode: HotMountMode.Sd, needsSdPath: true, labelKey: "certs.hotModeSd" as const },
+  { mode: HotMountMode.All, needsSdPath: true, labelKey: "certs.hotModeAll" as const },
 ] as const;
 
 export const HOT_MOUNT_MODE_OPTIONS = HOT_MOUNT_ACTIONS.map((action) => ({
-  label: action.label,
+  labelKey: action.labelKey,
   value: action.mode,
   needsSdPath: action.needsSdPath,
 }));
 
-export const HOT_MODE_LABEL: Record<HotMountMode, string> = {
-  [HotMountMode.User]: "用户证书",
-  [HotMountMode.Sd]: "存储卡证书",
-  [HotMountMode.All]: "用户 + 存储卡",
+export const HOT_MODE_LABEL_KEY: Record<HotMountMode, "certs.hotModeUserLong" | "certs.hotModeSdLong" | "certs.hotModeAllLong"> = {
+  [HotMountMode.User]: "certs.hotModeUserLong",
+  [HotMountMode.Sd]: "certs.hotModeSdLong",
+  [HotMountMode.All]: "certs.hotModeAllLong",
 };
-
-export const HOT_MOUNT_CONFIRM_LABEL: Record<HotMountMode, string> = {
-  [HotMountMode.User]: "用户凭据区",
-  [HotMountMode.Sd]: "存储卡目录",
-  [HotMountMode.All]: "用户凭据区与存储卡目录",
-};
-
-export const HOT_MOUNT_META =
-  "未挂载 · 需手动触发；放入证书目录不会自动挂载。重启后临时层自动失效。";
-
-export const HOT_MOUNT_ACTIVE_META =
-  "临时会话进行中；挂载成功后可在本页「无痕卸载」，或直接重启清除";
 
 export function builtinStatusKeys(kind: BuiltinCertKind) {
   return {

@@ -34,7 +34,7 @@ export type BuiltinPipelineRow = {
 };
 
 export function useTrustOverview() {
-  const { t, i18n } = useTranslation("webui");
+  const { t } = useTranslation("webui");
   const status = useAppSelector(selectModuleStatus);
   const customCertificates = useAppSelector(selectCustomCertificates);
   const deviceLabel = useAppSelector(selectDeviceLabel);
@@ -42,7 +42,6 @@ export function useTrustOverview() {
   const isLoading = useAppSelector(selectStatusLoading);
   const lastRefreshedAt = useAppSelector(selectLastRefreshedAt);
   const statusError = useAppSelector(selectStatusError);
-  const lang = i18n.resolvedLanguage || i18n.language;
 
   const trust = useMemo(() => {
     if (statusError) {
@@ -69,7 +68,7 @@ export function useTrustOverview() {
       };
     }
     return resolveTrustLabel(status);
-  }, [status, statusError, isLoading, t, lang]);
+  }, [status, statusError, isLoading, t]);
 
   const activeCount = Number(status.active_count || 0);
   const customCount = Number(status.custom_count || customCertificates.length || 0);
@@ -114,7 +113,7 @@ export function useTrustOverview() {
         stateLabel,
       };
     });
-  }, [status, t, lang]);
+  }, [status, t]);
 
   const trustScore = useMemo(() => {
     if (statusError || isDisabled) return 12;

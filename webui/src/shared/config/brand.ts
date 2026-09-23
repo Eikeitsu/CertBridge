@@ -15,7 +15,8 @@ export const LINKS = {
   proxypin: "https://github.com/wanghongenpin/proxypin",
 } as const;
 
-export type AboutLinkId = "docs" | "repo" | "coolapk" | BuiltinCertKind.Reqable | BuiltinCertKind.Proxypin;
+export type AboutLinkId =
+  "docs" | "repo" | "coolapk" | BuiltinCertKind.Reqable | BuiltinCertKind.Proxypin;
 
 export const ABOUT_LINKS = [
   { id: "docs" as const, url: LINKS.docs },

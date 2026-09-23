@@ -119,7 +119,10 @@ export const HOT_MOUNT_MODE_OPTIONS = HOT_MOUNT_ACTIONS.map((action) => ({
   needsSdPath: action.needsSdPath,
 }));
 
-export const HOT_MODE_LABEL_KEY: Record<HotMountMode, "certs.hotModeUserLong" | "certs.hotModeSdLong" | "certs.hotModeAllLong"> = {
+export const HOT_MODE_LABEL_KEY: Record<
+  HotMountMode,
+  "certs.hotModeUserLong" | "certs.hotModeSdLong" | "certs.hotModeAllLong"
+> = {
   [HotMountMode.User]: "certs.hotModeUserLong",
   [HotMountMode.Sd]: "certs.hotModeSdLong",
   [HotMountMode.All]: "certs.hotModeAllLong",

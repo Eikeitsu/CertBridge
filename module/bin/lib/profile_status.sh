@@ -91,10 +91,18 @@ zygisk_loader_label() {
 }
 emit_zygisk_loader_status() {
   loader=$(detect_zygisk_loader)
-  echo "zygisk_loader=$loader"
-  echo "zygisk_loader_label=$(zygisk_loader_label "$loader")"
+  label=$(zygisk_loader_label "$loader")
   case "$loader" in
-    none) echo "zygisk_loader_ok=0" ;;
-    *) echo "zygisk_loader_ok=1" ;;
+    none) ok=0 ;;
+    *) ok=1 ;;
   esac
+  echo "zygisk_loader=$loader"
+  echo "zygisk_loader_label=$label"
+  echo "zygisk_loader_ok=$ok"
+  # 供 status --quick 首屏复用，避免每次 magisk sqlite / pgrep
+  {
+    echo "zygisk_loader=$loader"
+    echo "zygisk_loader_label=$label"
+    echo "zygisk_loader_ok=$ok"
+  } >"$STATEDIR/zygisk-loader.cache" 2>/dev/null || true
 }

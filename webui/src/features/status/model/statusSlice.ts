@@ -89,24 +89,26 @@ export const bootstrapStatus = createAsyncThunk("status/bootstrap", async () => 
       await new Promise((r) => window.setTimeout(r, 40 + i * 40));
     }
   }
-  // 首屏只拉 status，尽快进页面；设备名 / 自定义列表后台补
-  const status = await fetchStatus();
+  // 首屏用 --quick，跳过 hide/zygisk 慢探测，尽快进首页
+  const status = await fetchStatus("quick");
   return { status };
 });
 
-/** 非阻塞补齐：设备文案 + 自定义证书列表 */
+/** 非阻塞补齐：设备文案 + 自定义列表 + 完整 status（补 hide/zygisk） */
 export const enrichBootstrapMeta = createAsyncThunk("status/enrichMeta", async () => {
-  const [device, customCertificates] = await Promise.all([
+  const [device, customCertificates, status] = await Promise.all([
     fetchDeviceInfo().catch(() => ({
       label: i18n.t("ui.deviceLocal"),
       name: i18n.t("ui.deviceLocal"),
     })),
     listCustom().catch(() => [] as CustomCertificate[]),
+    fetchStatus().catch(() => null),
   ]);
   return {
     deviceLabel: device.label,
     deviceName: device.name,
     customCertificates,
+    status,
   };
 });
 
@@ -193,6 +195,10 @@ const statusSlice = createSlice({
         state.deviceLabel = action.payload.deviceLabel;
         state.deviceName = action.payload.deviceName;
         state.customCertificates = action.payload.customCertificates;
+        if (action.payload.status) {
+          state.status = action.payload.status;
+          state.lastRefreshedAt = formatClockTime();
+        }
       })
       .addCase(refreshStatus.pending, (state) => {
         state.refreshing = true;

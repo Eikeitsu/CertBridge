@@ -4,6 +4,7 @@ import { errorFromResult, friendlyError } from "@/shared/api/errors";
 import { toast } from "@/shared/api/ksu";
 import { restoreChromeInsets } from "@/features/theme/lib/chrome";
 import { LOG_TAIL_LINES } from "@/shared/config/constants";
+import i18n from "@/shared/i18n";
 
 type LogState = {
   loading: boolean;
@@ -14,7 +15,7 @@ type LogState = {
 
 const initialState: LogState = {
   loading: false,
-  text: "暂无日志",
+  text: "",
   bytes: 0,
   lines: 0,
 };
@@ -24,7 +25,7 @@ export const fetchActivityLog = createAsyncThunk("log/fetch", async () => {
   const lines = text ? text.split("\n").filter(Boolean).length : 0;
   restoreChromeInsets();
   return {
-    text: text || "暂无日志",
+    text: text || i18n.t("log.emptyHint"),
     bytes,
     lines,
   };
@@ -35,7 +36,7 @@ export const clearActivityLog = createAsyncThunk("log/clear", async () => {
   if (result.errno !== 0) {
     throw new Error(errorFromResult(result.stdout, result.stderr));
   }
-  toast("日志已清空", "ok");
+  toast(i18n.t("log.cleared"), "ok");
   restoreChromeInsets();
   return true;
 });
@@ -57,11 +58,11 @@ const logSlice = createSlice({
       })
       .addCase(fetchActivityLog.rejected, (state, action) => {
         state.loading = false;
-        state.text = "暂无法读取日志";
+        state.text = i18n.t("log.readFail");
         toast(friendlyError(action.error.message), "bad");
       })
       .addCase(clearActivityLog.fulfilled, (state) => {
-        state.text = "暂无日志";
+        state.text = i18n.t("log.emptyHint");
         state.bytes = 0;
         state.lines = 0;
       })

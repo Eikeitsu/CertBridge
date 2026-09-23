@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import type { TrustTone } from "@/entities/module/enums";
 
 type StatusStageProps = {
@@ -15,7 +16,7 @@ type StatusStageProps = {
 
 export function StatusStage({
   tone,
-  kicker = "运行状态",
+  kicker,
   title,
   description,
   heroValue,
@@ -24,6 +25,8 @@ export function StatusStage({
   diagnosis,
   footer,
 }: StatusStageProps) {
+  const { t } = useTranslation("webui");
+  const resolvedKicker = kicker ?? t("ui.statusStage");
   return (
     <section className={`bf-stage tone-${tone}`}>
       <div className="bf-stage__glow" aria-hidden />
@@ -33,7 +36,7 @@ export function StatusStage({
           <div className="bf-stage__hero-copy">
             <p className="bf-stage__kicker">
               <span className={`bf-stage__tone-dot tone-${tone}`} aria-hidden />
-              {kicker}
+              {resolvedKicker}
             </p>
             <h2 className="bf-stage__title">{title}</h2>
           </div>
@@ -42,7 +45,7 @@ export function StatusStage({
         <>
           <p className="bf-stage__kicker">
             <span className={`bf-stage__tone-dot tone-${tone}`} aria-hidden />
-            {kicker}
+            {resolvedKicker}
           </p>
           <h2 className="bf-stage__title">{title}</h2>
         </>

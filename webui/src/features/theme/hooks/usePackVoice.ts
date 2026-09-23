@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, startTransition } from "react";
 import { useTranslation } from "react-i18next";
 import { usePackCopy } from "@/features/theme/ui/PackCopyProvider";
 
@@ -17,8 +17,10 @@ export function useApplyUiLang() {
         document.documentElement.lang = lng === "zh-CN" ? "zh-CN" : "en";
         return;
       }
-      void i18n.changeLanguage(lng);
-      document.documentElement.lang = lng === "zh-CN" ? "zh-CN" : "en";
+      startTransition(() => {
+        void i18n.changeLanguage(lng);
+        document.documentElement.lang = lng === "zh-CN" ? "zh-CN" : "en";
+      });
     },
     [i18n],
   );

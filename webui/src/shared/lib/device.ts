@@ -2,6 +2,7 @@
  * 机型 / 系统文案：多厂商 getprop 兜底（小米 / 一加 / OPPO / vivo / 荣耀等 market name）。
  * 注意：getprop 属性不存在时仍 exit 0 且输出空串，不能用 `||` 串联。
  */
+import i18n from "@/shared/i18n";
 
 /** 一次 shell 输出：`机型\t系统`（系统可为空） */
 export const DEVICE_INFO_SHELL = `
@@ -76,9 +77,10 @@ function parseDeviceLine(stdout: string): { model: string; os: string } {
     .split(/\r?\n/)
     .map((s) => s.trim())
     .find(Boolean);
-  if (!line) return { model: "本机", os: "" };
+  const fallback = i18n.t("ui.deviceLocal");
+  if (!line) return { model: fallback, os: "" };
   const tab = line.indexOf("\t");
-  const model = (tab >= 0 ? line.slice(0, tab) : line).trim() || "本机";
+  const model = (tab >= 0 ? line.slice(0, tab) : line).trim() || fallback;
   const os = (tab >= 0 ? line.slice(tab + 1) : "").trim();
   return { model, os };
 }

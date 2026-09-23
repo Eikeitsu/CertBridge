@@ -32,10 +32,18 @@ export async function cli(args: string, timeoutMs?: number): Promise<ExecResult>
   return exec(`sh '${PATHS.CLI}' ${args}`, timeoutMs);
 }
 
-export async function fetchStatus(live = false): Promise<ModuleStatus> {
+export async function fetchStatus(
+  liveOrMode: boolean | "quick" | "live" = false,
+): Promise<ModuleStatus> {
+  const mode =
+    liveOrMode === true || liveOrMode === "live"
+      ? "live"
+      : liveOrMode === "quick"
+        ? "quick"
+        : "full";
   const result = await cli(
-    live ? "status --live" : "status",
-    live ? CLI_TIMEOUT_MS.IMPORT : undefined,
+    mode === "live" ? "status --live" : mode === "quick" ? "status --quick" : "status",
+    mode === "live" ? CLI_TIMEOUT_MS.IMPORT : undefined,
   );
   if (result.errno !== 0 && !result.stdout) {
     throw new Error(result.stderr || "status_failed");

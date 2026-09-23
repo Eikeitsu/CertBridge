@@ -75,8 +75,7 @@ export function useCertActions() {
           checked ? t("toast.toggleOn") : t("toast.toggleOff"),
           checked ? t("toast.toggleOnMatch") : t("toast.toggleOffMatch"),
         );
-        // 始终再拉一次 status，确保首页 pending 横幅与磁盘标记一致
-        void dispatch(refreshStatus(SILENT_REFRESH));
+        // merge 已带 pending_reboot；勿再全量 status（含 hide/zygisk 探测，易卡 UI）
       });
     },
     [dispatch, runExclusive, t],

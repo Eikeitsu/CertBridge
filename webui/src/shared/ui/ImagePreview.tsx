@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import * as Dialog from "@radix-ui/react-dialog";
 
 type ImagePreviewProps = {
@@ -10,6 +11,8 @@ type ImagePreviewProps = {
 };
 
 export function ImagePreview({ open, onClose, src, title, alt }: ImagePreviewProps) {
+  const { t } = useTranslation("webui");
+
   useEffect(() => {
     if (!open) return;
     const onKey = (event: KeyboardEvent) => {
@@ -32,7 +35,7 @@ export function ImagePreview({ open, onClose, src, title, alt }: ImagePreviewPro
             <button
               type="button"
               className="bf-img-preview__mask"
-              aria-label="关闭预览"
+              aria-label={t("ui.closePreview")}
               onClick={onClose}
             />
           </Dialog.Overlay>
@@ -44,8 +47,12 @@ export function ImagePreview({ open, onClose, src, title, alt }: ImagePreviewPro
             <div className="bf-img-preview__bar">
               <Dialog.Title className="bf-img-preview__title">{title}</Dialog.Title>
               <Dialog.Close asChild>
-                <button type="button" className="bf-img-preview__close" aria-label="关闭">
-                  关闭
+                <button
+                  type="button"
+                  className="bf-img-preview__close"
+                  aria-label={t("ui.close")}
+                >
+                  {t("ui.close")}
                 </button>
               </Dialog.Close>
             </div>

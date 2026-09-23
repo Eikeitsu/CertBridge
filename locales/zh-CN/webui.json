@@ -19,7 +19,11 @@
     "copyFps": "复制指纹",
     "loading": "加载中…",
     "deviceLocal": "本机",
-    "noBridge": "未检测到 WebUI 桥接"
+    "noBridge": "未检测到 WebUI 桥接",
+    "copyOk": "已复制",
+    "copyFail": "复制失败",
+    "closePreview": "关闭预览",
+    "statusStage": "运行状态"
   },
   "overview": {
     "kicker": "信任状态",
@@ -46,7 +50,40 @@
     "envMount": "挂载",
     "envVersion": "版本",
     "envRefresh": "刷新",
-    "lastRefresh": "上次刷新 {{time}}"
+    "lastRefresh": "上次刷新 {{time}}",
+    "checking": "检测中…",
+    "checkingHint": "正在读取模块状态",
+    "bridgeHint": "请用 SukiSU / KernelSU / MMRL 等管理器打开本模块 WebUI",
+    "retryHint": "可点「刷新复核」重试；若反复失败请查看日志",
+    "deviceFallback": "本机",
+    "stateMissing": "未检测到",
+    "stateApplied": "已应用",
+    "statePendingWrite": "待重启写入",
+    "stateStillActive": "仍在生效",
+    "stateReadyOff": "可用未启用",
+    "apexInjected": "已注入",
+    "apexFail": "失败",
+    "hotAbnormal": "异常",
+    "hotPartial": "部分",
+    "hotMounted": "已挂载",
+    "hotIdle": "未挂载",
+    "pipelineOn": "生效",
+    "pipelinePending": "待重启",
+    "pipelineReady": "可用",
+    "pipelineMissing": "缺失"
+  },
+  "trust": {
+    "disabled": "模块已禁用",
+    "pendingHot": "热挂载 · 永久配置待重启",
+    "pending": "待重启生效",
+    "stabilizing": "稳定中…",
+    "stabilizingHint": "正在确认注入是否生效，请稍候",
+    "injectError": "注入异常",
+    "checkLog": "请查看日志或重启后再试",
+    "ok": "运行正常",
+    "okCount": "运行正常 · {{count}} 张",
+    "abnormal": "状态异常",
+    "defaultDesc": "安全合并 Reqable / ProxyPin / 自定义 CA，并支持用户区、存储卡证书免重启挂载与无痕卸载。"
   },
   "certs": {
     "builtinTitle": "抓包应用证书",
@@ -100,7 +137,14 @@
     "importedReboot": "已导入，重启后生效",
     "importedOk": "已导入（无需重启）",
     "removedReboot": "已移除，重启后生效",
-    "removedMatch": "已移除（与当前生效一致）"
+    "removedMatch": "已移除（与当前生效一致）",
+    "flagApplied": "已应用",
+    "flagPending": "待重启",
+    "flagStillActive": "仍在生效",
+    "flagOff": "已关闭",
+    "subMissing": "未检测到证书",
+    "subRemovePending": "重启后才会从系统撤下",
+    "subWritePending": "重启后写入系统信任库"
   },
   "log": {
     "title": "活动日志",
@@ -121,7 +165,10 @@
     "clearConfirmBody": "仅清除本机日志文件，不影响证书配置。",
     "loading": "读取日志…",
     "linesCount": "{{count}} 行",
-    "linesRecent": "最近 {{count}} 行"
+    "linesRecent": "最近 {{count}} 行",
+    "emptyHint": "暂无日志",
+    "readFail": "暂无法读取日志",
+    "cleared": "日志已清空"
   },
   "hide": {
     "switchTitle": "隐藏开关",

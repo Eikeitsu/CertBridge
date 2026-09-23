@@ -1,7 +1,13 @@
 import { LogLevel, isLogLevel } from "@/entities/module/enums";
 
 const LEVEL_TAG = /\[(INFO|WARN|ERROR|DEBUG)\]/i;
-const EMPTY_HINTS = new Set(["", "暂无日志", "暂无法读取日志"]);
+const EMPTY_HINTS = new Set([
+  "",
+  "暂无日志",
+  "暂无法读取日志",
+  "No logs",
+  "Cannot read logs",
+]);
 
 export type LogEntry = {
   raw: string;

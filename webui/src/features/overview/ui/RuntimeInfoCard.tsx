@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { TrustOverview } from "@/features/overview/hooks/useTrustOverview";
 import { Card, ListGroup, Row } from "@/shared/ui/primitives";
 
@@ -6,15 +7,19 @@ type RuntimeInfoCardProps = {
   title?: string;
 };
 
-export function RuntimeInfoCard({ overview, title = "运行信息" }: RuntimeInfoCardProps) {
+export function RuntimeInfoCard({ overview, title }: RuntimeInfoCardProps) {
+  const { t } = useTranslation("webui");
   return (
-    <Card title={title} meta={`上次刷新 ${overview.lastRefreshedAt}`}>
+    <Card
+      title={title ?? t("overview.runtimeTitle")}
+      meta={t("overview.lastRefresh", { time: overview.lastRefreshedAt })}
+    >
       <ListGroup>
-        <Row title="设备" extra={overview.deviceName} />
-        <Row title="系统" extra={overview.androidLabel} />
+        <Row title={t("overview.envDevice")} extra={overview.deviceName} />
+        <Row title={t("overview.envSystem")} extra={overview.androidLabel} />
         <Row title="Root" extra={overview.rootLabel} />
-        <Row title="注入" extra={overview.apexLabel} />
-        <Row title="版本" extra={overview.versionLabel} />
+        <Row title={t("overview.envInject")} extra={overview.apexLabel} />
+        <Row title={t("overview.envVersion")} extra={overview.versionLabel} />
       </ListGroup>
     </Card>
   );

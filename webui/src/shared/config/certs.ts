@@ -98,12 +98,12 @@ export const BUILTIN_CERTS = [
   {
     kind: BuiltinCertKind.Reqable,
     fallbackTitle: BUILTIN_BRAND_ICON[BuiltinCertKind.Reqable].label,
-    missingHint: "未检测到证书",
+    missingHintKey: "certs.subMissing" as const,
   },
   {
     kind: BuiltinCertKind.Proxypin,
     fallbackTitle: BUILTIN_BRAND_ICON[BuiltinCertKind.Proxypin].label,
-    missingHint: "未检测到证书",
+    missingHintKey: "certs.subMissing" as const,
   },
 ] as const;
 

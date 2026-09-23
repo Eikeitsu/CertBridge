@@ -19,7 +19,11 @@
     "copyFps": "Copy FPS",
     "loading": "Loading…",
     "deviceLocal": "Device",
-    "noBridge": "WebUI bridge not found"
+    "noBridge": "WebUI bridge not found",
+    "copyOk": "Copied",
+    "copyFail": "Copy failed",
+    "closePreview": "Close preview",
+    "statusStage": "Status"
   },
   "overview": {
     "kicker": "Trust",
@@ -46,7 +50,40 @@
     "envMount": "Mount",
     "envVersion": "Ver",
     "envRefresh": "Refresh",
-    "lastRefresh": "Refreshed {{time}}"
+    "lastRefresh": "Refreshed {{time}}",
+    "checking": "Checking…",
+    "checkingHint": "Reading module status",
+    "bridgeHint": "Open this WebUI from SukiSU / KernelSU / MMRL",
+    "retryHint": "Tap Refresh to retry; check logs if it keeps failing",
+    "deviceFallback": "Device",
+    "stateMissing": "Not found",
+    "stateApplied": "Applied",
+    "statePendingWrite": "Pending write",
+    "stateStillActive": "Still active",
+    "stateReadyOff": "Ready, off",
+    "apexInjected": "Injected",
+    "apexFail": "Failed",
+    "hotAbnormal": "Bad",
+    "hotPartial": "Partial",
+    "hotMounted": "Mounted",
+    "hotIdle": "Idle",
+    "pipelineOn": "On",
+    "pipelinePending": "Pending",
+    "pipelineReady": "Ready",
+    "pipelineMissing": "Missing"
+  },
+  "trust": {
+    "disabled": "Module disabled",
+    "pendingHot": "Hot mount · permanent changes pending reboot",
+    "pending": "Pending reboot",
+    "stabilizing": "Stabilizing…",
+    "stabilizingHint": "Confirming injection; please wait",
+    "injectError": "Inject error",
+    "checkLog": "Check logs or reboot and retry",
+    "ok": "OK",
+    "okCount": "OK · {{count}}",
+    "abnormal": "Abnormal",
+    "defaultDesc": "Merges Reqable / ProxyPin / custom CAs; supports user-store and SD hot mount without reboot."
   },
   "certs": {
     "builtinTitle": "Capture CA",
@@ -100,7 +137,14 @@
     "importedReboot": "Imported; reboot",
     "importedOk": "Imported",
     "removedReboot": "Removed; reboot",
-    "removedMatch": "Removed (matches)"
+    "removedMatch": "Removed (matches)",
+    "flagApplied": "Applied",
+    "flagPending": "Pending",
+    "flagStillActive": "Still on",
+    "flagOff": "Off",
+    "subMissing": "Cert not found",
+    "subRemovePending": "Removed from system after reboot",
+    "subWritePending": "Written to system trust after reboot"
   },
   "log": {
     "title": "Log",
@@ -121,7 +165,10 @@
     "clearConfirmBody": "Clears local log only; certs untouched.",
     "loading": "Reading…",
     "linesCount": "{{count}} lines",
-    "linesRecent": "Last {{count}} lines"
+    "linesRecent": "Last {{count}} lines",
+    "emptyHint": "No logs",
+    "readFail": "Cannot read logs",
+    "cleared": "Log cleared"
   },
   "hide": {
     "switchTitle": "Hide",

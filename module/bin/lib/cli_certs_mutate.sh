@@ -82,9 +82,9 @@ cmd_toggle() {
 
   echo "ok=1"
   echo "${tog_kind}_enabled=$tog_val"
-  # 先回契约再刷简介，避免简介路径改全局变量影响回包
   update_reboot_required_flag_certs
-  refresh_module_description_light >/dev/null 2>&1 || true
+  # 简介刷 module.prop 偏慢：后台做，不挡 WebUI 开关回包
+  (refresh_module_description_light >/dev/null 2>&1 || true) &
   return 0
 }
 

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { TrustOverview } from "@/features/overview/hooks/useTrustOverview";
 import { Card, ListGroup, Row, Tag } from "@/shared/ui/primitives";
 
@@ -9,28 +10,30 @@ type BuiltinPipelineCardProps = {
 
 export function BuiltinPipelineCard({
   pipeline,
-  title = "内置证书",
+  title,
   compact = false,
 }: BuiltinPipelineCardProps) {
+  const { t } = useTranslation("webui");
+  const resolvedTitle = title ?? t("overview.pipelineTitle");
+
+  const chipLabel = (row: TrustOverview["builtinPipeline"][number]) => {
+    if (row.active) return t("overview.pipelineOn");
+    if (row.enabled) return t("overview.pipelinePending");
+    if (row.available) return t("overview.pipelineReady");
+    return t("overview.pipelineMissing");
+  };
+
   if (compact) {
     return (
-      <div className="bf-chip-row" aria-label={title}>
-        <span className="bf-chip-row__label">{title}</span>
+      <div className="bf-chip-row" aria-label={resolvedTitle}>
+        <span className="bf-chip-row__label">{resolvedTitle}</span>
         {pipeline.map((row) => (
           <span
             key={row.kind}
             className={`bf-chip${row.active ? " is-on" : row.enabled ? " is-pend" : ""}`}
           >
             {row.title}
-            <em>
-              {row.active
-                ? "生效"
-                : row.enabled
-                  ? "待重启"
-                  : row.available
-                    ? "可用"
-                    : "缺失"}
-            </em>
+            <em>{chipLabel(row)}</em>
           </span>
         ))}
       </div>
@@ -38,7 +41,7 @@ export function BuiltinPipelineCard({
   }
 
   return (
-    <Card title={title}>
+    <Card title={resolvedTitle}>
       <ListGroup>
         {pipeline.map((row) => (
           <Row
@@ -47,11 +50,15 @@ export function BuiltinPipelineCard({
             desc={row.stateLabel}
             extra={
               row.active ? (
-                <Tag tone="ok">生效</Tag>
+                <Tag tone="ok">{t("overview.pipelineOn")}</Tag>
               ) : row.enabled ? (
-                <Tag tone="warn">待重启</Tag>
+                <Tag tone="warn">{t("overview.pipelinePending")}</Tag>
               ) : (
-                <Tag>{row.available ? "可用" : "缺失"}</Tag>
+                <Tag>
+                  {row.available
+                    ? t("overview.pipelineReady")
+                    : t("overview.pipelineMissing")}
+                </Tag>
               )
             }
           />

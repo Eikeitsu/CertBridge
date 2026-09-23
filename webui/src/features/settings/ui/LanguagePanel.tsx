@@ -65,10 +65,10 @@ export function LanguagePanel({
         }
         const kv = parseKv(result.stdout || "");
         dispatch(mergeStatus(kv));
-        toast(t("webui:language"), "ok");
+        // 不 toast「语言」二字；切换本身已有即时 UI 反馈
       })();
     },
-    [apply, dispatch, pref, t],
+    [apply, dispatch, pref],
   );
 
   return (

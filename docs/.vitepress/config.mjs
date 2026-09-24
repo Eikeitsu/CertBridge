@@ -7,7 +7,7 @@ const zhNav = [
   { text: "首页", link: "/" },
   { text: "功能", link: "/guide/features" },
   { text: "安装", link: "/guide/install" },
-  { text: "FAQ", link: "/guide/faq" },
+  { text: "常见问题", link: "/guide/faq" },
   {
     text: "更多",
     items: [
@@ -18,7 +18,7 @@ const zhNav = [
       { text: "相关", link: "/guide/related" },
     ],
   },
-  { text: "日志", link: "/guide/changelog" },
+  { text: "更新日志", link: "/guide/changelog" },
 ];
 
 const zhSidebar = [
@@ -28,7 +28,7 @@ const zhSidebar = [
       { text: "功能", link: "/guide/features" },
       { text: "安装", link: "/guide/install" },
       { text: "配置", link: "/guide/config" },
-      { text: "FAQ", link: "/guide/faq" },
+      { text: "常见问题", link: "/guide/faq" },
     ],
   },
   {
@@ -42,8 +42,8 @@ const zhSidebar = [
   {
     text: "其它",
     items: [
-      { text: "相关", link: "/guide/related" },
-      { text: "日志", link: "/guide/changelog" },
+      { text: "相关软件", link: "/guide/related" },
+      { text: "更新日志", link: "/guide/changelog" },
       { text: "致谢", link: "/guide/credits" },
     ],
   },

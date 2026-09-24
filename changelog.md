@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- **Zygisk 挂载过滤**：`native/zygisk_hide`、构建脚本、默认 `zn_whitelist.txt`；`build:module` 会编 so；CI 装 NDK 并 `REQUIRE_ZYGISK_HIDE=1`；`zn_hide_allow` 与 shell 一致优先读外置 `user.conf`
+- **Zygisk 挂载过滤**：过滤 mountinfo/mounts、maps/smaps；弱化 map_files readlink，默认不需要，按需安装
 
 ## v4.3.1
 

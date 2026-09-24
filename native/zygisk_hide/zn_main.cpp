@@ -36,11 +36,13 @@ ssize_t (*orig_read)(int, void *, size_t) = nullptr;
 
 bool module_prop_is_certbridge(const char *prop_path) {
   int fd = open(prop_path, O_RDONLY | O_CLOEXEC);
-  if (fd < 0) return false;
+  if (fd < 0)
+    return false;
   char buf[512];
   ssize_t n = ::read(fd, buf, sizeof(buf) - 1);
   ::close(fd);
-  if (n <= 0) return false;
+  if (n <= 0)
+    return false;
   buf[n] = '\0';
   return std::strstr(buf, "id=CertBridge") != nullptr;
 }
@@ -53,18 +55,22 @@ int open_certbridge_moddir() {
   };
   for (const char *p : kDirect) {
     int fd = open(p, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
-    if (fd >= 0) return fd;
+    if (fd >= 0)
+      return fd;
   }
   static constexpr const char *kRoots[] = {"/data/adb/modules", "/data/adb/modules_update"};
   for (const char *root : kRoots) {
     DIR *d = opendir(root);
-    if (!d) continue;
+    if (!d)
+      continue;
     while (dirent *ent = readdir(d)) {
-      if (ent->d_name[0] == '.') continue;
+      if (ent->d_name[0] == '.')
+        continue;
       char prop[256];
       char dir[256];
       std::snprintf(prop, sizeof(prop), "%s/%s/module.prop", root, ent->d_name);
-      if (!module_prop_is_certbridge(prop)) continue;
+      if (!module_prop_is_certbridge(prop))
+        continue;
       std::snprintf(dir, sizeof(dir), "%s/%s", root, ent->d_name);
       closedir(d);
       return open(dir, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
@@ -75,8 +81,10 @@ int open_certbridge_moddir() {
 }
 
 void mark_fd_if_mount_table(int fd, const char *path) {
-  if (fd < 0 || !path || !g_enabled) return;
-  if (!cb_hide::path_needs_trace_filter(path)) return;
+  if (fd < 0 || !path || !g_enabled)
+    return;
+  if (!cb_hide::path_needs_trace_filter(path))
+    return;
   std::lock_guard<std::mutex> lock(g_mu);
   g_filter_fds.insert(fd);
   g_fd_pending.erase(fd);
@@ -94,7 +102,8 @@ bool is_filter_fd(int fd) {
 }
 
 ssize_t filtered_read(int fd, void *buf, size_t count) {
-  if (!buf || count == 0) return 0;
+  if (!buf || count == 0)
+    return 0;
   {
     std::lock_guard<std::mutex> lock(g_mu);
     auto it = g_fd_pending.find(fd);
@@ -120,10 +129,13 @@ ssize_t filtered_read(int fd, void *buf, size_t count) {
   char tmp[4096];
   for (;;) {
     ssize_t n = orig_read ? orig_read(fd, tmp, sizeof(tmp)) : ::read(fd, tmp, sizeof(tmp));
-    if (n < 0) return n;
-    if (n == 0) break;
+    if (n < 0)
+      return n;
+    if (n == 0)
+      break;
     raw.append(tmp, static_cast<size_t>(n));
-    if (raw.size() > 2 * 1024 * 1024) break;
+    if (raw.size() > 2 * 1024 * 1024)
+      break;
   }
   std::string filtered = cb_hide::filter_trace_text(raw);
   std::lock_guard<std::mutex> lock(g_mu);
@@ -133,8 +145,10 @@ ssize_t filtered_read(int fd, void *buf, size_t count) {
   }
   size_t n = filtered.size() < count ? filtered.size() : count;
   std::memcpy(buf, filtered.data(), n);
-  if (n < filtered.size()) g_fd_pending[fd] = filtered.substr(n);
-  else g_filter_fds.erase(fd);
+  if (n < filtered.size())
+    g_fd_pending[fd] = filtered.substr(n);
+  else
+    g_filter_fds.erase(fd);
   return static_cast<ssize_t>(n);
 }
 
@@ -146,8 +160,9 @@ int hooked_open(const char *pathname, int flags, ...) {
     mode = static_cast<mode_t>(va_arg(ap, int));
     va_end(ap);
   }
-  int fd = orig_open ? (flags & O_CREAT ? orig_open(pathname, flags, mode) : orig_open(pathname, flags))
-                     : (flags & O_CREAT ? ::open(pathname, flags, mode) : ::open(pathname, flags));
+  int fd = orig_open
+               ? (flags & O_CREAT ? orig_open(pathname, flags, mode) : orig_open(pathname, flags))
+               : (flags & O_CREAT ? ::open(pathname, flags, mode) : ::open(pathname, flags));
   mark_fd_if_mount_table(fd, pathname);
   return fd;
 }
@@ -160,11 +175,10 @@ int hooked_openat(int dirfd, const char *pathname, int flags, ...) {
     mode = static_cast<mode_t>(va_arg(ap, int));
     va_end(ap);
   }
-  int fd = orig_openat
-               ? (flags & O_CREAT ? orig_openat(dirfd, pathname, flags, mode)
-                                  : orig_openat(dirfd, pathname, flags))
-               : (flags & O_CREAT ? ::openat(dirfd, pathname, flags, mode)
-                                 : ::openat(dirfd, pathname, flags));
+  int fd = orig_openat ? (flags & O_CREAT ? orig_openat(dirfd, pathname, flags, mode)
+                                          : orig_openat(dirfd, pathname, flags))
+                       : (flags & O_CREAT ? ::openat(dirfd, pathname, flags, mode)
+                                          : ::openat(dirfd, pathname, flags));
   mark_fd_if_mount_table(fd, pathname);
   return fd;
 }
@@ -175,20 +189,24 @@ int hooked_close(int fd) {
 }
 
 ssize_t hooked_read(int fd, void *buf, size_t count) {
-  if (g_enabled && is_filter_fd(fd)) return filtered_read(fd, buf, count);
+  if (g_enabled && is_filter_fd(fd))
+    return filtered_read(fd, buf, count);
   return orig_read ? orig_read(fd, buf, count) : ::read(fd, buf, count);
 }
 
-}  // namespace
+} // namespace
 
 extern "C" [[gnu::visibility("default")]] void zn_module_entry_v1(ZnApiTableV1 *api,
                                                                   const char *process_name) {
   (void)process_name;
-  if (!api || !api->pltHook || !api->pltHookCommit) return;
+  if (!api || !api->pltHook || !api->pltHookCommit)
+    return;
   int modfd = open_certbridge_moddir();
   const bool allow = cb_hide::read_zn_hide_allow(modfd);
-  if (modfd >= 0) ::close(modfd);
-  if (!allow) return;
+  if (modfd >= 0)
+    ::close(modfd);
+  if (!allow)
+    return;
   g_enabled = true;
   api->pltHook(".*libc\\.so$", "open", reinterpret_cast<void *>(hooked_open),
                reinterpret_cast<void **>(&orig_open));
@@ -198,5 +216,6 @@ extern "C" [[gnu::visibility("default")]] void zn_module_entry_v1(ZnApiTableV1 *
                reinterpret_cast<void **>(&orig_close));
   api->pltHook(".*libc\\.so$", "read", reinterpret_cast<void *>(hooked_read),
                reinterpret_cast<void **>(&orig_read));
-  if (!api->pltHookCommit()) g_enabled = false;
+  if (!api->pltHookCommit())
+    g_enabled = false;
 }

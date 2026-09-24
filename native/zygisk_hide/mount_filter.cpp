@@ -15,29 +15,29 @@ std::vector<std::string> g_whitelist;
 bool g_whitelist_ready = false;
 
 constexpr const char *kBuiltinWhitelist[] = {
-    "com.reqable.android",
-    "com.reqable.android.pro",
-    "com.reqable",
-    "com.proxy.pin",
-    "com.network.proxy",
-    "com.wangyu.proxypin",
+    "com.reqable.android", "com.reqable.android.pro", "com.reqable",
+    "com.proxy.pin",       "com.network.proxy",       "com.wangyu.proxypin",
 };
 
 bool contains_ci(std::string_view hay, std::string_view needle) {
-  if (needle.empty() || hay.size() < needle.size()) return false;
+  if (needle.empty() || hay.size() < needle.size())
+    return false;
   for (size_t i = 0; i + needle.size() <= hay.size(); ++i) {
     bool ok = true;
     for (size_t j = 0; j < needle.size(); ++j) {
       char a = hay[i + j];
       char b = needle[j];
-      if (a >= 'A' && a <= 'Z') a = static_cast<char>(a - 'A' + 'a');
-      if (b >= 'A' && b <= 'Z') b = static_cast<char>(b - 'A' + 'a');
+      if (a >= 'A' && a <= 'Z')
+        a = static_cast<char>(a - 'A' + 'a');
+      if (b >= 'A' && b <= 'Z')
+        b = static_cast<char>(b - 'A' + 'a');
       if (a != b) {
         ok = false;
         break;
       }
     }
-    if (ok) return true;
+    if (ok)
+      return true;
   }
   return false;
 }
@@ -47,21 +47,27 @@ bool contains(std::string_view hay, std::string_view needle) {
 }
 
 bool ends_with(std::string_view hay, std::string_view suffix) {
-  if (hay.size() < suffix.size()) return false;
+  if (hay.size() < suffix.size())
+    return false;
   return hay.compare(hay.size() - suffix.size(), suffix.size(), suffix) == 0;
 }
 
 bool pkg_matches(std::string_view process_name, std::string_view pkg) {
-  if (pkg.empty() || process_name.size() < pkg.size()) return false;
-  if (process_name.compare(0, pkg.size(), pkg) != 0) return false;
-  if (process_name.size() == pkg.size()) return true;
+  if (pkg.empty() || process_name.size() < pkg.size())
+    return false;
+  if (process_name.compare(0, pkg.size(), pkg) != 0)
+    return false;
+  if (process_name.size() == pkg.size())
+    return true;
   return process_name[pkg.size()] == ':' || process_name[pkg.size()] == '/';
 }
 
 void ensure_builtin_whitelist_locked() {
-  if (g_whitelist_ready) return;
+  if (g_whitelist_ready)
+    return;
   g_whitelist.clear();
-  for (const char *p : kBuiltinWhitelist) g_whitelist.emplace_back(p);
+  for (const char *p : kBuiltinWhitelist)
+    g_whitelist.emplace_back(p);
   g_whitelist_ready = true;
 }
 
@@ -80,7 +86,8 @@ void parse_whitelist_text(std::string_view text, std::vector<std::string> *out) 
     if (!line.empty() && line.front() != '#') {
       out->emplace_back(line);
     }
-    if (end == std::string_view::npos) break;
+    if (end == std::string_view::npos)
+      break;
     start = end + 1;
   }
 }
@@ -88,63 +95,77 @@ void parse_whitelist_text(std::string_view text, std::vector<std::string> *out) 
 enum class ConfTri { Absent, Off, On };
 
 ConfTri conf_key_tri(const char *buf, const char *key) {
-  if (!buf || !key) return ConfTri::Absent;
+  if (!buf || !key)
+    return ConfTri::Absent;
   const size_t key_len = std::strlen(key);
   const char *p = buf;
   while (*p) {
     if ((p == buf || p[-1] == '\n') && std::strncmp(p, key, key_len) == 0 && p[key_len] == '=') {
       const char *v = p + key_len + 1;
-      while (*v == ' ' || *v == '\t') ++v;
-      if (*v == '1') return ConfTri::On;
+      while (*v == ' ' || *v == '\t')
+        ++v;
+      if (*v == '1')
+        return ConfTri::On;
       return ConfTri::Off;
     }
     const char *nl = std::strchr(p, '\n');
-    if (!nl) break;
+    if (!nl)
+      break;
     p = nl + 1;
   }
   return ConfTri::Absent;
 }
 
 bool read_file_small(int fd, std::string *out) {
-  if (fd < 0 || !out) return false;
+  if (fd < 0 || !out)
+    return false;
   out->clear();
   char tmp[1024];
   for (;;) {
     ssize_t n = ::read(fd, tmp, sizeof(tmp));
-    if (n < 0) return false;
-    if (n == 0) break;
+    if (n < 0)
+      return false;
+    if (n == 0)
+      break;
     out->append(tmp, static_cast<size_t>(n));
-    if (out->size() > 64 * 1024) break;
+    if (out->size() > 64 * 1024)
+      break;
   }
   return true;
 }
 
 ConfTri conf_tri_from_fd(int fd) {
-  if (fd < 0) return ConfTri::Absent;
+  if (fd < 0)
+    return ConfTri::Absent;
   std::string raw;
-  if (!read_file_small(fd, &raw)) return ConfTri::Absent;
+  if (!read_file_small(fd, &raw))
+    return ConfTri::Absent;
   return conf_key_tri(raw.c_str(), "zn_hide_allow");
 }
 
 ConfTri conf_tri_from_path(const char *path) {
-  if (!path) return ConfTri::Absent;
+  if (!path)
+    return ConfTri::Absent;
   int fd = open(path, O_RDONLY | O_CLOEXEC);
-  if (fd < 0) return ConfTri::Absent;
+  if (fd < 0)
+    return ConfTri::Absent;
   ConfTri t = conf_tri_from_fd(fd);
   ::close(fd);
   return t;
 }
 
 ConfTri conf_tri_from_moddir(int moddir_fd, const char *rel) {
-  if (moddir_fd < 0 || !rel) return ConfTri::Absent;
+  if (moddir_fd < 0 || !rel)
+    return ConfTri::Absent;
   int fd = openat(moddir_fd, rel, O_RDONLY | O_CLOEXEC);
-  if (fd < 0) return ConfTri::Absent;
+  if (fd < 0)
+    return ConfTri::Absent;
   ConfTri t = conf_tri_from_fd(fd);
   ::close(fd);
   return t;
 }
 
-}  // namespace
+} // namespace
 
 bool read_zn_hide_allow(int moddir_fd) {
   // 与 module/bin/lib/conf.sh::read_conf 同序：外置 user.conf → legacy → 模块模板
@@ -154,8 +175,10 @@ bool read_zn_hide_allow(int moddir_fd) {
       conf_tri_from_moddir(moddir_fd, "config/certs.conf"),
   };
   for (ConfTri t : layers) {
-    if (t == ConfTri::On) return true;
-    if (t == ConfTri::Off) return false;
+    if (t == ConfTri::On)
+      return true;
+    if (t == ConfTri::Off)
+      return false;
   }
   return false;
 }
@@ -171,17 +194,21 @@ void load_whitelist_from_moddir(int moddir_fd) {
       char tmp[1024];
       for (;;) {
         ssize_t n = ::read(fd, tmp, sizeof(tmp));
-        if (n < 0) break;
-        if (n == 0) break;
+        if (n < 0)
+          break;
+        if (n == 0)
+          break;
         raw.append(tmp, static_cast<size_t>(n));
-        if (raw.size() > 64 * 1024) break;
+        if (raw.size() > 64 * 1024)
+          break;
       }
       ::close(fd);
       parse_whitelist_text(raw, &g_whitelist);
     }
   }
   if (g_whitelist.empty()) {
-    for (const char *p : kBuiltinWhitelist) g_whitelist.emplace_back(p);
+    for (const char *p : kBuiltinWhitelist)
+      g_whitelist.emplace_back(p);
   }
   g_whitelist_ready = true;
 }
@@ -190,39 +217,57 @@ bool is_capture_whitelist(std::string_view process_name) {
   std::lock_guard<std::mutex> lock(g_wl_mu);
   ensure_builtin_whitelist_locked();
   for (const auto &pkg : g_whitelist) {
-    if (pkg_matches(process_name, pkg)) return true;
+    if (pkg_matches(process_name, pkg))
+      return true;
   }
   return false;
 }
 
 bool line_is_certbridge_trace(std::string_view line) {
-  if (contains(line, "modules/CertBridge")) return true;
-  if (contains(line, "/CertBridge/")) return true;
-  if (contains(line, "/CertBridge")) return true;
-  if (contains(line, "/dev/.cb")) return true;
-  if (contains(line, "/.cb0") || contains(line, "/.cb1")) return true;
-  if (contains(line, "/.fs0") || contains(line, "/.fs1")) return true;
-  if (contains(line, "/mnt/.ca") || contains(line, "/.ca0") || contains(line, "/.ca1")) return true;
-  if (contains(line, "sys-ca-merge")) return true;
-  if (contains_ci(line, "certbridge")) return true;
+  if (contains(line, "modules/CertBridge"))
+    return true;
+  if (contains(line, "/CertBridge/"))
+    return true;
+  if (contains(line, "/CertBridge"))
+    return true;
+  if (contains(line, "/dev/.cb"))
+    return true;
+  if (contains(line, "/.cb0") || contains(line, "/.cb1"))
+    return true;
+  if (contains(line, "/.fs0") || contains(line, "/.fs1"))
+    return true;
+  if (contains(line, "/mnt/.ca") || contains(line, "/.ca0") || contains(line, "/.ca1"))
+    return true;
+  if (contains(line, "sys-ca-merge"))
+    return true;
+  if (contains_ci(line, "certbridge"))
+    return true;
   return false;
 }
 
 bool path_is_mount_table(std::string_view path) {
-  if (path.empty()) return false;
-  if (contains(path, "/mountinfo")) return true;
+  if (path.empty())
+    return false;
+  if (contains(path, "/mountinfo"))
+    return true;
   if (contains(path, "/mounts")) {
-    if (ends_with(path, "/mounts")) return true;
-    if (contains(path, "/proc/") && contains(path, "mounts")) return true;
+    if (ends_with(path, "/mounts"))
+      return true;
+    if (contains(path, "/proc/") && contains(path, "mounts"))
+      return true;
   }
   return false;
 }
 
 bool path_is_maps_table(std::string_view path) {
-  if (path.empty()) return false;
-  if (ends_with(path, "/maps") && contains(path, "/proc/")) return true;
-  if (ends_with(path, "/smaps") && contains(path, "/proc/")) return true;
-  if (ends_with(path, "/smaps_rollup") && contains(path, "/proc/")) return true;
+  if (path.empty())
+    return false;
+  if (ends_with(path, "/maps") && contains(path, "/proc/"))
+    return true;
+  if (ends_with(path, "/smaps") && contains(path, "/proc/"))
+    return true;
+  if (ends_with(path, "/smaps_rollup") && contains(path, "/proc/"))
+    return true;
   return false;
 }
 
@@ -240,12 +285,14 @@ std::string filter_trace_text(std::string_view raw) {
         end == std::string_view::npos ? raw.substr(start) : raw.substr(start, end - start);
     if (!line_is_certbridge_trace(line)) {
       out.append(line.data(), line.size());
-      if (end != std::string_view::npos) out.push_back('\n');
+      if (end != std::string_view::npos)
+        out.push_back('\n');
     }
-    if (end == std::string_view::npos) break;
+    if (end == std::string_view::npos)
+      break;
     start = end + 1;
   }
   return out;
 }
 
-}  // namespace cb_hide
+} // namespace cb_hide

@@ -44,4 +44,4 @@ inline std::string filter_mount_table_text(std::string_view raw) {
   return filter_trace_text(raw);
 }
 
-}  // namespace cb_hide
+} // namespace cb_hide

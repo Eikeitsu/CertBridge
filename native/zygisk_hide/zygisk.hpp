@@ -1,6 +1,7 @@
 /*
  * Public Zygisk module API (ABI version 5).
- * Keep the surface below compatible with Zygisk loaders (Magisk / ZygiskNext / ReZygisk / NeoZygisk).
+ * Keep the surface below compatible with Zygisk loaders (Magisk / ZygiskNext / ReZygisk /
+ * NeoZygisk).
  *
  * Copyright 2022-2023 John "topjohnwu" Wu
  * Permission to use, copy, modify, and/or distribute this software for any
@@ -76,9 +77,8 @@ struct ServerSpecializeArgs {
 
 namespace internal {
 struct api_table;
-template <class T>
-void entry_impl(api_table *, JNIEnv *);
-}  // namespace internal
+template <class T> void entry_impl(api_table *, JNIEnv *);
+} // namespace internal
 
 enum Option : int {
   FORCE_DENYLIST_UNMOUNT = 0,
@@ -103,17 +103,18 @@ struct Api {
 
 private:
   internal::api_table *tbl;
-  template <class T>
-  friend void internal::entry_impl(api_table *, JNIEnv *);
+  template <class T> friend void internal::entry_impl(api_table *, JNIEnv *);
 };
 
-#define REGISTER_ZYGISK_MODULE(clazz)                                        \
-  void zygisk_module_entry(zygisk::internal::api_table *table, JNIEnv *env) { \
-    zygisk::internal::entry_impl<clazz>(table, env);                         \
+#define REGISTER_ZYGISK_MODULE(clazz)                                                              \
+  void zygisk_module_entry(zygisk::internal::api_table *table, JNIEnv *env) {                      \
+    zygisk::internal::entry_impl<clazz>(table, env);                                               \
   }
 
-#define REGISTER_ZYGISK_COMPANION(func) \
-  void zygisk_companion_entry(int client) { func(client); }
+#define REGISTER_ZYGISK_COMPANION(func)                                                            \
+  void zygisk_companion_entry(int client) {                                                        \
+    func(client);                                                                                  \
+  }
 
 namespace internal {
 
@@ -146,18 +147,18 @@ struct api_table {
   uint32_t (*getFlags)(void *);
 };
 
-template <class T>
-void entry_impl(api_table *table, JNIEnv *env) {
+template <class T> void entry_impl(api_table *table, JNIEnv *env) {
   static Api api;
   api.tbl = table;
   static T module;
   ModuleBase *m = &module;
   static module_abi abi(m);
-  if (!table->registerModule(table, &abi)) return;
+  if (!table->registerModule(table, &abi))
+    return;
   m->onLoad(&api, env);
 }
 
-}  // namespace internal
+} // namespace internal
 
 inline int Api::connectCompanion() {
   return tbl->connectCompanion ? tbl->connectCompanion(tbl->impl) : -1;
@@ -166,7 +167,8 @@ inline int Api::getModuleDir() {
   return tbl->getModuleDir ? tbl->getModuleDir(tbl->impl) : -1;
 }
 inline void Api::setOption(Option opt) {
-  if (tbl->setOption) tbl->setOption(tbl->impl, opt);
+  if (tbl->setOption)
+    tbl->setOption(tbl->impl, opt);
 }
 inline uint32_t Api::getFlags() {
   return tbl->getFlags ? tbl->getFlags(tbl->impl) : 0;
@@ -176,17 +178,19 @@ inline bool Api::exemptFd(int fd) {
 }
 inline void Api::hookJniNativeMethods(JNIEnv *env, const char *className, JNINativeMethod *methods,
                                       int numMethods) {
-  if (tbl->hookJniNativeMethods) tbl->hookJniNativeMethods(env, className, methods, numMethods);
+  if (tbl->hookJniNativeMethods)
+    tbl->hookJniNativeMethods(env, className, methods, numMethods);
 }
 inline void Api::pltHookRegister(dev_t dev, ino_t inode, const char *symbol, void *newFunc,
                                  void **oldFunc) {
-  if (tbl->pltHookRegister) tbl->pltHookRegister(dev, inode, symbol, newFunc, oldFunc);
+  if (tbl->pltHookRegister)
+    tbl->pltHookRegister(dev, inode, symbol, newFunc, oldFunc);
 }
 inline bool Api::pltHookCommit() {
   return tbl->pltHookCommit != nullptr && tbl->pltHookCommit();
 }
 
-}  // namespace zygisk
+} // namespace zygisk
 
 extern "C" {
 [[gnu::visibility("default"), maybe_unused]] void zygisk_module_entry(zygisk::internal::api_table *,

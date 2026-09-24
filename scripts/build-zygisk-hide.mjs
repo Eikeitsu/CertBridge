@@ -77,6 +77,26 @@ function toolchainFile(ndk) {
   return p;
 }
 
+function resolveCmake() {
+  const fromEnv = process.env.CMAKE;
+  if (fromEnv && existsSync(fromEnv)) return fromEnv;
+  try {
+    execSync("cmake --version", { stdio: "ignore", shell: true });
+    return "cmake";
+  } catch {
+    return null;
+  }
+}
+
+function preferNinja() {
+  try {
+    execSync("ninja --version", { stdio: "ignore", shell: true });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function walkFind(dir, predicate) {
   for (const e of readdirSync(dir, { withFileTypes: true })) {
     const p = join(dir, e.name);
@@ -90,7 +110,7 @@ function walkFind(dir, predicate) {
   return null;
 }
 
-function buildAbi(ndk, abi) {
+function buildAbi(ndk, abi, cmakeBin, useNinja) {
   const buildDir = join(buildRoot, abi);
   rmSync(buildDir, { recursive: true, force: true });
   mkdirSync(buildDir, { recursive: true });
@@ -102,19 +122,17 @@ function buildAbi(ndk, abi) {
     `-DANDROID_STL=c++_static`,
     `-DCMAKE_BUILD_TYPE=Release`,
     `-DBUILD_ZN_MODULE=${buildZn ? "ON" : "OFF"}`,
-    `-S`,
-    srcDir,
-    `-B`,
-    buildDir,
   ];
+  if (useNinja) cmakeArgs.push("-G", "Ninja");
+  cmakeArgs.push("-S", srcDir, "-B", buildDir);
   log(`cmake configure ${abi}`);
-  execSync(`cmake ${cmakeArgs.map((a) => `"${a}"`).join(" ")}`, {
+  execSync(`${cmakeBin} ${cmakeArgs.map((a) => `"${a}"`).join(" ")}`, {
     cwd: repoRoot,
     stdio: "inherit",
     shell: true,
   });
   log(`cmake build ${abi}`);
-  execSync(`cmake --build "${buildDir}" --config Release -j`, {
+  execSync(`${cmakeBin} --build "${buildDir}" --config Release -j`, {
     cwd: repoRoot,
     stdio: "inherit",
     shell: true,
@@ -181,8 +199,17 @@ if (!ndk) {
 }
 
 log(`NDK=${ndk}`);
+const cmakeBin = resolveCmake();
+if (!cmakeBin) {
+  console.error(
+    "[build-zygisk-hide] cmake not found (install cmake / ninja, or set CMAKE=/path/to/cmake)",
+  );
+  process.exit(1);
+}
+const useNinja = preferNinja();
+log(`cmake=${cmakeBin}${useNinja ? " (Ninja)" : ""}`);
 const abis = resolveAbis();
 for (const abi of abis) {
-  buildAbi(ndk, abi);
+  buildAbi(ndk, abi, cmakeBin, useNinja);
 }
 log("done");

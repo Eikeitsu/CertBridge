@@ -61,6 +61,8 @@ emit_hide_status_quick() {
   echo "hide_nohello=0"
   echo "hide_kernel_umount_feature=0"
   echo "hide_try_umount_paths="
+  echo "hide_assistants=none"
+  echo "hide_assistants_label="
   echo "hide_provider=none"
   echo "hide_provider_label="
   echo "hide_applied=0"

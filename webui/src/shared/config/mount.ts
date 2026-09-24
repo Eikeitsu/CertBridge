@@ -99,6 +99,7 @@ export const TMPFS_STYLE_OPTIONS = [
 export const TMPFS_HELP_FOOTNOTE_KEY = "mount.tmpfsFootnote";
 
 export const HIDE_PROVIDER_LABELS: Record<string, string> = {
+  ksud: "mount.providers.ksud",
   susfs: "mount.providers.susfs",
   rezygisk: "mount.providers.rezygisk",
   neozygisk: "mount.providers.neozygisk",

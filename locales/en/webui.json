@@ -301,7 +301,9 @@
       "serviceProbe": "Late-inject probe",
       "serviceProbeOn": "On (needs late inject)",
       "serviceProbeOff": "Off",
-      "provider": "Hide helper",
+      "provider": "Hide helpers",
+      "assistants": "Hide helpers",
+      "detected": "Detected",
       "susfsReady": "In kernel",
       "susfsLabel": "SuSFS",
       "noHelloReady": "Installed",
@@ -310,7 +312,7 @@
       "kernelUmountUnknown": "Off / unknown",
       "kernelUmountWarning": "Off (registered paths may remain)",
       "tryUmount": "Module try_umount",
-      "registeredPaths": "Registered paths",
+      "registeredPaths": "try_umount.txt paths",
       "zygiskFilter": "Zygisk mount filter",
       "enabled": "Enabled",
       "disabled": "Disabled",
@@ -325,7 +327,14 @@
       "tmpfsLegacy": "Legacy path",
       "providerMagisk": "Magisk DenyList",
       "providerKsu": "KernelSU Umount modules",
-      "providerApatch": "APatch Exclude Modifications"
+      "providerApatch": "APatch Exclude Modifications",
+      "groups": {
+        "mount": "Mount",
+        "inject": "Injection",
+        "assistants": "Hide helpers",
+        "register": "Registration",
+        "zygisk": "Module Zygisk filter"
+      }
     },
     "captureWarning": {
       "banner": "Enabling module umount for Reqable, ProxyPin, or the target app removes the cacerts mount and often reports the root CA missing.",
@@ -484,7 +493,8 @@
       }
     },
     "providers": {
-      "susfs": "SuSFS try_umount",
+      "susfs": "SuSFS",
+      "ksud": "ksud kernel umount",
       "rezygisk": "ReZygisk",
       "neozygisk": "NeoZygisk",
       "zygisknext": "ZygiskNext",

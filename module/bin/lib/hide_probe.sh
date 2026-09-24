@@ -31,9 +31,7 @@ hide_module_enabled() {
   [ ! -f "$moddir/disable" ] && [ ! -f "$moddir/remove" ]
 }
 
-# 解析 ksu_susfs：优先环境变量，再常见安装路径与 PATH
-
-# 解析 ksu_susfs：优先环境变量，再常见安装路径与 PATH
+# 解析 ksu_susfs：不限官方 susfs4ksu；SukiSU / KSU-Next / ReSuFS 等也可能自带
 hide_resolve_susfs_bin() {
   if [ -n "${SUSFS_BIN:-}" ] && [ -x "$SUSFS_BIN" ]; then
     echo "$SUSFS_BIN"
@@ -42,17 +40,105 @@ hide_resolve_susfs_bin() {
   for cand in \
     /data/adb/ksu/bin/ksu_susfs \
     /data/adb/ksud/bin/ksu_susfs \
-    /data/adb/modules/susfs4ksu/tools/ksu_susfs; do
+    /data/adb/modules/susfs4ksu/tools/ksu_susfs \
+    /data/adb/modules/susfs4ksu/bin/ksu_susfs \
+    /data/adb/modules/resusfs/tools/ksu_susfs \
+    /data/adb/modules/resusfs/bin/ksu_susfs \
+    /data/adb/modules/ReSuFS/tools/ksu_susfs \
+    /data/adb/modules/ReSuFS/bin/ksu_susfs; do
     if [ -x "$cand" ]; then
       echo "$cand"
       return 0
     fi
+  done
+  # 任意已启用模块里的 tools/bin
+  for cand in /data/adb/modules/*/tools/ksu_susfs /data/adb/modules/*/bin/ksu_susfs; do
+    [ -x "$cand" ] || continue
+    moddir=$(dirname "$(dirname "$cand")")
+    hide_module_enabled "$moddir" || continue
+    echo "$cand"
+    return 0
   done
   cand=$(command -v ksu_susfs 2>/dev/null) || cand=
   [ -n "$cand" ] && [ -x "$cand" ] && echo "$cand" && return 0
   return 1
 }
 
+# CLI 能否与内核 SuSFS 通信（证明内核侧有 SuSFS，不代表依赖某管理器模块）
+hide_susfs_cli_talks() {
+  bin="$1"
+  [ -n "$bin" ] && [ -x "$bin" ] || return 1
+  if "$bin" show version >/dev/null 2>&1; then
+    return 0
+  fi
+  feats=$("$bin" show enabled_features 2>/dev/null) || feats=
+  [ -n "$feats" ] || return 1
+  echo "$feats" | grep -q "CONFIG_KSU_SUSFS"
+}
+
+# 内核是否编入 SuSFS（优先读配置；不依赖管理器/模块是否安装）
+hide_kernel_has_susfs() {
+  # 1) /proc/config.gz（内核开启 IKCONFIG_PROC 时可用）
+  if [ -f /proc/config.gz ]; then
+    if zcat /proc/config.gz 2>/dev/null | grep -qE '^CONFIG_KSU_SUSFS(=y|_TRY_UMOUNT=y)'; then
+      return 0
+    fi
+    if zcat /proc/config.gz 2>/dev/null | grep -q '^CONFIG_KSU_SUSFS=y'; then
+      return 0
+    fi
+  fi
+  if [ -f /proc/config ]; then
+    grep -qE '^CONFIG_KSU_SUSFS(=y|_TRY_UMOUNT=y)' /proc/config 2>/dev/null && return 0
+    grep -q '^CONFIG_KSU_SUSFS=y' /proc/config 2>/dev/null && return 0
+  fi
+  # 2) 任意 ksu_susfs 能 show version → 内核已响应 SuSFS ioctl/prctl
+  if SUSFS_BIN=$(hide_resolve_susfs_bin); then
+    export SUSFS_BIN
+    hide_susfs_cli_talks "$SUSFS_BIN" && return 0
+  fi
+  # 3) 部分管理器把版本写在固定文件（可选痕迹，仍指向内核能力）
+  for f in \
+    /data/adb/ksu/susfs_version \
+    /data/adb/susfs4ksu/susfs_version \
+    /data/adb/resusfs/susfs_version; do
+    [ -f "$f" ] && [ -s "$f" ] && return 0
+  done
+  return 1
+}
+
+# 可选：管理器配置目录（仅用于 try_umount.txt 持久化，不作为「有无 SuSFS」判据）
+hide_susfs_persist_dir_hint() {
+  for d in /data/adb/susfs4ksu /data/adb/resusfs /data/adb/ReSuFS; do
+    [ -d "$d" ] && return 0
+  done
+  for prop in /data/adb/modules/*/module.prop; do
+    [ -f "$prop" ] || continue
+    moddir=$(dirname "$prop")
+    hide_module_enabled "$moddir" || continue
+    id=$(awk -F= '$1=="id"{sub(/^[^=]*=/,""); print; exit}' "$prop" 2>/dev/null | tr -d '\r')
+    name=$(awk -F= '$1=="name"{sub(/^[^=]*=/,""); print; exit}' "$prop" 2>/dev/null | tr -d '\r')
+    blob=$(printf '%s %s %s' "$id" "$name" "$(basename "$moddir")" | tr 'A-Z' 'a-z')
+    case "$blob" in
+      *susfs*|*resusfs*) return 0 ;;
+    esac
+  done
+  return 1
+}
+
+# 解析 try_umount 持久化文件：有管理器目录才写；没有则只靠本模块当场 ksud/ksu_susfs 登记
+hide_resolve_susfs_try_umount_file() {
+  if [ -n "${SUSFS_TRY_UMOUNT_FILE:-}" ]; then
+    echo "$SUSFS_TRY_UMOUNT_FILE"
+    return 0
+  fi
+  for d in /data/adb/susfs4ksu /data/adb/resusfs /data/adb/ReSuFS; do
+    if [ -d "$d" ]; then
+      echo "$d/try_umount.txt"
+      return 0
+    fi
+  done
+  return 1
+}
 hide_probe_cache_boot_ok() {
   [ -f "$HIDE_PROBE_CACHE" ] || return 1
   cache_boot=$(awk -F= '$1 == "boot_id" { sub(/^[^=]*=/, ""); print; exit }' "$HIDE_PROBE_CACHE" 2>/dev/null | tr -d '\r')
@@ -108,28 +194,21 @@ hide_probe_cache_clear() {
   rm -f "$HIDE_PROBE_CACHE" 2>/dev/null
 }
 
-# 结果按 boot 缓存；失败不缓存，避免 post-fs 过早探测失败后整轮开机不再登记
-
-# 结果按 boot 缓存；失败不缓存，避免 post-fs 过早探测失败后整轮开机不再登记
+# SuSFS 可用 = 内核具备 SuSFS（不是「装了某个管理器模块」）。
+# 用户态管理器只是配置 UI / 附带 CLI；本模块自己用 ksud / ksu_susfs 登记 try_umount。
 hide_susfs_available() {
   cached=$(hide_probe_cache_get susfs 2>/dev/null) || cached=
   if [ "$cached" = "1" ]; then
     return 0
   fi
-  ok=0
-  if SUSFS_BIN=$(hide_resolve_susfs_bin); then
-    export SUSFS_BIN
-    if "$SUSFS_BIN" show enabled_features 2>/dev/null | grep -q "CONFIG_KSU_SUSFS_TRY_UMOUNT"; then
-      ok=1
-    fi
+  if hide_kernel_has_susfs; then
+    hide_probe_cache_set susfs 1
+    return 0
   fi
-  [ "$ok" = "1" ] && hide_probe_cache_set susfs 1
-  [ "$ok" = "1" ]
+  return 1
 }
 
-# ksu_susfs 二进制是否存在（登记时用；不要求 feature 标志，兼容 SuSFS v2→ksud 路径）
-
-# ksu_susfs 二进制是否存在（登记时用；不要求 feature 标志，兼容 SuSFS v2→ksud 路径）
+# ksu_susfs 二进制是否存在（登记时可选通道；无则走 ksud）
 hide_susfs_bin_present() {
   if SUSFS_BIN=$(hide_resolve_susfs_bin); then
     export SUSFS_BIN
@@ -138,13 +217,15 @@ hide_susfs_bin_present() {
   return 1
 }
 
-# susfs4ksu 用户态模块是否已装（用于写入 try_umount.txt，供其 post-mount / boot-completed 重登记）
-
-# susfs4ksu 用户态模块是否已装（用于写入 try_umount.txt，供其 post-mount / boot-completed 重登记）
+# 兼容旧名：是否有可写的管理器配置目录（仅持久化用）
 hide_susfs4ksu_module_present() {
-  hide_module_enabled /data/adb/modules/susfs4ksu || [ -d /data/adb/susfs4ksu ]
+  hide_susfs_persist_dir_hint
 }
 
+# 旧名兼容（若其它脚本仍调用）
+hide_susfs_manager_hint() {
+  hide_susfs_persist_dir_hint
+}
 # 结果按 boot 缓存；失败不缓存
 
 # 结果按 boot 缓存；失败不缓存

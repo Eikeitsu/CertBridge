@@ -46,8 +46,10 @@ hide_unregister_kernel_try_umount_all() {
         "$SUSFS_BIN" remove_try_umount "$target" >/dev/null 2>&1 || true
     fi
   done
-  # try_umount.txt 里可能还有历史路径
-  if [ -f "$SUSFS_TRY_UMOUNT_FILE" ]; then
+  # try_umount 持久文件里可能还有历史路径
+  _tumount=$(hide_resolve_susfs_try_umount_file 2>/dev/null) || _tumount=
+  [ -n "$_tumount" ] || _tumount="$SUSFS_TRY_UMOUNT_FILE"
+  if [ -f "$_tumount" ]; then
     while IFS= read -r line || [ -n "$line" ]; do
       case "$line" in
         ''|'#'*) continue ;;
@@ -59,7 +61,7 @@ hide_unregister_kernel_try_umount_all() {
       case "$seen" in *"|$line|"*) continue ;; esac
       seen="$seen$line|"
       hide_try_ksud_umount_del "$line" 2>/dev/null || true
-    done <"$SUSFS_TRY_UMOUNT_FILE"
+    done <"$_tumount"
   fi
 }
 
@@ -113,19 +115,23 @@ hide_nohello_unpersist_all() {
 hide_unpersist_try_umount() {
   target="$1"
   [ -n "$target" ] || return 0
-  [ -f "$SUSFS_TRY_UMOUNT_FILE" ] || return 0
+  _tumount=$(hide_resolve_susfs_try_umount_file 2>/dev/null) || _tumount=
+  [ -n "$_tumount" ] || _tumount="$SUSFS_TRY_UMOUNT_FILE"
+  [ -f "$_tumount" ] || return 0
   case "$target" in
     */) target=${target%/} ;;
   esac
-  tmp="$SUSFS_TRY_UMOUNT_FILE.tmp.$$"
+  tmp="$_tumount.tmp.$$"
   # 精确删行，保留用户其它条目与注释
-  grep -vxF "$target" "$SUSFS_TRY_UMOUNT_FILE" >"$tmp" 2>/dev/null && \
-    mv -f "$tmp" "$SUSFS_TRY_UMOUNT_FILE" 2>/dev/null
+  grep -vxF "$target" "$_tumount" >"$tmp" 2>/dev/null && \
+    mv -f "$tmp" "$_tumount" 2>/dev/null
   rm -f "$tmp" 2>/dev/null
 }
 
 hide_unpersist_all_try_umount() {
-  [ -f "$SUSFS_TRY_UMOUNT_FILE" ] || return 0
+  _tumount=$(hide_resolve_susfs_try_umount_file 2>/dev/null) || _tumount=
+  [ -n "$_tumount" ] || _tumount="$SUSFS_TRY_UMOUNT_FILE"
+  [ -f "$_tumount" ] || return 0
   for target in $(list_target_stores 2>/dev/null); do
     hide_unpersist_try_umount "$target"
   done

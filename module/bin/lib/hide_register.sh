@@ -130,25 +130,25 @@ hide_read_applied() {
   [ -f "$HIDE_STATE_FILE" ] && grep -q '^hide_applied=1' "$HIDE_STATE_FILE" 2>/dev/null
 }
 
-# 写入 susfs4ksu 持久列表，供其 post-mount / boot-completed 再次 add_try_umount / ksud umount
-# 只要装了 susfs4ksu（或已有配置目录）就写；不依赖当场 add 成功
-
-# 写入 susfs4ksu 持久列表，供其 post-mount / boot-completed 再次 add_try_umount / ksud umount
-# 只要装了 susfs4ksu（或已有配置目录）就写；不依赖当场 add 成功
+# 写入 SuSFS 管理器持久列表（susfs4ksu / resusfs 等已有目录时），供其开机重登记
 hide_persist_try_umount() {
   target="$1"
   [ -n "$target" ] || return 1
-  hide_susfs4ksu_module_present || return 1
-  mkdir -p /data/adb/susfs4ksu 2>/dev/null || return 1
-  if [ ! -f "$SUSFS_TRY_UMOUNT_FILE" ]; then
-    printf '%s\n' "# CertBridge cacerts try_umount paths" >"$SUSFS_TRY_UMOUNT_FILE" 2>/dev/null || return 1
+  persist=$(hide_resolve_susfs_try_umount_file 2>/dev/null) || persist=
+  [ -n "$persist" ] || return 1
+  pdir=$(dirname "$persist")
+  mkdir -p "$pdir" 2>/dev/null || return 1
+  if [ ! -f "$persist" ]; then
+    printf '%s\n' "# CertBridge cacerts try_umount paths" >"$persist" 2>/dev/null || return 1
   fi
   case "$target" in
     */) target=${target%/} ;;
   esac
-  grep -qxF "$target" "$SUSFS_TRY_UMOUNT_FILE" 2>/dev/null && return 0
-  printf '%s\n' "$target" >>"$SUSFS_TRY_UMOUNT_FILE" 2>/dev/null || return 1
-  log_info "hide: persisted try_umount.txt ($target)"
+  grep -qxF "$target" "$persist" 2>/dev/null && return 0
+  printf '%s\n' "$target" >>"$persist" 2>/dev/null || return 1
+  SUSFS_TRY_UMOUNT_FILE="$persist"
+  export SUSFS_TRY_UMOUNT_FILE
+  log_info "hide: persisted try_umount ($target → $persist)"
   return 0
 }
 

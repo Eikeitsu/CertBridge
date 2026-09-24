@@ -95,8 +95,8 @@ export function HideStatusCard({ variant = "list", title }: HideStatusCardProps)
     },
     { k: t("hide.status.provider"), v: provider },
     {
-      k: "SuSFS",
-      v: hideSusfs ? t("hide.status.susfsReady") : t("hide.status.notDetected"),
+      k: t("hide.status.susfsLabel"),
+      v: t(hideSusfs ? "hide.status.susfsReady" : "hide.status.notDetected"),
     },
     {
       k: "NoHello",
@@ -213,7 +213,7 @@ export function HideStatusCard({ variant = "list", title }: HideStatusCardProps)
           }
         />
         <Row
-          title="SuSFS TRY_UMOUNT"
+          title={t("hide.status.susfsLabel")}
           extra={
             <Tag tone={hideSusfs ? "ok" : "warn"}>
               {hideSusfs ? t("hide.status.susfsReady") : t("hide.status.notDetected")}

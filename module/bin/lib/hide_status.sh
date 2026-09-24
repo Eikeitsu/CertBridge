@@ -137,10 +137,12 @@ emit_hide_status() {
       fi
     fi
     echo "hide_kernel_umount_feature=$hide_ku"
-    # try_umount.txt 中本模块相关路径（便于对照）
+    # try_umount 持久文件中本模块相关路径（susfs4ksu / resusfs 等）
     hide_paths=
-    if [ -f "$SUSFS_TRY_UMOUNT_FILE" ]; then
-      hide_paths=$(grep -E '/cacerts$' "$SUSFS_TRY_UMOUNT_FILE" 2>/dev/null | tr '\n' ',' | sed 's/,$//')
+    _tumount=$(hide_resolve_susfs_try_umount_file 2>/dev/null) || _tumount=
+    [ -n "$_tumount" ] || _tumount="$SUSFS_TRY_UMOUNT_FILE"
+    if [ -f "$_tumount" ]; then
+      hide_paths=$(grep -E '/cacerts$' "$_tumount" 2>/dev/null | tr '\n' ',' | sed 's/,$//')
     fi
     echo "hide_try_umount_paths=${hide_paths:-}"
     provider=$(detect_hide_provider)

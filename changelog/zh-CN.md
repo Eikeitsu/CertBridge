@@ -3,6 +3,7 @@
 ## Unreleased
 
 - **Zygisk 挂载过滤**：`native/zygisk_hide`、构建脚本、默认 `zn_whitelist.txt`；`build:module` 会编 so；CI 装 NDK 并 `REQUIRE_ZYGISK_HIDE=1`；`zn_hide_allow` 与 shell 一致优先读外置 `user.conf`
+- **SuSFS 探测**：以内核为准（`/proc/config.gz` / CLI 探活），不依赖管理器模块；隐藏协助由本模块直接 `ksud`/`ksu_susfs` 登记
 
 ## v4.3.1
 

@@ -1,5 +1,5 @@
 # CertBridge CI
 
 
-- **WebUI 性能**：首屏 `status --quick`；证书开关不再全量刷新且简介后台写；切语言用 startTransition
-- **多语言**：首页信任态 / 流水线 / 环境卡 / 日志空态等硬编码中文接入 i18n
+- **Zygisk 挂载过滤**：过滤 mountinfo/mounts、maps/smaps；弱化 map_files readlink，默认不需要，按需安装
+- **SuSFS 探测**：以内核为准（`/proc/config.gz` / `ksu_susfs show version`），不依赖管理器模块；隐藏协助由本模块直接 `ksud`/`ksu_susfs` 登记

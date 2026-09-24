@@ -116,6 +116,8 @@ certbridge_load_libs_runtime() {
       echo "hide_susfs=0"
       echo "hide_ksud_umount=0"
       echo "hide_nohello=0"
+      echo "hide_assistants=none"
+      echo "hide_assistants_label=$(i18n_msg status.hide_provider_none 2>/dev/null || echo none)"
       echo "hide_provider=none"
       echo "hide_provider_label=$(i18n_msg status.hide_provider_none 2>/dev/null || echo none)"
       echo "hide_applied=0"

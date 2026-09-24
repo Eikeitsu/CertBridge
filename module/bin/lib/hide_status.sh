@@ -1,71 +1,104 @@
 #!/system/bin/sh
 # 挂载隐藏协助（可选组件）
 # 隐藏栈探测与 WebUI 状态输出
-detect_hide_provider() {
+# 收集全部隐藏助手（可并存，无互斥优先级）。SuSFS 与 ZygiskNext 等可同时生效。
+detect_hide_assistants() {
+  list=
+  _add() {
+    case ",$list," in
+      *",$1,"*) ;;
+      *) list="${list}${list:+,}$1" ;;
+    esac
+  }
+
   if hide_susfs_available; then
-    echo susfs
-    return 0
+    _add susfs
+  fi
+  if hide_ksud_kernel_umount_available; then
+    _add ksud
+  fi
+  if hide_nohello_available; then
+    _add nohello
   fi
 
   if hide_module_enabled /data/adb/modules/rezygisk; then
-    echo rezygisk
-    return 0
+    _add rezygisk
   fi
 
   zyg_dir=/data/adb/modules/zygisksu
   if hide_module_enabled "$zyg_dir"; then
-    if grep -q "NeoZygisk" "$zyg_dir/module.prop" 2>/dev/null; then
-      echo neozygisk
-      return 0
+    if grep -qi "NeoZygisk" "$zyg_dir/module.prop" 2>/dev/null; then
+      _add neozygisk
+    else
+      _add zygisknext
     fi
-    echo zygisknext
-    return 0
   fi
 
   if hide_module_enabled /data/adb/modules/shamiko; then
-    echo shamiko
-    return 0
+    _add shamiko
   fi
-
   if hide_module_enabled /data/adb/modules/zygisk-assistant; then
-    echo zygisk_assistant
-    return 0
+    _add zygisk_assistant
   fi
 
-  if hide_module_enabled /data/adb/modules/zygisk_nohello; then
-    echo nohello
-    return 0
-  fi
-
-  if hide_module_enabled /data/adb/modules/NoHello; then
-    echo nohello
-    return 0
-  fi
-
+  # Root 侧每 App 隐藏机制（与 try_umount 助手正交，一并列出）
   root_impl=$(detect_root_impl 2>/dev/null)
   case "$root_impl" in
-    Magisk) echo magisk_denylist ;;
-    KernelSU|SukiSU) echo ksu_umount ;;
-    APatch) echo apatch_exclude ;;
-    *) echo none ;;
+    Magisk) _add magisk_denylist ;;
+    KernelSU|SukiSU) _add ksu_umount ;;
+    APatch) _add apatch_exclude ;;
+  esac
+
+  [ -n "$list" ] && echo "$list" || echo none
+}
+
+# 兼容旧字段：取列表首项（不再因 SuSFS 挡住后续助手）
+detect_hide_provider() {
+  list=$(detect_hide_assistants 2>/dev/null) || list=none
+  case "$list" in
+    ""|none) echo none ;;
+    *,*) echo "${list%%,*}" ;;
+    *) echo "$list" ;;
   esac
 }
 
 hide_provider_label() {
   case "$1" in
-    susfs) echo "SuSFS try_umount" ;;
+    susfs) echo "SuSFS" ;;
+    ksud) echo "ksud kernel umount" ;;
     rezygisk) echo "ReZygisk" ;;
     neozygisk) echo "NeoZygisk" ;;
     zygisknext) echo "ZygiskNext" ;;
     shamiko) echo "Shamiko" ;;
     zygisk_assistant) echo "Zygisk Assistant" ;;
     nohello) echo "NoHello" ;;
-    magisk_denylist) echo "Magisk 排除列表（需配合 Zygisk 助手）" ;;
+    magisk_denylist) echo "Magisk 排除列表" ;;
     ksu_umount) echo "KernelSU 卸载模块" ;;
     apatch_exclude) echo "APatch 排除修改" ;;
-    none) echo "未检测到隐藏助手" ;;
+    none) echo "未检测到" ;;
     *) echo "$1" ;;
   esac
+}
+
+hide_assistants_label() {
+  list="$1"
+  [ -n "$list" ] || list=none
+  if [ "$list" = "none" ]; then
+    hide_provider_label none
+    return 0
+  fi
+  out=
+  old_ifs=$IFS
+  IFS=,
+  # shellcheck disable=SC2086
+  set -- $list
+  IFS=$old_ifs
+  for id in "$@"; do
+    [ -n "$id" ] || continue
+    lab=$(hide_provider_label "$id")
+    out="${out}${out:+ · }$lab"
+  done
+  echo "$out"
 }
 
 hide_mount_mode_label() {
@@ -86,8 +119,8 @@ hide_tmpfs_label() {
 }
 
 compose_hide_summary() {
-  provider=$(detect_hide_provider)
-  provider_label=$(hide_provider_label "$provider")
+  assistants=$(detect_hide_assistants)
+  assistants_label=$(hide_assistants_label "$assistants")
   mount_label=$(hide_mount_mode_label)
   tmpfs_label=$(hide_tmpfs_label)
   applied=0
@@ -102,7 +135,7 @@ compose_hide_summary() {
   else
     summary="${summary} · 无法登记（无 SuSFS/ksud/NoHello）"
   fi
-  summary="${summary} · 助手：${provider_label}"
+  summary="${summary} · 助手：${assistants_label}"
   echo "$summary"
 }
 
@@ -145,6 +178,10 @@ emit_hide_status() {
       hide_paths=$(grep -E '/cacerts$' "$_tumount" 2>/dev/null | tr '\n' ',' | sed 's/,$//')
     fi
     echo "hide_try_umount_paths=${hide_paths:-}"
+    assistants=$(detect_hide_assistants)
+    echo "hide_assistants=$assistants"
+    echo "hide_assistants_label=$(hide_assistants_label "$assistants")"
+    # 兼容旧字段
     provider=$(detect_hide_provider)
     echo "hide_provider=$provider"
     echo "hide_provider_label=$(hide_provider_label "$provider")"
@@ -160,6 +197,8 @@ emit_hide_status() {
     echo "hide_nohello=0"
     echo "hide_kernel_umount_feature=0"
     echo "hide_try_umount_paths="
+    echo "hide_assistants=none"
+    echo "hide_assistants_label=已关闭（开关未开）"
     echo "hide_provider=none"
     echo "hide_provider_label=已关闭（开关未开）"
     echo "hide_applied=0"

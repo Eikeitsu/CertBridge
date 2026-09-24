@@ -36,7 +36,7 @@ When installed:
 - The switch writes configuration and returns immediately; registration continues in the background without blocking WebUI.
 - To verify unmounting, force-stop and reopen the target app. Rebooting solely to register paths is unnecessary.
 
-Without a helper, detectors may still see the bind in mountinfo.
+Without a helper, detectors may still see the bind in mountinfo. The Hide status card lists available helpers side by side (SuSFS, ksud, NoHello, ZygiskNext, and so on)—they can work together; there is no exclusive priority. CertBridge registers paths itself via `ksud kernel umount` / `ksu_susfs add_try_umount`.
 
 ## Zygisk mount-trace filtering
 

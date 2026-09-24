@@ -78,6 +78,8 @@ export type ModuleStatus = {
   stage_root?: string;
   hide_provider?: string;
   hide_provider_label?: string;
+  hide_assistants?: string;
+  hide_assistants_label?: string;
   hide_applied?: string;
   hide_susfs?: string;
   hide_ksud_umount?: string;

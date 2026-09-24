@@ -301,7 +301,9 @@
       "serviceProbe": "晚注入状态复核",
       "serviceProbeOn": "开启（需晚注入）",
       "serviceProbeOff": "关闭",
-      "provider": "检测到的隐藏助手",
+      "provider": "隐藏助手",
+      "assistants": "隐藏助手",
+      "detected": "已检测到",
       "susfsReady": "内核已集成",
       "susfsLabel": "SuSFS",
       "noHelloReady": "已安装",
@@ -310,7 +312,7 @@
       "kernelUmountUnknown": "未开启/未知",
       "kernelUmountWarning": "未开启（登记了也可能不卸）",
       "tryUmount": "本模块 try_umount",
-      "registeredPaths": "登记路径",
+      "registeredPaths": "try_umount.txt 路径",
       "zygiskFilter": "Zygisk 挂载过滤",
       "enabled": "已开启",
       "disabled": "已关闭",
@@ -325,7 +327,14 @@
       "tmpfsLegacy": "传统路径",
       "providerMagisk": "Magisk 排除列表",
       "providerKsu": "KernelSU 卸载模块",
-      "providerApatch": "APatch 排除修改"
+      "providerApatch": "APatch 排除修改",
+      "groups": {
+        "mount": "挂载环境",
+        "inject": "注入行为",
+        "assistants": "隐藏助手",
+        "register": "登记状态",
+        "zygisk": "本模块 Zygisk 过滤"
+      }
     },
     "captureWarning": {
       "banner": "对 Reqable / ProxyPin 或被抓包目标开「卸载模块 / Umount」会卸掉 cacerts 挂载，抓包软件常报「根证书未安装」。",
@@ -484,7 +493,8 @@
       }
     },
     "providers": {
-      "susfs": "SuSFS try_umount",
+      "susfs": "SuSFS",
+      "ksud": "ksud kernel umount",
       "rezygisk": "ReZygisk",
       "neozygisk": "NeoZygisk",
       "zygisknext": "ZygiskNext",

@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useAppSelector } from "@/app/store/hooks";
 import { selectModuleStatus } from "@/features/status/model/selectors";
@@ -5,24 +6,43 @@ import { isFlagOn } from "@/shared/lib/flag";
 import { HIDE_PROVIDER_LABELS, TMPFS_STYLES } from "@/shared/config/mount";
 import { parseEnum } from "@/shared/lib/enum";
 import { MountMode, TmpfsStyle } from "@/entities/module/enums";
-import { Card, ListGroup, Row, Tag } from "@/shared/ui/primitives";
+import { Card } from "@/shared/ui/primitives";
 
 type HideStatusCardProps = {
   variant?: "list" | "table";
   title?: string;
 };
 
+type Tone = "ok" | "warn" | "off" | "neutral";
+
+type StatusItem = {
+  id: string;
+  label: string;
+  value: string;
+  tone: Tone;
+};
+
+type KvItem = {
+  id: string;
+  label: string;
+  value: string;
+  /** 长文案用上下结构，避免挤成一团 */
+  layout?: "row" | "stack";
+  tone?: Tone;
+};
+
+function toneClass(tone: Tone | undefined) {
+  if (tone === "ok") return "is-ok";
+  if (tone === "warn") return "is-warn";
+  if (tone === "off") return "is-off";
+  return "is-neutral";
+}
+
 export function HideStatusCard({ variant = "list", title }: HideStatusCardProps) {
   const { t } = useTranslation("webui");
   const status = useAppSelector(selectModuleStatus);
   const mountMode = parseEnum(MountMode, status.mount_mode, MountMode.Compatible);
   const tmpfsStyle = parseEnum(TmpfsStyle, status.tmpfs_style, TmpfsStyle.Dev);
-  const providerKey = status.hide_provider || "none";
-  const providerLabelKey = HIDE_PROVIDER_LABELS[providerKey];
-  const provider =
-    (providerLabelKey ? t(providerLabelKey) : undefined) ||
-    status.hide_provider_label ||
-    t("hide.status.notDetected");
   const hideApplied = isFlagOn(status.hide_applied);
   const hideSusfs = isFlagOn(status.hide_susfs);
   const hideKsud = isFlagOn(status.hide_ksud_umount);
@@ -68,76 +88,189 @@ export function HideStatusCard({ variant = "list", title }: HideStatusCardProps)
     }`,
   );
 
-  const rows = [
-    { k: "Root", v: status.root || "—" },
-    { k: t("hide.status.mount"), v: mountModeLabel },
-    { k: "STAGE", v: status.stage_root || TMPFS_STYLES[tmpfsStyle].paths[0] },
-    { k: t("hide.status.pathStyle"), v: tmpfsStyleLabel },
+  const assistants = useMemo((): StatusItem[] => {
+    const labelOf = (id: string) => {
+      const key = HIDE_PROVIDER_LABELS[id];
+      return key ? t(key) : id;
+    };
+    const seen = new Set<string>();
+    const items: StatusItem[] = [];
+    const push = (id: string, label: string, value: string, tone: Tone) => {
+      if (seen.has(id)) return;
+      seen.add(id);
+      items.push({ id, label, value, tone });
+    };
+
+    // 细项优先（更准的状态文案）；CSV / 底座补齐其余，互不挡路
+    if (hideSusfs) {
+      push("susfs", labelOf("susfs"), t("hide.status.susfsReady"), "ok");
+    }
+    if (hideNohello) {
+      push("nohello", labelOf("nohello"), t("hide.status.noHelloPointReady"), "ok");
+    }
+    if (hideKsud) {
+      push("ksud", labelOf("ksud"), t("hide.status.detected"), "ok");
+    }
+    if (hideKuFeat) {
+      push("kernel_umount", "kernel_umount", t("hide.status.kernelUmountOn"), "ok");
+    } else if (hideKsud || (status.root || "").includes("Kernel")) {
+      push(
+        "kernel_umount",
+        "kernel_umount",
+        t("hide.status.kernelUmountWarning"),
+        "warn",
+      );
+    }
+
+    const csv = (status.hide_assistants || "").trim();
+    if (csv && csv !== "none") {
+      for (const id of csv.split(",")) {
+        const key = id.trim();
+        if (!key || key === "none") continue;
+        push(key, labelOf(key), t("hide.status.detected"), "ok");
+      }
+    }
+
+    const loader = status.zygisk_loader || "";
+    if (loader && loader !== "none") {
+      const loaderOk = isFlagOn(status.zygisk_loader_ok);
+      push(
+        loader,
+        status.zygisk_loader_label || labelOf(loader),
+        t("hide.status.detected"),
+        loaderOk ? "ok" : "warn",
+      );
+    }
+
+    if (items.length === 0) {
+      items.push({
+        id: "none",
+        label: t("hide.status.assistants"),
+        value: status.hide_assistants_label || t("hide.status.notDetected"),
+        tone: "off",
+      });
+    }
+    return items;
+  }, [
+    status.hide_assistants,
+    status.hide_assistants_label,
+    status.zygisk_loader,
+    status.zygisk_loader_label,
+    status.zygisk_loader_ok,
+    status.root,
+    hideSusfs,
+    hideNohello,
+    hideKsud,
+    hideKuFeat,
+    t,
+  ]);
+
+  const pathList = (status.hide_try_umount_paths || "")
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  const mountItems: KvItem[] = [
+    { id: "root", label: t("hide.status.root"), value: status.root || "—" },
+    { id: "mount", label: t("hide.status.mount"), value: mountModeLabel },
     {
-      k: t("hide.status.forceBind"),
-      v: t(forceBind ? "hide.status.forceBindOn" : "hide.status.forceBindOff"),
+      id: "stage",
+      label: t("hide.status.stagePath"),
+      value: status.stage_root || TMPFS_STYLES[tmpfsStyle].paths[0],
+      layout: "stack",
     },
-    {
-      k: t("hide.status.lateInject"),
-      v: t(lateInject ? "hide.status.lateInjectOn" : "hide.status.lateInjectOff"),
-    },
-    {
-      k: t("hide.status.bootZygote"),
-      v: t(bootZygote ? "hide.status.bootZygoteOn" : "hide.status.bootZygoteOff"),
-    },
-    {
-      k: t("hide.status.bootTargets"),
-      v: t(multiApex ? "hide.status.bootTargetsOn" : "hide.status.bootTargetsOff"),
-    },
-    {
-      k: t("hide.status.serviceProbe"),
-      v: t(serviceProbe ? "hide.status.serviceProbeOn" : "hide.status.serviceProbeOff"),
-    },
-    { k: t("hide.status.provider"), v: provider },
-    {
-      k: t("hide.status.susfsLabel"),
-      v: t(hideSusfs ? "hide.status.susfsReady" : "hide.status.notDetected"),
-    },
-    {
-      k: "NoHello",
-      v: hideNohello ? t("hide.status.noHelloReady") : t("hide.status.notDetected"),
-    },
-    {
-      k: "kernel_umount",
-      v: hideKuFeat
-        ? t("hide.status.kernelUmountOn")
-        : hideKsud || status.root?.includes("Kernel")
-          ? t("hide.status.kernelUmountUnknown")
-          : "—",
-    },
-    { k: "try_umount", v: tryUmountLabel },
+    { id: "style", label: t("hide.status.pathStyle"), value: tmpfsStyleLabel },
   ];
-  if (status.hide_try_umount_paths) {
-    rows.push({ k: t("hide.status.registeredPaths"), v: status.hide_try_umount_paths });
-  }
-  if (znSupported) {
-    rows.push({
-      k: t("hide.status.zygiskFilter"),
-      v: t(znAllow ? "hide.status.enabled" : "hide.status.disabled"),
+
+  const injectItems: KvItem[] = [
+    {
+      id: "force",
+      label: t("hide.status.forceBind"),
+      value: t(forceBind ? "hide.status.forceBindOn" : "hide.status.forceBindOff"),
+      tone: forceBind ? "warn" : "ok",
+    },
+    {
+      id: "late",
+      label: t("hide.status.lateInject"),
+      value: t(lateInject ? "hide.status.lateInjectOn" : "hide.status.lateInjectOff"),
+      tone: lateInject ? "warn" : "ok",
+    },
+    {
+      id: "zygote",
+      label: t("hide.status.bootZygote"),
+      value: t(bootZygote ? "hide.status.bootZygoteOn" : "hide.status.bootZygoteOff"),
+      tone: bootZygote ? "ok" : "warn",
+    },
+    {
+      id: "targets",
+      label: t("hide.status.bootTargets"),
+      value: t(multiApex ? "hide.status.bootTargetsOn" : "hide.status.bootTargetsOff"),
+      tone: multiApex ? "ok" : "warn",
+    },
+    {
+      id: "probe",
+      label: t("hide.status.serviceProbe"),
+      value: t(
+        serviceProbe ? "hide.status.serviceProbeOn" : "hide.status.serviceProbeOff",
+      ),
+      tone: serviceProbe ? "ok" : "warn",
+    },
+  ];
+
+  const registerItems: KvItem[] = [
+    {
+      id: "try",
+      label: t("hide.status.tryUmount"),
+      value: tryUmountLabel,
+      tone: hideApplied ? "ok" : canRegister ? "warn" : "off",
+    },
+  ];
+  if (pathList.length) {
+    registerItems.push({
+      id: "paths",
+      label: t("hide.status.registeredPaths"),
+      value: pathList.join("\n"),
+      layout: "stack",
     });
-    rows.push({
-      k: t("hide.status.zygiskBase"),
-      v: status.zygisk_loader_label || status.zygisk_loader || "—",
+  }
+
+  const zygiskItems: KvItem[] = [];
+  if (znSupported) {
+    zygiskItems.push({
+      id: "filter",
+      label: t("hide.status.zygiskFilter"),
+      value: t(znAllow ? "hide.status.enabled" : "hide.status.disabled"),
+      tone: znAllow ? "ok" : "off",
     });
     if (isFlagOn(status.zn_hide_zn_module)) {
-      rows.push({ k: t("hide.status.znPath"), v: t("hide.status.declared") });
+      zygiskItems.push({
+        id: "zn",
+        label: t("hide.status.znPath"),
+        value: t("hide.status.declared"),
+        tone: "ok",
+      });
     }
   }
+
+  const tableRows: { k: string; v: string }[] = [
+    ...mountItems.map((i) => ({ k: i.label, v: i.value })),
+    ...injectItems.map((i) => ({ k: i.label, v: i.value })),
+    ...assistants.map((i) => ({ k: i.label, v: i.value })),
+    ...registerItems.map((i) => ({ k: i.label, v: i.value })),
+    ...zygiskItems.map((i) => ({ k: i.label, v: i.value })),
+  ];
 
   if (variant === "table") {
     return (
       <Card title={title ?? t("hide.status.title")} meta={meta}>
         <table className="bf-table">
           <tbody>
-            {rows.map((row) => (
-              <tr key={row.k}>
+            {tableRows.map((row) => (
+              <tr key={`${row.k}:${row.v}`}>
                 <td>{row.k}</td>
-                <td>{row.v}</td>
+                <td style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                  {row.v}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -148,138 +281,94 @@ export function HideStatusCard({ variant = "list", title }: HideStatusCardProps)
 
   return (
     <Card title={title ?? t("hide.status.title")} meta={meta}>
-      <ListGroup>
-        <Row title={t("hide.status.root")} extra={status.root || "—"} />
-        <Row title={t("hide.status.mount")} extra={mountModeLabel} />
-        <Row
-          title={t("hide.status.stagePath")}
-          extra={status.stage_root || TMPFS_STYLES[tmpfsStyle].paths[0]}
-        />
-        <Row title={t("hide.status.pathStyle")} extra={tmpfsStyleLabel} />
-        <Row
-          title={t("hide.status.forceBind")}
-          extra={
-            <Tag tone={forceBind ? "warn" : "ok"}>
-              {t(forceBind ? "hide.status.forceBindOn" : "hide.status.forceBindOff")}
-            </Tag>
-          }
-        />
-        <Row
-          title={t("hide.status.lateInject")}
-          extra={
-            <Tag tone={lateInject ? "warn" : "ok"}>
-              {t(lateInject ? "hide.status.lateInjectOn" : "hide.status.lateInjectOff")}
-            </Tag>
-          }
-        />
-        <Row
-          title={t("hide.status.bootZygote")}
-          extra={
-            <Tag tone={bootZygote ? "ok" : "warn"}>
-              {t(bootZygote ? "hide.status.bootZygoteOn" : "hide.status.bootZygoteOff")}
-            </Tag>
-          }
-        />
-        <Row
-          title={t("hide.status.bootTargets")}
-          extra={
-            <Tag tone={multiApex ? "ok" : "warn"}>
-              {t(multiApex ? "hide.status.bootTargetsOn" : "hide.status.bootTargetsOff")}
-            </Tag>
-          }
-        />
-        <Row
-          title={t("hide.status.serviceProbe")}
-          extra={
-            <Tag tone={serviceProbe ? "ok" : "warn"}>
-              {t(
-                serviceProbe
-                  ? "hide.status.serviceProbeOn"
-                  : "hide.status.serviceProbeOff",
-              )}
-            </Tag>
-          }
-        />
-        <Row
-          title={t("hide.status.provider")}
-          extra={
-            <Tag
-              tone={
-                status.hide_provider && status.hide_provider !== "none" ? "ok" : "warn"
-              }
-            >
-              {provider}
-            </Tag>
-          }
-        />
-        <Row
-          title={t("hide.status.susfsLabel")}
-          extra={
-            <Tag tone={hideSusfs ? "ok" : "warn"}>
-              {hideSusfs ? t("hide.status.susfsReady") : t("hide.status.notDetected")}
-            </Tag>
-          }
-        />
-        <Row
-          title="NoHello"
-          extra={
-            <Tag tone={hideNohello ? "ok" : "warn"}>
-              {hideNohello
-                ? t("hide.status.noHelloPointReady")
-                : t("hide.status.notDetected")}
-            </Tag>
-          }
-        />
-        <Row
-          title="KSU kernel_umount"
-          extra={
-            <Tag tone={hideKuFeat ? "ok" : "warn"}>
-              {hideKuFeat
-                ? t("hide.status.kernelUmountOn")
-                : t("hide.status.kernelUmountWarning")}
-            </Tag>
-          }
-        />
-        <Row
-          title={t("hide.status.tryUmount")}
-          extra={
-            <Tag tone={hideApplied ? "ok" : canRegister ? "warn" : "default"}>
-              {tryUmountLabel}
-            </Tag>
-          }
-        />
-        {status.hide_try_umount_paths ? (
-          <Row title="try_umount.txt" extra={status.hide_try_umount_paths} />
+      <div className="bf-hide-status">
+        <section className="bf-hide-status__block">
+          <div className="bf-hide-status__head">{t("hide.status.groups.mount")}</div>
+          <div className="bf-hide-status__metrics">
+            {mountItems.map((item) => (
+              <div
+                key={item.id}
+                className={`bf-hide-status__metric${item.layout === "stack" ? " is-wide" : ""}`}
+              >
+                <span>{item.label}</span>
+                <strong>{item.value}</strong>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="bf-hide-status__block">
+          <div className="bf-hide-status__head">{t("hide.status.groups.inject")}</div>
+          <div className="bf-hide-status__stack">
+            {injectItems.map((item) => (
+              <div
+                key={item.id}
+                className={`bf-hide-status__row ${toneClass(item.tone)}`}
+              >
+                <span>{item.label}</span>
+                <strong>{item.value}</strong>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="bf-hide-status__block">
+          <div className="bf-hide-status__head">{t("hide.status.groups.assistants")}</div>
+          <div className="bf-hide-status__assistants">
+            {assistants.map((item) => (
+              <div
+                key={item.id}
+                className={`bf-hide-status__chip ${toneClass(item.tone)}`}
+              >
+                <span className="bf-hide-status__dot" aria-hidden />
+                <div>
+                  <strong>{item.label}</strong>
+                  <em>{item.value}</em>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="bf-hide-status__block">
+          <div className="bf-hide-status__head">{t("hide.status.groups.register")}</div>
+          <div className="bf-hide-status__stack">
+            {registerItems.map((item) =>
+              item.layout === "stack" ? (
+                <div key={item.id} className="bf-hide-status__row is-stack">
+                  <span>{item.label}</span>
+                  <strong className="bf-hide-status__paths">{item.value}</strong>
+                </div>
+              ) : (
+                <div
+                  key={item.id}
+                  className={`bf-hide-status__row ${toneClass(item.tone)}`}
+                >
+                  <span>{item.label}</span>
+                  <strong>{item.value}</strong>
+                </div>
+              ),
+            )}
+          </div>
+        </section>
+
+        {zygiskItems.length ? (
+          <section className="bf-hide-status__block">
+            <div className="bf-hide-status__head">{t("hide.status.groups.zygisk")}</div>
+            <div className="bf-hide-status__stack">
+              {zygiskItems.map((item) => (
+                <div
+                  key={item.id}
+                  className={`bf-hide-status__row ${toneClass(item.tone)}`}
+                >
+                  <span>{item.label}</span>
+                  <strong>{item.value}</strong>
+                </div>
+              ))}
+            </div>
+          </section>
         ) : null}
-        {znSupported ? (
-          <Row
-            title={t("hide.status.zygiskFilter")}
-            extra={
-              <Tag tone={znAllow ? "ok" : "default"}>
-                {t(znAllow ? "hide.status.enabled" : "hide.status.disabled")}
-              </Tag>
-            }
-          />
-        ) : null}
-        {znSupported ? (
-          <Row
-            title={t("hide.status.zygiskBase")}
-            extra={
-              <Tag tone={isFlagOn(status.zygisk_loader_ok) ? "ok" : "warn"}>
-                {status.zygisk_loader_label ||
-                  status.zygisk_loader ||
-                  t("hide.status.notDetected")}
-              </Tag>
-            }
-          />
-        ) : null}
-        {znSupported && isFlagOn(status.zn_hide_zn_module) ? (
-          <Row
-            title={t("hide.status.znPath")}
-            extra={<Tag tone="ok">{t("hide.status.declared")}</Tag>}
-          />
-        ) : null}
-      </ListGroup>
+      </div>
     </Card>
   );
 }

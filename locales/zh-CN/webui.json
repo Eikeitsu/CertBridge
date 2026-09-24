@@ -1,0 +1,678 @@
+{
+  "brand": "证书桥",
+  "loadingHint": "加载中",
+  "language": "语言",
+  "languageMeta": "跟随系统或手动选择",
+  "tabs": {
+    "home": "首页",
+    "certs": "证书",
+    "log": "日志",
+    "hide": "隐藏",
+    "more": "更多"
+  },
+  "ui": {
+    "confirm": "确认",
+    "cancel": "取消",
+    "close": "关闭",
+    "detail": "详情",
+    "delete": "删除",
+    "copyFps": "复制指纹",
+    "loading": "加载中…",
+    "deviceLocal": "本机",
+    "noBridge": "未检测到 WebUI 桥接",
+    "copyOk": "已复制",
+    "copyFail": "复制失败",
+    "closePreview": "关闭预览",
+    "statusStage": "运行状态"
+  },
+  "overview": {
+    "kicker": "信任状态",
+    "emptyActive": "尚未启用附加证书",
+    "metrics": {
+      "active": "已启用",
+      "custom": "自定义",
+      "baseline": "基线",
+      "store": "库内"
+    },
+    "pipelineTitle": "内置证书",
+    "runtimeTitle": "环境详情",
+    "refresh": "刷新",
+    "reboot": "重启",
+    "moduleDisabled": "模块已停用，证书注入不会执行。",
+    "pendingReboot": "有永久变更等待重启后生效。",
+    "rebootConfirmTitle": "确认重启设备？",
+    "rebootConfirmBody": "重启后应用永久证书变更并清理临时层。",
+    "activeCountSuffix": "张生效",
+    "metricsAria": "指标",
+    "envDevice": "设备",
+    "envSystem": "系统",
+    "envInject": "注入",
+    "envMount": "挂载",
+    "envVersion": "版本",
+    "envRefresh": "刷新",
+    "lastRefresh": "上次刷新 {{time}}",
+    "checking": "检测中…",
+    "checkingHint": "正在读取模块状态",
+    "bridgeHint": "请用 SukiSU / KernelSU / MMRL 等管理器打开本模块 WebUI",
+    "retryHint": "可点「刷新复核」重试；若反复失败请查看日志",
+    "deviceFallback": "本机",
+    "stateMissing": "未检测到",
+    "stateApplied": "已应用",
+    "statePendingWrite": "待重启写入",
+    "stateStillActive": "仍在生效",
+    "stateReadyOff": "可用未启用",
+    "apexInjected": "已注入",
+    "apexFail": "失败",
+    "hotAbnormal": "异常",
+    "hotPartial": "部分",
+    "hotMounted": "已挂载",
+    "hotIdle": "未挂载",
+    "pipelineOn": "生效",
+    "pipelinePending": "待重启",
+    "pipelineReady": "可用",
+    "pipelineMissing": "缺失"
+  },
+  "trust": {
+    "disabled": "模块已禁用",
+    "pendingHot": "热挂载 · 永久配置待重启",
+    "pending": "待重启生效",
+    "stabilizing": "稳定中…",
+    "stabilizingHint": "正在确认注入是否生效，请稍候",
+    "injectError": "注入异常",
+    "checkLog": "请查看日志或重启后再试",
+    "ok": "运行正常",
+    "okCount": "运行正常 · {{count}} 张",
+    "abnormal": "状态异常",
+    "defaultDesc": "安全合并 Reqable / ProxyPin / 自定义 CA，并支持用户区、存储卡证书免重启挂载与无痕卸载。"
+  },
+  "certs": {
+    "builtinTitle": "抓包应用证书",
+    "builtinMeta": "变更需重启写入系统库",
+    "customTitle": "自定义证书",
+    "customEmpty": "暂无自定义",
+    "importLabel": "导入",
+    "detailLabel": "详情",
+    "refresh": "刷新",
+    "hotTitle": "临时挂载",
+    "hotMeta": "未挂载 · 需手动触发；放入证书目录不会自动挂载。重启后临时层自动失效。",
+    "hotActiveMeta": "临时会话进行中；挂载成功后可在本页「无痕卸载」，或直接重启清除",
+    "hotAllowTitle": "允许临时挂载",
+    "hotAllowDesc": "关闭后无法新建临时会话",
+    "hotAllowHint": "请先开启「允许临时挂载」。",
+    "hotModeUser": "用户证书",
+    "hotModeSd": "存储卡",
+    "hotModeAll": "合并",
+    "hotModeUserLong": "用户证书",
+    "hotModeSdLong": "存储卡证书",
+    "hotModeAllLong": "用户 + 存储卡",
+    "hotSdPathHint": "需指定存储卡目录",
+    "hotStart": "开始临时挂载",
+    "hotSilentUnmount": "无痕卸载",
+    "hotMetricAdded": "已加入",
+    "hotMetricNamespaces": "命名空间",
+    "hotPartialTag": "部分未覆盖",
+    "hotSessionMounted": "已挂载（{{mode}}）",
+    "hotSessionPartial": "部分挂载（{{mode}}）",
+    "hotSessionStale": "状态异常（建议卸载或重启）",
+    "hotSessionIdle": "未挂载",
+    "presetsTitle": "从常见路径导入",
+    "presetsMeta": "探测 Download / App 目录",
+    "exportFps": "复制指纹",
+    "exportFpsEmpty": "无已应用指纹",
+    "exportFpsOk": "已复制",
+    "presetUnchanged": "已在列表中",
+    "importReadFail": "读取失败",
+    "removeConfirmTitle": "移除证书？",
+    "removeConfirmBody": "重启后从系统库撤下",
+    "removeConfirmOk": "移除",
+    "hotAllowOn": "已允许热挂载",
+    "hotAllowOff": "已关闭热挂载",
+    "hotConfirmOffTitle": "关闭热挂载？",
+    "hotConfirmOffBody": "将结束当前临时会话",
+    "hotConfirmOffOk": "关闭",
+    "hotSdPathBad": "路径不受支持",
+    "hotMountConfirmBody": "临时会话，重启失效",
+    "hotMountConfirmOk": "挂载",
+    "hotMounting": "建立会话…",
+    "hotUnmountConfirmTitle": "卸载临时会话？",
+    "hotUnmountConfirmBody": "不影响永久配置",
+    "hotUnmountConfirmOk": "卸载",
+    "hotUnmounting": "卸载中…",
+    "hotUnmounted": "已卸载",
+    "statusActive": "已生效",
+    "statusPending": "待重启",
+    "statusPendingLong": "已开启，待重启",
+    "statusAvailable": "可用",
+    "statusMissing": "未检测到",
+    "statusMissingApp": "未检测到 App 证书",
+    "detailTitle": "证书详情",
+    "parseLoading": "正在解析证书",
+    "parseFail": "未能解析该证书。请确认文件为 PEM/DER，且设备上的解析器可用。",
+    "hotMountConfirmTitle": "立即挂载{{target}}中的有效 CA？",
+    "hotTargetUser": "用户凭据区",
+    "hotTargetSd": "存储卡目录",
+    "hotTargetAll": "用户凭据区与存储卡目录",
+    "hotMounted": "已免重启挂载 {{count}} 张证书",
+    "hotMountedPartial": "已挂载 {{added}} 张，{{failed}} 个会话未覆盖",
+    "hotUnmountPartial": "卸载未完成，仍有 {{remaining}} 个会话，请重试或重启",
+    "importedReboot": "已导入，重启后生效",
+    "importedOk": "已导入（无需重启）",
+    "removedReboot": "已移除，重启后生效",
+    "removedMatch": "已移除（与当前生效一致）",
+    "flagApplied": "已应用",
+    "flagPending": "待重启",
+    "flagStillActive": "仍在生效",
+    "flagOff": "已关闭",
+    "subMissing": "未检测到证书",
+    "subRemovePending": "重启后才会从系统撤下",
+    "subWritePending": "重启后写入系统信任库"
+  },
+  "log": {
+    "title": "活动日志",
+    "metaEmpty": "暂无日志",
+    "refresh": "刷新",
+    "clear": "清空",
+    "emptyFiltered": "无该等级日志",
+    "emptyAll": "暂无日志",
+    "levelAll": "全部",
+    "levelInfo": "信息",
+    "levelWarn": "警告",
+    "levelError": "错误",
+    "levelDebug": "调试",
+    "wrap": "折行",
+    "wrapTitle": "自动换行",
+    "wrapMeta": "关闭后长行横向滚动，便于对齐排查",
+    "clearConfirmTitle": "确认清空日志？",
+    "clearConfirmBody": "仅清除本机日志文件，不影响证书配置。",
+    "loading": "读取日志…",
+    "linesCount": "{{count}} 行",
+    "linesRecent": "最近 {{count}} 行",
+    "emptyHint": "暂无日志",
+    "readFail": "暂无法读取日志",
+    "cleared": "日志已清空"
+  },
+  "hide": {
+    "switchTitle": "隐藏开关",
+    "switchMeta": "关闭后不再登记 umount",
+    "allowTitle": "挂载隐藏协助",
+    "allowOn": "注入后登记 umount 路径",
+    "allowOff": "不写隐藏状态",
+    "toastOn": "已开启",
+    "toastOff": "已关闭",
+    "confirmOffTitle": "关闭隐藏协助？",
+    "confirmOffBody": "将清理 try_umount / NoHello 登记",
+    "confirmOffOk": "关闭",
+    "forceBindTitle": "强注抓包 App",
+    "forceBindOn": "对运行中抓包 App 补绑",
+    "forceBindOff": "尊重卸载模块",
+    "forceBindToastOn": "已开启强注",
+    "forceBindToastOff": "已关闭强注",
+    "forceBindConfirmOnTitle": "开启强注？",
+    "forceBindConfirmOnBody": "可能盖掉「卸载模块」效果，仅调试时短期开启",
+    "forceBindConfirmOnOk": "开启",
+    "lateInjectTitle": "晚注入",
+    "lateInjectOn": "开机后再注入应用命名空间",
+    "lateInjectOff": "仅 boot 注入",
+    "lateInjectToastOn": "已开启晚注入",
+    "lateInjectToastOff": "已关闭晚注入",
+    "lateInjectConfirmOnTitle": "开启晚注入？",
+    "lateInjectConfirmOnBody": "兼容更好，痕迹更多",
+    "lateInjectConfirmOnOk": "开启",
+    "experimentEntryTitle": "冷门实验",
+    "experimentEntryMeta": "默认痕迹最少",
+    "experimentEntryCta": "打开选项",
+    "experimentSheetTitle": "冷门实验",
+    "experimentIntro": "证书异常时再打开；开机项需重启",
+    "bootZygoteTitle": "开机注入 Zygote",
+    "bootZygoteOn": "boot 时 bind zygote",
+    "bootZygoteOff": "仅 bind init",
+    "bootZygoteToastOn": "已开启；重启生效",
+    "bootZygoteToastOff": "已关闭；重启生效",
+    "bootZygoteConfirmOnTitle": "开启 Zygote 注入？",
+    "bootZygoteConfirmOnBody": "兼容更好，痕迹更多；需重启",
+    "bootZygoteConfirmOnOk": "开启",
+    "bootMultiApexTitle": "完整 boot 目标",
+    "bootMultiApexOn": "注入全部目标",
+    "bootMultiApexOff": "14+ 仅主 APEX",
+    "bootMultiApexToastOn": "已开启；重启生效",
+    "bootMultiApexToastOff": "已关闭；重启生效",
+    "bootMultiApexConfirmOnTitle": "开启完整目标？",
+    "bootMultiApexConfirmOnBody": "兼容更好，痕迹更多；需重启",
+    "bootMultiApexConfirmOnOk": "开启",
+    "serviceProbeTitle": "晚注入复核",
+    "serviceProbeOn": "退避校验 + heal",
+    "serviceProbeOff": "默认关",
+    "serviceProbeToastOn": "已开启复核",
+    "serviceProbeToastOff": "已关闭复核",
+    "znSwitchTitle": "Zygisk 过滤",
+    "znSwitchMeta": "过滤 mountinfo / maps",
+    "znAllowTitle": "启用 Zygisk 过滤",
+    "znAllowOn": "过滤挂载痕迹；白名单除外",
+    "znAllowOff": "关闭后需强停 App",
+    "znToastOn": "已开启",
+    "znToastOff": "已关闭",
+    "znConfirmOffTitle": "关闭 Zygisk 过滤？",
+    "znConfirmOffBody": "已运行进程需强停",
+    "znConfirmOffOk": "关闭",
+    "znMissingTitle": "未装 Zygisk 过滤",
+    "znMissingMeta": "默认安装不含",
+    "znMissingBody": "自定义安装勾选，并启用 Zygisk",
+    "loaderWarnTitle": "未检测到 Zygisk",
+    "loaderWarnMeta": "组件可能无法注入",
+    "loaderWarnBody": "请在管理器启用 Zygisk",
+    "whitelistTitle": "抓包白名单",
+    "whitelistMeta": "名单内不过滤",
+    "whitelistHint": "一行一个包名；# 注释；保存后强停 App",
+    "whitelistSave": "保存",
+    "whitelistSaved": "已保存",
+    "checklistTitle": "抓包检查",
+    "checklistMeta": "首次建议过一遍",
+    "checklistDismiss": "知道了",
+    "captureTitle": "抓包注意",
+    "captureMeta": "比开关更重要",
+    "introTitle": "挂载隐藏",
+    "introBody": "通过 bind 写入系统信任库；抓包对象须能看见挂载",
+    "guideTitle": "隐藏说明",
+    "guideMeta": "按 Root 方案配置",
+    "docsCta": "文档",
+    "status": {
+      "title": "挂载与隐藏实况",
+      "deviceProbe": "基于当前设备探测",
+      "notDetected": "未检测到",
+      "registered": "已注册",
+      "notRegistered": "未登记",
+      "noProvider": "无 SuSFS/ksud/NoHello",
+      "root": "Root 方案",
+      "mount": "证书挂载模式",
+      "stagePath": "临时层路径",
+      "pathStyle": "路径风格",
+      "forceBind": "强注抓包 App",
+      "forceBindOn": "开启（旧行为）",
+      "forceBindOff": "关闭（尊重卸载）",
+      "lateInject": "开机后晚注入",
+      "lateInjectOn": "开启（service namespaces）",
+      "lateInjectOff": "关闭（仅 boot）",
+      "bootZygote": "开机注入 Zygote",
+      "bootZygoteOn": "开启",
+      "bootZygoteOff": "关闭（仅 init）",
+      "bootTargets": "完整 boot 目标",
+      "bootTargetsOn": "完整（双模式）",
+      "bootTargetsOff": "精简（14+ 仅主 APEX）",
+      "serviceProbe": "晚注入状态复核",
+      "serviceProbeOn": "开启（需晚注入）",
+      "serviceProbeOff": "关闭",
+      "provider": "检测到的隐藏助手",
+      "susfsReady": "TRY_UMOUNT 可用",
+      "noHelloReady": "已安装",
+      "noHelloPointReady": "已安装（可登记 point）",
+      "kernelUmountOn": "已开启",
+      "kernelUmountUnknown": "未开启/未知",
+      "kernelUmountWarning": "未开启（登记了也可能不卸）",
+      "tryUmount": "本模块 try_umount",
+      "registeredPaths": "登记路径",
+      "zygiskFilter": "Zygisk 挂载过滤",
+      "enabled": "已开启",
+      "disabled": "已关闭",
+      "zygiskBase": "Zygisk 底座",
+      "znPath": "ZN Module 辅路径",
+      "declared": "已声明",
+      "mountModeCompatible": "完整兼容",
+      "mountModeMagic": "轻量 Magic",
+      "tmpfsDev": "Dev 路径",
+      "tmpfsMnt": "Mnt 路径",
+      "tmpfsShort": "短路径",
+      "tmpfsLegacy": "传统路径",
+      "providerMagisk": "Magisk 排除列表",
+      "providerKsu": "KernelSU 卸载模块",
+      "providerApatch": "APatch 排除修改"
+    },
+    "captureWarning": {
+      "banner": "对 Reqable / ProxyPin 或被抓包目标开「卸载模块 / Umount」会卸掉 cacerts 挂载，抓包软件常报「根证书未安装」。",
+      "notice": "对抓包软件开启「卸载模块 / Umount」、DenyList+umount 或 APatch「排除修改」会卸掉 cacerts 证书挂载。",
+      "toolLabel": "抓包软件",
+      "toolText": "开了卸载模块 → 软件内常显示「根证书未安装」",
+      "targetLabel": "被抓包 App",
+      "targetText": "开了卸载模块 → TLS 看不到抓包 CA → 断网 / 证书错误",
+      "scope": "仅对需要躲检测、且不参与本次抓包的应用开启隐藏。",
+      "force": "若必须保留卸载模块，可开「强注抓包 App」，但会削弱隐藏。"
+    },
+    "checklistNotice": "证书要生效，抓包链路相关 App 必须能看见 cacerts 挂载。",
+    "checklistItems": [
+      "Reqable / ProxyPin：关闭「卸载模块 / Umount / 排除修改」",
+      "本次被抓包的目标 App：同样关闭上述隐藏",
+      "仅对「要躲检测且不参与本次抓包」的其它 App 再开卸载模块",
+      "需要 maps 自藏时：自定义安装勾选 Zygisk 过滤，并确认设备已开 Zygisk"
+    ],
+    "guideSections": {
+      "capture": {
+        "title": "抓包必读：勿对抓包 App 开卸载模块",
+        "body": [
+          "证书要生效，进程必须能看到 cacerts bind。卸载模块、DenyList+Shamiko umount 或 APatch 排除修改会卸掉该挂载。",
+          "不要对 Reqable / ProxyPin 开启上述隐藏，否则常显示「根证书未安装」。",
+          "被抓包的目标 App 也不要开启，否则 TLS 可能断网或报证书错误。",
+          "仅对需要躲 Root 或 mount 检测的其它 App 单独开启卸载模块。",
+          "hide_allow 会向 SuSFS / ksud / NoHello 全局登记 cacerts；最终仍由每 App 的卸载列表决定。",
+          "若抓包 App 必须开启卸载模块，可在冷门实验开启强注抓包 App，但会削弱隐藏，仅建议调试。",
+          "若部分 App 仍读不到 CA，可开启晚注入，开机后重试应用命名空间，但痕迹更多。",
+          "仍误报 Found KSU 时可关闭开机注入 Zygote 或完整 boot 目标；兼容性可能降低，需重启。"
+        ]
+      },
+      "magisk": {
+        "title": "Magisk / Alpha / Kitsune",
+        "body": [
+          "排除列表替代旧 MagiskHide；只加入需要隐藏 Root 的 App。",
+          "强制执行排除列表主要停用 Zygisk 模块，不等于完整隐藏 bind；配合 Shamiko / NoHello 时通常关闭。",
+          "不要把 Reqable、ProxyPin 或被抓包目标放进启用 umount 的列表。",
+          "推荐 ZygiskNext/ReZygisk + NoHello；hide_allow 登记 cacerts point，App 列表决定是否 umount。",
+          "Magisk 官方没有路径级 umount 登记 API。"
+        ]
+      },
+      "ksu": {
+        "title": "KernelSU / SukiSU / MKSU",
+        "body": [
+          "仅对需要躲检测的 App 开启卸载模块，并确保内核支持 path_umount。",
+          "Reqable、ProxyPin 和被抓包目标应关闭卸载模块。",
+          "安装 SuSFS 并开启 hide_allow 后，bind 成功会 add_try_umount 登记 cacerts。",
+          "可叠加 NeoZygisk、ReZygisk 或 ZygiskNext umount-only，但不要用于抓包链路 App。",
+          "避免与 Magical OverlayFS 等冲突模块同时启用。"
+        ]
+      },
+      "apatch": {
+        "title": "APatch",
+        "body": [
+          "仅对需要躲检测的 App 启用排除修改。",
+          "不要对 Reqable、ProxyPin 或被抓包目标启用，否则看不到 CA 挂载。",
+          "apd 没有 ksud 式路径 API；使用 ZygiskNext/ReZygisk + NoHello，由 hide_allow 登记 point。"
+        ]
+      },
+      "limits": {
+        "title": "能力边界",
+        "body": [
+          "默认 /dev/.fs* 临时层可避开简单的 local/tmp 扫描，但不能替代 umount。",
+          "无 SuSFS 或 Zygisk umount 助手时，mountinfo 检测仍可能发现 bind。",
+          "可选 Zygisk 过滤会隐藏匹配的 mount/maps 行和模块 readlink；内存代码与 Zygisk 底座仍可能被检测。",
+          "Reqable / ProxyPin 在过滤白名单内，以保留 CA 视图。",
+          "默认安装不含 Zygisk 过滤；需自定义安装勾选并包含 zygisk/*.so。",
+          "系统 TLS 必须从信任库路径读取 CA，不存在通用的无挂载 CA 注入。"
+        ]
+      }
+    }
+  },
+  "theme": {
+    "packs": {
+      "default": {
+        "label": "默认",
+        "hint": "大状态区，证书与环境按组排列"
+      },
+      "ops": {
+        "label": "精简",
+        "hint": "紧凑面板，状态与列表更集中"
+      },
+      "console": {
+        "label": "终端",
+        "hint": "等宽字体，路径顶栏与贴边表格"
+      }
+    },
+    "accents": {
+      "teal": "青绿",
+      "steel": "钢蓝",
+      "amber": "琥珀",
+      "ink": "墨青"
+    },
+    "modes": {
+      "system": "跟随系统",
+      "light": "浅色",
+      "dark": "深色"
+    }
+  },
+  "mount": {
+    "modeFootnote": "切换后需重启生效。",
+    "tmpfsFootnote": "仅影响完整兼容与热挂载临时层；切换后需重启。换路径不能替代 umount 隐藏。",
+    "modes": {
+      "compatible": {
+        "label": "完整兼容",
+        "short": "兼容",
+        "meta": "运行时整库 bind，适用 Magisk / KernelSU / APatch",
+        "helpTitle": "完整兼容（默认）",
+        "helpBody": "运行时整库合并后绑定，不写 system 叠层。不依赖 Magic Mount 元模块。"
+      },
+      "magic": {
+        "label": "轻量 Magic",
+        "short": "轻量",
+        "meta": "仅叠附加证书；Android 14+ 仍对 APEX 做脚本注入",
+        "helpTitle": "轻量 Magic Mount",
+        "helpBody": "只把启用的附加证书叠进系统信任库。"
+      }
+    },
+    "roots": {
+      "magisk": "DenyList + NoHello / ZygiskNext；脚本 bind 需 NoHello point 规则",
+      "kernelsu": "建议 SuSFS 或 ZygiskNext/ReZygisk umount；需 path_umount",
+      "apatch": "排除修改 + NoHello / ZygiskNext（apd 无路径登记 API）"
+    },
+    "experimental14": {
+      "footnote": "仅 Android 14+ 生效，与挂载模式正交；7–13 忽略。切换后需重启。",
+      "skip": {
+        "label": "跳过 system",
+        "meta": "默认：Android 14+ 不挂载 /system 证书路径，只脚本注入 APEX"
+      },
+      "auto": {
+        "label": "挂载 system",
+        "meta": "按上方挂载模式处理 system（兼容 bind / Magic 叠层）"
+      }
+    },
+    "tmpfs": {
+      "dev": {
+        "label": "Dev 路径",
+        "meta": "默认：/dev/.fs*，避开 local/tmp 关键词",
+        "helpTitle": "Dev 路径（默认）"
+      },
+      "mnt": {
+        "label": "Mnt 路径",
+        "meta": "/mnt 下短名临时层",
+        "helpTitle": "Mnt 路径"
+      },
+      "short": {
+        "label": "短路径",
+        "meta": "local/tmp 下的 .fs0 / .fs1",
+        "helpTitle": "短路径"
+      },
+      "legacy": {
+        "label": "传统路径",
+        "meta": "可读旧路径，便于排障",
+        "helpTitle": "传统路径"
+      }
+    },
+    "providers": {
+      "susfs": "SuSFS try_umount",
+      "rezygisk": "ReZygisk",
+      "neozygisk": "NeoZygisk",
+      "zygisknext": "ZygiskNext",
+      "shamiko": "Shamiko",
+      "zygiskAssistant": "Zygisk Assistant",
+      "nohello": "NoHello",
+      "magiskDenylist": "Magisk 排除列表",
+      "ksuUmount": "KernelSU 卸载模块",
+      "apatchExclude": "APatch 排除修改",
+      "none": "未检测到"
+    }
+  },
+  "about": {
+    "title": "关于证书桥",
+    "linksTitle": "链接",
+    "links": {
+      "docs": "使用指南",
+      "repo": "开源仓库",
+      "coolapk": "酷安主页",
+      "reqable": "Reqable 官网",
+      "proxypin": "ProxyPin 仓库"
+    },
+    "tip": {
+      "title": "打赏作者",
+      "body": "{{author}} · 微信 / 支付宝。如果证书桥帮到了你，欢迎请作者喝杯奶茶。",
+      "wechat": "微信支付",
+      "alipay": "支付宝",
+      "wechatAlt": "微信收款码",
+      "alipayAlt": "支付宝收款码"
+    },
+    "labels": {
+      "version": "版本",
+      "device": "设备",
+      "system": "系统",
+      "mount": "挂载模式",
+      "tmpfs": "临时路径",
+      "installMode": "安装方案",
+      "webui": "WebUI 组件",
+      "hot": "热挂载组件",
+      "hide": "挂载隐藏协助",
+      "zygisk": "Zygisk 挂载过滤"
+    },
+    "values": {
+      "installed": "已安装",
+      "notInstalled": "未安装",
+      "defaultInstall": "默认安装",
+      "customInstall": "自定义安装"
+    },
+    "groups": {
+      "env": "环境",
+      "runtime": "运行环境",
+      "config": "配置",
+      "components": "组件",
+      "componentStatus": "组件状态"
+    }
+  },
+  "update": {
+    "errors": {
+      "missingUrl": "缺少下载地址",
+      "downloadFailed": "下载失败",
+      "installFailed": "安装失败：CLI 与打开管理器均未成功"
+    }
+  },
+  "more": {
+    "appearanceTitle": "外观",
+    "appearanceMeta": "主题、深浅色、强调色",
+    "aboutTitle": "关于",
+    "hubMeta": "外观、挂载与更新",
+    "mountTitle": "挂载与注入",
+    "mountMeta": "模式、路径、简介",
+    "navTitle": "导航",
+    "navMeta": "底栏页面",
+    "showHideTitle": "显示「隐藏」页",
+    "showHideDesc": "关闭后底栏不显示",
+    "quietTitle": "模块简介",
+    "quietMeta": "动态模块描述；默认开启",
+    "quietRow": "动态简介",
+    "fontSize": "字号",
+    "tmpfsPath": "临时挂载路径",
+    "mountMode": "证书挂载模式",
+    "android14System": "Android 14+ system 路径",
+    "quietOn": "已开启动态简介：管理器列表将显示运行状态",
+    "quietOff": "已关闭动态简介：管理器列表保持中性文案",
+    "mountSaved": "兼容策略已更新，重启后生效",
+    "mountRestored": "兼容策略已恢复为当前生效配置",
+    "tmpfsSaved": "临时路径风格已更新，重启后生效",
+    "tmpfsRestored": "临时路径风格已恢复为当前生效配置",
+    "systemSaved": "已设为挂载 system，重启后生效",
+    "systemSkipSaved": "已设为跳过 system，重启后生效",
+    "systemRestored": "system 策略已恢复为当前生效配置",
+    "mountConfig": {
+      "modeFootnote": "切换后需重启生效。",
+      "tmpfsFootnote": "仅影响完整兼容与热挂载临时层；换路径不能替代 umount。",
+      "systemFootnote": "仅 Android 14+ 生效，与挂载模式正交；切换后需重启。",
+      "mode": {
+        "compatible": {
+          "label": "完整兼容",
+          "meta": "运行时整库 bind，适用 Magisk / KernelSU / APatch"
+        },
+        "magic": {
+          "label": "轻量 Magic",
+          "meta": "仅叠附加证书；Android 14+ 仍脚本注入 APEX"
+        }
+      },
+      "tmpfs": {
+        "dev": "Dev 路径",
+        "mnt": "Mnt 路径",
+        "short": "短路径",
+        "legacy": "传统路径"
+      },
+      "system": {
+        "skip": {
+          "label": "跳过 system",
+          "meta": "默认：Android 14+ 仅脚本注入 APEX"
+        },
+        "auto": {
+          "label": "挂载 system",
+          "meta": "按上方挂载模式处理 system"
+        }
+      },
+      "root": {
+        "magisk": {
+          "name": "Magisk",
+          "note": "DenyList + NoHello / ZygiskNext；脚本 bind 需 NoHello point 规则"
+        },
+        "kernelsu": {
+          "name": "KernelSU",
+          "note": "建议 SuSFS 或 ZygiskNext/ReZygisk umount；需 path_umount"
+        },
+        "apatch": {
+          "name": "APatch",
+          "note": "排除修改 + NoHello / ZygiskNext；apd 无路径登记 API"
+        }
+      }
+    },
+    "update": {
+      "title": "更新通道",
+      "meta": "正式走 Pages；CI 清单与 zip 位于 ci-dist。管理器更新始终跟随正式通道。",
+      "checked": "检查完成",
+      "ciConfirm": "切换到 CI？\n开发构建可能不稳定，仅建议排查问题或尝鲜。",
+      "noPackage": "没有可安装的包",
+      "installFailed": "安装失败",
+      "flashed": "已刷入模块",
+      "managerOpened": "已打开管理器，请确认安装",
+      "download": "正在下载",
+      "write": "正在写入",
+      "install": "正在安装",
+      "manager": "打开管理器",
+      "downloadBusy": "下载中…",
+      "writeBusy": "写入中…",
+      "installBusy": "安装中…",
+      "managerBusy": "打开中…",
+      "downloadInstall": "下载并安装",
+      "switchInstall": "切换安装",
+      "cdnTitle": "CI 经 jsDelivr 拉取",
+      "cdnDesc": "默认关；失败会回退 GitHub raw",
+      "channels": {
+        "stable": {
+          "label": "正式",
+          "hint": "推荐大多数用户；与管理器在线更新一致"
+        },
+        "ci": {
+          "label": "CI",
+          "hint": "开发构建，可能不稳定"
+        }
+      },
+      "versions": "本地 / 远端：{{versions}}",
+      "updateReady": "有新版本可安装",
+      "switchReady": "可切换安装当前通道版本",
+      "stableNewer": "正式通道已有更新：{{version}}",
+      "check": "检查更新"
+    }
+  },
+  "toast": {
+    "toggleOn": "已开启，重启后生效",
+    "toggleOff": "已关闭，重启后移除",
+    "toggleOnMatch": "已开启（与当前一致）",
+    "toggleOffMatch": "已关闭（与当前一致）",
+    "mountUpdated": "挂载已更新，重启生效",
+    "mountMatch": "已恢复为当前生效配置",
+    "styleUpdated": "路径风格已更新，重启生效",
+    "styleMatch": "已恢复为当前生效配置",
+    "e14Updated": "system 策略已更新，重启生效",
+    "e14Match": "已恢复为当前生效配置",
+    "syncUpdatedReboot": "已从 App 更新 {{count}} 张证书（含可选自定义），重启后生效",
+    "syncUpdated": "已从 App 更新 {{count}} 张证书（含可选自定义）",
+    "syncNone": "未从 App 读到新证书（已保留现有）",
+    "statusLive": "已复核注入状态",
+    "statusOk": "状态已刷新",
+    "rebooting": "正在重启…"
+  }
+}

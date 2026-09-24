@@ -1,8 +1,15 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { dismissSnack, getSnack, subscribeSnack } from "@/shared/lib/snack";
 
-const HOLD_MS = 2400;
-const EXIT_MS = 320;
+const HOLD_MS = 2600;
+const EXIT_MS = 280;
+
+const TONE_MARK: Record<string, string> = {
+  ok: "✓",
+  warn: "!",
+  bad: "×",
+  info: "i",
+};
 
 export function AppSnackbar() {
   const snack = useSyncExternalStore(subscribeSnack, getSnack, () => null);
@@ -26,6 +33,8 @@ export function AppSnackbar() {
 
   if (!snack) return null;
 
+  const mark = TONE_MARK[snack.tone] || TONE_MARK.info;
+
   return (
     <button
       type="button"
@@ -35,7 +44,10 @@ export function AppSnackbar() {
         window.setTimeout(() => dismissSnack(), EXIT_MS);
       }}
     >
-      {snack.text}
+      <span className="bf-snackbar__mark" aria-hidden>
+        {mark}
+      </span>
+      <span className="bf-snackbar__text">{snack.text}</span>
     </button>
   );
 }

@@ -41,33 +41,6 @@ ssize_t (*orig_pread64)(int, void *, size_t, off64_t) = nullptr;
 ssize_t (*orig_readlink)(const char *, char *, size_t) = nullptr;
 ssize_t (*orig_readlinkat)(int, const char *, char *, size_t) = nullptr;
 
-bool conf_key_is_one(const char *buf, const char *key) {
-  if (!buf || !key) return false;
-  const size_t key_len = std::strlen(key);
-  const char *p = buf;
-  while (*p) {
-    if ((p == buf || p[-1] == '\n') && std::strncmp(p, key, key_len) == 0 && p[key_len] == '=') {
-      return p[key_len + 1] == '1';
-    }
-    const char *nl = std::strchr(p, '\n');
-    if (!nl) break;
-    p = nl + 1;
-  }
-  return false;
-}
-
-bool read_conf_zn_hide_allow(int moddir_fd) {
-  if (moddir_fd < 0) return false;
-  int fd = openat(moddir_fd, "config/certs.conf", O_RDONLY | O_CLOEXEC);
-  if (fd < 0) return false;
-  char buf[4096];
-  ssize_t n = ::read(fd, buf, sizeof(buf) - 1);
-  ::close(fd);
-  if (n <= 0) return false;
-  buf[n] = '\0';
-  return conf_key_is_one(buf, "zn_hide_allow");
-}
-
 bool find_libc(dev_t *dev, ino_t *inode) {
   // 挂钩安装前直接读 maps，避免依赖已被替换的 open
   FILE *fp = fopen("/proc/self/maps", "re");
@@ -373,7 +346,7 @@ class CertBridgeHideModule : public ModuleBase {
     if (modfd < 0) return;
     cb_hide::load_whitelist_from_moddir(modfd);
     if (cb_hide::is_capture_whitelist(proc)) return;
-    if (!read_conf_zn_hide_allow(modfd)) return;
+    if (!cb_hide::read_zn_hide_allow(modfd)) return;
 
     should_hook = true;
   }

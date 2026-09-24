@@ -107,7 +107,6 @@ import_optional_app_preset() {
   echo "kind=$kind"
   echo "file=$name"
   echo "path=$live"
-  echo "pending_reboot=1"
   [ -n "$pending_line" ] && echo "$pending_line"
   return 0
 }

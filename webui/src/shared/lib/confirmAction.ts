@@ -1,3 +1,4 @@
+import i18n from "@/shared/i18n";
 import { haptic } from "@/shared/lib/haptic";
 
 export type ConfirmActionOptions = {
@@ -32,7 +33,7 @@ export function confirmAction(options: ConfirmActionOptions) {
   return new Promise<void>((resolve) => {
     const request: ConfirmRequest = {
       ...options,
-      cancelText: options.cancelText || "取消",
+      cancelText: options.cancelText || i18n.t("ui.cancel"),
       id,
       resolve: () => {
         if (current?.id !== id) return;

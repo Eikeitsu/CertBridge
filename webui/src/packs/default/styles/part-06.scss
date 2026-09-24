@@ -1,0 +1,20 @@
+/* textarea 的 width:auto 会按 cols 收缩，手机端只剩一小条；强制铺满卡片内容区 */
+.pk-def-shell .bf-card > .bf-textarea,
+.pk-def-shell .bf-card > textarea {
+  display: block;
+  width: 100%;
+}
+
+.pk-def-shell .bf-bullet-list > li {
+  padding-left: 1.15rem;
+}
+
+.pk-def-shell .bf-segment--stack .bf-segment__option {
+  min-height: 44px;
+  padding: 10px 12px;
+}
+
+.pk-def-shell .bf-hide-switch-card {
+  padding: 12px 14px;
+  min-height: 52px;
+}

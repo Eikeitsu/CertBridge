@@ -1,17 +1,66 @@
 #!/system/bin/sh
 # 已安装抓包 App 的 CA 路径探测（不含导入 / 解析）
+#
+# 安装脚本与 WebUI/CLI 共用本文件。
+# 差异仅在于进程 mount ns：安装多在全局 ns 可直接读；
+# WebUI 常在隔离 ns，需经 init ns 探测/拷出（ensure_readable_cert_file）。
+
+_app_cert_in_init_ns() {
+  p="$1"
+  [ -n "$p" ] || return 1
+  command -v nsenter >/dev/null 2>&1 || return 1
+  [ -d /proc/1/ns/mnt ] || return 1
+  nsenter --mount=/proc/1/ns/mnt -- test -f "$p" 2>/dev/null
+}
+
+# 保证当前 ns 可读：本 ns 直接返回；否则从 init ns 拷到外部目录
+ensure_readable_cert_file() {
+  src="$1"
+  [ -n "$src" ] || return 1
+  if [ -f "$src" ] && [ -r "$src" ]; then
+    echo "$src"
+    return 0
+  fi
+  # status 热路径可关 init 探测
+  [ "${_APP_CERT_TRY_INIT_NS:-1}" != "0" ] || return 1
+  _app_cert_in_init_ns "$src" || return 1
+  probe_dir="${CB_EXT_DIR:-/data/adb/certbridge}/live_probe"
+  mkdir -p "$probe_dir" 2>/dev/null || {
+    probe_dir="${DATADIR:-/data/local/tmp}/live_probe"
+    mkdir -p "$probe_dir" 2>/dev/null || return 1
+  }
+  tag=$(echo "$src" | cksum 2>/dev/null | awk '{print $1}')
+  [ -n "$tag" ] || tag="x"
+  dest="$probe_dir/ns_${tag}.crt"
+  nsenter --mount=/proc/1/ns/mnt -- cat "$src" >"$dest" 2>/dev/null || {
+    rm -f "$dest"
+    return 1
+  }
+  [ -s "$dest" ] || {
+    rm -f "$dest"
+    return 1
+  }
+  chmod 0644 "$dest" 2>/dev/null
+  echo "$dest"
+}
 
 _app_cert_first_existing() {
   for p in "$@"; do
     [ -n "$p" ] || continue
-    [ -f "$p" ] && { echo "$p"; return 0; }
+    if readable=$(ensure_readable_cert_file "$p" 2>/dev/null); then
+      echo "$readable"
+      return 0
+    fi
   done
   return 1
 }
 
 # 查找已安装抓包 App 导出的 CA 路径
+# try_init_ns：1=本 ns 没有时经 init mount ns 再探（WebUI 需要）；0=仅本 ns（status 轻量）
 find_live_app_cert() {
   kind="$1"
+  try_init_ns="${2:-1}"
+  _APP_CERT_TRY_INIT_NS="$try_init_ns"
   case "$kind" in
     reqable)
       _app_cert_first_existing \
@@ -39,7 +88,6 @@ find_live_app_cert() {
         "/data/data/com.guoshi.httpcanary.premium/cache/HttpCanary.pem"
       ;;
     adguard)
-      # 包名路径里的 adg 是第三方目录名，kind 统一用 adguard
       if path=$(_app_cert_first_existing \
         "/data/user/0/com.adguard.android/files/ca.crt" \
         "/data/user/0/com.adguard.android/files/certificate.crt" \
@@ -66,7 +114,6 @@ find_live_app_cert() {
       return 1
       ;;
     charles)
-      # 多为用户导出到下载目录；亦试常见自定义路径
       _app_cert_first_existing \
         "/storage/emulated/0/Download/charles-ssl-proxying-certificate.pem" \
         "/storage/emulated/0/Download/charles-proxy-ssl-proxying-certificate.pem" \
@@ -112,7 +159,6 @@ app_cert_label() {
   esac
 }
 
-# 可作为「自定义导入预设」探测的 kind（不含 Reqable/ProxyPin 源开关）
 optional_custom_app_kinds() {
   echo "httpcanary adguard charles mitmproxy pcapdroid"
 }

@@ -1,3 +1,4 @@
+import i18n from "@/shared/i18n";
 import { PATHS } from "@/shared/config/paths";
 import { exec } from "@/shared/api/ksu";
 import { parseKv } from "@/shared/lib/parse";
@@ -31,10 +32,18 @@ export async function cli(args: string, timeoutMs?: number): Promise<ExecResult>
   return exec(`sh '${PATHS.CLI}' ${args}`, timeoutMs);
 }
 
-export async function fetchStatus(live = false): Promise<ModuleStatus> {
+export async function fetchStatus(
+  liveOrMode: boolean | "quick" | "live" = false,
+): Promise<ModuleStatus> {
+  const mode =
+    liveOrMode === true || liveOrMode === "live"
+      ? "live"
+      : liveOrMode === "quick"
+        ? "quick"
+        : "full";
   const result = await cli(
-    live ? "status --live" : "status",
-    live ? CLI_TIMEOUT_MS.IMPORT : undefined,
+    mode === "live" ? "status --live" : mode === "quick" ? "status --quick" : "status",
+    mode === "live" ? CLI_TIMEOUT_MS.IMPORT : undefined,
   );
   if (result.errno !== 0 && !result.stdout) {
     throw new Error(result.stderr || "status_failed");
@@ -58,7 +67,7 @@ export async function listCustom(): Promise<CustomCertificate[]> {
 }
 
 export async function toggleBuiltin(kind: BuiltinCertKind, value: FlagValue) {
-  return cli(`toggle ${kind} ${value}`);
+  return cli(`toggle ${kind} ${value}`, CLI_TIMEOUT_MS.TOGGLE);
 }
 
 export async function syncAppSources(): Promise<{
@@ -168,6 +177,10 @@ export async function setServiceProbe(value: FlagValue) {
   return cli(`set_service_probe ${value}`);
 }
 
+export async function setUiLang(value: "system" | "zh-CN" | "en") {
+  return cli(`set_ui_lang ${value}`);
+}
+
 function textToBase64(text: string): string {
   const bytes = new TextEncoder().encode(text);
   let binary = "";
@@ -231,7 +244,8 @@ export async function rebootDevice() {
 export async function fetchDeviceInfo(): Promise<DeviceInfo> {
   const result = await exec(DEVICE_INFO_SHELL);
   if (result.errno === -1 && /no_bridge|no_ksu_bridge/.test(result.stderr || "")) {
-    return { label: "未检测到 WebUI 桥接", name: "未检测到 WebUI 桥接" };
+    const noBridge = i18n.t("ui.noBridge", { ns: "webui" });
+    return { label: noBridge, name: noBridge };
   }
   return formatDeviceInfo(result.stdout);
 }

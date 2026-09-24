@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { refreshStatus, requestReboot } from "@/features/status/model/statusSlice";
 import { selectStatusRefreshing } from "@/features/status/model/selectors";
@@ -15,6 +16,7 @@ export function OverviewActions({
   rebootLabel,
   blockPrimary,
 }: OverviewActionsProps) {
+  const { t } = useTranslation("webui");
   const dispatch = useAppDispatch();
   const isRefreshing = useAppSelector(selectStatusRefreshing);
 
@@ -33,8 +35,8 @@ export function OverviewActions({
         className={blockPrimary ? "bf-btn--block" : ""}
         onClick={() =>
           confirmAction({
-            title: "确认重启设备？",
-            content: "重启后应用永久证书变更并清理临时层。",
+            title: t("overview.rebootConfirmTitle"),
+            content: t("overview.rebootConfirmBody"),
             okText: rebootLabel,
             danger: true,
             onOk: () => dispatch(requestReboot()),

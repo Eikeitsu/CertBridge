@@ -7,6 +7,7 @@ import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
 import { selectResolvedTheme } from "@/features/theme/model/selectors";
 import {
   selectDeviceLabel,
+  selectStatusLoading,
   selectStatusRefreshing,
 } from "@/features/status/model/selectors";
 import { TabName } from "@/entities/module/enums";
@@ -25,9 +26,10 @@ import { AppTabPane } from "./AppTabPane";
 export function AppShell() {
   const deviceLabel = useAppSelector(selectDeviceLabel);
   const isRefreshing = useAppSelector(selectStatusRefreshing);
+  const isLoading = useAppSelector(selectStatusLoading);
   const resolvedTheme = useAppSelector(selectResolvedTheme);
   const { activeTab, switchTab } = useActiveTab();
-  const { tabs, hideSupported } = useVisibleTabs();
+  const { tabs, showHideTab } = useVisibleTabs();
   const { voice } = usePackVoice();
   const [seen, setSeen] = useState<Partial<Record<TabName, boolean>>>(() => ({
     [activeTab]: true,
@@ -49,14 +51,12 @@ export function AppShell() {
   }, [activeTab]);
 
   useEffect(() => {
-    if (!hideSupported && activeTab === TabName.Hide) {
-      switchTab(TabName.Home);
-    }
-  }, [hideSupported, activeTab, switchTab]);
+    if (!showHideTab && activeTab === TabName.Hide) switchTab(TabName.Home);
+  }, [showHideTab, activeTab, switchTab]);
 
   return (
     <div className="bf-shell">
-      <AppProgressBar active={isRefreshing} />
+      <AppProgressBar active={isRefreshing || isLoading} />
       <AppTopbar
         brand={voice.brand}
         pageTitle={voice.tabs[activeTab]}
@@ -78,7 +78,7 @@ export function AppShell() {
         <AppTabPane tab={TabName.Log} activeTab={activeTab} seen={!!seen[TabName.Log]}>
           <LogPage />
         </AppTabPane>
-        {hideSupported ? (
+        {showHideTab ? (
           <AppTabPane
             tab={TabName.Hide}
             activeTab={activeTab}

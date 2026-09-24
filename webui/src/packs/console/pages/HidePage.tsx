@@ -12,9 +12,10 @@ import { CaptureChecklistCard } from "@/features/hide/ui/CaptureChecklistCard";
 import { ZnWhitelistEditor } from "@/features/hide/ui/ZnWhitelistEditor";
 import { HideExperimentPanel } from "@/features/hide/ui/HideExperimentPanel";
 import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
-import { CONSOLE_VOICE } from "../voice";
+import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
 
 export function ConsoleHidePage() {
+  const chrome = usePackChrome();
   const hide = useHideAllow();
   const zn = useZnHideAllow();
   const status = useAppSelector(selectModuleStatus);
@@ -24,8 +25,8 @@ export function ConsoleHidePage() {
 
   return (
     <div className="pk-con-page">
-      <pre className="pk-con-banner">{`# ${CONSOLE_VOICE.hide.title}
-# ${CONSOLE_VOICE.hide.sub}`}</pre>
+      <pre className="pk-con-banner">{`# ${chrome.hide.title}
+# ${chrome.hide.sub}`}</pre>
       <HideCaptureWarning title={h.captureTitle} meta={h.captureMeta} banner />
       <CaptureChecklistCard
         title={h.checklistTitle}

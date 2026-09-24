@@ -1,8 +1,40 @@
 # 更新日志
 
+## v4.3.1
+
+- **WebUI 性能**：首屏 `status --quick`；证书开关不再全量刷新且简介后台写；切语言用 startTransition
+- **多语言**：首页信任态 / 流水线 / 环境卡 / 日志空态等硬编码中文接入 i18n
+
+## v4.3.0
+
+- **国际化**：共享 `locales/` 文案；WebUI i18next；安装/简介跟随系统语言（非中英回落英语）
+- **首屏**：仅品牌字 + 细进度条，去掉「正在加载」文案与大转圈
+- **安装询问**：音量键提示改为短句
+- **仓库整理**：`scripts/` / `tools/` / `docs-dev/` / `legacy/`；changelog 中英双文件
+
+## v4.2.2
+
+- **产物后缀**：32 位 ARM 包由 `*_arm.zip` / `CertBridge_arm.zip` 改为 `*_arm32.zip` / `CertBridge_arm32.zip`（armeabi-v7a）；`OPENSSL_ABIS=arm` 仍兼容
+- **待重启提示**：证书开关 / 挂载模式 / 跳过 system / 路径风格等改回与开机生效快照一致时，清除「待重启」状态与主页提示
+- **CI**：Release 的版本号改为高于发版时最新的 CI 版本号
+
+## v4.2.1
+
+> 为了减小模块体积，从 **4.2.1** 开始按架构分包
+>
+> 多数人一般安装 `arm64` 架构的模块即可，模拟器虚拟机请自行选择合适的架构
+
+- **按架构分包**：完整版默认 4 包 `*_arm64.zip` / `*_arm.zip` / `*_x86.zip` / `*_x64.zip`；另有 lite。`updateJson` / ci-dist 默认 `CertBridge_arm64.zip`。旧式合包 `PACKAGE_FAT=1` → `*_fat.zip`
+- **证书开关（简化）**：关=只写 `user.conf`；开=本地有证或按**与安装相同**的 App 路径导入；证书常驻 `/data/adb/certbridge/addon-sources/`
+- **CLI**：入口安装到 `/data/adb/certbridge/cb`（模块外）
+- **WebUI**：首屏内联 loading + 主题色，CSS 先于 JS，先进壳层再拉 status；更多页拆「外观」「挂载与注入」并支持「显示隐藏页」；统一底部抽屉动画；Toast / 开关交互与底栏 Tab 稳定性改进
+- **文档重写**：按当前模块能力重写使用手册
+- **CI / 工程**：Node 24；同提交改 Web 时打包门控；`INPUT_DIGEST` 去重；Lint 并行 web/shell/tooling；发版可晋升 ci-dist；接入 `setup-ndk-clang`；Lint/Format 覆盖 Python / Java / C/C++（有 native 时）
+
 ## v4.2.0
 
 > 解决了春秋检测词条：Found ksu/免解设备
+>
 > 如果依然还有该检测词条，请检查是否使用了其它 mount 模块
 
 - **冷门实验默认痕迹最少**：`boot_bind_zygote` / `boot_multi_apex` / `service_probe` 默认均为 `0`；证书异常时再在「冷门实验」打开兼容项。升级若已有旧值会保留
@@ -91,7 +123,7 @@
 - WebUI「更多」可切换挂载模式，并说明 Magisk / KernelSU 与挂载元模块关系
 - 开机注入与热挂载的临时层改到 `/data/local/tmp/sys-ca-merge{,-hot}`，降低 mountinfo 中的模块路径暴露
 - 发版时自动将 `changelog.md` 的 `Unreleased` 提升为版本号；文档站两份 changelog **不含 Unreleased**
-- 发版约定见 `tooling/RELEASE.md`
+- 发版约定见 `docs-dev/RELEASE.md`
 
 ## v2.0.0
 

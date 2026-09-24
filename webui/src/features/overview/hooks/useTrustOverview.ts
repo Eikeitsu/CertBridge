@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useAppSelector } from "@/app/store/hooks";
 import {
   selectCustomCertificates,
@@ -14,7 +15,7 @@ import { isFlagOn } from "@/shared/lib/flag";
 import { EMPTY_PLACEHOLDER } from "@/shared/config/constants";
 import { BUILTIN_CERTS, builtinStatusKeys } from "@/shared/config/certs";
 import { MOUNT_MODES, TMPFS_STYLES } from "@/shared/config/mount";
-import { DEFAULT_STATUS_DESC } from "../lib/labels";
+import { defaultStatusDesc, resolveApexLabel, resolveHotLabel } from "../lib/labels";
 import { parseEnum } from "@/shared/lib/enum";
 import {
   BuiltinCertKind,
@@ -22,7 +23,6 @@ import {
   TmpfsStyle,
   TrustTone,
 } from "@/entities/module/enums";
-import { resolveApexLabel, resolveHotLabel } from "../lib/labels";
 
 export type BuiltinPipelineRow = {
   kind: BuiltinCertKind;
@@ -34,6 +34,7 @@ export type BuiltinPipelineRow = {
 };
 
 export function useTrustOverview() {
+  const { t } = useTranslation("webui");
   const status = useAppSelector(selectModuleStatus);
   const customCertificates = useAppSelector(selectCustomCertificates);
   const deviceLabel = useAppSelector(selectDeviceLabel);
@@ -48,9 +49,7 @@ export function useTrustOverview() {
       return {
         tone: TrustTone.Idle,
         title: statusError,
-        hint: isBridge
-          ? "请用 SukiSU / KernelSU / MMRL 等管理器打开本模块 WebUI"
-          : "可点「刷新复核」重试；若反复失败请查看日志",
+        hint: isBridge ? t("overview.bridgeHint") : t("overview.retryHint"),
       };
     }
     const statusReady =
@@ -64,12 +63,12 @@ export function useTrustOverview() {
     if (isLoading && !statusReady) {
       return {
         tone: TrustTone.Idle,
-        title: "检测中…",
-        hint: "正在读取模块状态",
+        title: t("overview.checking"),
+        hint: t("overview.checkingHint"),
       };
     }
     return resolveTrustLabel(status);
-  }, [status, statusError, isLoading]);
+  }, [status, statusError, isLoading, t]);
 
   const activeCount = Number(status.active_count || 0);
   const customCount = Number(status.custom_count || customCertificates.length || 0);
@@ -100,11 +99,11 @@ export function useTrustOverview() {
       const enabled = isFlagOn(status[keys.enabled]);
       const active = isFlagOn(status[keys.active]);
       const available = isFlagOn(status[keys.available]);
-      let stateLabel = "未检测到";
-      if (enabled && active) stateLabel = "已应用";
-      else if (enabled && !active) stateLabel = "待重启写入";
-      else if (!enabled && active) stateLabel = "仍在生效";
-      else if (available) stateLabel = "可用未启用";
+      let stateLabel = t("overview.stateMissing");
+      if (enabled && active) stateLabel = t("overview.stateApplied");
+      else if (enabled && !active) stateLabel = t("overview.statePendingWrite");
+      else if (!enabled && active) stateLabel = t("overview.stateStillActive");
+      else if (available) stateLabel = t("overview.stateReadyOff");
       return {
         kind: cert.kind,
         title: status[keys.title] || status[keys.display] || cert.fallbackTitle,
@@ -114,7 +113,7 @@ export function useTrustOverview() {
         stateLabel,
       };
     });
-  }, [status]);
+  }, [status, t]);
 
   const trustScore = useMemo(() => {
     if (statusError || isDisabled) return 12;
@@ -135,6 +134,7 @@ export function useTrustOverview() {
 
   const mountMode = parseEnum(MountMode, status.mount_mode, MountMode.Compatible);
   const tmpfsStyle = parseEnum(TmpfsStyle, status.tmpfs_style, TmpfsStyle.Dev);
+  const deviceFallback = t("overview.deviceFallback");
 
   return {
     status,
@@ -150,15 +150,14 @@ export function useTrustOverview() {
     isHotStale,
     isHotAllow,
     trustScore,
-    deviceLabel: deviceLabel || "本机",
-    /** 运行环境「设备」：仅机型，不含厂商系统名 */
-    deviceName: deviceName || deviceLabel || "本机",
+    deviceLabel: deviceLabel || deviceFallback,
+    deviceName: deviceName || deviceLabel || deviceFallback,
     rootLabel: status.root || EMPTY_PLACEHOLDER,
     apexLabel: resolveApexLabel(status.apex_ok),
-    mountModeLabel: MOUNT_MODES[mountMode].shortLabel,
-    mountModeMeta: MOUNT_MODES[mountMode].meta,
-    tmpfsLabel: TMPFS_STYLES[tmpfsStyle].label,
-    tmpfsMeta: TMPFS_STYLES[tmpfsStyle].meta,
+    mountModeLabel: t(MOUNT_MODES[mountMode].shortLabelKey),
+    mountModeMeta: t(MOUNT_MODES[mountMode].metaKey),
+    tmpfsLabel: t(TMPFS_STYLES[tmpfsStyle].labelKey),
+    tmpfsMeta: t(TMPFS_STYLES[tmpfsStyle].metaKey),
     androidLabel: status.release
       ? `Android ${status.release}${status.api ? ` · API ${status.api}` : ""}`
       : EMPTY_PLACEHOLDER,
@@ -174,7 +173,7 @@ export function useTrustOverview() {
     builtinPipeline,
     baselineCount: status.base_count || EMPTY_PLACEHOLDER,
     storeCount: status.store_count || EMPTY_PLACEHOLDER,
-    description: status.desc_body || DEFAULT_STATUS_DESC,
+    description: status.desc_body || defaultStatusDesc(),
     shortDesc: status.desc_short || trust.title,
     injectDiagnosis: isFlagOn(status.inject_error)
       ? {

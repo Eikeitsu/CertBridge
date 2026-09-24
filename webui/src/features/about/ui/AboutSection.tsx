@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Card } from "@/shared/ui/primitives";
 import { AboutHero } from "./AboutHero";
 import { AboutModuleInfo } from "./AboutModuleInfo";
@@ -13,17 +14,20 @@ type AboutSectionProps = {
 };
 
 export function AboutSection({
-  title = "关于证书桥",
+  title,
   layout,
   heroEmphasis,
   surface = "card",
 }: AboutSectionProps) {
+  const { t } = useTranslation("webui");
   const resolved = layout ?? (heroEmphasis ? "dashboard" : "dashboard");
+  const resolvedTitle = title ?? t("about.title");
 
   if (resolved === "terminal") {
     return (
       <div className="bf-about bf-about--terminal">
         <section className="pk-con-block">
+          {/* terminal chrome stays English by design */}
           <div className="pk-con-block__head">about</div>
           <div className="bf-about-hero-wrap">
             <AboutHero />
@@ -39,7 +43,7 @@ export function AboutSection({
     return (
       <div className="bf-about bf-about--ops">
         <section className="pk-ops-panel">
-          <h3 className="pk-ops-panel__title">{title}</h3>
+          <h3 className="pk-ops-panel__title">{resolvedTitle}</h3>
           <AboutHero />
           <AboutModuleInfo variant="rail" />
         </section>
@@ -53,7 +57,7 @@ export function AboutSection({
       <div className="bf-about-hero-block">
         <AboutHero large />
       </div>
-      <Card title={title} surface={surface}>
+      <Card title={resolvedTitle} surface={surface}>
         <AboutModuleInfo variant="tiles" />
       </Card>
       <AboutLinksCard variant="dashboard" />

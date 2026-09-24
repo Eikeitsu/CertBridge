@@ -49,6 +49,13 @@ import_ca_into_dir() {
   src="$1"
   dest_dir="$2"
   fallback_name="${3:-CA 证书}"
+  # 路径可能仅在 init mount ns 可见（WebUI exec 隔离 ns）
+  if [ ! -f "$src" ] || [ ! -r "$src" ]; then
+    src=$(ensure_readable_cert_file "$src") || {
+      echo "文件不存在" >&2
+      return 1
+    }
+  fi
   [ -f "$src" ] || {
     echo "文件不存在" >&2
     return 1

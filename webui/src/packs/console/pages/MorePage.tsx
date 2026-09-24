@@ -1,54 +1,73 @@
-import { useMountMode } from "@/features/settings/hooks/useMountMode";
-import { useExperimental14System } from "@/features/settings/hooks/useExperimental14System";
-import { useTmpfsStyle } from "@/features/settings/hooks/useTmpfsStyle";
-import { useQuietProp } from "@/features/settings/hooks/useQuietProp";
+import { useState } from "react";
 import { AppearancePanel } from "@/features/settings/ui/appearance/AppearancePanel";
-import { MountModePanel } from "@/features/settings/ui/MountModePanel";
-import { Experimental14SystemPanel } from "@/features/settings/ui/Experimental14SystemPanel";
-import { QuietPropPanel } from "@/features/settings/ui/QuietPropPanel";
-import { TmpfsPathPanel } from "@/features/settings/ui/TmpfsPathPanel";
 import { UpdateChannelPanel } from "@/features/settings/ui/UpdateChannelPanel";
 import { AboutSection } from "@/features/about/ui/AboutSection";
-import { CONSOLE_VOICE } from "../voice";
+import { MoreNavRow, MoreSubHeader } from "@/features/settings/ui/MoreNav";
+import { ShowHideTabCard } from "@/features/settings/ui/ShowHideTabCard";
+import { MountInjectPanels } from "@/features/settings/ui/MountInjectPanels";
+import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
+import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
+
+type MoreView = "hub" | "appearance" | "mount";
 
 export function ConsoleMorePage() {
-  const mount = useMountMode();
-  const experimental14 = useExperimental14System();
-  const tmpfs = useTmpfsStyle();
-  const quiet = useQuietProp();
-  const v = CONSOLE_VOICE.more;
+  const chrome = usePackChrome();
+  const { voice } = usePackVoice();
+  const m = voice.more;
+  const v = chrome.more;
+  const [view, setView] = useState<MoreView>("hub");
+
+  if (view === "appearance") {
+    return (
+      <div className="pk-con-page">
+        <MoreSubHeader
+          title={m.appearanceTitle}
+          backLabel={chrome.tabs.more}
+          onBack={() => setView("hub")}
+        />
+        <AppearancePanel
+          title={m.appearanceTitle}
+          meta={m.appearanceMeta}
+          surface="plain"
+        />
+      </div>
+    );
+  }
+
+  if (view === "mount") {
+    return (
+      <div className="pk-con-page">
+        <MoreSubHeader
+          title={m.mountTitle}
+          backLabel={chrome.tabs.more}
+          onBack={() => setView("hub")}
+        />
+        <MountInjectPanels dense surface="plain" />
+      </div>
+    );
+  }
 
   return (
     <div className="pk-con-page">
       <pre className="pk-con-banner">{`# ${v.title}
-# ${v.appearanceMeta}`}</pre>
-      <AppearancePanel title={v.appearance} meta={v.appearanceMeta} surface="plain" />
-      <MountModePanel
-        mountMode={mount.mountMode}
-        pending={mount.isPending}
-        onChange={(mode) => void mount.handleChange(mode)}
-        dense
-        surface="plain"
-      />
-      <Experimental14SystemPanel
-        mode={experimental14.mode}
-        pending={experimental14.isPending}
-        onChange={(mode) => void experimental14.handleChange(mode)}
-        dense
-        surface="plain"
-      />
-      <TmpfsPathPanel
-        tmpfsStyle={tmpfs.tmpfsStyle}
-        pending={tmpfs.isPending}
-        onChange={(style) => void tmpfs.handleChange(style)}
-        dense
-        surface="plain"
-      />
-      <QuietPropPanel
-        dynamicOn={quiet.dynamicOn}
-        pending={quiet.isPending}
-        onChange={(on) => void quiet.handleChange(on)}
-        dense
+# ${m.hubMeta}`}</pre>
+      <section className="pk-con-block">
+        <MoreNavRow
+          title={m.appearanceTitle}
+          desc={m.appearanceMeta}
+          onClick={() => setView("appearance")}
+        />
+        <MoreNavRow
+          title={m.mountTitle}
+          desc={m.mountMeta}
+          onClick={() => setView("mount")}
+        />
+      </section>
+      <ShowHideTabCard
+        title={m.navTitle}
+        meta={m.navMeta}
+        rowTitle={m.showHideTitle}
+        rowDesc={m.showHideDesc}
         surface="plain"
       />
       <UpdateChannelPanel dense surface="plain" />

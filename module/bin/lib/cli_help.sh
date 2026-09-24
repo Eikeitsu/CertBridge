@@ -66,7 +66,8 @@ cmd_get_conf() {
   esac
   # 与各 setter / status 默认对齐
   case "$key" in
-    quiet_prop|hot_allow|reqable|proxypin) def=1 ;;
+    quiet_prop) def=0 ;;
+    hot_allow|reqable|proxypin) def=1 ;;
     experimental_14_system) def=skip ;;
     mount_mode) def=compatible ;;
     tmpfs_style) def=dev ;;

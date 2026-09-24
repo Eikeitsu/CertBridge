@@ -16,13 +16,14 @@ type ZnWhitelistEditorProps = {
 };
 
 export function ZnWhitelistEditor({
-  title = "抓包白名单",
-  meta = "名单内不过滤 mount/maps",
-  hint = "一行一个包名；# 开头为注释。保存后强停相关 App 或重启生效。",
-  saveLabel = "保存白名单",
+  title,
+  meta,
+  hint,
+  saveLabel,
   rows = 5,
 }: ZnWhitelistEditorProps) {
   const { voice } = usePackVoice();
+  const h = voice.hide;
   const [text, setText] = useState("");
   const [loaded, setLoaded] = useState(false);
   const { isPending, runExclusive } = useAsyncLock();
@@ -56,10 +57,10 @@ export function ZnWhitelistEditor({
   }, [runExclusive, text, voice.hide.whitelistSaved]);
 
   return (
-    <Card title={title} meta={meta}>
-      {hint ? (
+    <Card title={title ?? h.whitelistTitle} meta={meta ?? h.whitelistMeta}>
+      {(hint ?? h.whitelistHint) ? (
         <p className="bf-page-sub" style={{ marginBottom: 10 }}>
-          {hint}
+          {hint ?? h.whitelistHint}
         </p>
       ) : null}
       <textarea
@@ -72,7 +73,7 @@ export function ZnWhitelistEditor({
       />
       <div className="bf-btn-row" style={{ marginTop: 12 }}>
         <Button variant="primary" disabled={!loaded || isPending} onClick={handleSave}>
-          {saveLabel}
+          {saveLabel ?? h.whitelistSave}
         </Button>
       </div>
     </Card>

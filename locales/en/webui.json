@@ -1,0 +1,678 @@
+{
+  "brand": "CertBridge",
+  "loadingHint": "Loading",
+  "language": "Language",
+  "languageMeta": "System or manual",
+  "tabs": {
+    "home": "Home",
+    "certs": "Certs",
+    "log": "Log",
+    "hide": "Hide",
+    "more": "More"
+  },
+  "ui": {
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "close": "Close",
+    "detail": "Info",
+    "delete": "Delete",
+    "copyFps": "Copy FPS",
+    "loading": "Loading…",
+    "deviceLocal": "Device",
+    "noBridge": "WebUI bridge not found",
+    "copyOk": "Copied",
+    "copyFail": "Copy failed",
+    "closePreview": "Close preview",
+    "statusStage": "Status"
+  },
+  "overview": {
+    "kicker": "Trust",
+    "emptyActive": "No addon CA",
+    "metrics": {
+      "active": "Active",
+      "custom": "Custom",
+      "baseline": "Base",
+      "store": "Store"
+    },
+    "pipelineTitle": "Builtin",
+    "runtimeTitle": "Env",
+    "refresh": "Refresh",
+    "reboot": "Reboot",
+    "moduleDisabled": "Module disabled; inject skipped.",
+    "pendingReboot": "Changes pending reboot.",
+    "rebootConfirmTitle": "Reboot now?",
+    "rebootConfirmBody": "Applies permanent CA changes and clears hot layers.",
+    "activeCountSuffix": "active",
+    "metricsAria": "Metrics",
+    "envDevice": "Device",
+    "envSystem": "OS",
+    "envInject": "Inject",
+    "envMount": "Mount",
+    "envVersion": "Ver",
+    "envRefresh": "Refresh",
+    "lastRefresh": "Refreshed {{time}}",
+    "checking": "Checking…",
+    "checkingHint": "Reading module status",
+    "bridgeHint": "Open this WebUI from SukiSU / KernelSU / MMRL",
+    "retryHint": "Tap Refresh to retry; check logs if it keeps failing",
+    "deviceFallback": "Device",
+    "stateMissing": "Not found",
+    "stateApplied": "Applied",
+    "statePendingWrite": "Pending write",
+    "stateStillActive": "Still active",
+    "stateReadyOff": "Ready, off",
+    "apexInjected": "Injected",
+    "apexFail": "Failed",
+    "hotAbnormal": "Bad",
+    "hotPartial": "Partial",
+    "hotMounted": "Mounted",
+    "hotIdle": "Idle",
+    "pipelineOn": "On",
+    "pipelinePending": "Pending",
+    "pipelineReady": "Ready",
+    "pipelineMissing": "Missing"
+  },
+  "trust": {
+    "disabled": "Module disabled",
+    "pendingHot": "Hot mount · permanent changes pending reboot",
+    "pending": "Pending reboot",
+    "stabilizing": "Stabilizing…",
+    "stabilizingHint": "Confirming injection; please wait",
+    "injectError": "Inject error",
+    "checkLog": "Check logs or reboot and retry",
+    "ok": "OK",
+    "okCount": "OK · {{count}}",
+    "abnormal": "Abnormal",
+    "defaultDesc": "Merges Reqable / ProxyPin / custom CAs; supports user-store and SD hot mount without reboot."
+  },
+  "certs": {
+    "builtinTitle": "Capture CA",
+    "builtinMeta": "Needs reboot",
+    "customTitle": "Custom",
+    "customEmpty": "None",
+    "importLabel": "Import",
+    "detailLabel": "Info",
+    "refresh": "Refresh",
+    "hotTitle": "Hot mount",
+    "hotMeta": "Idle · manual only; dropping files into the cert dir does not auto-mount. Temp layer clears on reboot.",
+    "hotActiveMeta": "Temp session active; silent-unmount here after success, or reboot to clear",
+    "hotAllowTitle": "Allow hot mount",
+    "hotAllowDesc": "Off blocks new temp sessions",
+    "hotAllowHint": "Turn on “Allow hot mount” first.",
+    "hotModeUser": "User",
+    "hotModeSd": "SD",
+    "hotModeAll": "Merge",
+    "hotModeUserLong": "User creds",
+    "hotModeSdLong": "SD certs",
+    "hotModeAllLong": "User + SD",
+    "hotSdPathHint": "SD path required",
+    "hotStart": "Start hot mount",
+    "hotSilentUnmount": "Silent unmount",
+    "hotMetricAdded": "Added",
+    "hotMetricNamespaces": "Namespaces",
+    "hotPartialTag": "Partial",
+    "hotSessionMounted": "Mounted ({{mode}})",
+    "hotSessionPartial": "Partial ({{mode}})",
+    "hotSessionStale": "Bad state (unmount or reboot)",
+    "hotSessionIdle": "Idle",
+    "presetsTitle": "Import paths",
+    "presetsMeta": "Download / App dirs",
+    "exportFps": "Copy FPS",
+    "exportFpsEmpty": "No FPS",
+    "exportFpsOk": "Copied",
+    "presetUnchanged": "Already listed",
+    "importReadFail": "Read failed",
+    "removeConfirmTitle": "Remove CA?",
+    "removeConfirmBody": "Gone after reboot",
+    "removeConfirmOk": "Remove",
+    "hotAllowOn": "Hot mount on",
+    "hotAllowOff": "Hot mount off",
+    "hotConfirmOffTitle": "Disable hot mount?",
+    "hotConfirmOffBody": "Ends temp session",
+    "hotConfirmOffOk": "Disable",
+    "hotSdPathBad": "Bad path",
+    "hotMountConfirmBody": "Temp; clears on reboot",
+    "hotMountConfirmOk": "Mount",
+    "hotMounting": "Mounting…",
+    "hotUnmountConfirmTitle": "Unmount temp?",
+    "hotUnmountConfirmBody": "Keeps permanent config",
+    "hotUnmountConfirmOk": "Unmount",
+    "hotUnmounting": "Unmounting…",
+    "hotUnmounted": "Unmounted",
+    "statusActive": "Active",
+    "statusPending": "Pending",
+    "statusPendingLong": "On; reboot",
+    "statusAvailable": "Ready",
+    "statusMissing": "Missing",
+    "statusMissingApp": "No app CA",
+    "detailTitle": "Cert detail",
+    "parseLoading": "Parsing…",
+    "parseFail": "Parse failed. Use PEM/DER; ensure parser is available.",
+    "hotMountConfirmTitle": "Mount valid CAs from {{target}}?",
+    "hotTargetUser": "user creds",
+    "hotTargetSd": "SD path",
+    "hotTargetAll": "user + SD",
+    "hotMounted": "Hot-mounted {{count}}",
+    "hotMountedPartial": "Mounted {{added}}; {{failed}} sessions missed",
+    "hotUnmountPartial": "Still {{remaining}} sessions; retry or reboot",
+    "importedReboot": "Imported; reboot",
+    "importedOk": "Imported",
+    "removedReboot": "Removed; reboot",
+    "removedMatch": "Removed (matches)",
+    "flagApplied": "Applied",
+    "flagPending": "Pending",
+    "flagStillActive": "Still on",
+    "flagOff": "Off",
+    "subMissing": "Cert not found",
+    "subRemovePending": "Removed from system after reboot",
+    "subWritePending": "Written to system trust after reboot"
+  },
+  "log": {
+    "title": "Log",
+    "metaEmpty": "Empty",
+    "refresh": "Reload",
+    "clear": "Clear",
+    "emptyFiltered": "No lines",
+    "emptyAll": "No log yet",
+    "levelAll": "All",
+    "levelInfo": "Info",
+    "levelWarn": "Warn",
+    "levelError": "Error",
+    "levelDebug": "Debug",
+    "wrap": "Wrap",
+    "wrapTitle": "Wrap lines",
+    "wrapMeta": "Off = horizontal scroll",
+    "clearConfirmTitle": "Clear log?",
+    "clearConfirmBody": "Clears local log only; certs untouched.",
+    "loading": "Reading…",
+    "linesCount": "{{count}} lines",
+    "linesRecent": "Last {{count}} lines",
+    "emptyHint": "No logs",
+    "readFail": "Cannot read logs",
+    "cleared": "Log cleared"
+  },
+  "hide": {
+    "switchTitle": "Hide",
+    "switchMeta": "Umount register",
+    "allowTitle": "Hide assist",
+    "allowOn": "Register umount paths",
+    "allowOff": "No hide state",
+    "toastOn": "On",
+    "toastOff": "Off",
+    "confirmOffTitle": "Disable hide?",
+    "confirmOffBody": "Clears umount entries",
+    "confirmOffOk": "Disable",
+    "forceBindTitle": "Force-bind apps",
+    "forceBindOn": "Rebind running apps",
+    "forceBindOff": "Respect umount",
+    "forceBindToastOn": "Force-bind on",
+    "forceBindToastOff": "Force-bind off",
+    "forceBindConfirmOnTitle": "Enable force-bind?",
+    "forceBindConfirmOnBody": "May override umount; debug only",
+    "forceBindConfirmOnOk": "Enable",
+    "lateInjectTitle": "Late inject",
+    "lateInjectOn": "Inject after boot",
+    "lateInjectOff": "Boot only",
+    "lateInjectToastOn": "Late inject on",
+    "lateInjectToastOff": "Late inject off",
+    "lateInjectConfirmOnTitle": "Enable late inject?",
+    "lateInjectConfirmOnBody": "More compatible, more traces",
+    "lateInjectConfirmOnOk": "Enable",
+    "experimentEntryTitle": "Labs",
+    "experimentEntryMeta": "Min traces by default",
+    "experimentEntryCta": "Open",
+    "experimentSheetTitle": "Labs",
+    "experimentIntro": "Open if certs fail; boot opts need reboot",
+    "bootZygoteTitle": "Boot Zygote",
+    "bootZygoteOn": "Bind zygote at boot",
+    "bootZygoteOff": "Init only",
+    "bootZygoteToastOn": "On; reboot",
+    "bootZygoteToastOff": "Off; reboot",
+    "bootZygoteConfirmOnTitle": "Enable Zygote bind?",
+    "bootZygoteConfirmOnBody": "More compatible; needs reboot",
+    "bootZygoteConfirmOnOk": "Enable",
+    "bootMultiApexTitle": "Full boot targets",
+    "bootMultiApexOn": "All targets",
+    "bootMultiApexOff": "14+ main APEX only",
+    "bootMultiApexToastOn": "On; reboot",
+    "bootMultiApexToastOff": "Off; reboot",
+    "bootMultiApexConfirmOnTitle": "Enable full targets?",
+    "bootMultiApexConfirmOnBody": "More compatible; needs reboot",
+    "bootMultiApexConfirmOnOk": "Enable",
+    "serviceProbeTitle": "Late probe",
+    "serviceProbeOn": "Backoff + heal",
+    "serviceProbeOff": "Off",
+    "serviceProbeToastOn": "Probe on",
+    "serviceProbeToastOff": "Probe off",
+    "znSwitchTitle": "Zygisk filter",
+    "znSwitchMeta": "Filter mountinfo/maps",
+    "znAllowTitle": "Enable filter",
+    "znAllowOn": "Filter mounts; whitelist exempt",
+    "znAllowOff": "Force-stop apps after off",
+    "znToastOn": "On",
+    "znToastOff": "Off",
+    "znConfirmOffTitle": "Disable filter?",
+    "znConfirmOffBody": "Force-stop running apps",
+    "znConfirmOffOk": "Disable",
+    "znMissingTitle": "Filter missing",
+    "znMissingMeta": "Not in default install",
+    "znMissingBody": "Custom install + Zygisk",
+    "loaderWarnTitle": "No Zygisk",
+    "loaderWarnMeta": "May not inject",
+    "loaderWarnBody": "Enable Zygisk in manager",
+    "whitelistTitle": "Whitelist",
+    "whitelistMeta": "No filter inside",
+    "whitelistHint": "One pkg/line; # comments; force-stop after save",
+    "whitelistSave": "Save",
+    "whitelistSaved": "Saved",
+    "checklistTitle": "Checklist",
+    "checklistMeta": "First-run tips",
+    "checklistDismiss": "Got it",
+    "captureTitle": "Capture tips",
+    "captureMeta": "Read first",
+    "introTitle": "Hide",
+    "introBody": "Bind mounts system trust; targets must see mounts",
+    "guideTitle": "Guide",
+    "guideMeta": "Per root setup",
+    "docsCta": "Docs",
+    "status": {
+      "title": "Mount & hide status",
+      "deviceProbe": "From current device",
+      "notDetected": "Not detected",
+      "registered": "Registered",
+      "notRegistered": "Not registered",
+      "noProvider": "No SuSFS/ksud/NoHello",
+      "root": "Root setup",
+      "mount": "CA mount mode",
+      "stagePath": "Staging path",
+      "pathStyle": "Path style",
+      "forceBind": "Force-bind capture apps",
+      "forceBindOn": "On (legacy)",
+      "forceBindOff": "Off (respect umount)",
+      "lateInject": "Late injection",
+      "lateInjectOn": "On (service namespaces)",
+      "lateInjectOff": "Off (boot only)",
+      "bootZygote": "Boot Zygote bind",
+      "bootZygoteOn": "On",
+      "bootZygoteOff": "Off (init only)",
+      "bootTargets": "Full boot targets",
+      "bootTargetsOn": "Full (dual mode)",
+      "bootTargetsOff": "Lean (14+ main APEX)",
+      "serviceProbe": "Late-inject probe",
+      "serviceProbeOn": "On (needs late inject)",
+      "serviceProbeOff": "Off",
+      "provider": "Hide helper",
+      "susfsReady": "TRY_UMOUNT ready",
+      "noHelloReady": "Installed",
+      "noHelloPointReady": "Installed (point capable)",
+      "kernelUmountOn": "Enabled",
+      "kernelUmountUnknown": "Off / unknown",
+      "kernelUmountWarning": "Off (registered paths may remain)",
+      "tryUmount": "Module try_umount",
+      "registeredPaths": "Registered paths",
+      "zygiskFilter": "Zygisk mount filter",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "zygiskBase": "Zygisk loader",
+      "znPath": "ZN module path",
+      "declared": "Declared",
+      "mountModeCompatible": "Full compatibility",
+      "mountModeMagic": "Light Magic",
+      "tmpfsDev": "Dev path",
+      "tmpfsMnt": "Mnt path",
+      "tmpfsShort": "Short path",
+      "tmpfsLegacy": "Legacy path",
+      "providerMagisk": "Magisk DenyList",
+      "providerKsu": "KernelSU Umount modules",
+      "providerApatch": "APatch Exclude Modifications"
+    },
+    "captureWarning": {
+      "banner": "Enabling module umount for Reqable, ProxyPin, or the target app removes the cacerts mount and often reports the root CA missing.",
+      "notice": "Umount modules, DenyList+umount, or APatch Exclude Modifications removes the cacerts mount from capture apps.",
+      "toolLabel": "Capture app",
+      "toolText": "umount enabled → root CA often appears missing",
+      "targetLabel": "Target app",
+      "targetText": "umount enabled → TLS cannot see the capture CA",
+      "scope": "Only hide apps that need it and are not in this capture path.",
+      "force": "If umount must stay on, Force-bind apps may restore the CA but weakens hiding."
+    },
+    "checklistNotice": "Capture-path apps must see the cacerts mount.",
+    "checklistItems": [
+      "Disable Umount modules / Exclude Modifications for Reqable and ProxyPin.",
+      "Disable the same hiding for the app being captured.",
+      "Enable umount only for other apps that need detection hiding.",
+      "For maps filtering, custom-install the Zygisk filter and enable Zygisk."
+    ],
+    "guideSections": {
+      "capture": {
+        "title": "Capture rule: do not umount capture apps",
+        "body": [
+          "A process must see the cacerts bind for the CA to work. Module umount, DenyList+Shamiko umount, or APatch exclusion removes that mount.",
+          "Do not enable those options for Reqable or ProxyPin, or they may report the root CA missing.",
+          "Do not enable them for the target app either, or TLS may fail with network or certificate errors.",
+          "Use app-specific umount only for other apps that need Root or mount hiding.",
+          "hide_allow registers cacerts globally with SuSFS, ksud, or NoHello; your per-app umount list still decides where it is removed.",
+          "If a capture app must use umount, Labs → Force-bind apps can rebind it, but weakens hiding and is for debugging.",
+          "If some apps still miss the CA, Labs → Late inject retries app namespaces after boot, with extra traces.",
+          "For Found KSU reports, try disabling Boot Zygote or Full boot targets; compatibility may drop and a reboot is required."
+        ]
+      },
+      "magisk": {
+        "title": "Magisk / Alpha / Kitsune",
+        "body": [
+          "DenyList replaces old MagiskHide. Add only apps that need Root hiding.",
+          "Enforce DenyList mainly blocks Zygisk modules; it is not full bind-mount hiding and usually stays off with Shamiko or NoHello.",
+          "Keep Reqable, ProxyPin, and capture targets out of umount-enabled lists.",
+          "Recommended: ZygiskNext or ReZygisk + NoHello. hide_allow registers cacerts point rules; the app list controls umount.",
+          "Official Magisk has no path-level umount registration API."
+        ]
+      },
+      "ksu": {
+        "title": "KernelSU / SukiSU / MKSU",
+        "body": [
+          "Enable Umount modules only for apps that need hiding, and use a kernel with path_umount support.",
+          "Disable it for Reqable, ProxyPin, and capture targets.",
+          "With SuSFS and hide_allow, CertBridge registers cacerts with add_try_umount after a successful bind.",
+          "NeoZygisk, ReZygisk, or ZygiskNext umount-only can be combined, but not for capture-path apps.",
+          "Avoid conflicting overlay modules such as Magical OverlayFS."
+        ]
+      },
+      "apatch": {
+        "title": "APatch",
+        "body": [
+          "Use Exclude Modifications only for apps that need hiding.",
+          "Do not exclude Reqable, ProxyPin, or capture targets, or they cannot see the CA mount.",
+          "apd has no ksud-style path API. Use ZygiskNext/ReZygisk + NoHello; hide_allow registers point rules."
+        ]
+      },
+      "limits": {
+        "title": "Limits",
+        "body": [
+          "The default /dev/.fs* staging path avoids simple /data/local/tmp scans but does not replace umount.",
+          "Without SuSFS or a Zygisk umount helper, mountinfo checks may still find the bind.",
+          "The optional Zygisk filter hides matching mount/maps lines and module readlinks; in-memory code and the Zygisk loader may remain detectable.",
+          "Reqable and ProxyPin are filter-whitelisted so they retain the CA view.",
+          "The default install omits the Zygisk filter; select it in custom install and include zygisk/*.so.",
+          "System TLS requires the CA in a trust-store path; there is no general mount-free CA injection."
+        ]
+      }
+    }
+  },
+  "theme": {
+    "packs": {
+      "default": {
+        "label": "Default",
+        "hint": "Large status area with grouped certs and environment"
+      },
+      "ops": {
+        "label": "Compact",
+        "hint": "Denser status panels and lists"
+      },
+      "console": {
+        "label": "Console",
+        "hint": "Monospace text, path header, and edge-to-edge tables"
+      }
+    },
+    "accents": {
+      "teal": "Teal",
+      "steel": "Steel blue",
+      "amber": "Amber",
+      "ink": "Ink"
+    },
+    "modes": {
+      "system": "System",
+      "light": "Light",
+      "dark": "Dark"
+    }
+  },
+  "mount": {
+    "modeFootnote": "Reboot after changing.",
+    "tmpfsFootnote": "Used by full compatibility and hot mount. Reboot after changing; path changes do not replace umount.",
+    "modes": {
+      "compatible": {
+        "label": "Full compatibility",
+        "short": "Compatible",
+        "meta": "Runtime full-store bind for Magisk / KernelSU / APatch",
+        "helpTitle": "Full compatibility (default)",
+        "helpBody": "Merge and bind the full store at runtime. No system overlay or Magic Mount module required."
+      },
+      "magic": {
+        "label": "Light Magic",
+        "short": "Light",
+        "meta": "Overlay added CAs; script-inject APEX on Android 14+",
+        "helpTitle": "Light Magic Mount",
+        "helpBody": "Overlay only enabled addon CAs into the system trust store."
+      }
+    },
+    "roots": {
+      "magisk": "DenyList + NoHello / ZygiskNext; script binds need NoHello point rules",
+      "kernelsu": "Use SuSFS or ZygiskNext/ReZygisk umount with path_umount",
+      "apatch": "Exclude Modifications + NoHello / ZygiskNext; apd has no path API"
+    },
+    "experimental14": {
+      "footnote": "Android 14+ only; independent of mount mode. Ignored on 7–13. Reboot after changing.",
+      "skip": {
+        "label": "Skip system",
+        "meta": "Default: inject APEX only on Android 14+"
+      },
+      "auto": {
+        "label": "Mount system",
+        "meta": "Apply the selected mount mode to system"
+      }
+    },
+    "tmpfs": {
+      "dev": {
+        "label": "Dev path",
+        "meta": "Default: /dev/.fs* avoids local/tmp keywords",
+        "helpTitle": "Dev path (default)"
+      },
+      "mnt": {
+        "label": "Mnt path",
+        "meta": "Short temporary paths under /mnt",
+        "helpTitle": "Mnt path"
+      },
+      "short": {
+        "label": "Short path",
+        "meta": ".fs0 / .fs1 under local/tmp",
+        "helpTitle": "Short path"
+      },
+      "legacy": {
+        "label": "Legacy path",
+        "meta": "Readable legacy paths for troubleshooting",
+        "helpTitle": "Legacy path"
+      }
+    },
+    "providers": {
+      "susfs": "SuSFS try_umount",
+      "rezygisk": "ReZygisk",
+      "neozygisk": "NeoZygisk",
+      "zygisknext": "ZygiskNext",
+      "shamiko": "Shamiko",
+      "zygiskAssistant": "Zygisk Assistant",
+      "nohello": "NoHello",
+      "magiskDenylist": "Magisk DenyList",
+      "ksuUmount": "KernelSU Umount modules",
+      "apatchExclude": "APatch Exclude Modifications",
+      "none": "Not detected"
+    }
+  },
+  "about": {
+    "title": "About CertBridge",
+    "linksTitle": "Links",
+    "links": {
+      "docs": "Guide",
+      "repo": "Source",
+      "coolapk": "Coolapk",
+      "reqable": "Reqable",
+      "proxypin": "ProxyPin"
+    },
+    "tip": {
+      "title": "Tip the author",
+      "body": "{{author}} · WeChat / Alipay. If CertBridge helped you, a milk tea is welcome.",
+      "wechat": "WeChat Pay",
+      "alipay": "Alipay",
+      "wechatAlt": "WeChat QR",
+      "alipayAlt": "Alipay QR"
+    },
+    "labels": {
+      "version": "Version",
+      "device": "Device",
+      "system": "OS",
+      "mount": "Mount mode",
+      "tmpfs": "Temporary path",
+      "installMode": "Install profile",
+      "webui": "WebUI component",
+      "hot": "Hot mount component",
+      "hide": "Mount hide assist",
+      "zygisk": "Zygisk mount filter"
+    },
+    "values": {
+      "installed": "Installed",
+      "notInstalled": "Not installed",
+      "defaultInstall": "Default install",
+      "customInstall": "Custom install"
+    },
+    "groups": {
+      "env": "Environment",
+      "runtime": "Runtime",
+      "config": "Config",
+      "components": "Components",
+      "componentStatus": "Component status"
+    }
+  },
+  "update": {
+    "errors": {
+      "missingUrl": "Missing download URL",
+      "downloadFailed": "Download failed",
+      "installFailed": "Install failed: CLI and manager launch both failed"
+    }
+  },
+  "more": {
+    "appearanceTitle": "Look",
+    "appearanceMeta": "Theme / accent",
+    "aboutTitle": "About",
+    "hubMeta": "Look, mount, updates",
+    "mountTitle": "Mount",
+    "mountMeta": "Mode / paths",
+    "navTitle": "Nav",
+    "navMeta": "Dock tabs",
+    "showHideTitle": "Show Hide tab",
+    "showHideDesc": "Off hides dock entry",
+    "quietTitle": "Module blurb",
+    "quietMeta": "Dynamic desc; default ON",
+    "quietRow": "Dynamic blurb",
+    "fontSize": "Font size",
+    "tmpfsPath": "Temporary mount path",
+    "mountMode": "CA mount mode",
+    "android14System": "Android 14+ system path",
+    "quietOn": "Dynamic blurb enabled",
+    "quietOff": "Dynamic blurb disabled",
+    "mountSaved": "Mount policy updated; reboot",
+    "mountRestored": "Mount policy matches active config",
+    "tmpfsSaved": "Path style updated; reboot",
+    "tmpfsRestored": "Path style matches active config",
+    "systemSaved": "System policy updated; reboot",
+    "systemSkipSaved": "System path skipped; reboot",
+    "systemRestored": "System policy matches active config",
+    "mountConfig": {
+      "modeFootnote": "Reboot after changing.",
+      "tmpfsFootnote": "Used by full compatibility and hot mount; paths do not replace umount.",
+      "systemFootnote": "Android 14+ only; independent of mount mode. Reboot after changing.",
+      "mode": {
+        "compatible": {
+          "label": "Full compatibility",
+          "meta": "Runtime full-store bind for Magisk / KernelSU / APatch"
+        },
+        "magic": {
+          "label": "Light Magic",
+          "meta": "Overlay added CAs; script-inject APEX on Android 14+"
+        }
+      },
+      "tmpfs": {
+        "dev": "Dev path",
+        "mnt": "Mnt path",
+        "short": "Short path",
+        "legacy": "Legacy path"
+      },
+      "system": {
+        "skip": {
+          "label": "Skip system",
+          "meta": "Default: inject APEX only on Android 14+"
+        },
+        "auto": {
+          "label": "Mount system",
+          "meta": "Apply the selected mount mode to system"
+        }
+      },
+      "root": {
+        "magisk": {
+          "name": "Magisk",
+          "note": "DenyList + NoHello / ZygiskNext; script binds need NoHello point rules"
+        },
+        "kernelsu": {
+          "name": "KernelSU",
+          "note": "Use SuSFS or ZygiskNext/ReZygisk umount with path_umount"
+        },
+        "apatch": {
+          "name": "APatch",
+          "note": "Exclude Modifications + NoHello / ZygiskNext; apd has no path API"
+        }
+      }
+    },
+    "update": {
+      "title": "Update channel",
+      "meta": "Stable uses Pages; CI uses ci-dist. Manager updates stay on stable.",
+      "checked": "Check complete",
+      "ciConfirm": "Switch to CI?\nDevelopment builds may be unstable.",
+      "noPackage": "No installable package",
+      "installFailed": "Install failed",
+      "flashed": "Module flashed",
+      "managerOpened": "Manager opened; confirm install",
+      "download": "Downloading",
+      "write": "Writing",
+      "install": "Installing",
+      "manager": "Opening manager",
+      "downloadBusy": "Downloading…",
+      "writeBusy": "Writing…",
+      "installBusy": "Installing…",
+      "managerBusy": "Opening…",
+      "downloadInstall": "Download & install",
+      "switchInstall": "Install this channel",
+      "cdnTitle": "CI via jsDelivr",
+      "cdnDesc": "Off by default; falls back to GitHub raw",
+      "channels": {
+        "stable": {
+          "label": "Stable",
+          "hint": "Recommended; matches manager updates"
+        },
+        "ci": {
+          "label": "CI",
+          "hint": "Development builds; may be unstable"
+        }
+      },
+      "versions": "Local / remote: {{versions}}",
+      "updateReady": "New version available",
+      "switchReady": "Current channel build can be installed",
+      "stableNewer": "Stable update available: {{version}}",
+      "check": "Check updates"
+    }
+  },
+  "toast": {
+    "toggleOn": "On; reboot",
+    "toggleOff": "Off; reboot",
+    "toggleOnMatch": "On (matches)",
+    "toggleOffMatch": "Off (matches)",
+    "mountUpdated": "Mount updated; reboot",
+    "mountMatch": "Matches applied",
+    "styleUpdated": "Style updated; reboot",
+    "styleMatch": "Matches applied",
+    "e14Updated": "Policy updated; reboot",
+    "e14Match": "Matches applied",
+    "syncUpdatedReboot": "Synced {{count}} from App; reboot",
+    "syncUpdated": "Synced {{count}} from App",
+    "syncNone": "No new App certs",
+    "statusLive": "Inject rechecked",
+    "statusOk": "Refreshed",
+    "rebooting": "Rebooting…"
+  }
+}

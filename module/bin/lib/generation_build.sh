@@ -66,12 +66,22 @@ build_boot_generation() {
   [ -n "$previous_boot_id" ] || previous_boot_id=$(cat "$GEN_ACTIVE_BOOT" 2>/dev/null | tr -d '\r\n')
   [ -n "$previous_boot_id" ] || \
     previous_boot_id=$(grep '^boot_id=' "$SOURCE_META" 2>/dev/null | cut -d= -f2-)
-  # 当前 conf 与已生效 conf 不一致时必须重建（防止 pending 标记丢失后仍用旧 addon）
+  # 当前 conf（模块模板 + user.conf）与已生效不一致时必须重建
   conf_changed=0
   if [ -f "$CONF" ] && [ -f "$APPLIED_CONF" ]; then
     cmp -s "$CONF" "$APPLIED_CONF" 2>/dev/null || conf_changed=1
   elif [ -f "$CONF" ] && [ ! -f "$APPLIED_CONF" ] && [ -s "$APPLIED_MAP" ]; then
     conf_changed=1
+  fi
+  if [ "$conf_changed" != "1" ] && [ -f "$USER_CONF" ] && [ -f "$APPLIED_CONF" ]; then
+    for _k in reqable proxypin mount_mode tmpfs_style experimental_14_system \
+        hot_allow hide_allow zn_hide_allow force_bind_capture late_inject \
+        boot_bind_zygote boot_multi_apex service_probe quiet_prop; do
+      _c=$(read_conf "$_k" "")
+      _a=$(read_applied_conf "$_k" "")
+      [ -n "$_c" ] || continue
+      [ "$_c" = "$_a" ] || { conf_changed=1; break; }
+    done
   fi
   [ "$conf_changed" = "1" ] && \
     log_info "generation: conf differs from applied, force rebuild"
@@ -169,6 +179,10 @@ build_boot_generation() {
   GEN_BOOT_TMP="$GEN_ACTIVE_BOOT.tmp.$$"
   cp -f "$GEN_CURRENT/boot-id" "$GEN_BOOT_TMP" && mv -f "$GEN_BOOT_TMP" "$GEN_ACTIVE_BOOT"
   cp -f "$CONF" "$APPLIED_CONF" 2>/dev/null || : >"$APPLIED_CONF"
+  # 叠加 user.conf，使生效快照与 read_conf 一致
+  if type snapshot_effective_conf >/dev/null 2>&1; then
+    snapshot_effective_conf "$APPLIED_CONF" 2>/dev/null || true
+  fi
   chmod 0600 "$APPLIED_MAP" "$SOURCE_META" "$APPLIED_CONF" 2>/dev/null
   rm -f "$PENDING_FILE"
   log_info "generation: source=$source_n total=$total addons=$(count_addon_certs)"

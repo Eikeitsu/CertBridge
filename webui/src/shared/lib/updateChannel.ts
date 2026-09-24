@@ -8,16 +8,6 @@ import { STORAGE_KEYS } from "@/shared/config/paths";
 export const UPDATE_CHANNELS = ["stable", "ci"] as const;
 export type UpdateChannel = (typeof UPDATE_CHANNELS)[number];
 
-export const UPDATE_CHANNEL_LABEL: Record<UpdateChannel, string> = {
-  stable: "正式",
-  ci: "CI",
-};
-
-export const UPDATE_CHANNEL_HINT: Record<UpdateChannel, string> = {
-  stable: "推荐大多数用户；与管理器在线更新一致",
-  ci: "开发构建，可能不稳定；清单与 zip 同在 ci-dist 分支",
-};
-
 const PAGES_UPDATE = "https://eikeitsu.github.io/CertBridge/update.json";
 const CI_RAW_BASE = "https://raw.githubusercontent.com/Eikeitsu/CertBridge/ci-dist";
 const CI_CDN_BASE = "https://cdn.jsdelivr.net/gh/Eikeitsu/CertBridge@ci-dist";
@@ -77,7 +67,7 @@ export interface ChannelCheckResult {
 }
 
 export function versionLine(local?: string | null, remote?: string | null): string {
-  const l = (local || "").trim() || "未知";
+  const l = (local || "").trim() || "--";
   const r = (remote || "").trim() || "--";
   return l === r ? l : `${l} → ${r}`;
 }

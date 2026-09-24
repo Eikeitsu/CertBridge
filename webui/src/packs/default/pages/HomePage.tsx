@@ -1,4 +1,5 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { selectStatusBootstrapped } from "@/features/status/model/selectors";
 import { refreshStatus } from "@/features/status/model/statusSlice";
@@ -6,19 +7,22 @@ import { useTrustOverview } from "@/features/overview/hooks/useTrustOverview";
 import { TrustTone } from "@/entities/module/enums";
 import { confirmAction } from "@/shared/lib/confirmAction";
 import { rebootDevice } from "@/shared/api/cli";
-import { Loader } from "@/shared/ui/Loader";
-import { DEFAULT_VOICE } from "../voice";
+import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
 
 export function DefaultHomePage() {
+  const { t } = useTranslation("webui");
+  const chrome = usePackChrome();
   const dispatch = useAppDispatch();
   const overview = useTrustOverview();
   const bootstrapped = useAppSelector(selectStatusBootstrapped);
-  const v = DEFAULT_VOICE.home;
-  const showBoot = overview.isLoading && !bootstrapped;
+  const v = chrome.home;
 
+  const title = overview.trust.title || "";
   const stabilizing =
     overview.trust.tone === TrustTone.Idle &&
-    /稳定中|注入中|检测中/.test(overview.trust.title);
+    (/Stable|Inject|Check|Boot|Pending/.test(title) ||
+      title.includes("\u2728") ||
+      title.includes("\u{1F50D}"));
 
   useEffect(() => {
     if (!bootstrapped || !stabilizing) return;
@@ -36,24 +40,19 @@ export function DefaultHomePage() {
       ? overview.activeNames.join(" · ")
       : overview.trust.hint || overview.description || v.empty);
 
-  const metrics = useMemo(
-    () => [
-      { label: v.metrics.active, value: overview.activeCount },
-      { label: v.metrics.custom, value: overview.customCount },
-      { label: v.metrics.baseline, value: overview.baselineCount },
-    ],
-    [overview, v],
-  );
-
-  if (showBoot) return <Loader label={DEFAULT_VOICE.loading} />;
+  const metrics = [
+    { label: v.metrics.active, value: overview.activeCount },
+    { label: v.metrics.custom, value: overview.customCount },
+    { label: v.metrics.baseline, value: overview.baselineCount },
+  ];
 
   return (
     <div className={`pk-def-page pk-def-page--home tone-${overview.trust.tone}`}>
       {overview.isDisabled ? (
-        <div className="pk-def-banner is-warn">模块已停用，证书注入不会执行。</div>
+        <div className="pk-def-banner is-warn">{t("overview.moduleDisabled")}</div>
       ) : null}
       {overview.isPendingReboot ? (
-        <div className="pk-def-banner is-warn">有永久变更等待重启后生效。</div>
+        <div className="pk-def-banner is-warn">{t("overview.pendingReboot")}</div>
       ) : null}
       {overview.injectDiagnosis?.message ? (
         <div className="pk-def-banner is-bad">
@@ -68,7 +67,7 @@ export function DefaultHomePage() {
           <h1 className="pk-def-stage__title">{overview.trust.title}</h1>
           <p className="pk-def-stage__count">
             <strong>{overview.activeCount}</strong>
-            <span>张生效</span>
+            <span>{t("overview.activeCountSuffix")}</span>
           </p>
         </div>
         <p className="pk-def-stage__desc">{desc}</p>
@@ -85,8 +84,8 @@ export function DefaultHomePage() {
             className="pk-def-btn is-ghost"
             onClick={() =>
               confirmAction({
-                title: "确认重启设备？",
-                content: "重启后应用永久证书变更并清理临时层。",
+                title: t("overview.rebootConfirmTitle"),
+                content: t("overview.rebootConfirmBody"),
                 okText: v.reboot,
                 danger: true,
                 onOk: () => rebootDevice(),
@@ -98,7 +97,7 @@ export function DefaultHomePage() {
         </div>
       </section>
 
-      <p className="pk-def-inline-stats" aria-label="指标">
+      <p className="pk-def-inline-stats" aria-label={t("overview.metricsAria")}>
         {metrics.map((m, i) => (
           <span key={m.label}>
             {i > 0 ? (
@@ -130,11 +129,11 @@ export function DefaultHomePage() {
         <summary>{v.env}</summary>
         <dl className="pk-def-kv">
           <div>
-            <dt>设备</dt>
+            <dt>{t("overview.envDevice")}</dt>
             <dd>{overview.deviceName}</dd>
           </div>
           <div>
-            <dt>系统</dt>
+            <dt>{t("overview.envSystem")}</dt>
             <dd>{overview.androidLabel}</dd>
           </div>
           <div>
@@ -142,19 +141,21 @@ export function DefaultHomePage() {
             <dd>{overview.rootLabel}</dd>
           </div>
           <div>
-            <dt>注入</dt>
+            <dt>{t("overview.envInject")}</dt>
             <dd>{overview.apexLabel}</dd>
           </div>
           <div>
-            <dt>挂载</dt>
+            <dt>{t("overview.envMount")}</dt>
             <dd>{overview.mountModeLabel}</dd>
           </div>
           <div>
-            <dt>版本</dt>
+            <dt>{t("overview.envVersion")}</dt>
             <dd>{overview.versionLabel}</dd>
           </div>
         </dl>
-        <p className="pk-def-muted">上次刷新 {overview.lastRefreshedAt}</p>
+        <p className="pk-def-muted">
+          {t("overview.lastRefresh", { time: overview.lastRefreshedAt })}
+        </p>
       </details>
     </div>
   );

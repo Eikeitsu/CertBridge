@@ -12,6 +12,19 @@ on:
         required: false
         type: string
         default: ""
+      build_mode:
+        description: "构建方式"
+        required: true
+        type: choice
+        default: "重新构建 — 完整编译正式版（推荐）"
+        options:
+          - "重新构建 — 完整编译正式版（推荐）"
+          - "晋升 CI — 从 ci-dist 取 zip，仅重盖正式 version（更快）"
+      ci_promote_sha:
+        description: "晋升 CI 时记录的 commit SHA（可空=用 ci-dist tip；仅日志）"
+        required: false
+        type: string
+        default: ""
       prerelease:
         description: "GitHub Release 标记为预发布（不影响正式更新通道）"
         required: false
@@ -40,8 +53,9 @@ jobs:
       prerelease: ${{ steps.meta.outputs.prerelease }}
       draft: ${{ steps.meta.outputs.draft }}
       zip: ${{ steps.meta.outputs.zip }}
+      build_mode: ${{ steps.meta.outputs.build_mode }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -55,29 +69,38 @@ jobs:
             CUSTOM_NAME="${{ inputs.release_name }}"
             echo "prerelease=${{ inputs.prerelease }}" >> "$GITHUB_OUTPUT"
             echo "draft=${{ inputs.draft }}" >> "$GITHUB_OUTPUT"
+            MODE="${{ inputs.build_mode }}"
+            if [[ "$MODE" == 晋升* ]]; then
+              echo "build_mode=promote" >> "$GITHUB_OUTPUT"
+            else
+              echo "build_mode=rebuild" >> "$GITHUB_OUTPUT"
+            fi
           else
             TAG_NAME="${GITHUB_REF_NAME}"
             RAW="${TAG_NAME#v}"
             CUSTOM_NAME=""
             echo "prerelease=false" >> "$GITHUB_OUTPUT"
             echo "draft=false" >> "$GITHUB_OUTPUT"
+            echo "build_mode=rebuild" >> "$GITHUB_OUTPUT"
           fi
 
-          eval "$(RAW="$RAW" python3 tooling/scripts/resolve-release-version.py)"
+          # versionCode：semver 映射；若 Pages/ci-dist 已见号更高则用已见+1
+          eval "$(RAW="$RAW" python3 scripts/resolve-release-version.py --fetch-remote)"
           TAG="${version}"
           if [ -n "$CUSTOM_NAME" ]; then
             NAME="$CUSTOM_NAME"
           else
             NAME="$TAG"
           fi
-          ZIP="CertBridge_${version}.zip"
+          # 正式 updateJson / Pages 默认 arm64 分包；其它 ABI 仍随 Release 上传
+          ZIP="CertBridge_${version}_arm64.zip"
 
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "raw=$version" >> "$GITHUB_OUTPUT"
           echo "version_code=$version_code" >> "$GITHUB_OUTPUT"
           echo "name=$NAME" >> "$GITHUB_OUTPUT"
           echo "zip=$ZIP" >> "$GITHUB_OUTPUT"
-          echo "Resolved release: $NAME ($TAG) versionCode=$version_code"
+          echo "Resolved release: $NAME ($TAG) versionCode=$version_code (semver_code=${semver_code:-?} seen_max=${seen_max_code:-none})"
 
       - name: Sync module.prop version
         shell: bash
@@ -105,32 +128,55 @@ jobs:
           npm version "$NPM_VERSION" --no-git-tag-version --allow-same-version
           node -p "require('./package.json').version"
 
-      - run: npm run build:module
+      - name: Promote from ci-dist
+        if: steps.meta.outputs.build_mode == 'promote'
+        env:
+          RAW: ${{ steps.meta.outputs.raw }}
+          CODE: ${{ steps.meta.outputs.version_code }}
+          PROMOTE_SHA: ${{ inputs.ci_promote_sha }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          chmod +x scripts/promote-ci-module-zips.sh
+          scripts/promote-ci-module-zips.sh
+
+      - name: Setup NDK (Zygisk sources present)
+        if: steps.meta.outputs.build_mode != 'promote' && hashFiles('native/zygisk_hide/**') != ''
+        uses: ./.github/actions/setup-ndk-clang
+        id: ndk
+
+      - name: Build module (rebuild)
+        if: steps.meta.outputs.build_mode != 'promote'
+        env:
+          ANDROID_NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
+          SKIP_ZYGISK_HIDE: ${{ hashFiles('native/zygisk_hide/**') == '' && '1' || '0' }}
+          REQUIRE_ZYGISK_HIDE: ${{ hashFiles('scripts/build-zygisk-hide.mjs') != '' && hashFiles('native/zygisk_hide/**') != '' && '1' || '0' }}
+          ZYGISK_ABIS: arm64-v8a,armeabi-v7a
+        run: npm run build:module
 
       - name: Upload zip artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: magisk-module-${{ steps.meta.outputs.tag }}
-          path: release/*.zip
+          path: .build/release/*.zip
           if-no-files-found: error
 
   publish:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           name: magisk-module-${{ needs.build.outputs.tag }}
-          path: release/
+          path: .build/release/
 
       - name: Prepare release notes
         shell: bash
         run: |
-          python3 tooling/scripts/prepare-release-notes.py \
+          python3 scripts/prepare-release-notes.py \
             "${{ needs.build.outputs.raw }}" \
             changelog.md \
             .release-body.md
@@ -138,7 +184,7 @@ jobs:
           cat .release-body.md || true
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ needs.build.outputs.tag }}
           name: ${{ needs.build.outputs.name }}
@@ -146,7 +192,7 @@ jobs:
           prerelease: ${{ needs.build.outputs.prerelease }}
           body_path: .release-body.md
           generate_release_notes: true
-          files: release/*.zip
+          files: .build/release/*.zip
           fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -156,17 +202,20 @@ jobs:
     if: ${{ needs.build.outputs.draft != 'true' && needs.build.outputs.prerelease != 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           name: magisk-module-${{ needs.build.outputs.tag }}
-          path: release/
+          path: .build/release/
 
       - uses: ./.github/actions/setup-node-npm
+
+      - name: Install changelog translator
+        run: python3 -m pip install --user "deep-translator>=1.11.4" "deepl>=1.18.0"
 
       - name: Update default branch (changelog / update.json / Pages zip)
         env:
@@ -177,4 +226,8 @@ jobs:
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
           PAGES_BASE: https://eikeitsu.github.io/CertBridge
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: bash tooling/scripts/post-release-update.sh
+          # Optional: repo secret DEEPL_AUTH_KEY for higher-quality EN
+          DEEPL_AUTH_KEY: ${{ secrets.DEEPL_AUTH_KEY }}
+        run: |
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          bash scripts/post-release-update.sh

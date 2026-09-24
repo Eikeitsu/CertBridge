@@ -1,13 +1,7 @@
 import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, Button, Notice } from "@/shared/ui/primitives";
 import { STORAGE_KEYS } from "@/shared/config/paths";
-
-const CHECKLIST = [
-  "Reqable / ProxyPin：关闭「卸载模块 / Umount / 排除修改」",
-  "本次被抓包的目标 App：同样关闭上述隐藏",
-  "仅对「要躲检测且不参与本次抓包」的其它 App 再开卸载模块",
-  "需要 maps 自藏时：自定义安装勾选 Zygisk 过滤，并确认设备已开 Zygisk",
-] as const;
 
 type CaptureChecklistCardProps = {
   title?: string;
@@ -24,11 +18,13 @@ function readDismissed(): boolean {
 }
 
 export function CaptureChecklistCard({
-  title = "抓包检查清单",
-  meta = "首次建议过一遍",
-  dismissLabel = "知道了，不再显示",
+  title,
+  meta,
+  dismissLabel,
 }: CaptureChecklistCardProps) {
+  const { t } = useTranslation("webui");
   const [dismissed, setDismissed] = useState(readDismissed);
+  const checklist = t("hide.checklistItems", { returnObjects: true }) as string[];
 
   const handleDismiss = useCallback(() => {
     try {
@@ -42,21 +38,24 @@ export function CaptureChecklistCard({
   if (dismissed) return null;
 
   return (
-    <Card title={title} meta={meta}>
-      <Notice tone="default">
-        证书要生效，抓包链路相关 App 必须能看见 cacerts 挂载。
-      </Notice>
+    <Card
+      title={title ?? t("hide.checklistTitle")}
+      meta={meta ?? t("hide.checklistMeta")}
+    >
+      <Notice tone="default">{t("hide.checklistNotice")}</Notice>
       <ol
         className="bf-bullet-list"
         data-style="decimal"
         style={{ color: "var(--bf-ink-2)", fontSize: "0.82rem" }}
       >
-        {CHECKLIST.map((item) => (
+        {checklist.map((item) => (
           <li key={item}>{item}</li>
         ))}
       </ol>
       <div className="bf-btn-row" style={{ marginTop: 12 }}>
-        <Button onClick={handleDismiss}>{dismissLabel}</Button>
+        <Button onClick={handleDismiss}>
+          {dismissLabel ?? t("hide.checklistDismiss")}
+        </Button>
       </div>
     </Card>
   );

@@ -24,16 +24,3 @@ features:
   - title: WebUI · CLI · 热挂载
     details: 管理器内五页界面、cb 命令行、可选用户区 / 存储卡免重启临时挂载。
 ---
-
-## 下载
-
-正式包在 **GitHub Releases**（不要在 Issues / 文档正文里找 zip）：
-
-**→ [https://github.com/Eikeitsu/CertBridge/releases](https://github.com/Eikeitsu/CertBridge/releases)**
-
-| 文件                     | 说明                             |
-| ------------------------ | -------------------------------- |
-| `CertBridge_v*.zip`      | **推荐**：完整版（内置 OpenSSL） |
-| `CertBridge_v*_lite.zip` | Lite（体积小，无 OpenSSL）       |
-
-下载后见 [安装与升级](/guide/install)。管理器「检查更新」也会拉完整版。

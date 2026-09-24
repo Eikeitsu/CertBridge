@@ -5,6 +5,15 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  pointer-events: none;
+}
+
+.bf-sheet-overlay > * {
+  pointer-events: auto;
+}
+
+.bf-sheet-overlay.is-confirm {
+  z-index: 90;
 }
 
 .bf-sheet-overlay__mask {
@@ -14,29 +23,124 @@
   background: rgba(0, 0, 0, 0.45);
 }
 
+.bf-sheet-overlay__mask[data-state="open"] {
+  animation: bf-sheet-mask-in 0.24s var(--bf-ease) both;
+}
+
+.bf-sheet-overlay__mask[data-state="closed"] {
+  animation: bf-sheet-mask-out 0.2s var(--bf-ease) both;
+}
+
+@keyframes bf-sheet-mask-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes bf-sheet-mask-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
 .bf-sheet {
   position: relative;
   z-index: 1;
   width: min(100%, 520px);
+  height: var(--bf-sheet-h, min(92dvh, 860px));
+  max-height: min(92dvh, 860px);
   display: flex;
   flex-direction: column;
   background: var(--bf-chrome);
   border-top-left-radius: var(--bf-radius-lg);
   border-top-right-radius: var(--bf-radius-lg);
   border: 1px solid var(--bf-stroke);
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.18);
   overflow: hidden;
-  animation: bf-sheet-up 0.24s var(--bf-ease);
+  will-change: transform, opacity;
+}
+
+.bf-sheet[data-state="open"] {
+  animation: bf-sheet-up 0.34s var(--bf-ease) both;
+}
+
+.bf-sheet[data-state="closed"] {
+  animation: bf-sheet-down 0.26s var(--bf-ease) both;
+}
+
+.bf-sheet.is-auto {
+  height: auto;
+  max-height: min(88dvh, 720px);
+}
+
+.bf-sheet.is-confirm {
+  width: min(100%, 440px);
+  margin: 0 10px calc(10px + var(--bf-inset-bottom));
+  border-radius: var(--bf-radius-lg);
+  background: var(--bf-chrome);
+}
+
+.bf-sheet.is-confirm[data-state="open"] {
+  animation: bf-sheet-confirm-in 0.3s var(--bf-ease) both;
+}
+
+.bf-sheet.is-confirm[data-state="closed"] {
+  animation: bf-sheet-confirm-out 0.22s var(--bf-ease) both;
 }
 
 @keyframes bf-sheet-up {
   from {
-    transform: translateY(24px);
-    opacity: 0.6;
+    transform: translateY(100%);
+    opacity: 0.86;
   }
 
   to {
     transform: translateY(0);
     opacity: 1;
+  }
+}
+
+@keyframes bf-sheet-down {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  to {
+    transform: translateY(100%);
+    opacity: 0.86;
+  }
+}
+
+@keyframes bf-sheet-confirm-in {
+  from {
+    transform: translateY(28px) scale(0.98);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes bf-sheet-confirm-out {
+  from {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+
+  to {
+    transform: translateY(20px) scale(0.98);
+    opacity: 0;
   }
 }
 
@@ -58,12 +162,23 @@
   justify-content: space-between;
   gap: 12px;
   padding: 10px 16px 8px;
+  min-height: 44px;
 }
 
 .bf-sheet__bar-title {
   font-size: 1rem;
   font-weight: 700;
   letter-spacing: -0.02em;
+  color: var(--bf-ink);
+}
+
+.bf-sheet.is-danger .bf-sheet__bar-title {
+  color: var(--bf-bad);
+}
+
+.bf-sheet__bar-spacer {
+  width: 32px;
+  height: 32px;
 }
 
 .bf-sheet__close {
@@ -74,6 +189,7 @@
   background: var(--bf-surface-2);
   position: relative;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .bf-sheet__close::before,
@@ -93,76 +209,71 @@
 }
 
 .bf-sheet__scroll {
+  position: relative;
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  padding: 8px 16px calc(16px + var(--bf-inset-bottom));
+  padding: 4px 16px calc(16px + var(--bf-inset-bottom));
 }
 
-.bf-spin__mask.is-embedded {
-  position: relative;
-  min-height: 140px;
-  display: grid;
-  place-items: center;
+.bf-sheet.is-confirm .bf-sheet__scroll {
+  flex: 0 1 auto;
+  overflow: visible;
+  padding-bottom: 4px;
 }
 
-.bf-confirm {
-  position: fixed;
-  inset: 0;
-  z-index: 90;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
+.bf-sheet__body {
+  transition: opacity 0.16s var(--bf-ease);
 }
 
-.bf-confirm__mask {
+.bf-sheet__body.is-busy {
+  opacity: 0.28;
+  pointer-events: none;
+
+  /* 预留高度，避免 loading 结束内容突然撑开 */
+  min-height: 160px;
+}
+
+.bf-sheet__loading {
   position: absolute;
   inset: 0;
-  border: 0;
-  background: rgba(0, 0, 0, 0.45);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: color-mix(in srgb, var(--bf-chrome) 55%, transparent);
+  backdrop-filter: blur(2px);
+  pointer-events: none;
 }
 
-.bf-confirm__sheet {
-  position: relative;
-  z-index: 1;
-  width: min(100%, 420px);
-  margin: 12px;
-  padding: 20px 16px calc(16px + var(--bf-inset-bottom));
-  border-radius: 18px 18px 0 0;
-  background: var(--bf-surface);
-  border: 1px solid var(--bf-stroke);
-}
-
-.bf-confirm__handle {
-  width: 36px;
-  height: 4px;
-  margin: 0 auto 12px;
-  border-radius: 2px;
-  background: color-mix(in srgb, var(--bf-ink) 18%, transparent);
-}
-
-.bf-confirm__title {
-  margin: 0 0 8px;
-  font-size: 1.05rem;
-  font-weight: 700;
-}
-
-.bf-confirm__body {
-  margin: 0 0 16px;
-  font-size: 0.86rem;
+.bf-sheet__copy {
+  margin: 0;
+  font-size: 0.88rem;
   color: var(--bf-ink-2);
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
-.bf-confirm__actions {
+.bf-sheet__footer {
+  flex-shrink: 0;
+  padding: 8px 16px calc(12px + var(--bf-inset-bottom));
+  border-top: 1px solid var(--bf-stroke);
+  background: color-mix(in srgb, var(--bf-chrome) 92%, var(--bf-surface));
+}
+
+.bf-sheet.is-confirm .bf-sheet__footer {
+  border-top: 0;
+  background: transparent;
+  padding-top: 4px;
+}
+
+.bf-sheet__actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
 
-.bf-confirm__btn {
+.bf-sheet__btn {
   border: 1px solid var(--bf-stroke-strong);
   border-radius: var(--bf-radius-sm);
   padding: 12px;
@@ -173,15 +284,39 @@
   color: inherit;
 }
 
-.bf-confirm__btn.is-solid {
+.bf-sheet__btn.is-ghost {
+  background: var(--bf-surface-2);
+}
+
+.bf-sheet__btn.is-solid {
   background: var(--bf-primary);
   border-color: var(--bf-primary);
   color: #fff;
 }
 
-.bf-confirm__sheet.is-danger .bf-confirm__btn.is-solid {
+.bf-sheet__btn.is-solid.is-danger,
+.bf-sheet.is-danger .bf-sheet__btn.is-solid {
   background: var(--bf-bad);
   border-color: var(--bf-bad);
+}
+
+/* 兼容旧类名：若仍有引用则映射到新按钮 */
+.bf-confirm,
+.bf-confirm__mask,
+.bf-confirm__sheet,
+.bf-confirm__handle,
+.bf-confirm__title,
+.bf-confirm__body,
+.bf-confirm__actions,
+.bf-confirm__btn {
+  /* ConfirmHost 已迁到 BottomSheet；保留空规则避免外部样式报错 */
+}
+
+.bf-spin__mask.is-embedded {
+  position: relative;
+  min-height: 140px;
+  display: grid;
+  place-items: center;
 }
 
 /* cert detail leftovers */

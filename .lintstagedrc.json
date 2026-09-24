@@ -8,5 +8,9 @@
     "prettier --write --ignore-unknown"
   ],
   "*.{json,html,yml,yaml}": ["prettier --write --ignore-unknown"],
-  "*.md": ["prettier --write --ignore-unknown", "markdownlint-cli2 --fix"]
+  "*.md": ["prettier --write --ignore-unknown", "markdownlint-cli2 --fix"],
+  "*.py": ["node scripts/lint-py.mjs --fix"],
+  "*.java": ["node scripts/lint-java.mjs --fix"],
+  "*.{c,cc,cpp,h,hpp}": ["node scripts/lint-clang.mjs --fix"],
+  "*.sh": ["node scripts/lint-shell.mjs"]
 }

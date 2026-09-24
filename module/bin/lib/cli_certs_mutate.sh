@@ -1,36 +1,91 @@
 #!/system/bin/sh
 # 由 cert_manager.sh 加载
 # 开关 / 同步 / 导入 / 删除
-cmd_toggle() {
-  name="$1"
-  value="$2"
-  case "$name" in reqable|proxypin) ;; *) echo "error=invalid_toggle"; return 1 ;; esac
-  [ "$value" = "1" ] || [ "$value" = "0" ] || { echo "error=invalid_value"; return 1; }
-  # 关闭前快照当前证书，保证立刻再开不依赖 App 瞬时可读
-  if [ "$value" = "0" ]; then
-    stash_addon_source "$name" >/dev/null 2>&1 || true
+#
+# 极简开关模型：
+# - 证书文件常驻 /data/adb/certbridge/addon-sources/，关开关绝不删除
+# - 关 = 只写 user.conf=0（不抢锁、不播种、不快照）
+# - 开 = 本地有证或能从 App/下载目录/builtin 拿到 → 写 user.conf=1
+
+_toggle_write_user_conf() {
+  tog_key="$1"
+  tog_val="$2"
+  CB_EXT_DIR="${CB_EXT_DIR:-/data/adb/certbridge}"
+  USER_CONF="$CB_EXT_DIR/user.conf"
+  mkdir -p "$CB_EXT_DIR" 2>/dev/null || return 1
+  tmp="$CB_EXT_DIR/.user.conf.$$.$tog_key"
+  if [ -f "$USER_CONF" ]; then
+    grep -v "^${tog_key}=" "$USER_CONF" >"$tmp" 2>/dev/null || : >"$tmp"
+    printf '%s=%s\n' "$tog_key" "$tog_val" >>"$tmp" 2>/dev/null || {
+      rm -f "$tmp"
+      return 1
+    }
+  else
+    printf '%s=%s\n' "$tog_key" "$tog_val" >"$tmp" 2>/dev/null || return 1
   fi
-  # 开启：App 同步 → 生效集恢复 → 快照恢复；任一成功即可写配置
-  if [ "$value" = "1" ]; then
-    sync_source_from_app "$name" >/dev/null 2>&1 || true
-    ensure_source_from_applied "$name" >/dev/null 2>&1 || true
-    restore_addon_source_from_stash "$name" >/dev/null 2>&1 || true
-    if ! addon_can_enable "$name"; then
+  chmod 0600 "$tmp" 2>/dev/null
+  wrote=0
+  if cp -f "$tmp" "$USER_CONF" 2>/dev/null; then
+    wrote=1
+  elif cat "$tmp" >"$USER_CONF" 2>/dev/null; then
+    wrote=1
+  elif mv -f "$tmp" "$USER_CONF" 2>/dev/null; then
+    wrote=1
+    tmp=""
+  fi
+  rm -f "$tmp" 2>/dev/null
+  [ "$wrote" = "1" ] || return 1
+  got=$(grep "^${tog_key}=" "$USER_CONF" 2>/dev/null | head -n1 | cut -d= -f2- | tr -d ' \t\r\n')
+  [ "$got" = "$tog_val" ]
+}
+
+# 开之前保证 addon-sources 有证（与安装 certbridge_install_try_app 同一套探测/同步）
+addon_ensure_ready() {
+  kind="$1"
+  case "$kind" in reqable|proxypin) ;; *) return 1 ;; esac
+  CB_EXT_DIR="${CB_EXT_DIR:-/data/adb/certbridge}"
+  SOURCES_DIR="${SOURCES_DIR:-$CB_EXT_DIR/addon-sources}"
+  mkdir -p "$SOURCES_DIR/$kind" 2>/dev/null || true
+
+  find_source_cert "$kind" >/dev/null 2>&1 && return 0
+  prepare_addon_local "$kind" >/dev/null 2>&1 || true
+  find_source_cert "$kind" >/dev/null 2>&1 && return 0
+  find_addon_cert "$kind" 0 >/dev/null 2>&1 && return 0
+
+  # 与安装相同：diagnose → sync_source_from_app
+  if sync_source_from_app "$kind" >/dev/null 2>&1; then
+    find_source_cert "$kind" >/dev/null 2>&1 && return 0
+  fi
+  return 1
+}
+
+cmd_toggle() {
+  # 禁用 name/value：sync/import 会污染全局 name，导致写成错误键、开关弹回
+  tog_kind="$1"
+  tog_val="$2"
+  case "$tog_kind" in reqable|proxypin) ;; *) echo "error=invalid_toggle"; return 1 ;; esac
+  [ "$tog_val" = "1" ] || [ "$tog_val" = "0" ] || { echo "error=invalid_value"; return 1; }
+
+  if [ "$tog_val" = "1" ]; then
+    if ! addon_ensure_ready "$tog_kind"; then
       echo "error=certificate_unavailable"
-      echo "hint=请先在对应 App 中生成根证书，或使用自定义导入"
+      echo "hint=本地无证书且无法从 App 导入（与安装扫描相同路径）；请先在 App 生成根证书或自定义导入"
       return 1
     fi
-    # 开启成功后再刷新一份快照，方便下次关开
-    stash_addon_source "$name" >/dev/null 2>&1 || true
   fi
-  write_conf "$name" "$value" || { echo "error=write_failed"; return 1; }
-  pending_line=$(note_conf_dirty)
-  log_info "config: $name=$value (reboot required)"
-  log_debug "config: toggle path conf=$CONF pending=1"
+
+  if ! _toggle_write_user_conf "$tog_kind" "$tog_val"; then
+    echo "error=write_failed"
+    echo "hint=无法写入 /data/adb/certbridge/user.conf"
+    return 1
+  fi
+
   echo "ok=1"
-  echo "${name}_enabled=$value"
-  echo "pending_reboot=1"
-  echo "$pending_line"
+  echo "${tog_kind}_enabled=$tog_val"
+  update_reboot_required_flag_certs
+  # 简介刷 module.prop 偏慢：后台做，不挡 WebUI 开关回包
+  (refresh_module_description_light >/dev/null 2>&1 || true) &
+  return 0
 }
 
 cmd_sync_apps() {
@@ -41,7 +96,6 @@ cmd_sync_apps() {
   echo "$opt_out"
   opt_updated=$(echo "$opt_out" | awk -F= '$1 == "optional_updated" { print $2; exit }')
   total_updated=$((${updated:-0} + ${opt_updated:-0}))
-  # 汇总给 WebUI：含 Reqable/ProxyPin 与可选自定义导入
   echo "updated=$total_updated"
   if [ "${total_updated:-0}" -gt 0 ] 2>/dev/null; then
     pending_line=$(update_reboot_required_flag)
@@ -133,11 +187,10 @@ cmd_install_custom() {
   fi
   release_write_lock
   rm -f "$raw" "$normalized"
-  log_info "custom: installed $name ($display, reboot required)"
+  log_info "custom: installed $name ($display)"
   echo "ok=1"
   echo "filename=$name"
   echo "display_name=$display"
-  echo "pending_reboot=1"
   echo "$pending_line"
 }
 
@@ -160,8 +213,7 @@ cmd_remove_custom() {
     sync_magic_overlay "$MODDIR" >/dev/null 2>&1 || true
   fi
   release_write_lock
-  log_info "custom: removed $filename (reboot required)"
+  log_info "custom: removed $filename"
   echo "ok=1"
-  echo "pending_reboot=1"
   echo "$pending_line"
 }

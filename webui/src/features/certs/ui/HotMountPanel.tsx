@@ -1,8 +1,8 @@
+import { useTranslation } from "react-i18next";
 import { useAppSelector } from "@/app/store/hooks";
 import { selectModuleStatus } from "@/features/status/model/selectors";
 import { isFlagOn } from "@/shared/lib/flag";
 import { HotMountMode } from "@/entities/module/enums";
-import { HOT_MOUNT_META } from "@/shared/config/certs";
 import { useHotMountPanel } from "../hooks/useHotMountPanel";
 import { resolveHotSessionLabel } from "../lib/hotSession";
 import { Card } from "@/shared/ui/primitives";
@@ -25,10 +25,11 @@ export function HotMountPanel({
   onSetHotAllow,
   onMount,
   onUnmount,
-  title = "临时挂载",
+  title,
   surface = "card",
   hideTitle = false,
 }: HotMountPanelProps) {
+  const { t } = useTranslation("webui");
   const status = useAppSelector(selectModuleStatus);
   const { mode, setMode, sdPath, setSdPath } = useHotMountPanel();
 
@@ -37,12 +38,13 @@ export function HotMountPanel({
   const isHotActive = isFlagOn(status.hot_active);
   const isHotPartial = isFlagOn(status.hot_partial);
   const isHotAllow = isFlagOn(status.hot_allow);
-  const sessionLabel = resolveHotSessionLabel(status);
+  const sessionLabel = resolveHotSessionLabel(status, t);
+  const resolvedTitle = title ?? t("certs.hotTitle");
 
   return (
     <Card
-      title={hideTitle ? undefined : title}
-      meta={isHotActive ? sessionLabel : HOT_MOUNT_META}
+      title={hideTitle ? undefined : resolvedTitle}
+      meta={isHotActive ? sessionLabel : t("certs.hotMeta")}
       surface={surface}
     >
       <HotMountAllowRow checked={isHotAllow} disabled={busy} onChange={onSetHotAllow} />
@@ -65,7 +67,7 @@ export function HotMountPanel({
         />
       ) : (
         <p style={{ fontSize: "0.8rem", color: "var(--bf-ink-3)" }}>
-          请先开启「允许临时挂载」。
+          {t("certs.hotAllowHint")}
         </p>
       )}
     </Card>

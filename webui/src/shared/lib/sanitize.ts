@@ -1,3 +1,4 @@
+import i18n from "@/shared/i18n";
 import { isFlagOn } from "@/shared/lib/flag";
 import { TrustTone } from "@/entities/module/enums";
 
@@ -13,6 +14,7 @@ export function resolveTrustLabel(status: {
   hot_active?: string;
   active_count?: string;
 }): { tone: TrustTone; title: string; hint: string } {
+  const t = i18n.t.bind(i18n);
   const shortLabel = stripStatusEmoji(status.desc_short || "");
   const injectHint = [status.inject_message, status.inject_hint]
     .filter(Boolean)
@@ -20,7 +22,7 @@ export function resolveTrustLabel(status: {
   const hint = injectHint || cleanStatusBody(status.desc_body) || "";
 
   if (isFlagOn(status.disabled)) {
-    return { tone: TrustTone.Idle, title: shortLabel || "模块已禁用", hint };
+    return { tone: TrustTone.Idle, title: shortLabel || t("trust.disabled"), hint };
   }
 
   if (isFlagOn(status.pending_reboot)) {
@@ -28,35 +30,40 @@ export function resolveTrustLabel(status: {
       tone: TrustTone.Warn,
       title:
         shortLabel ||
-        (isFlagOn(status.hot_active) ? "热挂载 · 永久配置待重启" : "待重启生效"),
+        (isFlagOn(status.hot_active) ? t("trust.pendingHot") : t("trust.pending")),
       hint: cleanStatusBody(status.desc_body) || hint,
     };
   }
 
-  if (/稳定中|注入中|检测中|启动中/.test(shortLabel)) {
+  if (/稳定中|注入中|检测中|启动中|Stable|Inject|Check|Boot|Pending/i.test(shortLabel)) {
     return {
       tone: TrustTone.Idle,
-      title: shortLabel || "稳定中…",
-      hint: cleanStatusBody(status.desc_body) || "正在确认注入是否生效，请稍候",
+      title: shortLabel || t("trust.stabilizing"),
+      hint: cleanStatusBody(status.desc_body) || t("trust.stabilizingHint"),
     };
   }
 
-  if (isFlagOn(status.inject_error) || /失败|异常|需重装/.test(shortLabel)) {
+  if (
+    isFlagOn(status.inject_error) ||
+    /失败|异常|需重装|fail|error|abnormal/i.test(shortLabel)
+  ) {
     return {
       tone: TrustTone.Bad,
-      title: shortLabel || "注入异常",
-      hint: injectHint || cleanStatusBody(status.desc_body) || "请查看日志或重启后再试",
+      title: shortLabel || t("trust.injectError"),
+      hint: injectHint || cleanStatusBody(status.desc_body) || t("trust.checkLog"),
     };
   }
 
   if (shortLabel) {
-    const isIdle = /未启用/.test(shortLabel);
-    const isWarn = /待重启|热挂载/.test(shortLabel);
-    // 热更新收尾竞态下偶发「运行正常 · 张」（缺数字），用 active_count 补上
+    const isIdle = /未启用|idle|off/i.test(shortLabel);
+    const isWarn = /待重启|热挂载|pending|hot/i.test(shortLabel);
     let title = shortLabel;
-    if (/^运行正常/.test(shortLabel) && !/\d+\s*张/.test(shortLabel)) {
+    if (
+      (/^运行正常/.test(shortLabel) || /^OK\b/i.test(shortLabel)) &&
+      !/\d+/.test(shortLabel)
+    ) {
       const n = String(status.active_count || "").replace(/\D/g, "") || "0";
-      title = n === "0" ? "运行正常" : `运行正常 · ${n} 张`;
+      title = n === "0" ? t("trust.ok") : t("trust.okCount", { count: n });
     }
     return {
       tone: isIdle ? TrustTone.Idle : isWarn ? TrustTone.Warn : TrustTone.Ok,
@@ -68,15 +75,15 @@ export function resolveTrustLabel(status: {
   if (status.apex_ok === "1" || status.apex_ok === "2") {
     return {
       tone: TrustTone.Ok,
-      title: `运行正常 · ${status.active_count || 0} 张`,
+      title: t("trust.okCount", { count: status.active_count || 0 }),
       hint: cleanStatusBody(status.desc_body) || hint,
     };
   }
 
   return {
     tone: TrustTone.Bad,
-    title: "状态异常",
-    hint: injectHint || "请查看日志或重启后再试",
+    title: t("trust.abnormal"),
+    hint: injectHint || t("trust.checkLog"),
   };
 }
 

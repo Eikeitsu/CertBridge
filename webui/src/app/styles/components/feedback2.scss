@@ -1,0 +1,99 @@
+.bf-snackbar {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--bf-inset-bottom) + var(--bf-dock-h) + var(--bf-dock-pad) + 16px);
+  transform: translateX(-50%) translateY(10px) scale(0.98);
+  z-index: 95;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(92vw, 360px);
+  padding: 11px 14px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--bf-stroke-strong) 80%, transparent);
+  background: color-mix(in srgb, var(--bf-surface) 92%, transparent);
+  color: var(--bf-ink);
+  box-shadow:
+    0 10px 28px color-mix(in srgb, var(--bf-ink) 12%, transparent),
+    0 1px 0 color-mix(in srgb, #fff 35%, transparent) inset;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  --bf-snack-fs: 0.84rem;
+
+  font-size: var(--bf-snack-fs);
+  line-height: 1.35;
+  text-align: left;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.22s var(--bf-ease),
+    transform 0.22s var(--bf-ease);
+}
+
+.bf-snackbar.is-on {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+.bf-snackbar__mark {
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: calc(var(--bf-snack-fs) * 1.35);
+  height: calc(var(--bf-snack-fs) * 1.35);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--bf-snack-fs) * 0.78);
+  font-weight: 700;
+  line-height: 1;
+  background: color-mix(in srgb, var(--bf-ink) 8%, transparent);
+  color: var(--bf-ink-2);
+}
+
+.bf-snackbar__text {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+.bf-snackbar.tone-ok {
+  border-color: color-mix(in srgb, var(--bf-ok) 35%, var(--bf-stroke));
+  background: color-mix(in srgb, var(--bf-ok-soft) 70%, var(--bf-surface));
+}
+
+.bf-snackbar.tone-ok .bf-snackbar__mark {
+  background: color-mix(in srgb, var(--bf-ok) 18%, transparent);
+  color: var(--bf-ok);
+}
+
+.bf-snackbar.tone-warn {
+  border-color: color-mix(in srgb, var(--bf-warn) 35%, var(--bf-stroke));
+  background: color-mix(in srgb, var(--bf-warn-soft) 70%, var(--bf-surface));
+}
+
+.bf-snackbar.tone-warn .bf-snackbar__mark {
+  background: color-mix(in srgb, var(--bf-warn) 18%, transparent);
+  color: var(--bf-warn);
+}
+
+.bf-snackbar.tone-bad {
+  border-color: color-mix(in srgb, var(--bf-bad) 35%, var(--bf-stroke));
+  background: color-mix(in srgb, var(--bf-bad-soft) 70%, var(--bf-surface));
+}
+
+.bf-snackbar.tone-bad .bf-snackbar__mark {
+  background: color-mix(in srgb, var(--bf-bad) 18%, transparent);
+  color: var(--bf-bad);
+}
+
+.bf-snackbar.tone-info .bf-snackbar__mark {
+  background: color-mix(in srgb, var(--bf-primary) 16%, transparent);
+  color: var(--bf-primary);
+}
+
+/* 更多页：二级导航 */

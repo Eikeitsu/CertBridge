@@ -12,6 +12,7 @@ import type { CustomCertificate, ModuleStatus } from "@/entities/module/types";
 import { restoreChromeInsets } from "@/features/theme/lib/chrome";
 import { formatClockTime } from "@/shared/lib/clock";
 import { FLAG_ON } from "@/shared/config/constants";
+import i18n from "@/shared/i18n";
 
 type StatusState = {
   loading: boolean;
@@ -49,7 +50,7 @@ function resolveRefreshArg(arg: RefreshStatusArg) {
   return { toast: false, syncApps: true, live: false };
 }
 
-/** CLI 回包里的 reboot_required → pending_reboot，并过滤非状态键 */
+/** CLI 回包里的 reboot_required 优先于 pending_reboot，并过滤非状态键 */
 export function normalizeCliStatusPatch(
   kv: Record<string, string>,
 ): Record<string, string> {
@@ -57,11 +58,15 @@ export function normalizeCliStatusPatch(
   for (const [key, value] of Object.entries(kv)) {
     if (!key || key === "ok" || key === "error" || key === "hint" || key === "filename")
       continue;
-    if (key === "reboot_required") {
-      patch.pending_reboot = value === FLAG_ON || value === "1" ? "1" : "0";
+    if (key === "reboot_required") continue;
+    // toggle 诊断字段，勿写入 status
+    if (key === "match_certs" || key.startsWith("boot_") || key.startsWith("cur_"))
       continue;
-    }
     patch[key] = value;
+  }
+  if (Object.prototype.hasOwnProperty.call(kv, "reboot_required")) {
+    const value = kv.reboot_required;
+    patch.pending_reboot = value === FLAG_ON || value === "1" ? "1" : "0";
   }
   return patch;
 }
@@ -72,29 +77,38 @@ const initialState: StatusState = {
   bootstrapped: false,
   status: {},
   customCertificates: [],
-  deviceLabel: "本机",
-  deviceName: "本机",
+  deviceLabel: "Device",
+  deviceName: "Device",
   lastRefreshedAt: "--",
 };
 
 export const bootstrapStatus = createAsyncThunk("status/bootstrap", async () => {
-  // 部分管理器（SukiSU 等）注入 ksu 略晚于首屏 JS
+  // 部分管理器（SukiSU 等）注入 ksu 略晚于首屏 JS：短轮询，避免固定 ~400ms 空等
   if (!hasBridge()) {
-    await new Promise((r) => window.setTimeout(r, 120));
+    for (let i = 0; i < 4 && !hasBridge(); i += 1) {
+      await new Promise((r) => window.setTimeout(r, 40 + i * 40));
+    }
   }
-  if (!hasBridge()) {
-    await new Promise((r) => window.setTimeout(r, 280));
-  }
-  const [device, status, customCertificates] = await Promise.all([
-    fetchDeviceInfo().catch(() => ({ label: "本机", name: "本机" })),
-    fetchStatus(),
+  // 首屏用 --quick，跳过 hide/zygisk 慢探测，尽快进首页
+  const status = await fetchStatus("quick");
+  return { status };
+});
+
+/** 非阻塞补齐：设备文案 + 自定义列表 + 完整 status（补 hide/zygisk） */
+export const enrichBootstrapMeta = createAsyncThunk("status/enrichMeta", async () => {
+  const [device, customCertificates, status] = await Promise.all([
+    fetchDeviceInfo().catch(() => ({
+      label: i18n.t("ui.deviceLocal"),
+      name: i18n.t("ui.deviceLocal"),
+    })),
     listCustom().catch(() => [] as CustomCertificate[]),
+    fetchStatus().catch(() => null),
   ]);
   return {
     deviceLabel: device.label,
     deviceName: device.name,
-    status,
     customCertificates,
+    status,
   };
 });
 
@@ -105,12 +119,12 @@ function formatSyncToast(sync: {
   rebootRequired?: boolean;
 }): string | null {
   if (sync.updated > 0) {
-    return sync.rebootRequired
-      ? `已从 App 更新 ${sync.updated} 张证书（含可选自定义），重启后生效`
-      : `已从 App 更新 ${sync.updated} 张证书（含可选自定义）`;
+    return i18n.t(sync.rebootRequired ? "toast.syncUpdatedReboot" : "toast.syncUpdated", {
+      count: sync.updated,
+    });
   }
   if (sync.miss > 0 && sync.kept === 0 && sync.updated === 0) {
-    return "未从 App 读到新证书（已保留现有）";
+    return i18n.t("toast.syncNone");
   }
   return null;
 }
@@ -132,7 +146,9 @@ export const refreshStatus = createAsyncThunk(
       listCustom().catch(() => [] as CustomCertificate[]),
     ]);
     if (showToast) {
-      toast(formatSyncToast(sync) || (live ? "已复核注入状态" : "状态已刷新"));
+      toast(
+        formatSyncToast(sync) || i18n.t(live ? "toast.statusLive" : "toast.statusOk"),
+      );
     }
     restoreChromeInsets();
     return { status, customCertificates };
@@ -140,7 +156,7 @@ export const refreshStatus = createAsyncThunk(
 );
 
 export const requestReboot = createAsyncThunk("status/reboot", async () => {
-  toast("正在重启…", "warn");
+  toast(i18n.t("toast.rebooting"), "warn");
   await rebootDevice();
 });
 
@@ -166,10 +182,7 @@ const statusSlice = createSlice({
       .addCase(bootstrapStatus.fulfilled, (state, action) => {
         state.loading = false;
         state.bootstrapped = true;
-        state.deviceLabel = action.payload.deviceLabel;
-        state.deviceName = action.payload.deviceName;
         state.status = action.payload.status;
-        state.customCertificates = action.payload.customCertificates;
         state.lastRefreshedAt = formatClockTime();
       })
       .addCase(bootstrapStatus.rejected, (state, action) => {
@@ -177,6 +190,15 @@ const statusSlice = createSlice({
         state.bootstrapped = true;
         state.error = friendlyError(action.error.message);
         toast(state.error, "bad");
+      })
+      .addCase(enrichBootstrapMeta.fulfilled, (state, action) => {
+        state.deviceLabel = action.payload.deviceLabel;
+        state.deviceName = action.payload.deviceName;
+        state.customCertificates = action.payload.customCertificates;
+        if (action.payload.status) {
+          state.status = action.payload.status;
+          state.lastRefreshedAt = formatClockTime();
+        }
       })
       .addCase(refreshStatus.pending, (state) => {
         state.refreshing = true;

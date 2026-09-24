@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button, Card, Row, Segment, Switch } from "@/shared/ui/primitives";
 import { toast } from "@/shared/api/ksu";
 import {
@@ -7,8 +8,6 @@ import {
 } from "@/shared/api/moduleUpdate";
 import {
   UPDATE_CHANNELS,
-  UPDATE_CHANNEL_HINT,
-  UPDATE_CHANNEL_LABEL,
   checkUpdateChannel,
   isPreferCdn,
   loadPersistedChannel,
@@ -25,14 +24,8 @@ type UpdateChannelPanelProps = {
   surface?: "card" | "plain";
 };
 
-const INSTALL_BTN: Record<ModuleUpdatePhase, string> = {
-  download: "下载中…",
-  write: "写入中…",
-  install: "安装中…",
-  manager: "打开中…",
-};
-
 export function UpdateChannelPanel({ dense, surface = "card" }: UpdateChannelPanelProps) {
+  const { t } = useTranslation("webui");
   const [channel, setChannel] = useState<UpdateChannel>("stable");
   const [preferCdn, setPreferCdnState] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -53,14 +46,14 @@ export function UpdateChannelPanel({ dense, surface = "card" }: UpdateChannelPan
         const r = await checkUpdateChannel(channel, preferCdn);
         setResult(r);
         if (r.error) toast(r.error, "bad");
-        else if (!silent) toast("检查完成", "ok");
+        else if (!silent) toast(t("more.update.checked"), "ok");
       } catch (e) {
         toast(e instanceof Error ? e.message : String(e), "bad");
       } finally {
         setBusy(false);
       }
     },
-    [channel, preferCdn],
+    [channel, preferCdn, t],
   );
 
   useEffect(() => {
@@ -71,9 +64,7 @@ export function UpdateChannelPanel({ dense, surface = "card" }: UpdateChannelPan
     const ch = next === "ci" ? "ci" : "stable";
     if (ch === channel) return;
     if (ch === "ci") {
-      const ok = window.confirm(
-        "切换到 CI？\n开发构建可能不稳定，仅建议排查问题或尝鲜时使用。",
-      );
+      const ok = window.confirm(t("more.update.ciConfirm"));
       if (!ok) return;
     }
     setChannel(ch);
@@ -88,7 +79,7 @@ export function UpdateChannelPanel({ dense, surface = "card" }: UpdateChannelPan
   const onInstall = async () => {
     const zip = result?.remote?.zipUrl;
     if (!zip) {
-      toast("没有可安装的包", "bad");
+      toast(t("more.update.noPackage"), "bad");
       return;
     }
     setInstalling(true);
@@ -100,11 +91,14 @@ export function UpdateChannelPanel({ dense, surface = "card" }: UpdateChannelPan
         setPercent(p.percent);
       });
       if (!r.ok) {
-        toast(r.error || "安装失败", "bad");
+        toast(r.error || t("more.update.installFailed"), "bad");
         return;
       }
       setPercent(100);
-      toast(r.mode === "cli" ? "已刷入模块" : "已打开管理器，请确认安装", "ok");
+      toast(
+        t(r.mode === "cli" ? "more.update.flashed" : "more.update.managerOpened"),
+        "ok",
+      );
       void runCheck(true);
     } finally {
       setInstalling(false);
@@ -117,23 +111,23 @@ export function UpdateChannelPanel({ dense, surface = "card" }: UpdateChannelPan
   const canInstall = !!(result && remote && (result.hasUpdate || result.canSwitch));
   const installLabel =
     installing && phase
-      ? INSTALL_BTN[phase]
+      ? t(`more.update.${phase}Busy`)
       : result?.hasUpdate
-        ? "下载并安装"
-        : "切换安装";
+        ? t("more.update.downloadInstall")
+        : t("more.update.switchInstall");
 
   return (
     <Card
-      title="更新通道"
-      meta="正式走 Pages；CI 的清单与 zip 同在 ci-dist 分支。管理器自带更新始终跟正式通道。"
+      title={t("more.update.title")}
+      meta={t("more.update.meta")}
       surface={surface}
       className={dense ? "bf-card--dense" : undefined}
     >
       <Segment
         options={UPDATE_CHANNELS.map((c) => ({
           value: c,
-          label: UPDATE_CHANNEL_LABEL[c],
-          hint: UPDATE_CHANNEL_HINT[c],
+          label: t(`more.update.channels.${c}.label`),
+          hint: t(`more.update.channels.${c}.hint`),
         }))}
         value={channel}
         disabled={busy || installing}
@@ -141,8 +135,8 @@ export function UpdateChannelPanel({ dense, surface = "card" }: UpdateChannelPan
       />
       {channel === "ci" ? (
         <Row
-          title="CI 经 jsDelivr 拉取"
-          desc="默认关；失败会回退 GitHub raw"
+          title={t("more.update.cdnTitle")}
+          desc={t("more.update.cdnDesc")}
           extra={
             <Switch
               checked={preferCdn}
@@ -154,18 +148,22 @@ export function UpdateChannelPanel({ dense, surface = "card" }: UpdateChannelPan
       ) : null}
       <div className="bf-row" style={{ display: "block", paddingTop: 8 }}>
         <div className="bf-row__desc">
-          本地 / 远端：{versionLine(result?.localVersion, remote?.version)}
+          {t("more.update.versions", {
+            versions: versionLine(result?.localVersion, remote?.version),
+          })}
           {result?.localCode || remote?.versionCode
-            ? `（${result?.localCode ?? "?"} → ${remote?.versionCode ?? "--"}）`
+            ? ` (${result?.localCode ?? "?"} → ${remote?.versionCode ?? "--"})`
             : ""}
         </div>
-        {result?.hasUpdate ? <div className="bf-row__desc">有新版本可安装</div> : null}
+        {result?.hasUpdate ? (
+          <div className="bf-row__desc">{t("more.update.updateReady")}</div>
+        ) : null}
         {result?.canSwitch && !result.hasUpdate ? (
-          <div className="bf-row__desc">可切换安装当前通道版本</div>
+          <div className="bf-row__desc">{t("more.update.switchReady")}</div>
         ) : null}
         {result?.stableNewer ? (
           <div className="bf-row__desc">
-            旁路提示：正式通道已有更新 {result.stableNewer.version}
+            {t("more.update.stableNewer", { version: result.stableNewer.version })}
           </div>
         ) : null}
         {result?.error ? <div className="bf-row__desc">{result.error}</div> : null}
@@ -173,7 +171,7 @@ export function UpdateChannelPanel({ dense, surface = "card" }: UpdateChannelPan
       <UpdateInstallProgress active={installing} phase={phase} percent={percent} />
       <div className="bf-update-actions">
         <Button disabled={busy || installing} onClick={() => void runCheck(false)}>
-          检查更新
+          {t("more.update.check")}
         </Button>
         <Button
           variant="primary"

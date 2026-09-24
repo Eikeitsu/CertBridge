@@ -8,12 +8,13 @@ import { useImmersiveChrome } from "@/features/shell/hooks/useImmersiveChrome";
 import { selectResolvedTheme } from "@/features/theme/model/selectors";
 import {
   selectDeviceLabel,
+  selectStatusLoading,
   selectStatusRefreshing,
 } from "@/features/status/model/selectors";
 import { TabName } from "@/entities/module/enums";
 import { AppSnackbar } from "@/shared/ui/AppSnackbar";
 import { ConfirmHost } from "@/shared/ui/ConfirmHost";
-import { OPS_VOICE } from "./voice";
+import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
 import { OpsHomePage } from "./pages/HomePage";
 import { OpsCertsPage } from "./pages/CertsPage";
 import { OpsLogPage } from "./pages/LogPage";
@@ -50,12 +51,14 @@ function Pane({
 }
 
 export function OpsShell() {
+  const chrome = usePackChrome();
   const deviceLabel = useAppSelector(selectDeviceLabel);
   const refreshing = useAppSelector(selectStatusRefreshing);
+  const loading = useAppSelector(selectStatusLoading);
   const resolved = useAppSelector(selectResolvedTheme);
   const { activeTab, switchTab } = useActiveTab();
-  const { tabs, hideSupported } = useVisibleTabs();
-  const v = OPS_VOICE;
+  const { tabs, showHideTab } = useVisibleTabs();
+  const v = chrome;
   const [seen, setSeen] = useState<Partial<Record<TabName, boolean>>>(() => ({
     [activeTab]: true,
   }));
@@ -67,8 +70,8 @@ export function OpsShell() {
   }, [activeTab]);
 
   useEffect(() => {
-    if (!hideSupported && activeTab === TabName.Hide) switchTab(TabName.Home);
-  }, [hideSupported, activeTab, switchTab]);
+    if (!showHideTab && activeTab === TabName.Hide) switchTab(TabName.Home);
+  }, [showHideTab, activeTab, switchTab]);
 
   const dockTabs = useMemo(
     () => tabs.map((t) => ({ key: t.key, label: v.tabs[t.key] })),
@@ -77,7 +80,10 @@ export function OpsShell() {
 
   return (
     <div className="pk-ops-shell">
-      <div className={`pk-ops-progress${refreshing ? " is-on" : ""}`} aria-hidden />
+      <div
+        className={`pk-ops-progress${refreshing || loading ? " is-on" : ""}`}
+        aria-hidden
+      />
       <header className="pk-ops-topbar">
         <div className="pk-ops-topbar__brand">
           <span className="pk-ops-topbar__mark" aria-hidden />
@@ -96,7 +102,7 @@ export function OpsShell() {
         <Pane tab={TabName.Log} active={activeTab} seen={!!seen[TabName.Log]}>
           <OpsLogPage />
         </Pane>
-        {hideSupported ? (
+        {showHideTab ? (
           <Pane tab={TabName.Hide} active={activeTab} seen={!!seen[TabName.Hide]}>
             <OpsHidePage />
           </Pane>

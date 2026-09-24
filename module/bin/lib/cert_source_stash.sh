@@ -1,30 +1,106 @@
 #!/system/bin/sh
 # 由 common / cert_domain 加载
 # addon 快照、可启用判断与批量同步
-stash_addon_source() {
+#
+# 不变量（关/开不能互斥）：
+# - conf 开关与证书字节分离；关断绝不删除 sources / stash
+# - stash / sources 在 /data/adb/certbridge（模块外持久）
+# - 开启：有 sources / stash / applied / builtin 即可；App 同步只是可选刷新
+
+CB_EXT_DIR="${CB_EXT_DIR:-/data/adb/certbridge}"
+STASH_DIR="${STASH_DIR:-$CB_EXT_DIR/source-stash}"
+
+stash_has_cert() {
   kind="$1"
-  case "$kind" in reqable|proxypin) ;; *) return 1 ;; esac
-  src=$(find_addon_cert "$kind" 0 2>/dev/null) || src=$(find_applied_gen_cert "$kind" 2>/dev/null) || return 1
+  [ -d "$STASH_DIR/$kind" ] || return 1
+  for cert in "$STASH_DIR/$kind"/*.*; do
+    [ -f "$cert" ] || continue
+    case "$cert" in *.meta) continue ;; esac
+    is_cert_filename "$(basename "$cert")" && return 0
+  done
+  return 1
+}
+
+# 把单个证书文件原子写入 stash/<kind>/（保留旧快照直到新文件就位）
+_stash_store_file() {
+  kind="$1"
+  src="$2"
   [ -f "$src" ] || return 1
   dest_dir="$STASH_DIR/$kind"
   mkdir -p "$dest_dir" 2>/dev/null || return 1
-  # 清空旧快照，只留一份
-  rm -f "$dest_dir"/* 2>/dev/null
   name=$(basename "$src" | tr -d '\r')
-  cp -f "$src" "$dest_dir/$name" 2>/dev/null || return 1
-  chmod 0644 "$dest_dir/$name" 2>/dev/null
+  is_cert_filename "$name" || return 1
+  stage="$dest_dir/.stage.$$"
+  rm -rf "$stage"
+  mkdir -p "$stage" 2>/dev/null || return 1
+  cp -f "$src" "$stage/$name" 2>/dev/null || {
+    rm -rf "$stage"
+    return 1
+  }
+  chmod 0644 "$stage/$name" 2>/dev/null
   if [ -f "$src.meta" ]; then
-    cp -f "$src.meta" "$dest_dir/$name.meta" 2>/dev/null || true
+    cp -f "$src.meta" "$stage/$name.meta" 2>/dev/null || true
+  elif [ -f "${src}.meta" ]; then
+    cp -f "${src}.meta" "$stage/$name.meta" 2>/dev/null || true
   fi
+  # 新文件就位后再删其它旧证；失败则丢弃 stage，旧快照原样保留
+  if ! mv -f "$stage/$name" "$dest_dir/$name" 2>/dev/null; then
+    if ! cp -f "$stage/$name" "$dest_dir/$name" 2>/dev/null; then
+      rm -rf "$stage"
+      return 1
+    fi
+  fi
+  if [ -f "$stage/$name.meta" ]; then
+    mv -f "$stage/$name.meta" "$dest_dir/$name.meta" 2>/dev/null || \
+      cp -f "$stage/$name.meta" "$dest_dir/$name.meta" 2>/dev/null || true
+  fi
+  rm -rf "$stage"
+  for old in "$dest_dir"/*.*; do
+    [ -f "$old" ] || continue
+    case "$old" in
+      */"$name"|*/"$name".meta) continue ;;
+      *.meta) continue ;;
+    esac
+    # 只清其它证书文件，保留刚写入的
+    is_cert_filename "$(basename "$old")" || continue
+    rm -f "$old" "$old.meta" 2>/dev/null
+  done
   return 0
+}
+
+# 仅从 sources 快照（纯本地 cp，供关断热路径，绝不扫 App）
+stash_addon_from_sources() {
+  kind="$1"
+  case "$kind" in reqable|proxypin) ;; *) return 1 ;; esac
+  src=$(find_source_cert "$kind" 2>/dev/null) || return 1
+  _stash_store_file "$kind" "$src"
+}
+
+# 完整快照：sources → addon/builtin → 生效集
+stash_addon_source() {
+  kind="$1"
+  case "$kind" in reqable|proxypin) ;; *) return 1 ;; esac
+  src=$(find_source_cert "$kind" 2>/dev/null) || \
+    src=$(find_addon_cert "$kind" 0 2>/dev/null) || \
+    src=$(find_applied_gen_cert "$kind" 2>/dev/null) || return 1
+  _stash_store_file "$kind" "$src"
+}
+
+# 关断专用：只做本地快照（sources / applied / 已有 stash），绝不扫 App
+stash_addon_for_disable() {
+  kind="$1"
+  case "$kind" in reqable|proxypin) ;; *) return 1 ;; esac
+  stash_addon_from_sources "$kind" >/dev/null 2>&1 && return 0
+  stash_addon_source "$kind" >/dev/null 2>&1 && return 0
+  stash_has_cert "$kind"
 }
 
 restore_addon_source_from_stash() {
   kind="$1"
   case "$kind" in reqable|proxypin) ;; *) return 1 ;; esac
   find_source_cert "$kind" >/dev/null 2>&1 && return 0
+  stash_has_cert "$kind" || return 1
   stash="$STASH_DIR/$kind"
-  [ -d "$stash" ] || return 1
   src=""
   for cert in "$stash"/*.*; do
     [ -f "$cert" ] || continue
@@ -45,18 +121,49 @@ restore_addon_source_from_stash() {
   echo "$dest_dir/$name"
 }
 
-# 是否允许开启：sources / builtin / 仍在生效 / generation 残留 / 关断前快照
+# 开启前凑齐本地工作副本（不碰 App）
+prepare_addon_local() {
+  kind="$1"
+  case "$kind" in reqable|proxypin) ;; *) return 1 ;; esac
+  CB_EXT_DIR="${CB_EXT_DIR:-/data/adb/certbridge}"
+  SOURCES_DIR="${SOURCES_DIR:-$CB_EXT_DIR/addon-sources}"
+  STASH_DIR="${STASH_DIR:-$CB_EXT_DIR/source-stash}"
+  certbridge_ensure_state_sources >/dev/null 2>&1 || true
+  find_source_cert "$kind" >/dev/null 2>&1 && return 0
+  restore_addon_source_from_stash "$kind" >/dev/null 2>&1 && return 0
+  ensure_source_from_applied "$kind" >/dev/null 2>&1 && return 0
+  # 旧路径再扫一遍（热更新后外置目录可能仍空）
+  for src_dir in \
+    "${STATEDIR:-}/addon-sources/$kind" \
+    "${STATEDIR:-}/source-stash/$kind" \
+    "${CERT_POOL:-}/sources/$kind" \
+    "$CB_EXT_DIR/source-stash/$kind"
+  do
+    [ -n "$src_dir" ] && [ -d "$src_dir" ] || continue
+    for f in "$src_dir"/*.*; do
+      [ -f "$f" ] || continue
+      case "$f" in *.meta) continue ;; esac
+      is_cert_filename "$(basename "$f")" || continue
+      dest_dir="$SOURCES_DIR/$kind"
+      mkdir -p "$dest_dir" 2>/dev/null || continue
+      name=$(basename "$f")
+      cp -f "$f" "$dest_dir/$name" 2>/dev/null || continue
+      [ -f "$f.meta" ] && cp -f "$f.meta" "$dest_dir/$name.meta" 2>/dev/null || true
+      chmod 0644 "$dest_dir/$name" 2>/dev/null
+      find_source_cert "$kind" >/dev/null 2>&1 && return 0
+    done
+  done
+  # proxypin 可走 builtin；reqable 无 builtin
+  find_addon_cert "$kind" 0 >/dev/null 2>&1 && return 0
+  return 1
+}
+
+# 是否允许开启：sources / builtin / 仍在生效文件 / 关断前快照
 addon_can_enable() {
   kind="$1"
   find_addon_cert "$kind" 0 >/dev/null 2>&1 && return 0
-  is_addon_applied "$kind" && return 0
   find_applied_gen_cert "$kind" >/dev/null 2>&1 && return 0
-  [ -d "$STASH_DIR/$kind" ] || return 1
-  for cert in "$STASH_DIR/$kind"/*.*; do
-    [ -f "$cert" ] || continue
-    case "$cert" in *.meta) continue ;; esac
-    is_cert_filename "$(basename "$cert")" && return 0
-  done
+  stash_has_cert "$kind" && return 0
   return 1
 }
 

@@ -3,11 +3,11 @@
 装完模块后（需 Root：`adb shell` / `su`）：
 
 ```bash
-/data/adb/modules/CertBridge/bin/cb help
-/data/adb/modules/CertBridge/bin/cb status
+/data/adb/certbridge/cb help
+/data/adb/certbridge/cb status
 ```
 
-`cb` 是薄包装，实际执行 `bin/cert_manager.sh`。**不**挂到 `system/bin`。
+外部入口在 `/data/adb/certbridge/cb`（转发到模块内 `cert_manager.sh`）。模块内 `bin/cb` 仍可用。**不**挂到 `system/bin`。
 
 ## 常用命令
 
@@ -72,11 +72,12 @@ cb help aliases
 
 ## 相关路径
 
-| 路径                                  | 说明           |
-| ------------------------------------- | -------------- |
-| `/data/adb/modules/CertBridge/bin/cb` | CLI 入口       |
-| `.../bin/cert_manager.sh`             | 实际命令实现   |
-| `.../config/certs.conf`               | 主配置         |
-| `.../data/install.log`                | 安装与运行日志 |
+| 路径                                  | 说明               |
+| ------------------------------------- | ------------------ |
+| `/data/adb/certbridge/cb`             | CLI 入口（推荐）   |
+| `/data/adb/modules/CertBridge/bin/cb` | 模块内入口（兼容） |
+| `.../bin/cert_manager.sh`             | 实际命令实现       |
+| `.../config/certs.conf`               | 主配置             |
+| `.../data/install.log`                | 安装与运行日志     |
 
 多行白名单更适合用 WebUI 编辑；完整键义见 [配置说明](/guide/config)。

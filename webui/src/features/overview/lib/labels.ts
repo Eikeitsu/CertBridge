@@ -1,12 +1,17 @@
+import i18n from "@/shared/i18n";
 import { isFlagOn } from "@/shared/lib/flag";
 
-export const DEFAULT_STATUS_DESC =
-  "安全合并 Reqable / ProxyPin / 自定义 CA，并支持用户区、存储卡证书免重启挂载与无痕卸载。";
+export function defaultStatusDesc(): string {
+  return i18n.t("trust.defaultDesc");
+}
+
+/** @deprecated use defaultStatusDesc() */
+export const DEFAULT_STATUS_DESC = "";
 
 export function resolveApexLabel(apexOk?: string): string {
   if (apexOk === "2") return "N/A";
-  if (apexOk === "1") return "已注入";
-  return "失败";
+  if (apexOk === "1") return i18n.t("overview.apexInjected");
+  return i18n.t("overview.apexFail");
 }
 
 export function resolveHotLabel(status: {
@@ -16,9 +21,11 @@ export function resolveHotLabel(status: {
   hot_partial?: string;
 }): string {
   if (!isFlagOn(status.hot_supported)) return "N/A";
-  if (isFlagOn(status.hot_stale)) return "异常";
+  if (isFlagOn(status.hot_stale)) return i18n.t("overview.hotAbnormal");
   if (isFlagOn(status.hot_active)) {
-    return isFlagOn(status.hot_partial) ? "部分" : "已挂载";
+    return isFlagOn(status.hot_partial)
+      ? i18n.t("overview.hotPartial")
+      : i18n.t("overview.hotMounted");
   }
-  return "未挂载";
+  return i18n.t("overview.hotIdle");
 }

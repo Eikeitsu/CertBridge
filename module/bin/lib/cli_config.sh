@@ -11,10 +11,9 @@ cmd_set_mount_mode() {
   # 立刻按新模式清理 / 同步 staged，避免下次开机前脏 overlay
   prepare_mount_mode_overlay "$MODDIR" 2>/dev/null || true
   pending_line=$(note_conf_dirty)
-  log_info "config: mount_mode=$mode (reboot required)"
+  log_info "config: mount_mode=$mode"
   echo "ok=1"
   echo "mount_mode=$mode"
-  echo "pending_reboot=1"
   echo "$pending_line"
 }
 
@@ -27,10 +26,9 @@ cmd_set_tmpfs_style() {
   write_conf tmpfs_style "$style" || { echo "error=write_failed"; return 1; }
   apply_tmpfs_style
   pending_line=$(note_conf_dirty)
-  log_info "config: tmpfs_style=$style (reboot required)"
+  log_info "config: tmpfs_style=$style"
   echo "ok=1"
   echo "tmpfs_style=$style"
-  echo "pending_reboot=1"
   echo "$pending_line"
 }
 
@@ -50,10 +48,9 @@ cmd_set_experimental_14_system() {
   write_conf experimental_14_system "$mode" || { echo "error=write_failed"; return 1; }
   prepare_mount_mode_overlay "$MODDIR" 2>/dev/null || true
   pending_line=$(note_conf_dirty)
-  log_info "config: experimental_14_system=$mode (reboot required; API34+ both mount modes)"
+  log_info "config: experimental_14_system=$mode (API34+ both mount modes)"
   echo "ok=1"
   echo "experimental_14_system=$mode"
-  echo "pending_reboot=1"
   echo "$pending_line"
 }
 
@@ -198,9 +195,11 @@ cmd_set_boot_bind_zygote() {
     *) echo "error=invalid_boot_bind_zygote"; return 1 ;;
   esac
   write_conf boot_bind_zygote "$val" || { echo "error=write_failed"; return 1; }
-  log_info "config: boot_bind_zygote=$val (reboot required)"
+  pending_line=$(note_conf_dirty)
+  log_info "config: boot_bind_zygote=$val"
   echo "ok=1"
   echo "boot_bind_zygote=$val"
+  echo "$pending_line"
   if [ "$val" = "0" ]; then
     echo "hint=已关闭开机 Zygote 注入；重启后仅 bind init，部分机可能缺证"
   else
@@ -215,9 +214,11 @@ cmd_set_boot_multi_apex() {
     *) echo "error=invalid_boot_multi_apex"; return 1 ;;
   esac
   write_conf boot_multi_apex "$val" || { echo "error=write_failed"; return 1; }
-  log_info "config: boot_multi_apex=$val (reboot required)"
+  pending_line=$(note_conf_dirty)
+  log_info "config: boot_multi_apex=$val"
   echo "ok=1"
   echo "boot_multi_apex=$val"
+  echo "$pending_line"
   if [ "$val" = "0" ]; then
     echo "hint=已改为精简 boot：14+ 仅主 APEX（跳过 @版本与 system）；重启后生效"
   else
@@ -236,10 +237,29 @@ cmd_set_service_probe() {
   echo "ok=1"
   echo "service_probe=$val"
   if [ "$val" = "0" ]; then
-    echo "hint=已关闭状态复核；仅 late_inject=1 时本项有意义，下次开机生效"
+    echo "hint=probe off"
   else
-    echo "hint=已开启状态复核（需同时 late_inject=1 才会退避/heal）；下次开机生效"
+    echo "hint=probe on (needs late_inject=1)"
   fi
+}
+
+cmd_set_ui_lang() {
+  val="$1"
+  case "$val" in
+    system|zh-CN|en) ;;
+    zh|zh_CN) val=zh-CN ;;
+    en-US|en_US) val=en ;;
+    auto) val=system ;;
+    *) echo "error=invalid_ui_lang"; return 1 ;;
+  esac
+  write_conf ui_lang "$val" || { echo "error=write_failed"; return 1; }
+  i18n_load >/dev/null 2>&1 || true
+  # 简介/模块名刷新较重：后台做，避免 WebUI 切语言卡住
+  (update_module_description >/dev/null 2>&1 || true) &
+  log_info "config: ui_lang=$val resolved=$(resolve_ui_lang)"
+  echo "ok=1"
+  echo "ui_lang=$val"
+  echo "ui_lang_resolved=$(resolve_ui_lang)"
 }
 
 ZN_WHITELIST_FILE="$CONFDIR/zn_whitelist.txt"

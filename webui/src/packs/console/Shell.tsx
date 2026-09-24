@@ -12,11 +12,14 @@ import { useActiveTab } from "@/features/shell/hooks/useActiveTab";
 import { useVisibleTabs } from "@/features/shell/hooks/useVisibleTabs";
 import { useImmersiveChrome } from "@/features/shell/hooks/useImmersiveChrome";
 import { selectResolvedTheme } from "@/features/theme/model/selectors";
-import { selectStatusRefreshing } from "@/features/status/model/selectors";
+import {
+  selectStatusLoading,
+  selectStatusRefreshing,
+} from "@/features/status/model/selectors";
 import { TabName } from "@/entities/module/enums";
 import { AppSnackbar } from "@/shared/ui/AppSnackbar";
 import { ConfirmHost } from "@/shared/ui/ConfirmHost";
-import { CONSOLE_VOICE } from "./voice";
+import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
 import { ConsoleHomePage } from "./pages/HomePage";
 import { ConsoleCertsPage } from "./pages/CertsPage";
 import { ConsoleLogPage } from "./pages/LogPage";
@@ -53,11 +56,13 @@ function Pane({
 }
 
 export function ConsoleShell() {
+  const chrome = usePackChrome();
   const refreshing = useAppSelector(selectStatusRefreshing);
+  const loading = useAppSelector(selectStatusLoading);
   const resolved = useAppSelector(selectResolvedTheme);
   const { activeTab, switchTab } = useActiveTab();
-  const { tabs, hideSupported } = useVisibleTabs();
-  const v = CONSOLE_VOICE;
+  const { tabs, showHideTab } = useVisibleTabs();
+  const v = chrome;
   const [seen, setSeen] = useState<Partial<Record<TabName, boolean>>>(() => ({
     [activeTab]: true,
   }));
@@ -69,8 +74,8 @@ export function ConsoleShell() {
   }, [activeTab]);
 
   useEffect(() => {
-    if (!hideSupported && activeTab === TabName.Hide) switchTab(TabName.Home);
-  }, [hideSupported, activeTab, switchTab]);
+    if (!showHideTab && activeTab === TabName.Hide) switchTab(TabName.Home);
+  }, [showHideTab, activeTab, switchTab]);
 
   const dockTabs = useMemo(
     () => tabs.map((t) => ({ key: t.key, label: v.tabs[t.key] })),
@@ -79,7 +84,10 @@ export function ConsoleShell() {
 
   return (
     <div className="pk-con-shell">
-      <div className={`pk-con-progress${refreshing ? " is-on" : ""}`} aria-hidden />
+      <div
+        className={`pk-con-progress${refreshing || loading ? " is-on" : ""}`}
+        aria-hidden
+      />
       <header className="pk-con-topbar">
         <code className="pk-con-topbar__path">
           ~/{v.brand}/{v.tabs[activeTab]}
@@ -98,7 +106,7 @@ export function ConsoleShell() {
         <Pane tab={TabName.Log} active={activeTab} seen={!!seen[TabName.Log]}>
           <ConsoleLogPage />
         </Pane>
-        {hideSupported ? (
+        {showHideTab ? (
           <Pane tab={TabName.Hide} active={activeTab} seen={!!seen[TabName.Hide]}>
             <ConsoleHidePage />
           </Pane>

@@ -6,25 +6,26 @@
 format_running_ok_tag() {
   n=""
   if summary=$(compose_applied_cert_summary); then
-    n=$(printf '%s' "${summary%%|*}" | tr -d ' \r\n')
+    parse_cert_summary "$summary"
+    n=$_sum_n
   fi
   case "$n" in
     ""|*[!0-9]*) n=$(count_applied_certs) ;;
   esac
   case "$n" in
-    ""|*[!0-9]*|0) echo "✅运行正常" ;;
-    *) echo "✅运行正常 · ${n} 张" ;;
+    ""|*[!0-9]*|0) i18n_msg status.tag_ok ;;
+    *) i18n_fmt status.tag_ok_n n="$n" ;;
   esac
 }
 
-# 缓存标签是否可直接展示（缺数字的「运行正常 · 张」不可信）
+# 缓存标签是否可直接展示
 status_tag_cache_usable() {
   _tag="$1"
   case "$_tag" in
     "") return 1 ;;
-    *运行正常*)
+    *运行正常*|*OK*|✅*)
       case "$_tag" in
-        *[0-9]*张*|✅运行正常|运行正常) return 0 ;;
+        *[0-9]*|✅*) return 0 ;;
         *) return 1 ;;
       esac
       ;;
@@ -34,10 +35,10 @@ status_tag_cache_usable() {
 
 compute_status_tag() {
   force_verify="${1:-0}"
-  [ -f "$MODDIR/disable" ] && { echo "⛔已禁用"; return 0; }
+  [ -f "$MODDIR/disable" ] && { i18n_msg status.tag_disabled; return 0; }
 
   if [ -f "$STATEDIR/hot-update" ]; then
-    clear_stale_hot_update_marker || { echo "♻️热更新中"; return 0; }
+    clear_stale_hot_update_marker || { i18n_msg status.tag_hot_update; return 0; }
   fi
 
   if hot_session_recorded; then
@@ -46,38 +47,37 @@ compute_status_tag() {
     hot_added=$(awk -F= '$1 == "added_count" { print $2; exit }' \
       "$STATEDIR/hot-session.conf" 2>/dev/null)
     if [ "${hot_failed:-0}" -gt 0 ]; then
-      echo "🔥热挂载 +${hot_added:-0}（部分未覆盖）"
+      i18n_fmt status.tag_hot_partial n="${hot_added:-0}"
     elif [ -f "$PENDING_FILE" ]; then
-      echo "🔥热挂载 +${hot_added:-0}（待重启）"
+      i18n_fmt status.tag_hot_pending n="${hot_added:-0}"
     else
-      echo "🔥热挂载 +${hot_added:-0}"
+      i18n_fmt status.tag_hot n="${hot_added:-0}"
     fi
     return 0
   fi
 
-  [ -f "$PENDING_FILE" ] && { echo "⏳待重启"; return 0; }
+  [ -f "$PENDING_FILE" ] && { i18n_msg status.tag_pending; return 0; }
   generation_valid || {
-    [ -f "$STATEDIR/inject-error" ] && { echo "⚠️异常"; return 0; }
-    echo "🔎检测中"
+    [ -f "$STATEDIR/inject-error" ] && { i18n_msg status.tag_error; return 0; }
+    i18n_msg status.tag_detect
     return 0
   }
-  [ "$(count_addon_certs)" -eq 0 ] && { echo "💤未启用"; return 0; }
+  [ "$(count_addon_certs)" -eq 0 ] && { i18n_msg status.tag_idle; return 0; }
 
   if [ "$force_verify" != "1" ] && runtime_status_fresh; then
     cached_tag=$(read_runtime_status tag)
     cached_phase=$(read_runtime_status phase)
     case "$cached_tag" in
-      注入中|启动中|检测中|稳定中|✨*|🔎*)
-        # service 已落盘的「稳定中」对 WebUI 仍展示中间态；异常诊断就绪则继续走下方逻辑
-        if inject_error_present && [ "$cached_tag" != "✨稳定中" ] && [ "$cached_tag" != "稳定中" ]; then
+      *注入*|*Inject*|*启动*|*Boot*|*检测*|*Check*|*稳定*|*Stable*|✨*|🔎*)
+        if inject_error_present && ! printf '%s' "$cached_tag" | grep -qE '稳定|Stable'; then
           :
-        elif [ "$cached_tag" = "✨稳定中" ] || [ "$cached_tag" = "稳定中" ]; then
-          echo "✨稳定中"
+        elif printf '%s' "$cached_tag" | grep -qE '稳定|Stable'; then
+          i18n_msg status.tag_stable
           return 0
         elif [ "$cached_phase" = "service" ]; then
           :
         else
-          echo "✨注入中"
+          i18n_msg status.tag_inject
           return 0
         fi
         ;;
@@ -88,7 +88,6 @@ compute_status_tag() {
           echo "$cached_tag"
           return 0
         fi
-        # 缺数字等坏缓存：按 applied 重算
         format_running_ok_tag
         return 0
         ;;
@@ -97,7 +96,7 @@ compute_status_tag() {
 
   if [ "$force_verify" = "1" ]; then
     [ "$(check_store_injected)" = "0" ] && {
-      echo "⚠️异常"
+      i18n_msg status.tag_error
       return 0
     }
     format_running_ok_tag
@@ -105,27 +104,32 @@ compute_status_tag() {
   fi
 
   if inject_error_present; then
-    echo "⚠️异常"
+    i18n_msg status.tag_error
     return 0
   fi
-  echo "🔎检测中"
+  i18n_msg status.tag_detect
 }
 
 update_module_description() {
-  # 可选：启动中 | 注入中
   prop="$MODDIR/module.prop"
   [ -f "$prop" ] || return 0
   if is_quiet_prop 2>/dev/null; then
-    desc="$DESC_INTRO"
+    desc="$(desc_intro)"
   else
     desc=$(compose_module_description)
   fi
+  # 同步 name 到当前语言品牌
+  name=$(i18n_msg status.prop_name 2>/dev/null || echo CertBridge)
   tmp="$prop.tmp.$$"
-  awk -F= -v desc="$desc" '
-    BEGIN { done=0 }
-    $1 == "description" { print "description=" desc; done=1; next }
+  awk -F= -v desc="$desc" -v name="$name" '
+    BEGIN { d=0; n=0 }
+    $1 == "description" { print "description=" desc; d=1; next }
+    $1 == "name" { print "name=" name; n=1; next }
     { print }
-    END { if (!done) print "description=" desc }
+    END {
+      if (!n) print "name=" name
+      if (!d) print "description=" desc
+    }
   ' "$prop" >"$tmp" && mv -f "$tmp" "$prop"
   chmod 0644 "$prop" 2>/dev/null
 }
@@ -140,13 +144,13 @@ refresh_module_description() {
 # WebUI 写配置热路径：只写短标签，不做注入核验 / generation 全量扫描
 refresh_module_description_light() {
   if [ -f "$MODDIR/disable" ]; then
-    tag="⛔已禁用"
+    tag=$(i18n_msg status.tag_disabled)
   elif hot_session_recorded 2>/dev/null; then
-    tag="🔥热挂载"
+    tag=$(i18n_fmt status.tag_hot n="")
   elif [ -f "$PENDING_FILE" ]; then
-    tag="⏳待重启"
+    tag=$(i18n_msg status.tag_pending)
   else
-    tag="✨已更新"
+    tag=$(i18n_msg status.tag_inject)
   fi
   prop="$MODDIR/module.prop"
   [ -f "$prop" ] || {
@@ -154,7 +158,7 @@ refresh_module_description_light() {
     return 0
   }
   if is_quiet_prop 2>/dev/null; then
-    desc="$DESC_INTRO"
+    desc="$(desc_intro)"
   else
     desc=$(compose_module_prop_description_light "$tag" 2>/dev/null || echo "$tag")
   fi
@@ -171,7 +175,7 @@ refresh_module_description_light() {
 
 compose_module_prop_description_light() {
   tag="$1"
-  echo "[${tag}] 配置已保存；完整状态以下次刷新 / 重启为准"
+  echo "[${tag}] $(desc_intro)"
 }
 
 # 将实测结果写成 tag / 错误态并落盘（finalize / live 复核共用）
@@ -179,7 +183,7 @@ apply_verified_runtime_status() {
   phase="$1"
   apex_ok="$2"
   if [ "$apex_ok" = "0" ]; then
-    tag="⚠️异常"
+    tag=$(i18n_msg status.tag_error)
     if [ "$phase" = "service" ] || [ "$phase" = "heal" ] || [ "$phase" = "live" ]; then
       ensure_inject_error_diagnosed 2>/dev/null || true
     elif ! inject_error_present; then
@@ -189,7 +193,7 @@ apply_verified_runtime_status() {
     tag=$(format_running_ok_tag)
     clear_inject_error 2>/dev/null || true
   else
-    tag="✅运行正常"
+    tag=$(i18n_msg status.tag_ok)
     clear_inject_error 2>/dev/null || true
   fi
   write_runtime_status "$phase" "$apex_ok" "$tag"
@@ -241,23 +245,23 @@ heal_runtime_status_later() {
 live_finalize_runtime_status() {
   phase="${1:-live}"
   if [ -f "$MODDIR/disable" ]; then
-    write_runtime_status "$phase" 2 "⛔已禁用"
+    write_runtime_status "$phase" 2 "$(i18n_msg status.tag_disabled)"
     update_module_description
     return 0
   fi
   if [ -f "$PENDING_FILE" ]; then
-    write_runtime_status "$phase" 2 "⏳待重启"
+    write_runtime_status "$phase" 2 "$(i18n_msg status.tag_pending)"
     update_module_description
     return 0
   fi
   if ! generation_valid; then
-    write_runtime_status "$phase" 0 "⚠️异常"
+    write_runtime_status "$phase" 0 "$(i18n_msg status.tag_error)"
     update_module_description
     return 0
   fi
   if [ "$(count_addon_certs)" -eq 0 ]; then
     clear_inject_error 2>/dev/null || true
-    write_runtime_status "$phase" 2 "💤未启用"
+    write_runtime_status "$phase" 2 "$(i18n_msg status.tag_idle)"
     update_module_description
     return 0
   fi
@@ -269,34 +273,32 @@ live_finalize_runtime_status() {
 finalize_runtime_status() {
   phase="$1"
   if [ -f "$MODDIR/disable" ]; then
-    write_runtime_status "$phase" 2 "⛔已禁用"
+    write_runtime_status "$phase" 2 "$(i18n_msg status.tag_disabled)"
     update_module_description
     return 0
   fi
   if [ -f "$PENDING_FILE" ]; then
-    write_runtime_status "$phase" 2 "⏳待重启"
+    write_runtime_status "$phase" 2 "$(i18n_msg status.tag_pending)"
     update_module_description
     return 0
   fi
   if ! generation_valid; then
-    write_runtime_status "$phase" 0 "⚠️异常"
+    write_runtime_status "$phase" 0 "$(i18n_msg status.tag_error)"
     update_module_description
     return 0
   fi
   if [ "$(count_addon_certs)" -eq 0 ]; then
     clear_inject_error 2>/dev/null || true
-    write_runtime_status "$phase" 2 "💤未启用"
+    write_runtime_status "$phase" 2 "$(i18n_msg status.tag_idle)"
     update_module_description
     return 0
   fi
   if [ "$phase" = "service" ]; then
-    # 先标稳定中，避免 Magisk 列表长时间停在旧失败态
-    write_runtime_status "$phase" 2 "✨稳定中"
+    write_runtime_status "$phase" 2 "$(i18n_msg status.tag_stable)"
     update_module_description
     if service_should_probe; then
       apex_ok=$(verify_store_with_backoff)
     else
-      # late_inject=0 或 service_probe=0：单次轻量校验（不退避）
       apex_ok=$(check_store_injected)
     fi
   else

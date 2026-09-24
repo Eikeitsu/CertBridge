@@ -24,8 +24,6 @@ WebUI 在模块管理器中打开（KernelSU、SukiSU、APatch 系、MMRL、WebU
 
 若提示未检测到桥接，请换支持模块 WebUI 的客户端。
 
----
-
 ## 首页
 
 只回答「信任是否生效」：
@@ -47,8 +45,6 @@ WebUI 在模块管理器中打开（KernelSU、SukiSU、APatch 系、MMRL、WebU
 
 开机后若短暂「稳定中」，页面会静默复核；也可手动点刷新。
 
----
-
 ## 证书
 
 | 区域   | 内容                                                        |
@@ -59,13 +55,9 @@ WebUI 在模块管理器中打开（KernelSU、SukiSU、APatch 系、MMRL、WebU
 
 永久改动保存后通常需**重启**；热挂载立即生效、重启后消失。
 
----
-
 ## 日志
 
 查看 `data/install.log` 与运行日志：级别过滤、搜索 `inject:` / `generation:` / `hide:` 等。注入失败时首页与日志会给出可读原因与建议。
-
----
 
 ## 隐藏
 
@@ -78,8 +70,6 @@ WebUI 在模块管理器中打开（KernelSU、SukiSU、APatch 系、MMRL、WebU
 
 默认冷门项全关，优先痕迹最少；证书异常再开。详见 [挂载隐藏](/guide/hide)、[配置说明](/guide/config)。
 
----
-
 ## 更多
 
 | 区域     | 内容                                 |
@@ -89,8 +79,6 @@ WebUI 在模块管理器中打开（KernelSU、SukiSU、APatch 系、MMRL、WebU
 | 外观     | 深浅色、强调色                       |
 | 更新     | 正式 / CI 通道、检查更新             |
 | 关于     | 版本、安装组件档案、捐赠入口         |
-
----
 
 ## 热更新路径
 

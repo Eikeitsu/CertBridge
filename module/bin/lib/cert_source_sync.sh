@@ -12,12 +12,18 @@ diagnose_app_cert_import() {
     echo "reason=live_not_found"
     return 2
   }
+  live=$(ensure_readable_cert_file "$live") || {
+    echo "reason=live_not_found"
+    return 2
+  }
   echo "live=$live"
-  errf="$DATADIR/diag_import.$$.err"
-  mkdir -p "$DATADIR" 2>/dev/null
-  if ! import_ca_into_dir "$live" "$DATADIR/diag_import.$$" "$(app_cert_label "$kind")" \
+  # 诊断暂存也放模块外，避免叠层写失败误判
+  diag_root="${CB_EXT_DIR:-/data/adb/certbridge}/diag_import.$$"
+  errf="$diag_root.err"
+  mkdir -p "$(dirname "$diag_root")" 2>/dev/null || true
+  if ! import_ca_into_dir "$live" "$diag_root" "$(app_cert_label "$kind")" \
     >/dev/null 2>"$errf"; then
-    rm -rf "$DATADIR/diag_import.$$"
+    rm -rf "$diag_root"
     echo "reason=import_failed"
     if [ -s "$errf" ]; then
       echo "import_err=$(tr '\n' ' ' <"$errf" | tr -d '\r')"
@@ -25,7 +31,7 @@ diagnose_app_cert_import() {
     rm -f "$errf"
     return 3
   fi
-  rm -rf "$DATADIR/diag_import.$$"
+  rm -rf "$diag_root"
   rm -f "$errf"
   echo "reason=ok"
   return 0
@@ -42,27 +48,34 @@ cert_same_fingerprint() {
 }
 
 # 从 App 同步到 sources/<kind>/，成功打印文件路径
+# - 暂存目录必须在 CB_EXT（与 sources 同盘），避免模块叠层跨设备 mv 失败
 # - 先写入临时目录，校验成功后再替换，失败保留旧源
 # - 指纹未变则不覆盖（避免无意义改写）
 sync_source_from_app() {
   kind="$1"
   live=$(find_live_app_cert "$kind") || return 1
+  live=$(ensure_readable_cert_file "$live") || return 1
   label=$(app_cert_label "$kind")
+  CB_EXT_DIR="${CB_EXT_DIR:-/data/adb/certbridge}"
+  SOURCES_DIR="${SOURCES_DIR:-$CB_EXT_DIR/addon-sources}"
   dest="$SOURCES_DIR/$kind"
-  mkdir -p "$SOURCES_DIR" "$DATADIR" || return 1
+  mkdir -p "$SOURCES_DIR" "$CB_EXT_DIR" || return 1
 
-  stage="$DATADIR/sync_stage.$$.$kind"
+  stage="$CB_EXT_DIR/.sync_stage.$$.$kind"
   rm -rf "$stage"
   mkdir -p "$stage" || return 1
-  name=$(import_ca_into_dir "$live" "$stage" "$label") || {
+  _imp_name=$(import_ca_into_dir "$live" "$stage" "$label") || {
     rm -rf "$stage"
     return 1
   }
-  new_cert="$stage/$name"
+  new_cert="$stage/$_imp_name"
+  is_cert_filename "$_imp_name" || {
+    rm -rf "$stage"
+    return 1
+  }
 
   if old=$(find_source_cert "$kind" 2>/dev/null); then
     if cert_same_fingerprint "$old" "$new_cert"; then
-      # 刷新显示名（App 侧可能改了 subject 展示，但指纹相同极少见；仍以旧文件为准）
       rm -rf "$stage"
       log_debug "sources: $kind unchanged fingerprint, keep $(basename "$old")"
       echo "$old"
@@ -71,18 +84,60 @@ sync_source_from_app() {
   fi
 
   new_dest="$dest.new.$$"
-  rm -rf "$new_dest"
-  if ! mv "$stage" "$new_dest"; then
-    rm -rf "$stage" "$new_dest"
-    log_warn "sources: $kind stage promote failed"
-    return 1
+  bak="$dest.bak.$$"
+  rm -rf "$new_dest" "$bak"
+  # 同盘 rename；跨设备则 cp 回退
+  if ! mv "$stage" "$new_dest" 2>/dev/null; then
+    mkdir -p "$new_dest" 2>/dev/null || {
+      rm -rf "$stage"
+      log_warn "sources: $kind stage promote failed"
+      return 1
+    }
+    if ! cp -a "$stage"/. "$new_dest"/ 2>/dev/null; then
+      rm -rf "$stage" "$new_dest"
+      log_warn "sources: $kind stage promote failed"
+      return 1
+    fi
+    rm -rf "$stage"
   fi
-  rm -rf "$dest"
-  if ! mv "$new_dest" "$dest"; then
-    # 极端情况：尽量把新目录挪回，避免空源
-    mv "$new_dest" "$dest" 2>/dev/null || true
-    log_error "sources: $kind dest swap failed"
-    return 1
+  # 先挪走旧目录再换入：失败则回滚，避免留下空 sources
+  if [ -d "$dest" ] || [ -e "$dest" ]; then
+    rm -rf "$bak"
+    if ! mv "$dest" "$bak" 2>/dev/null; then
+      mkdir -p "$bak" 2>/dev/null || {
+        rm -rf "$new_dest"
+        log_warn "sources: $kind cannot park old dest"
+        return 1
+      }
+      if ! cp -a "$dest"/. "$bak"/ 2>/dev/null; then
+        rm -rf "$new_dest" "$bak"
+        log_warn "sources: $kind cannot park old dest"
+        return 1
+      fi
+      rm -rf "$dest"
+    fi
+  fi
+  if ! mv "$new_dest" "$dest" 2>/dev/null; then
+    mkdir -p "$dest" 2>/dev/null
+    if ! cp -a "$new_dest"/. "$dest"/ 2>/dev/null; then
+      rm -rf "$dest"
+      if [ -d "$bak" ]; then
+        mv "$bak" "$dest" 2>/dev/null || {
+          mkdir -p "$dest" && cp -a "$bak"/. "$dest"/ 2>/dev/null || true
+        }
+      fi
+      rm -rf "$new_dest"
+      log_error "sources: $kind dest swap failed (restored old if any)"
+      return 1
+    fi
+    rm -rf "$new_dest"
+  fi
+  rm -rf "$bak"
+  # 换入后必须仍有合法证书；否则立刻从 stash 恢复
+  if ! find_source_cert "$kind" >/dev/null 2>&1; then
+    log_error "sources: $kind empty after swap; restoring stash"
+    restore_addon_source_from_stash "$kind" >/dev/null 2>&1 || true
+    find_source_cert "$kind" >/dev/null 2>&1 || return 1
   fi
   log_info "sources: $kind updated from app ($name)"
   echo "$dest/$name"
@@ -148,4 +203,5 @@ ensure_source_from_applied() {
 }
 
 # 将当前可用 addon 证书快照到 data/state，供关后再开时恢复（App 临时不可读也不丢）
-STASH_DIR="${STASH_DIR:-$STATEDIR/source-stash}"
+# STASH_DIR 在 cert_source_stash.sh 中定义
+

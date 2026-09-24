@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { selectStatusBootstrapped } from "@/features/status/model/selectors";
 import { refreshStatus } from "@/features/status/model/statusSlice";
@@ -6,19 +7,22 @@ import { useTrustOverview } from "@/features/overview/hooks/useTrustOverview";
 import { TrustTone } from "@/entities/module/enums";
 import { confirmAction } from "@/shared/lib/confirmAction";
 import { rebootDevice } from "@/shared/api/cli";
-import { Loader } from "@/shared/ui/Loader";
-import { CONSOLE_VOICE } from "../voice";
+import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
 
 export function ConsoleHomePage() {
+  const { t } = useTranslation("webui");
+  const chrome = usePackChrome();
   const dispatch = useAppDispatch();
   const overview = useTrustOverview();
   const bootstrapped = useAppSelector(selectStatusBootstrapped);
-  const v = CONSOLE_VOICE.home;
-  const showBoot = overview.isLoading && !bootstrapped;
+  const v = chrome.home;
 
+  const title = overview.trust.title || "";
   const stabilizing =
     overview.trust.tone === TrustTone.Idle &&
-    /稳定中|注入中|检测中/.test(overview.trust.title);
+    (/Stable|Inject|Check|Boot|Pending/.test(title) ||
+      title.includes("\u2728") ||
+      title.includes("\u{1F50D}"));
 
   useEffect(() => {
     if (!bootstrapped || !stabilizing) return;
@@ -29,8 +33,6 @@ export function ConsoleHomePage() {
     );
     return () => timers.forEach((id) => window.clearTimeout(id));
   }, [bootstrapped, stabilizing, dispatch]);
-
-  if (showBoot) return <Loader label={CONSOLE_VOICE.loading} />;
 
   const tone = overview.trust.tone;
 
@@ -57,8 +59,8 @@ disabled=${overview.isDisabled ? 1 : 0} reboot_pending=${overview.isPendingReboo
           className="pk-con-btn"
           onClick={() =>
             confirmAction({
-              title: "reboot device?",
-              content: "apply permanent CA changes and clear hot layers.",
+              title: t("overview.rebootConfirmTitle"),
+              content: t("overview.rebootConfirmBody"),
               okText: v.reboot,
               danger: true,
               onOk: () => rebootDevice(),

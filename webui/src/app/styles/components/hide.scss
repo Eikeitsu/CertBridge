@@ -1,0 +1,74 @@
+.bf-hide-guide details {
+  border: 1px solid var(--bf-stroke);
+  border-radius: var(--bf-radius-sm);
+  padding: var(--bf-space-sm) var(--bf-space-md);
+  background: var(--bf-surface-2);
+  margin-bottom: var(--bf-space-xs);
+}
+
+.bf-hide-guide summary {
+  cursor: pointer;
+  font-weight: 650;
+  font-size: 0.86rem;
+}
+
+.bf-hide-guide p,
+.bf-hide-guide li {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--bf-ink-2);
+}
+
+.bf-hide-guide ul,
+.bf-hide-guide ol {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bf-hide-guide li {
+  position: relative;
+  padding-left: 1rem;
+}
+
+.bf-hide-guide li + li {
+  margin-top: 6px;
+}
+
+.bf-hide-guide ul > li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  width: 0.85rem;
+  text-align: center;
+  color: var(--bf-ink-3);
+}
+
+.bf-hide-guide ol {
+  counter-reset: hide-guide;
+}
+
+.bf-hide-guide ol > li {
+  counter-increment: hide-guide;
+  padding-left: 1.25rem;
+}
+
+.bf-hide-guide ol > li::before {
+  content: counter(hide-guide) ".";
+  position: absolute;
+  left: 0;
+  color: var(--bf-ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.bf-hide-switch-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 72px;
+}
+
+.bf-hide-switch-card__text {
+  flex: 1;
+  min-width: 0;
+}

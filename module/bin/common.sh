@@ -22,7 +22,8 @@ certbridge_init_paths() {
   STATEDIR="$DATADIR/state"
   CERT_POOL="$MODDIR/certs"
   BUILTIN_DIR="$CERT_POOL/builtin"
-  SOURCES_DIR="$CERT_POOL/sources"
+  # 兼容旧路径；工作副本 / 快照在模块外（见 cert_sources.sh）
+  MODULE_SOURCES_DIR="$CERT_POOL/sources"
   CUSTOM_DIR="$CERT_POOL/custom"
   GEN_ROOT="$CERT_POOL/generation"
   GEN_CURRENT="$GEN_ROOT/current"
@@ -34,8 +35,13 @@ certbridge_init_paths() {
   APPLIED_CONF="$STATEDIR/applied.conf"
   SOURCE_META="$STATEDIR/source.meta"
   PENDING_FILE="$STATEDIR/reboot-required"
-  STASH_DIR="$STATEDIR/source-stash"
-  LOCK_DIR="$STATEDIR/write.lock"
+  # 开关 + 证书字节 + 写锁：模块外，避开叠层假写/卡死
+  CB_EXT_DIR="${CB_EXT_DIR:-/data/adb/certbridge}"
+  SOURCES_DIR="$CB_EXT_DIR/addon-sources"
+  STASH_DIR="$CB_EXT_DIR/source-stash"
+  USER_CONF="$CB_EXT_DIR/user.conf"
+  USER_CONF_LEGACY="$STATEDIR/user.conf"
+  LOCK_DIR="$CB_EXT_DIR/write.lock"
   LOCK_OWNER="$LOCK_DIR/owner"
   INSTALL_BOOT_FILE="$STATEDIR/install-boot-id"
   RUNTIME_STATUS_FILE="$STATEDIR/runtime-status.conf"
@@ -48,8 +54,6 @@ certbridge_init_paths() {
   HOT_RUNTIME_ROOT="/dev/.fs1"
   MIN_SAFE_CERTS=10
   MAX_CUSTOM_BYTES=65536
-  # 模块目录外的短时状态（无人值守标记、热更新副本/worker）；用完应清空，卸载时整目录删除
-  CB_EXT_DIR="${CB_EXT_DIR:-/data/adb/certbridge}"
 }
 
 # 外部目录空则删掉，避免 /data/adb 下残留空文件夹
@@ -77,8 +81,9 @@ certbridge_load_cert_domain() {
 
 certbridge_load_libs_install() {
   certbridge_load_lib log.sh
-  certbridge_load_lib keys.sh
   certbridge_load_lib conf.sh
+  certbridge_load_lib i18n.sh
+  certbridge_load_lib keys.sh
   certbridge_load_cert_domain
   certbridge_load_lib store.sh
   certbridge_load_lib install_flow.sh
@@ -88,6 +93,7 @@ certbridge_load_libs_runtime() {
   # keys.sh 仅安装用；Action / service / WebUI 后端不加载
   certbridge_load_lib log.sh
   certbridge_load_lib conf.sh
+  certbridge_load_lib i18n.sh
   certbridge_load_lib lock.sh
   certbridge_load_lib store.sh
   certbridge_load_cert_domain
@@ -111,13 +117,14 @@ certbridge_load_libs_runtime() {
       echo "hide_ksud_umount=0"
       echo "hide_nohello=0"
       echo "hide_provider=none"
-      echo "hide_provider_label=未安装隐藏组件"
+      echo "hide_provider_label=$(i18n_msg status.hide_provider_none 2>/dev/null || echo none)"
       echo "hide_applied=0"
-      echo "hide_summary=未安装挂载隐藏组件"
+      echo "hide_summary=$(i18n_msg status.hide_summary_none 2>/dev/null || echo none)"
     }
   fi
   # Zygisk / 安装档案 / 底座探测 → profile_status.sh
   certbridge_load_lib profile_status.sh
+  i18n_load >/dev/null 2>&1 || true
 }
 
 certbridge_init_paths "$0"

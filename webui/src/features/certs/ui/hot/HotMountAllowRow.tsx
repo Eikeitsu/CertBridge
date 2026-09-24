@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Row, Switch } from "@/shared/ui/primitives";
 
 type HotMountAllowRowProps = {
@@ -7,10 +8,12 @@ type HotMountAllowRowProps = {
 };
 
 export function HotMountAllowRow({ checked, disabled, onChange }: HotMountAllowRowProps) {
+  const { t } = useTranslation("webui");
+
   return (
     <Row
-      title="允许临时挂载"
-      desc="关闭后无法新建临时会话"
+      title={t("certs.hotAllowTitle")}
+      desc={t("certs.hotAllowDesc")}
       extra={<Switch checked={checked} disabled={disabled} onChange={onChange} />}
     />
   );

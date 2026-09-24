@@ -1,64 +1,85 @@
-import { useMountMode } from "@/features/settings/hooks/useMountMode";
-import { useExperimental14System } from "@/features/settings/hooks/useExperimental14System";
-import { useTmpfsStyle } from "@/features/settings/hooks/useTmpfsStyle";
-import { useQuietProp } from "@/features/settings/hooks/useQuietProp";
+import { useState } from "react";
 import { AppearancePanel } from "@/features/settings/ui/appearance/AppearancePanel";
-import { MountModePanel } from "@/features/settings/ui/MountModePanel";
-import { Experimental14SystemPanel } from "@/features/settings/ui/Experimental14SystemPanel";
-import { QuietPropPanel } from "@/features/settings/ui/QuietPropPanel";
-import { TmpfsPathPanel } from "@/features/settings/ui/TmpfsPathPanel";
 import { UpdateChannelPanel } from "@/features/settings/ui/UpdateChannelPanel";
 import { AboutSection } from "@/features/about/ui/AboutSection";
-import { DEFAULT_VOICE } from "../voice";
+import { MoreNavRow, MoreSubHeader } from "@/features/settings/ui/MoreNav";
+import { ShowHideTabCard } from "@/features/settings/ui/ShowHideTabCard";
+import { MountInjectPanels } from "@/features/settings/ui/MountInjectPanels";
+import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
+import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
+
+type MoreView = "hub" | "appearance" | "mount";
 
 export function DefaultMorePage() {
-  const mount = useMountMode();
-  const experimental14 = useExperimental14System();
-  const tmpfs = useTmpfsStyle();
-  const quiet = useQuietProp();
-  const v = DEFAULT_VOICE.more;
+  const chrome = usePackChrome();
+  const { voice } = usePackVoice();
+  const m = voice.more;
+  const v = chrome.more;
+  const [view, setView] = useState<MoreView>("hub");
+
+  if (view === "appearance") {
+    return (
+      <div className="pk-def-page">
+        <MoreSubHeader
+          title={m.appearanceTitle}
+          backLabel={v.title}
+          onBack={() => setView("hub")}
+        />
+        <section className="pk-def-section">
+          <AppearancePanel title={m.appearanceTitle} meta={m.appearanceMeta} />
+        </section>
+      </div>
+    );
+  }
+
+  if (view === "mount") {
+    return (
+      <div className="pk-def-page">
+        <MoreSubHeader
+          title={m.mountTitle}
+          backLabel={v.title}
+          onBack={() => setView("hub")}
+        />
+        <MountInjectPanels surface="card" />
+      </div>
+    );
+  }
 
   return (
     <div className="pk-def-page">
       <header className="pk-def-pagehead">
         <h1>{v.title}</h1>
-        <p>{v.appearanceMeta}</p>
+        <p>{m.hubMeta}</p>
       </header>
 
       <section className="pk-def-section">
-        <AppearancePanel title={v.appearance} meta={v.appearanceMeta} />
+        <div className="pk-def-group">
+          <MoreNavRow
+            title={m.appearanceTitle}
+            desc={m.appearanceMeta}
+            onClick={() => setView("appearance")}
+          />
+          <MoreNavRow
+            title={m.mountTitle}
+            desc={m.mountMeta}
+            onClick={() => setView("mount")}
+          />
+        </div>
       </section>
+
       <section className="pk-def-section">
-        <MountModePanel
-          mountMode={mount.mountMode}
-          pending={mount.isPending}
-          onChange={(mode) => void mount.handleChange(mode)}
+        <ShowHideTabCard
+          title={m.navTitle}
+          meta={m.navMeta}
+          rowTitle={m.showHideTitle}
+          rowDesc={m.showHideDesc}
         />
       </section>
-      <section className="pk-def-section">
-        <Experimental14SystemPanel
-          mode={experimental14.mode}
-          pending={experimental14.isPending}
-          onChange={(mode) => void experimental14.handleChange(mode)}
-        />
-      </section>
-      <section className="pk-def-section">
-        <TmpfsPathPanel
-          tmpfsStyle={tmpfs.tmpfsStyle}
-          pending={tmpfs.isPending}
-          onChange={(style) => void tmpfs.handleChange(style)}
-        />
-      </section>
-      <section className="pk-def-section">
-        <QuietPropPanel
-          dynamicOn={quiet.dynamicOn}
-          pending={quiet.isPending}
-          onChange={(on) => void quiet.handleChange(on)}
-        />
-      </section>
+
       <section className="pk-def-section">
         <UpdateChannelPanel />
       </section>
+
       <section className="pk-def-section">
         <AboutSection title={v.about} layout="dashboard" />
       </section>

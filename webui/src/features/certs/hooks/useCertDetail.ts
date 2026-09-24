@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { parseKv } from "@/shared/lib/parse";
 import { certInfo } from "@/shared/api/cli";
 import { friendlyError } from "@/shared/api/errors";
@@ -10,14 +10,21 @@ export function useCertDetail() {
   const [title, setTitle] = useState("");
   const [sourceId, setSourceId] = useState("");
   const [fields, setFields] = useState<Record<string, string>>({});
+  const seq = useRef(0);
+  const lastTarget = useRef("");
 
   const openDetail = useCallback(async (target: string, detailTitle: string) => {
+    const id = ++seq.current;
     setTitle(detailTitle);
     setSourceId(target);
-    setFields({});
+    if (lastTarget.current !== target) {
+      setFields({});
+      lastTarget.current = target;
+    }
     setIsOpen(true);
     setLoading(true);
     const result = await certInfo(target);
+    if (id !== seq.current) return;
     setLoading(false);
     if (result.errno !== 0 && !result.stdout) {
       toast(friendlyError(result.stderr), "bad");
@@ -28,6 +35,7 @@ export function useCertDetail() {
   }, []);
 
   const closeDetail = useCallback(() => {
+    seq.current += 1;
     setIsOpen(false);
     setLoading(false);
   }, []);

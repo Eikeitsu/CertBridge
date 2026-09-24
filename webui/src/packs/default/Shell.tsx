@@ -8,13 +8,14 @@ import { useImmersiveChrome } from "@/features/shell/hooks/useImmersiveChrome";
 import { selectResolvedTheme } from "@/features/theme/model/selectors";
 import {
   selectDeviceLabel,
+  selectStatusLoading,
   selectStatusRefreshing,
 } from "@/features/status/model/selectors";
 import { TabName } from "@/entities/module/enums";
 import { brandModuleIconSrc } from "@/shared/config/brand";
 import { AppSnackbar } from "@/shared/ui/AppSnackbar";
 import { ConfirmHost } from "@/shared/ui/ConfirmHost";
-import { DEFAULT_VOICE } from "./voice";
+import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
 import { DefaultHomePage } from "./pages/HomePage";
 import { DefaultCertsPage } from "./pages/CertsPage";
 import { DefaultLogPage } from "./pages/LogPage";
@@ -51,12 +52,14 @@ function Pane({
 }
 
 export function DefaultShell() {
+  const chrome = usePackChrome();
   const deviceLabel = useAppSelector(selectDeviceLabel);
   const refreshing = useAppSelector(selectStatusRefreshing);
+  const loading = useAppSelector(selectStatusLoading);
   const resolved = useAppSelector(selectResolvedTheme);
   const { activeTab, switchTab } = useActiveTab();
-  const { tabs, hideSupported } = useVisibleTabs();
-  const v = DEFAULT_VOICE;
+  const { tabs, showHideTab } = useVisibleTabs();
+  const v = chrome;
   const [seen, setSeen] = useState<Partial<Record<TabName, boolean>>>(() => ({
     [activeTab]: true,
   }));
@@ -68,8 +71,8 @@ export function DefaultShell() {
   }, [activeTab]);
 
   useEffect(() => {
-    if (!hideSupported && activeTab === TabName.Hide) switchTab(TabName.Home);
-  }, [hideSupported, activeTab, switchTab]);
+    if (!showHideTab && activeTab === TabName.Hide) switchTab(TabName.Home);
+  }, [showHideTab, activeTab, switchTab]);
 
   const dockTabs = useMemo(
     () => tabs.map((t) => ({ key: t.key, label: v.tabs[t.key] })),
@@ -78,7 +81,10 @@ export function DefaultShell() {
 
   return (
     <div className="pk-def-shell">
-      <div className={`pk-def-progress${refreshing ? " is-on" : ""}`} aria-hidden />
+      <div
+        className={`pk-def-progress${refreshing || loading ? " is-on" : ""}`}
+        aria-hidden
+      />
       <header className="pk-def-topbar">
         <div className="pk-def-topbar__brand">
           <img
@@ -102,7 +108,7 @@ export function DefaultShell() {
         <Pane tab={TabName.Log} active={activeTab} seen={!!seen[TabName.Log]}>
           <DefaultLogPage />
         </Pane>
-        {hideSupported ? (
+        {showHideTab ? (
           <Pane tab={TabName.Hide} active={activeTab} seen={!!seen[TabName.Hide]}>
             <DefaultHidePage />
           </Pane>

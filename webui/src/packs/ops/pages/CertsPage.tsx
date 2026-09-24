@@ -1,19 +1,15 @@
+import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
-import {
-  selectCustomCertificates,
-  selectStatusBootstrapped,
-  selectStatusLoading,
-} from "@/features/status/model/selectors";
+import { selectCustomCertificates } from "@/features/status/model/selectors";
 import { refreshStatus } from "@/features/status/model/statusSlice";
 import { useCertActions } from "@/features/certs/hooks/useCertActions";
 import { useBuiltinCerts } from "@/features/certs/hooks/useBuiltinCerts";
 import { useCertDetail } from "@/features/certs/hooks/useCertDetail";
 import type { AppPresetKind } from "@/shared/api/cli";
 import { Switch } from "@/shared/ui/primitives";
-import { Loader } from "@/shared/ui/Loader";
 import { CertDetailSheet } from "@/features/certs/ui/CertDetailSheet";
 import { HotMountPanel } from "@/features/certs/ui/HotMountPanel";
-import { OPS_VOICE } from "../voice";
+import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
 
 const PRESET_KINDS: AppPresetKind[] = [
   "httpcanary",
@@ -23,24 +19,16 @@ const PRESET_KINDS: AppPresetKind[] = [
   "pcapdroid",
 ];
 
-function stateOf(cert: { isActive: boolean; isEnabled: boolean; isAvailable: boolean }) {
-  if (cert.isActive) return "已生效";
-  if (cert.isEnabled) return "待重启";
-  if (cert.isAvailable) return "可用";
-  return "未检测到";
-}
-
 export function OpsCertsPage() {
+  const { t } = useTranslation("webui");
+  const chrome = usePackChrome();
   const dispatch = useAppDispatch();
-  const loading = useAppSelector(selectStatusLoading);
-  const bootstrapped = useAppSelector(selectStatusBootstrapped);
   const customs = useAppSelector(selectCustomCertificates);
   const builtins = useBuiltinCerts();
   const detail = useCertDetail();
-  const v = OPS_VOICE.certs;
+  const v = chrome.certs;
   const {
     isPending,
-    pendingKind,
     handleToggleBuiltin,
     handleImportFile,
     handleImportPreset,
@@ -51,7 +39,16 @@ export function OpsCertsPage() {
     handleHotUnmount,
   } = useCertActions();
 
-  if (loading && !bootstrapped) return <Loader label={OPS_VOICE.loading} />;
+  const stateOf = (cert: {
+    isActive: boolean;
+    isEnabled: boolean;
+    isAvailable: boolean;
+  }) => {
+    if (cert.isActive) return t("certs.statusActive");
+    if (cert.isEnabled) return t("certs.statusPending");
+    if (cert.isAvailable) return t("certs.statusAvailable");
+    return t("certs.statusMissing");
+  };
 
   return (
     <div className="pk-ops-page pk-ops-page--certs">
@@ -78,11 +75,10 @@ export function OpsCertsPage() {
                   disabled={!(cert.isAvailable || cert.isActive)}
                   onClick={() => void detail.openDetail(cert.kind, cert.title)}
                 >
-                  详情
+                  {t("ui.detail")}
                 </button>
                 <Switch
                   checked={cert.isEnabled}
-                  disabled={isPending && pendingKind === cert.kind}
                   onChange={(next) => void handleToggleBuiltin(cert.kind, next)}
                 />
               </div>
@@ -127,7 +123,7 @@ export function OpsCertsPage() {
                       void detail.openDetail(`custom:${c.name}`, c.display || c.name)
                     }
                   >
-                    详情
+                    {t("ui.detail")}
                   </button>
                   <button
                     type="button"
@@ -135,7 +131,7 @@ export function OpsCertsPage() {
                     disabled={isPending}
                     onClick={() => handleRemoveCustom(c.name)}
                   >
-                    删除
+                    {t("ui.delete")}
                   </button>
                 </div>
               </div>
@@ -162,7 +158,7 @@ export function OpsCertsPage() {
             disabled={isPending}
             onClick={() => void handleExportFingerprints()}
           >
-            复制指纹
+            {t("ui.copyFps")}
           </button>
         </div>
       </section>

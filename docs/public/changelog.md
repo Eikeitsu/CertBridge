@@ -1,8 +1,73 @@
-# 更新日志
+# 更新日志 / Changelog
+
+> English notes are under each version's Chinese block — scroll down a bit to find them.
+> English text is machine-translated (e.g. Google Translate) and may be awkward or imprecise.
+
+---
+
+## v4.3.1
+
+### 中文
+
+- **WebUI 性能**：首屏 `status --quick`；证书开关不再全量刷新且简介后台写；切语言用 startTransition
+- **多语言**：首页信任态 / 流水线 / 环境卡 / 日志空态等硬编码中文接入 i18n
+
+### English
+
+- **WebUI performance**: First screen uses `status --quick`; cert toggles no longer full-refresh and write the prop in the background; language switch uses startTransition
+- **Multi-language**: Hard-coded Chinese on home trust state / pipeline / env card / empty log state wired into i18n
+
+## v4.3.0
+
+### 中文
+
+- **国际化**：共享 `locales/` 文案；WebUI i18next；安装/简介跟随系统语言（非中英回落英语）
+- **首屏**：仅品牌字 + 细进度条，去掉「正在加载」文案与大转圈
+- **安装询问**：音量键提示改为短句
+- **仓库整理**：`scripts/` / `tools/` / `docs-dev/` / `legacy/`；changelog 中英双文件
+
+### English
+
+- **Internationalization**: Shared `locales/` copy; WebUI i18next; install/prop follow system language (non-zh/en fall back to English)
+- **Splash screen**: Brand wordmark + thin progress bar only; remove "Loading" copy and large spinner
+- **Install prompts**: Volume-key tips shortened to brief lines
+- **Repo layout**: `scripts/` / `tools/` / `docs-dev/` / `legacy/`; dual Chinese/English changelog files
+
+## v4.2.2
+
+### 中文
+
+- **产物后缀**：32 位 ARM 包由 `*_arm.zip` / `CertBridge_arm.zip` 改为 `*_arm32.zip` / `CertBridge_arm32.zip`（armeabi-v7a）；`OPENSSL_ABIS=arm` 仍兼容
+- **待重启提示**：证书开关 / 挂载模式 / 跳过 system / 路径风格等改回与开机生效快照一致时，清除「待重启」状态与主页提示
+- **CI**：Release 的版本号改为高于发版时最新的 CI 版本号
+
+### English
+
+- **Artifact suffix**: 32-bit ARM zips renamed from `*_arm.zip` / `CertBridge_arm.zip` to `*_arm32.zip` / `CertBridge_arm32.zip` (armeabi-v7a); `OPENSSL_ABIS=arm` still supported
+- **Pending-reboot banner**: Clear pending-reboot state and home tip when cert toggles / mount mode / skip-system / path style again match the boot-applied snapshot
+- **CI**: Release versionCode must be above the latest CI versionCode at publish time
+
+## v4.2.1
+
+### 中文
+
+> 为了减小模块体积，从 **4.2.1** 开始按架构分包
+>
+> 多数人一般安装 `arm64` 架构的模块即可，模拟器虚拟机请自行选择合适的架构
+
+- **按架构分包**：完整版默认 4 包 `*_arm64.zip` / `*_arm.zip` / `*_x86.zip` / `*_x64.zip`；另有 lite。`updateJson` / ci-dist 默认 `CertBridge_arm64.zip`。旧式合包 `PACKAGE_FAT=1` → `*_fat.zip`
+- **证书开关（简化）**：关=只写 `user.conf`；开=本地有证或按**与安装相同**的 App 路径导入；证书常驻 `/data/adb/certbridge/addon-sources/`
+- **CLI**：入口安装到 `/data/adb/certbridge/cb`（模块外）
+- **WebUI**：首屏内联 loading + 主题色，CSS 先于 JS，先进壳层再拉 status；更多页拆「外观」「挂载与注入」并支持「显示隐藏页」；统一底部抽屉动画；Toast / 开关交互与底栏 Tab 稳定性改进
+- **文档重写**：按当前模块能力重写使用手册
+- **CI / 工程**：Node 24；同提交改 Web 时打包门控；`INPUT_DIGEST` 去重；Lint 并行 web/shell/tooling；发版可晋升 ci-dist；接入 `setup-ndk-clang`；Lint/Format 覆盖 Python / Java / C/C++（有 native 时）
 
 ## v4.2.0
 
+### 中文
+
 > 解决了春秋检测词条：Found ksu/免解设备
+>
 > 如果依然还有该检测词条，请检查是否使用了其它 mount 模块
 
 - **冷门实验默认痕迹最少**：`boot_bind_zygote` / `boot_multi_apex` / `service_probe` 默认均为 `0`；证书异常时再在「冷门实验」打开兼容项。升级若已有旧值会保留
@@ -17,13 +82,19 @@
 
 ## v4.1.2
 
+### 中文
+
 - **装了隐藏但关着**：不再每次注入无谓 `hide_clear_applied`；仅当存在本模块残留状态时才清理（更接近「未安装」）
 
 ## v4.1.1
 
+### 中文
+
 - **关闭 hide_allow 即时卸登记**：清 try_umount.txt / NoHello 的同时对已知 cacerts 路径执行 `ksud kernel umount del`（不 wipe 全表）
 
 ## v4.1.0
+
+### 中文
 
 - **减轻晚注入 / KSU 误伤**：service 命名空间阶段默认不再二次 nsenter zygote/init（boot 已注入）；仅当 mountinfo 看不到本模块 bind 时才补注 zygote
 - **隐藏探测更省**：`hide_allow=0` 时 status 不再执行 `ksud` / `ksu_susfs`；开启后按 boot 缓存探测结果，避免每次刷新拉起
@@ -35,6 +106,8 @@
 - **开关不堵 UI**：`hide_allow` / `force_bind_capture` 只同步写 conf 并立刻返回；SuSFS/ksud 登记与抓包 App 补绑放后台；WebUI 乐观更新 + 延迟刷新实况
 
 ## v4.0.0
+
+### 中文
 
 - **挂载隐藏协助组件**：安装时可带上隐藏协助脚本；WebUI「隐藏」页用已有开关控制是否在注入 / 热挂载成功后登记 umount 路径（`hide_allow`）
 - **不强制 SuSFS**：有 SuSFS / KernelSU umount 时自动配合登记；没有也能正常用证书。Magisk 等可继续搭配 Shamiko、ZygiskNext 等做进程侧卸载隐藏
@@ -48,6 +121,8 @@
 
 ## v3.0.0
 
+### 中文
+
 - **WebUI**：使用 React 全面重构模块 webui
 - **更新通道**：正式（Pages）与 CI（`ci-dist`），可检测下载，CI 可选 jsDelivr，支持无人值守刷入；
 - **是否挂载 system**：支持设置 Android 14+ 是否挂载 system（`experimental_14_system`）；
@@ -58,12 +133,16 @@
 
 ## v2.3.1
 
+### 中文
+
 - 增强对 Android 14+ 的隐藏能力，消除更多挂载痕迹，默认不再挂载 `/system/etc/security/cacerts`
 - 实验配置 `experimental_14_system`（`auto` / `skip`，**默认 `skip`**）：Android 14+ 下对**两种挂载模式均生效**；默认跳过 system、只脚本注入 APEX；设为 `auto` 则按挂载模式处理 system。需要 system 叠 addon 请用正式模式 `magic` 并设 `auto`。改 `certs.conf` 或 `cb set_experimental_14_system` 后需重启
 - 挂载模式文档补充 Android 7–13 / 14+ 行为对照；说明完整兼容在 `auto` 时会在 `/system/etc/security/cacerts` 留下整库 bind，可改用轻量 Magic 或保持默认 `skip`
 - 挂载策略由 `mount_mode` 与实验项正交组合；模块简介兼容范围更新为 Android 7–17
 
 ## v2.3.0
+
+### 中文
 
 - 开机注入更稳：状态校验失败会退避重试并延迟自愈；改过开关后按新配置重建证书集
 - 切换挂载模式时清理 staged 叠层；DER 证书导入走快路径，减少导入失败
@@ -75,6 +154,8 @@
 
 ## v2.2.1
 
+### 中文
+
 - 修复软重启后仍可能继续注入已关闭证书的问题（如关掉 ProxyPin 后仍报注入失败 / 挂载残留）
 - WebUI：证书开关已关但旧证尚未卸掉时，会提示「仍在生效（重启后移除）」
 - Action 改为只读仪表盘（适配 SukiSU 约 10s 脚本超时），去掉易被掐断的音量键长操作
@@ -82,18 +163,24 @@
 
 ## v2.2.0
 
+### 中文
+
 - 修复 KernelSU 越狱模式软重启后状态不更新：软重启不换内核 `boot_id`，原先会跳过证书集重建并卡住「待重启」/旧缓存；现用 `boot-epoch` 区分用户态周期，并允许同 boot 重建待生效配置
 
 ## v2.1.0
+
+### 中文
 
 - 新增挂载模式：`compatible`（默认，完整兼容 / 运行时 bind）与 `magic`（轻量 Magic Mount，仅叠 addon）
 - 自定义安装增加音量键选择挂载模式；默认安装固定完整兼容
 - WebUI「更多」可切换挂载模式，并说明 Magisk / KernelSU 与挂载元模块关系
 - 开机注入与热挂载的临时层改到 `/data/local/tmp/sys-ca-merge{,-hot}`，降低 mountinfo 中的模块路径暴露
 - 发版时自动将 `changelog.md` 的 `Unreleased` 提升为版本号；文档站两份 changelog **不含 Unreleased**
-- 发版约定见 `tooling/RELEASE.md`
+- 发版约定见 `docs-dev/RELEASE.md`
 
 ## v2.0.0
+
+### 中文
 
 - 证书来源重构：不再内置 Reqable，优先从已安装 App 自动导入；ProxyPin 优先 App，未检测到且安装时选了 ProxyPin 则使用模块内置证书；检测到 HttpCanary、ADGuard 等依次询问是否导入为自定义证书
 - WebUI 证书名称从证书 subject（CN/O）自动解析，支持点击展开详情（主题、颁发者、有效期、指纹等）；自定义证书同样显示可读名称
@@ -109,6 +196,8 @@
 
 ## v1.2.0
 
+### 中文
+
 - 模块脚本按功能拆分到 `bin/lib/`，`common.sh` 仅作加载入口
 - Action 增加实用功能：音量上刷新状态，音量下进入菜单，可免重启挂载/卸载用户区与存储卡临时 CA；并优化音量键每轮独立计时，降低漏键与连按才响应
 - 为 APEX 与 system 信任库分别建立临时挂载层，按目标路径设置 SELinux 后再绑定到命名空间；放宽带 MCS 类别机型的上下文比对，避免误拒证书层准备
@@ -118,6 +207,8 @@
 
 ## v1.1.1
 
+### 中文
+
 - 修复 Android 14+ 仅注入 APEX、未覆盖 system 路径导致 Reqable 等检测「证书未安装」的问题；现同时运行时绑定 APEX 与 system
 - 开机后命名空间注入扩展到抓包 App 与已运行应用，避免 Settings 能看到证书但抓包 TLS 仍失败 / 断网（注：自 v1.2.0 起改为仅关键命名空间，不再扫全机应用）
 - 临时热挂载会合并已启用的永久 addon，且同样覆盖 APEX / system 双路径
@@ -125,6 +216,8 @@
 - 移除深色顶栏浅色状态栏条，改为依赖 `color-scheme` 与 theme-color 同步状态栏
 
 ## v1.1.0
+
+### 中文
 
 - 移除持久化系统 CA 基线与 `system/cacerts` 覆盖目录，改为每次开机从当前 system / Conscrypt APEX 信任库生成完整证书集
 - 生成阶段校验证书数量、复制结果、附加证书校验和及 SELinux 上下文；任一步失败都保留系统原始信任库
@@ -137,6 +230,8 @@
 
 ## v1.0.2
 
+### 中文
+
 - 紧急修复 KernelSU Magic Mount 将系统 CA 目录遮蔽为仅剩 Reqable、ProxyPin 两张证书的问题
 - 紧急修复运行时证书合并失败后系统信任库为空、导致 TLS 连接及抓包断网的问题
 - 恢复系统 CA 基线方案，始终以“完整系统基线 + 模块证书”生成挂载内容
@@ -145,6 +240,8 @@
 - 增加 PID 1、Zygote 与系统设置进程的注入日志
 
 ## v1.0.1
+
+### 中文
 
 - 项目更名为证书桥（CertBridge），模块显示名调整为「系统 CA 证书」
 - 移除持久化系统 CA 基线抓取，改为每次注入时现场读取并增量合并系统信任库
@@ -159,6 +256,8 @@
 - 更新日志与模块 ZIP 同步部署到 GitHub Pages，改善更新检查与下载体验
 
 ## v1.0.0
+
+### 中文
 
 - 首次发布系统 CA 证书模块与 KernelSU WebUI
 - 内置 Reqable / ProxyPin CA，支持独立开关与自定义证书

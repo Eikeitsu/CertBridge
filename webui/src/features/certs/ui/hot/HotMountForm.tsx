@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { HotMountMode } from "@/entities/module/enums";
 import { DEFAULT_SD_CERT_DIR } from "@/shared/config/constants";
 import { HOT_MOUNT_MODE_OPTIONS } from "@/shared/config/certs";
@@ -20,6 +21,7 @@ export function HotMountForm({
   onSdPathChange,
   onMount,
 }: HotMountFormProps) {
+  const { t } = useTranslation("webui");
   const selectedMode = HOT_MOUNT_MODE_OPTIONS.find((option) => option.value === mode);
   const needsSdPath = selectedMode?.needsSdPath ?? false;
 
@@ -30,8 +32,8 @@ export function HotMountForm({
         disabled={disabled}
         options={HOT_MOUNT_MODE_OPTIONS.map((option) => ({
           value: option.value,
-          label: option.label,
-          hint: option.needsSdPath ? "需指定存储卡目录" : undefined,
+          label: t(option.labelKey),
+          hint: option.needsSdPath ? t("certs.hotSdPathHint") : undefined,
         }))}
         onChange={(value) => onModeChange(value as HotMountMode)}
       />
@@ -51,7 +53,7 @@ export function HotMountForm({
           disabled={disabled}
           onClick={() => onMount(mode, needsSdPath ? sdPath : undefined)}
         >
-          开始临时挂载
+          {t("certs.hotStart")}
         </Button>
       </div>
     </>

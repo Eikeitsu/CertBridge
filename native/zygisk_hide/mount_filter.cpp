@@ -85,7 +85,80 @@ void parse_whitelist_text(std::string_view text, std::vector<std::string> *out) 
   }
 }
 
+enum class ConfTri { Absent, Off, On };
+
+ConfTri conf_key_tri(const char *buf, const char *key) {
+  if (!buf || !key) return ConfTri::Absent;
+  const size_t key_len = std::strlen(key);
+  const char *p = buf;
+  while (*p) {
+    if ((p == buf || p[-1] == '\n') && std::strncmp(p, key, key_len) == 0 && p[key_len] == '=') {
+      const char *v = p + key_len + 1;
+      while (*v == ' ' || *v == '\t') ++v;
+      if (*v == '1') return ConfTri::On;
+      return ConfTri::Off;
+    }
+    const char *nl = std::strchr(p, '\n');
+    if (!nl) break;
+    p = nl + 1;
+  }
+  return ConfTri::Absent;
+}
+
+bool read_file_small(int fd, std::string *out) {
+  if (fd < 0 || !out) return false;
+  out->clear();
+  char tmp[1024];
+  for (;;) {
+    ssize_t n = ::read(fd, tmp, sizeof(tmp));
+    if (n < 0) return false;
+    if (n == 0) break;
+    out->append(tmp, static_cast<size_t>(n));
+    if (out->size() > 64 * 1024) break;
+  }
+  return true;
+}
+
+ConfTri conf_tri_from_fd(int fd) {
+  if (fd < 0) return ConfTri::Absent;
+  std::string raw;
+  if (!read_file_small(fd, &raw)) return ConfTri::Absent;
+  return conf_key_tri(raw.c_str(), "zn_hide_allow");
+}
+
+ConfTri conf_tri_from_path(const char *path) {
+  if (!path) return ConfTri::Absent;
+  int fd = open(path, O_RDONLY | O_CLOEXEC);
+  if (fd < 0) return ConfTri::Absent;
+  ConfTri t = conf_tri_from_fd(fd);
+  ::close(fd);
+  return t;
+}
+
+ConfTri conf_tri_from_moddir(int moddir_fd, const char *rel) {
+  if (moddir_fd < 0 || !rel) return ConfTri::Absent;
+  int fd = openat(moddir_fd, rel, O_RDONLY | O_CLOEXEC);
+  if (fd < 0) return ConfTri::Absent;
+  ConfTri t = conf_tri_from_fd(fd);
+  ::close(fd);
+  return t;
+}
+
 }  // namespace
+
+bool read_zn_hide_allow(int moddir_fd) {
+  // 与 module/bin/lib/conf.sh::read_conf 同序：外置 user.conf → legacy → 模块模板
+  const ConfTri layers[] = {
+      conf_tri_from_path("/data/adb/certbridge/user.conf"),
+      conf_tri_from_moddir(moddir_fd, "data/state/user.conf"),
+      conf_tri_from_moddir(moddir_fd, "config/certs.conf"),
+  };
+  for (ConfTri t : layers) {
+    if (t == ConfTri::On) return true;
+    if (t == ConfTri::Off) return false;
+  }
+  return false;
+}
 
 void load_whitelist_from_moddir(int moddir_fd) {
   std::lock_guard<std::mutex> lock(g_wl_mu);

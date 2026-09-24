@@ -1,0 +1,19 @@
+{
+  "brand": "证书桥",
+  "brand_en": "CertBridge",
+  "yes": "是",
+  "no": "否",
+  "ok": "好",
+  "cancel": "取消",
+  "save": "保存",
+  "on": "开",
+  "off": "关",
+  "skip": "跳过",
+  "vol_up": "音量上",
+  "vol_down": "音量下",
+  "timeout_20": "20 秒未选则默认",
+  "loading": "加载中",
+  "follow_system": "跟随系统",
+  "lang_zh": "中文",
+  "lang_en": "English"
+}

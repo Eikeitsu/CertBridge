@@ -4,6 +4,36 @@
 certbridge_install_write_config() {
   sed -i "s/^reqable=.*/reqable=$INSTALL_REQABLE/" "$MODPATH/config/certs.conf"
   sed -i "s/^proxypin=.*/proxypin=$INSTALL_PROXYPIN/" "$MODPATH/config/certs.conf"
+  # 安装选项同步到模块外 user.conf（与运行时 write_conf 同路径）
+  mkdir -p /data/adb/certbridge "$MODPATH/data/state" 2>/dev/null || true
+  _uc="/data/adb/certbridge/user.conf"
+  {
+    if [ -f "$_uc" ]; then
+      awk -F= -v rq="$INSTALL_REQABLE" -v pp="$INSTALL_PROXYPIN" '
+        $1 == "reqable" { print "reqable=" rq; rqdone=1; next }
+        $1 == "proxypin" { print "proxypin=" pp; ppdone=1; next }
+        { print }
+        END {
+          if (!rqdone) print "reqable=" rq
+          if (!ppdone) print "proxypin=" pp
+        }
+      ' "$_uc"
+    elif [ -f "$MODPATH/data/state/user.conf" ]; then
+      awk -F= -v rq="$INSTALL_REQABLE" -v pp="$INSTALL_PROXYPIN" '
+        $1 == "reqable" { print "reqable=" rq; rqdone=1; next }
+        $1 == "proxypin" { print "proxypin=" pp; ppdone=1; next }
+        { print }
+        END {
+          if (!rqdone) print "reqable=" rq
+          if (!ppdone) print "proxypin=" pp
+        }
+      ' "$MODPATH/data/state/user.conf"
+    else
+      printf 'reqable=%s\nproxypin=%s\n' "$INSTALL_REQABLE" "$INSTALL_PROXYPIN"
+    fi
+  } >"$_uc.tmp" 2>/dev/null && mv -f "$_uc.tmp" "$_uc"
+  chmod 0600 "$_uc" 2>/dev/null || true
+  cp -f "$_uc" "$MODPATH/data/state/user.conf" 2>/dev/null || true
   if grep -q '^mount_mode=' "$MODPATH/config/certs.conf" 2>/dev/null; then
     sed -i "s/^mount_mode=.*/mount_mode=$INSTALL_MOUNT_MODE/" "$MODPATH/config/certs.conf"
   else
@@ -18,7 +48,7 @@ certbridge_install_write_config() {
     echo "tmpfs_style=dev" >>"$MODPATH/config/certs.conf"
   fi
   if ! grep -q '^quiet_prop=' "$MODPATH/config/certs.conf" 2>/dev/null; then
-    echo "quiet_prop=1" >>"$MODPATH/config/certs.conf"
+    echo "quiet_prop=0" >>"$MODPATH/config/certs.conf"
   fi
   # 旧键迁移 / 缺省实验项
   if grep -q '^experimental_14_apex_only=' "$MODPATH/config/certs.conf" 2>/dev/null && \
@@ -70,9 +100,26 @@ certbridge_install_write_config() {
     else
       echo "zn_hide_allow=$INSTALL_ZN_HIDE_ALLOW" >>"$MODPATH/config/certs.conf"
     fi
+    # 同步到外置 user.conf，供 Zygisk so 与 shell read_conf 同路径读取
+    if [ -f "$_uc" ]; then
+      awk -F= -v v="$INSTALL_ZN_HIDE_ALLOW" '
+        $1 == "zn_hide_allow" { print "zn_hide_allow=" v; done=1; next }
+        { print }
+        END { if (!done) print "zn_hide_allow=" v }
+      ' "$_uc" >"$_uc.tmp" 2>/dev/null && mv -f "$_uc.tmp" "$_uc"
+    else
+      echo "zn_hide_allow=$INSTALL_ZN_HIDE_ALLOW" >>"$_uc"
+    fi
+    chmod 0600 "$_uc" 2>/dev/null || true
+    cp -f "$_uc" "$MODPATH/data/state/user.conf" 2>/dev/null || true
   else
     if grep -q '^zn_hide_allow=' "$MODPATH/config/certs.conf" 2>/dev/null; then
       sed -i '/^zn_hide_allow=/d' "$MODPATH/config/certs.conf"
+    fi
+    if [ -f "$_uc" ] && grep -q '^zn_hide_allow=' "$_uc" 2>/dev/null; then
+      awk -F= '$1 != "zn_hide_allow" { print }' "$_uc" >"$_uc.tmp" 2>/dev/null && mv -f "$_uc.tmp" "$_uc"
+      chmod 0600 "$_uc" 2>/dev/null || true
+      cp -f "$_uc" "$MODPATH/data/state/user.conf" 2>/dev/null || true
     fi
   fi
   cat >"$MODPATH/config/install-profile.conf" <<EOF
@@ -92,7 +139,11 @@ EOF
   CERT_POOL="$MODPATH/certs"
   CUSTOM_DIR="$CERT_POOL/custom"
   BUILTIN_DIR="$CERT_POOL/builtin"
-  SOURCES_DIR="$CERT_POOL/sources"
+  SOURCES_DIR="${CB_EXT_DIR:-/data/adb/certbridge}/addon-sources"
+  mkdir -p "$SOURCES_DIR/reqable" "$SOURCES_DIR/proxypin" \
+    "${CB_EXT_DIR:-/data/adb/certbridge}/source-stash/reqable" \
+    "${CB_EXT_DIR:-/data/adb/certbridge}/source-stash/proxypin" 2>/dev/null || true
+  mkdir -p "$MODPATH/data/state/addon-sources/reqable" "$MODPATH/data/state/addon-sources/proxypin" 2>/dev/null || true
   GEN_CERTS="$CERT_POOL/generation/current/cacerts"
   APPLIED_MAP="$STATEDIR/applied-certs.list"
   mkdir -p "$STATEDIR"
@@ -111,6 +162,9 @@ certbridge_install_trim_components() {
   if [ "$INSTALL_HIDE" != "1" ]; then
     rm -f "$MODPATH/bin/lib/hide_assist.sh"
     rm -f "$MODPATH/bin/lib/hide_actions.sh"
+    rm -f "$MODPATH/bin/lib/hide_probe.sh"
+    rm -f "$MODPATH/bin/lib/hide_clear.sh"
+    rm -f "$MODPATH/bin/lib/hide_register.sh"
     rm -f "$MODPATH/bin/lib/hide_status.sh"
     rm -f "$MODPATH/data/state/hide-assist.conf" 2>/dev/null
   fi

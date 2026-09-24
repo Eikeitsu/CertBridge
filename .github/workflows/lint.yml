@@ -10,25 +10,23 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: lint-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  lint:
+  web:
+    name: Web (eslint / style / md / typecheck / prettier)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
-          # 注意：不可写 `&& 0 || 1`——Actions 里 0 为假，PR 会错误变成浅克隆
-          # commitlint 需要 base..head 两端都在本地，统一全量历史
           fetch-depth: 0
 
       - uses: ./.github/actions/setup-node-npm
 
-      - name: Install shellcheck
-        run: sudo apt-get update && sudo apt-get install -y shellcheck
-
-      - name: ESLint / Stylelint / Markdown / Shell
-        run: npm run lint
-        env:
-          REQUIRE_SHELLCHECK: "1"
+      - name: ESLint / Stylelint / Markdown
+        run: npm run lint:js && npm run lint:style && npm run lint:md
 
       - name: Typecheck WebUI
         run: npm run typecheck:web
@@ -39,7 +37,6 @@ jobs:
       - name: Commitlint (PR range)
         if: github.event_name == 'pull_request'
         run: |
-          # PR checkout 默认是 merge ref；显式确保 base/head 可达
           git fetch --no-tags origin \
             "${{ github.event.pull_request.base.sha }}" \
             "${{ github.event.pull_request.head.sha }}"
@@ -47,3 +44,64 @@ jobs:
             --from "${{ github.event.pull_request.base.sha }}" \
             --to "${{ github.event.pull_request.head.sha }}" \
             --verbose
+
+  shell:
+    name: Shell (shellcheck)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: ./.github/actions/setup-node-npm
+
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends shellcheck
+
+      - name: ShellCheck
+        run: npm run lint:shell
+        env:
+          REQUIRE_SHELLCHECK: "1"
+
+  tooling:
+    name: Tooling (python / java / clang)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: ./.github/actions/setup-node-npm
+
+      - name: Install ruff + clang-format
+        run: |
+          python3 -m pip install --user ruff
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends clang-format
+
+      - name: Ruff (Python)
+        run: npm run lint:py
+        env:
+          REQUIRE_RUFF: "1"
+
+      - name: google-java-format (cbx509)
+        run: npm run lint:java
+        env:
+          REQUIRE_JAVA_FORMAT: "1"
+
+      - name: clang-format (native, if present)
+        run: npm run lint:clang
+        env:
+          REQUIRE_CLANG_FORMAT: "1"
+
+  lint:
+    name: Lint gate
+    runs-on: ubuntu-latest
+    needs: [web, shell, tooling]
+    if: always()
+    steps:
+      - name: Require all jobs success
+        run: |
+          echo "web=${{ needs.web.result }}"
+          echo "shell=${{ needs.shell.result }}"
+          echo "tooling=${{ needs.tooling.result }}"
+          test "${{ needs.web.result }}" = "success"
+          test "${{ needs.shell.result }}" = "success"
+          test "${{ needs.tooling.result }}" = "success"

@@ -7,6 +7,16 @@
 
 namespace cb_hide {
 
+/**
+ * 读取 zn_hide_allow，优先级与 shell read_conf 一致：
+ *   1) /data/adb/certbridge/user.conf
+ *   2) 模块 data/state/user.conf（legacy）
+ *   3) 模块 config/certs.conf
+ * 任一文件显式写出该键即以该值为准（含 =0）；皆无则视为关闭。
+ * moddir_fd < 0 时仅查外置 user.conf。
+ */
+bool read_zn_hide_allow(int moddir_fd);
+
 /** 从模块 config/zn_whitelist.txt 加载额外/覆盖白名单（空文件则仅用内置默认） */
 void load_whitelist_from_moddir(int moddir_fd);
 

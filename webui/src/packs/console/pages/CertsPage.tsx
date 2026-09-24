@@ -1,19 +1,15 @@
+import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
-import {
-  selectCustomCertificates,
-  selectStatusBootstrapped,
-  selectStatusLoading,
-} from "@/features/status/model/selectors";
+import { selectCustomCertificates } from "@/features/status/model/selectors";
 import { refreshStatus } from "@/features/status/model/statusSlice";
 import { useCertActions } from "@/features/certs/hooks/useCertActions";
 import { useBuiltinCerts } from "@/features/certs/hooks/useBuiltinCerts";
 import { useCertDetail } from "@/features/certs/hooks/useCertDetail";
 import type { AppPresetKind } from "@/shared/api/cli";
 import { Switch } from "@/shared/ui/primitives";
-import { Loader } from "@/shared/ui/Loader";
 import { CertDetailSheet } from "@/features/certs/ui/CertDetailSheet";
 import { HotMountPanel } from "@/features/certs/ui/HotMountPanel";
-import { CONSOLE_VOICE } from "../voice";
+import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
 
 const PRESET_KINDS: AppPresetKind[] = [
   "httpcanary",
@@ -23,24 +19,16 @@ const PRESET_KINDS: AppPresetKind[] = [
   "pcapdroid",
 ];
 
-function stateOf(cert: { isActive: boolean; isEnabled: boolean; isAvailable: boolean }) {
-  if (cert.isActive) return "active";
-  if (cert.isEnabled) return "pending";
-  if (cert.isAvailable) return "ready";
-  return "missing";
-}
-
 export function ConsoleCertsPage() {
+  const { t } = useTranslation("webui");
+  const chrome = usePackChrome();
   const dispatch = useAppDispatch();
-  const loading = useAppSelector(selectStatusLoading);
-  const bootstrapped = useAppSelector(selectStatusBootstrapped);
   const customs = useAppSelector(selectCustomCertificates);
   const builtins = useBuiltinCerts();
   const detail = useCertDetail();
-  const v = CONSOLE_VOICE.certs;
+  const v = chrome.certs;
   const {
     isPending,
-    pendingKind,
     handleToggleBuiltin,
     handleImportFile,
     handleImportPreset,
@@ -51,7 +39,16 @@ export function ConsoleCertsPage() {
     handleHotUnmount,
   } = useCertActions();
 
-  if (loading && !bootstrapped) return <Loader label={CONSOLE_VOICE.loading} />;
+  const stateOf = (cert: {
+    isActive: boolean;
+    isEnabled: boolean;
+    isAvailable: boolean;
+  }) => {
+    if (cert.isActive) return t("certs.statusActive");
+    if (cert.isEnabled) return t("certs.statusPending");
+    if (cert.isAvailable) return t("certs.statusAvailable");
+    return t("certs.statusMissing");
+  };
 
   return (
     <div className="pk-con-page">
@@ -87,7 +84,6 @@ export function ConsoleCertsPage() {
                 <td>
                   <Switch
                     checked={cert.isEnabled}
-                    disabled={isPending && pendingKind === cert.kind}
                     onChange={(next) => void handleToggleBuiltin(cert.kind, next)}
                   />
                 </td>

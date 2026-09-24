@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { TrustOverview } from "@/features/overview/hooks/useTrustOverview";
 import { Notice } from "@/shared/ui/primitives";
 
@@ -6,13 +7,14 @@ type OverviewAlertsProps = {
 };
 
 export function OverviewAlerts({ overview }: OverviewAlertsProps) {
+  const { t } = useTranslation("webui");
   return (
     <>
       {overview.isDisabled ? (
-        <Notice tone="alert">模块当前处于停用状态，证书注入不会执行。</Notice>
+        <Notice tone="alert">{t("overview.moduleDisabled")}</Notice>
       ) : null}
       {overview.isPendingReboot ? (
-        <Notice tone="alert">有永久变更等待重启后生效。</Notice>
+        <Notice tone="alert">{t("overview.pendingReboot")}</Notice>
       ) : null}
       {overview.injectDiagnosis?.message ? (
         <Notice tone="error">

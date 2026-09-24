@@ -26,6 +26,22 @@ if type update_module_description >/dev/null 2>&1; then
 	update_module_description >/dev/null 2>&1 || true
 fi
 
+# 重建 generation 前必须把 addon 播到 /data/adb/certbridge，
+# 否则 install_addon_certs_into 找不到源，会把已启用的 Reqable/ProxyPin 从集合里丢掉。
+if type certbridge_seed_ext_from_module >/dev/null 2>&1; then
+	certbridge_seed_ext_from_module "$MODDIR" >/dev/null 2>&1 || true
+fi
+if type certbridge_ensure_state_sources >/dev/null 2>&1; then
+	certbridge_ensure_state_sources >/dev/null 2>&1 || true
+fi
+if type certbridge_install_cli_ext >/dev/null 2>&1; then
+	certbridge_install_cli_ext >/dev/null 2>&1 || true
+elif [ -f "$MODDIR/bin/lib/install_finish.sh" ]; then
+	# shellcheck disable=SC1090
+	. "$MODDIR/bin/lib/install_finish.sh" 2>/dev/null
+	certbridge_install_cli_ext >/dev/null 2>&1 || true
+fi
+
 # 标记热更新路径：post-fs-data 在 rebuild 失败时会尝试把旧 generation 重新挂回去，
 # 避免「已卸绑定但新集合未建好」的空窗长期残留。
 export CERTBRIDGE_HOT_UPDATE=1

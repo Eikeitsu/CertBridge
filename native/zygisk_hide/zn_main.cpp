@@ -34,32 +34,6 @@ int (*orig_openat)(int, const char *, int, ...) = nullptr;
 int (*orig_close)(int) = nullptr;
 ssize_t (*orig_read)(int, void *, size_t) = nullptr;
 
-bool conf_key_is_one(const char *buf, const char *key) {
-  if (!buf || !key) return false;
-  const size_t key_len = std::strlen(key);
-  const char *p = buf;
-  while (*p) {
-    if ((p == buf || p[-1] == '\n') && std::strncmp(p, key, key_len) == 0 && p[key_len] == '=') {
-      return p[key_len + 1] == '1';
-    }
-    const char *nl = std::strchr(p, '\n');
-    if (!nl) break;
-    p = nl + 1;
-  }
-  return false;
-}
-
-bool read_conf_zn_hide_allow_path(const char *mod_conf) {
-  int fd = open(mod_conf, O_RDONLY | O_CLOEXEC);
-  if (fd < 0) return false;
-  char buf[4096];
-  ssize_t n = ::read(fd, buf, sizeof(buf) - 1);
-  ::close(fd);
-  if (n <= 0) return false;
-  buf[n] = '\0';
-  return conf_key_is_one(buf, "zn_hide_allow");
-}
-
 bool module_prop_is_certbridge(const char *prop_path) {
   int fd = open(prop_path, O_RDONLY | O_CLOEXEC);
   if (fd < 0) return false;
@@ -71,14 +45,15 @@ bool module_prop_is_certbridge(const char *prop_path) {
   return std::strstr(buf, "id=CertBridge") != nullptr;
 }
 
-/** 按 module.prop 的 id=CertBridge 定位配置，避免写死目录名之外的唯一路径 */
-bool read_conf_zn_hide_allow_resolved() {
+/** 打开 CertBridge 模块目录 fd，供 read_zn_hide_allow / 白名单使用 */
+int open_certbridge_moddir() {
   static constexpr const char *kDirect[] = {
-      "/data/adb/modules/CertBridge/config/certs.conf",
-      "/data/adb/modules_update/CertBridge/config/certs.conf",
+      "/data/adb/modules/CertBridge",
+      "/data/adb/modules_update/CertBridge",
   };
   for (const char *p : kDirect) {
-    if (read_conf_zn_hide_allow_path(p)) return true;
+    int fd = open(p, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+    if (fd >= 0) return fd;
   }
   static constexpr const char *kRoots[] = {"/data/adb/modules", "/data/adb/modules_update"};
   for (const char *root : kRoots) {
@@ -87,16 +62,16 @@ bool read_conf_zn_hide_allow_resolved() {
     while (dirent *ent = readdir(d)) {
       if (ent->d_name[0] == '.') continue;
       char prop[256];
-      char conf[288];
+      char dir[256];
       std::snprintf(prop, sizeof(prop), "%s/%s/module.prop", root, ent->d_name);
       if (!module_prop_is_certbridge(prop)) continue;
-      std::snprintf(conf, sizeof(conf), "%s/%s/config/certs.conf", root, ent->d_name);
+      std::snprintf(dir, sizeof(dir), "%s/%s", root, ent->d_name);
       closedir(d);
-      return read_conf_zn_hide_allow_path(conf);
+      return open(dir, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
     }
     closedir(d);
   }
-  return false;
+  return -1;
 }
 
 void mark_fd_if_mount_table(int fd, const char *path) {
@@ -210,7 +185,10 @@ extern "C" [[gnu::visibility("default")]] void zn_module_entry_v1(ZnApiTableV1 *
                                                                   const char *process_name) {
   (void)process_name;
   if (!api || !api->pltHook || !api->pltHookCommit) return;
-  if (!read_conf_zn_hide_allow_resolved()) return;
+  int modfd = open_certbridge_moddir();
+  const bool allow = cb_hide::read_zn_hide_allow(modfd);
+  if (modfd >= 0) ::close(modfd);
+  if (!allow) return;
   g_enabled = true;
   api->pltHook(".*libc\\.so$", "open", reinterpret_cast<void *>(hooked_open),
                reinterpret_cast<void **>(&orig_open));

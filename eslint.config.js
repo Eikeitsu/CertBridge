@@ -10,7 +10,7 @@ const sharedIgnores = {
     "**/.build/**",
     "**/.release/**",
     "**/module/webroot/**",
-    "**/archives/**",
+    "**/legacy/**",
     "**/docs/.vitepress/dist/**",
     "**/docs/.vitepress/cache/**",
     "webui/public/**",
@@ -60,7 +60,7 @@ export default tseslint.config(
   },
   {
     files: [
-      "tooling/**/*.{js,mjs,cjs}",
+      "scripts/**/*.{js,mjs,cjs}",
       "docs/.vitepress/**/*.{js,mjs,cjs}",
       "eslint.config.js",
       "stylelint.config.js",

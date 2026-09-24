@@ -1,0 +1,87 @@
+/* log: large viewport with page padding + rounded panel */
+.pk-ops-page--log {
+  min-height: calc(100dvh - var(--bf-inset-top) - var(--bf-inset-bottom) - 130px);
+}
+
+.pk-ops-term {
+  margin: 0;
+  flex: 1;
+  min-height: 42vh;
+  max-height: calc(100dvh - 260px);
+  overflow: auto;
+  padding: 12px 14px;
+  border-radius: var(--pk-radius);
+  border: 1px solid var(--pk-line);
+  background: #070b10;
+  color: #a7f3d0;
+  font-family: var(--bf-font-mono);
+  font-size: 0.72rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.pk-ops-term.is-nowrap {
+  white-space: pre;
+  word-break: normal;
+  overflow-x: auto;
+}
+
+.pk-ops-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--pk-line);
+  background: transparent;
+  color: var(--pk-muted);
+  font-size: 0.78rem;
+  font-weight: 650;
+  cursor: pointer;
+  user-select: none;
+}
+
+.pk-ops-check input {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  border: 1.5px solid var(--pk-line-strong, var(--pk-line));
+  border-radius: 3px;
+  background: transparent;
+  display: grid;
+  place-content: center;
+  flex-shrink: 0;
+}
+
+.pk-ops-check input::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  transform: scale(0);
+  transition: transform 0.12s ease;
+  background: var(--pk-accent);
+  border-radius: 1px;
+}
+
+.pk-ops-check input:checked::before {
+  transform: scale(1);
+}
+
+.pk-ops-check.is-on {
+  border-color: color-mix(in srgb, var(--pk-accent) 50%, transparent);
+  color: var(--pk-accent);
+  background: color-mix(in srgb, var(--pk-accent) 10%, transparent);
+}
+
+html[data-theme="light"] .pk-ops-term {
+  background: #0f172a;
+  color: #bbf7d0;
+}
+
+.pk-ops-page--log .pk-ops-term {
+  max-height: none;
+  min-height: calc(100dvh - 280px);
+}

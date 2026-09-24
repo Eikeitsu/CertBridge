@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { selectModuleStatus } from "@/features/status/model/selectors";
 import {
@@ -15,6 +16,7 @@ import { useAsyncLock } from "@/shared/hooks/useAsyncLock";
 
 /** dynamicOn = 管理器列表写入运行状态 = quiet_prop=0 */
 export function useQuietProp() {
+  const { t } = useTranslation("webui");
   const dispatch = useAppDispatch();
   const status = useAppSelector(selectModuleStatus);
   const { isPending, runExclusive } = useAsyncLock();
@@ -43,15 +45,10 @@ export function useQuietProp() {
         }
         const kv = parseKv(result.stdout || "");
         dispatch(mergeStatus(kv));
-        toast(
-          nextDynamicOn
-            ? "已开启动态简介：管理器列表将显示运行状态"
-            : "已关闭动态简介：管理器列表保持中性文案",
-          "ok",
-        );
+        toast(t(nextDynamicOn ? "more.quietOn" : "more.quietOff"), "ok");
       });
     },
-    [dispatch, dynamicOn, isPending, runExclusive],
+    [dispatch, dynamicOn, isPending, runExclusive, t],
   );
 
   return { dynamicOn, isPending, handleChange };

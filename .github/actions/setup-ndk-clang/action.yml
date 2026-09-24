@@ -15,6 +15,15 @@ outputs:
 runs:
   using: composite
   steps:
+    - name: Install CMake + Ninja
+      shell: bash
+      run: |
+        set -euo pipefail
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends cmake ninja-build
+        cmake --version
+        ninja --version
+
     # 不要开 local-cache：从缓存还原时 bin/ 下符号链接可能悬空 → clang exit 127
     - uses: nttld/setup-ndk@v1
       id: ndk

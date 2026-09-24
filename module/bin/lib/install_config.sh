@@ -100,9 +100,26 @@ certbridge_install_write_config() {
     else
       echo "zn_hide_allow=$INSTALL_ZN_HIDE_ALLOW" >>"$MODPATH/config/certs.conf"
     fi
+    # 同步到外置 user.conf，供 Zygisk so 与 shell read_conf 同路径读取
+    if [ -f "$_uc" ]; then
+      awk -F= -v v="$INSTALL_ZN_HIDE_ALLOW" '
+        $1 == "zn_hide_allow" { print "zn_hide_allow=" v; done=1; next }
+        { print }
+        END { if (!done) print "zn_hide_allow=" v }
+      ' "$_uc" >"$_uc.tmp" 2>/dev/null && mv -f "$_uc.tmp" "$_uc"
+    else
+      echo "zn_hide_allow=$INSTALL_ZN_HIDE_ALLOW" >>"$_uc"
+    fi
+    chmod 0600 "$_uc" 2>/dev/null || true
+    cp -f "$_uc" "$MODPATH/data/state/user.conf" 2>/dev/null || true
   else
     if grep -q '^zn_hide_allow=' "$MODPATH/config/certs.conf" 2>/dev/null; then
       sed -i '/^zn_hide_allow=/d' "$MODPATH/config/certs.conf"
+    fi
+    if [ -f "$_uc" ] && grep -q '^zn_hide_allow=' "$_uc" 2>/dev/null; then
+      awk -F= '$1 != "zn_hide_allow" { print }' "$_uc" >"$_uc.tmp" 2>/dev/null && mv -f "$_uc.tmp" "$_uc"
+      chmod 0600 "$_uc" 2>/dev/null || true
+      cp -f "$_uc" "$MODPATH/data/state/user.conf" 2>/dev/null || true
     fi
   fi
   cat >"$MODPATH/config/install-profile.conf" <<EOF

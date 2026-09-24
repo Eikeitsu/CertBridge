@@ -36,7 +36,7 @@
 - 开关只同步写 conf 并立刻返回；登记在后台做，不堵 UI
 - 验证卸载：对目标 App **强停再开**即可，不必仅为登记反复重启
 
-无助手时：mountinfo 上的 bind 仍可能被检测发现。
+无助手时：mountinfo 上的 bind 仍可能被检测发现。页面「SuSFS」表示**内核已集成 SuSFS**（读内核配置或 CLI 探活），不要求安装 susfs4ksu/ReSuFS；隐藏协助由本模块直接调用 `ksud kernel umount` / `ksu_susfs add_try_umount` 登记路径。
 
 ## Zygisk 挂载痕迹过滤
 

@@ -51,12 +51,13 @@ npm run build:web
 npm run typecheck:web
 npm run build:cbx509          # Lite 用 dex
 npm run package:module        # 打 zip（默认完整版 + Lite）
-npm run build:module          # build:web + package:module（有 Zygisk 源码时 CI 会编 so）
+npm run build:zygisk-hide     # 编 module/zygisk/<abi>.so（需 NDK；可 SKIP_ZYGISK_HIDE=1）
+npm run build:module          # build:web + build:zygisk-hide + package:module
 npm run dev:docs
 npm run build:docs
 ```
 
-存在 `native/zygisk_hide/` 与 `npm run build:zygisk-hide` 时：CI 使用 `.github/actions/setup-ndk-clang`；本地可 `SKIP_ZYGISK_HIDE=1` 跳过；`REQUIRE_ZYGISK_HIDE=1` 强制编 so。无 so 时仍可打包，自定义安装勾选 Zygisk 过滤会提示缺组件。
+存在 `native/zygisk_hide/` 与 `npm run build:zygisk-hide` 时：CI 使用 `.github/actions/setup-ndk-clang` 且 `build:module` 会编 so；本地可 `SKIP_ZYGISK_HIDE=1` 跳过；`REQUIRE_ZYGISK_HIDE=1` 强制编 so。无 so 时仍可打包，自定义安装勾选 Zygisk 过滤会提示缺组件。
 
 ### Lint 覆盖
 

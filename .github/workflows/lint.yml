@@ -71,10 +71,9 @@ jobs:
 
       - name: Install ruff + clang-format
         run: |
-          python3 -m pip install --user ruff
+          python3 -m pip install --user ruff clang-format
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends clang-format
+          clang-format --version
 
       - name: Ruff (Python)
         run: npm run lint:py

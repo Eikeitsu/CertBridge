@@ -14,8 +14,8 @@
 
 ### English
 
-- **WebUI 性能**: first screen `status --quick`; certificate switch no longer fully refreshes and introduces background writing; cut language with startTransition
-- **多语言**: home trust state/pipeline/environment card/log empty state and other hard-coded Chinese access i18n
+- **WebUI performance**: First screen uses `status --quick`; cert toggles no longer full-refresh and write the prop in the background; language switch uses startTransition
+- **Multi-language**: Hard-coded Chinese on home trust state / pipeline / env card / empty log state wired into i18n
 
 ## v4.3.0
 

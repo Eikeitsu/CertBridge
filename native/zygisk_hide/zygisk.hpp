@@ -103,7 +103,7 @@ struct Api {
 
 private:
   internal::api_table *tbl;
-  template <class T> friend void internal::entry_impl(api_table *, JNIEnv *);
+  template <class T> friend void internal::entry_impl(internal::api_table *, JNIEnv *);
 };
 
 #define REGISTER_ZYGISK_MODULE(clazz)                                                              \

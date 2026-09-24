@@ -119,7 +119,7 @@ hide_susfs_persist_dir_hint() {
     name=$(awk -F= '$1=="name"{sub(/^[^=]*=/,""); print; exit}' "$prop" 2>/dev/null | tr -d '\r')
     blob=$(printf '%s %s %s' "$id" "$name" "$(basename "$moddir")" | tr 'A-Z' 'a-z')
     case "$blob" in
-      *susfs*|*resusfs*) return 0 ;;
+      *susfs*) return 0 ;;
     esac
   done
   return 1

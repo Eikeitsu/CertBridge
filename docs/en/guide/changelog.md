@@ -1,5 +1,10 @@
 # Changelog
 
+## v5.0.1
+
+- **upgrade reserved configuration**: snapshot external `user.conf`/old module conf as soon as installation starts; default installation upgrade backfill `mount_mode`, switch and behavior direction keys; reserved `CERTBRIDGE_CONF_RESET_BELOW` (default 0, not triggered yet)
+- Hidden Assistant Detection and Hidden Mount Assist Switch Decoupling
+
 ## v5.0.0
 
 - **Zygisk mount filter**: filter mountinfo/mounts, maps/smaps; weaken map_files readlink, not required by default, install on demand

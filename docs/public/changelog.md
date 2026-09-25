@@ -5,6 +5,18 @@
 
 ---
 
+## v5.0.1
+
+### 中文
+
+- **升级保留配置**：安装开始即快照外置 `user.conf` / 旧模块 conf；默认安装升级回填 `mount_mode`、开关与行为向键；预留 `CERTBRIDGE_CONF_RESET_BELOW`（默认 0，暂不触发）
+- 隐藏助手探测与隐藏挂载协助开关解耦
+
+### English
+
+- **upgrade reserved configuration**: snapshot external `user.conf`/old module conf as soon as installation starts; default installation upgrade backfill `mount_mode`, switch and behavior direction keys; reserved `CERTBRIDGE_CONF_RESET_BELOW` (default 0, not triggered yet)
+- Hidden Assistant Detection and Hidden Mount Assist Switch Decoupling
+
 ## v5.0.0
 
 ### 中文

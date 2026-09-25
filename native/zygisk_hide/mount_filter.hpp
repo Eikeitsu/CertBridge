@@ -26,6 +26,15 @@ bool is_capture_whitelist(std::string_view process_name);
 /** 行内是否含本模块挂载 / 临时层 / Zygisk so 路径特征 */
 bool line_is_certbridge_trace(std::string_view line);
 
+/**
+ * maps/smaps VMA：可执行匿名映射（[anonymous] / 无名 00:00 0）。
+ * Zygisk PLT hook 跳板常见痕迹；不含 [anon:…] 等带标签的 ART JIT。
+ */
+bool line_is_anon_executable_map(std::string_view line);
+
+/** maps/smaps 是否应隐藏该行（路径痕迹或可执行匿名映射） */
+bool line_should_hide_maps(std::string_view line);
+
 /** 路径是否指向进程挂载表（mountinfo / mounts） */
 bool path_is_mount_table(std::string_view path);
 

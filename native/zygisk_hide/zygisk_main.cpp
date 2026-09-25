@@ -30,7 +30,7 @@ using zygisk::ModuleBase;
 std::mutex g_mu;
 bool g_enabled = false;
 
-enum class FilterKind : uint8_t { Line = 1, Smaps = 2 };
+enum class FilterKind : uint8_t { Mount = 1, Maps = 2, Smaps = 3 };
 
 std::unordered_map<int, FilterKind> g_filter_fds;
 std::unordered_map<int, std::string> g_fd_pending;
@@ -73,8 +73,15 @@ void mark_fd_if_sensitive(int fd, const char *path) {
     return;
   if (!cb_hide::path_needs_trace_filter(path))
     return;
-  FilterKind kind =
-      cb_hide::path_is_smaps_table(path) ? FilterKind::Smaps : FilterKind::Line;
+  FilterKind kind = FilterKind::Mount;
+  if (cb_hide::path_is_smaps_table(path))
+    kind = FilterKind::Smaps;
+  else if (cb_hide::path_is_maps_table(path))
+    kind = FilterKind::Maps;
+  else if (cb_hide::path_is_mount_table(path))
+    kind = FilterKind::Mount;
+  else
+    return;
   std::lock_guard<std::mutex> lock(g_mu);
   g_filter_fds[fd] = kind;
   g_fd_pending.erase(fd);
@@ -112,6 +119,12 @@ bool is_smaps_vma_header_line(std::string_view line) {
   if (j == i)
     return false;
   return j < line.size() && line[j] == ' ';
+}
+
+bool line_should_drop(std::string_view line, FilterKind kind) {
+  if (kind == FilterKind::Mount)
+    return cb_hide::line_is_certbridge_trace(line);
+  return cb_hide::line_should_hide_maps(line);
 }
 
 ssize_t filtered_read(int fd, void *buf, size_t count, FilterKind kind) {
@@ -153,15 +166,15 @@ ssize_t filtered_read(int fd, void *buf, size_t count, FilterKind kind) {
       bool keep = true;
       if (smaps) {
         if (is_smaps_vma_header_line(line)) {
-          drop_fields = cb_hide::line_is_certbridge_trace(line);
+          drop_fields = line_should_drop(line, kind);
           keep = !drop_fields;
         } else if (drop_fields) {
           keep = false;
         } else {
-          keep = !cb_hide::line_is_certbridge_trace(line);
+          keep = !line_should_drop(line, kind);
         }
       } else {
-        keep = !cb_hide::line_is_certbridge_trace(line);
+        keep = !line_should_drop(line, kind);
       }
       if (!keep)
         return;
@@ -279,7 +292,7 @@ int hooked_openat(int dirfd, const char *pathname, int flags, ...) {
     return -1;
   }
   int fd = flags & O_CREAT ? orig_openat(dirfd, pathname, flags, mode)
-                            : orig_openat(dirfd, pathname, flags);
+                           : orig_openat(dirfd, pathname, flags);
   mark_fd_if_sensitive(fd, pathname);
   return fd;
 }
@@ -310,15 +323,15 @@ ssize_t filtered_pread64(int fd, void *buf, size_t count, off64_t offset, Filter
       bool keep = true;
       if (smaps) {
         if (is_smaps_vma_header_line(line)) {
-          drop_fields = cb_hide::line_is_certbridge_trace(line);
+          drop_fields = line_should_drop(line, kind);
           keep = !drop_fields;
         } else if (drop_fields) {
           keep = false;
         } else {
-          keep = !cb_hide::line_is_certbridge_trace(line);
+          keep = !line_should_drop(line, kind);
         }
       } else {
-        keep = !cb_hide::line_is_certbridge_trace(line);
+        keep = !line_should_drop(line, kind);
       }
       if (!keep)
         return;
@@ -383,14 +396,14 @@ ssize_t filtered_pread64(int fd, void *buf, size_t count, off64_t offset, Filter
 }
 
 ssize_t hooked_read(int fd, void *buf, size_t count) {
-  FilterKind kind = FilterKind::Line;
+  FilterKind kind = FilterKind::Mount;
   if (g_enabled && lookup_filter_fd(fd, &kind))
     return filtered_read(fd, buf, count, kind);
   return orig_read ? orig_read(fd, buf, count) : ::read(fd, buf, count);
 }
 
 ssize_t hooked_pread64(int fd, void *buf, size_t count, off64_t offset) {
-  FilterKind kind = FilterKind::Line;
+  FilterKind kind = FilterKind::Mount;
   if (g_enabled && lookup_filter_fd(fd, &kind))
     return filtered_pread64(fd, buf, count, offset, kind);
   return orig_pread64 ? orig_pread64(fd, buf, count, offset) : ::pread64(fd, buf, count, offset);

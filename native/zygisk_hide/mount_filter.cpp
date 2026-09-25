@@ -245,6 +245,60 @@ bool line_is_certbridge_trace(std::string_view line) {
   return false;
 }
 
+bool is_smaps_vma_header(std::string_view line);
+
+bool line_is_anon_executable_map(std::string_view line) {
+  // 仅处理 VMA 首行：addr-addr perms ...
+  if (!is_smaps_vma_header(line))
+    return false;
+
+  size_t sp = line.find(' ');
+  if (sp == std::string_view::npos)
+    return false;
+  size_t perm_start = sp + 1;
+  while (perm_start < line.size() && line[perm_start] == ' ')
+    ++perm_start;
+  size_t perm_end = perm_start;
+  while (perm_end < line.size() && line[perm_end] != ' ')
+    ++perm_end;
+  if (perm_end <= perm_start)
+    return false;
+  bool exec = false;
+  for (size_t i = perm_start; i < perm_end; ++i) {
+    if (line[i] == 'x') {
+      exec = true;
+      break;
+    }
+  }
+  if (!exec)
+    return false;
+
+  // 保留带标签的匿名区（ART JIT 等）：[anon:…] [heap] [stack] [vdso]…
+  if (contains(line, "[anon:"))
+    return false;
+  if (contains(line, "[heap]") || contains(line, "[stack]"))
+    return false;
+  if (contains(line, "[vdso]") || contains(line, "[vvar]") || contains(line, "[vectors]"))
+    return false;
+
+  // 检测器常报的 Zygisk/PLT 跳板：明确的 [anonymous]
+  if (contains(line, "[anonymous]"))
+    return true;
+
+  // 无名可执行匿名页：dev 00:00、inode 0、无路径、无 [...] 标签
+  if (line.find('[') != std::string_view::npos)
+    return false;
+  if (line.find(" /") != std::string_view::npos)
+    return false;
+  if (contains(line, "00:00 0") || contains(line, "00:00\t0"))
+    return true;
+  return false;
+}
+
+bool line_should_hide_maps(std::string_view line) {
+  return line_is_certbridge_trace(line) || line_is_anon_executable_map(line);
+}
+
 bool path_is_mount_table(std::string_view path) {
   if (path.empty())
     return false;
@@ -310,6 +364,8 @@ std::string filter_trace_text_ex(std::string_view raw, bool smaps_records) {
   out.reserve(raw.size());
   size_t start = 0;
   bool drop_fields = false;
+  // smaps：路径痕迹 + 可执行匿名映射，且整段丢弃字段行
+  // 非 smaps（本函数 false 分支供 mount 全文过滤）：只去路径痕迹
   while (start <= raw.size()) {
     size_t end = raw.find('\n', start);
     std::string_view line =
@@ -317,13 +373,12 @@ std::string filter_trace_text_ex(std::string_view raw, bool smaps_records) {
     bool keep = true;
     if (smaps_records) {
       if (is_smaps_vma_header(line)) {
-        drop_fields = line_is_certbridge_trace(line);
+        drop_fields = line_should_hide_maps(line);
         keep = !drop_fields;
       } else if (drop_fields) {
-        // 丢掉被删 VMA 后面的 Size/Rss/Pss… 字段，避免解析器读到无头记录而崩
         keep = false;
       } else {
-        keep = !line_is_certbridge_trace(line);
+        keep = !line_should_hide_maps(line);
       }
     } else {
       keep = !line_is_certbridge_trace(line);

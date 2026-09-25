@@ -20,7 +20,6 @@
 #include <sys/sysmacros.h>
 #include <unistd.h>
 #include <unordered_map>
-#include <unordered_set>
 
 namespace {
 
@@ -30,7 +29,10 @@ using zygisk::ModuleBase;
 
 std::mutex g_mu;
 bool g_enabled = false;
-std::unordered_set<int> g_filter_fds;
+
+enum class FilterKind : uint8_t { Mount = 1, Maps = 2, Smaps = 3 };
+
+std::unordered_map<int, FilterKind> g_filter_fds;
 std::unordered_map<int, std::string> g_fd_pending;
 
 int (*orig_open)(const char *, int, ...) = nullptr;
@@ -71,8 +73,17 @@ void mark_fd_if_sensitive(int fd, const char *path) {
     return;
   if (!cb_hide::path_needs_trace_filter(path))
     return;
+  FilterKind kind = FilterKind::Mount;
+  if (cb_hide::path_is_smaps_table(path))
+    kind = FilterKind::Smaps;
+  else if (cb_hide::path_is_maps_table(path))
+    kind = FilterKind::Maps;
+  else if (cb_hide::path_is_mount_table(path))
+    kind = FilterKind::Mount;
+  else
+    return;
   std::lock_guard<std::mutex> lock(g_mu);
-  g_filter_fds.insert(fd);
+  g_filter_fds[fd] = kind;
   g_fd_pending.erase(fd);
 }
 
@@ -82,103 +93,158 @@ void unmark_fd(int fd) {
   g_fd_pending.erase(fd);
 }
 
-bool is_filter_fd(int fd) {
+bool lookup_filter_fd(int fd, FilterKind *kind_out) {
   std::lock_guard<std::mutex> lock(g_mu);
-  return g_filter_fds.count(fd) > 0;
+  auto it = g_filter_fds.find(fd);
+  if (it == g_filter_fds.end())
+    return false;
+  if (kind_out)
+    *kind_out = it->second;
+  return true;
 }
 
-ssize_t filtered_read(int fd, void *buf, size_t count) {
+bool is_smaps_vma_header_line(std::string_view line) {
+  size_t i = 0;
+  auto is_hex = [](char c) {
+    return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+  };
+  while (i < line.size() && is_hex(line[i]))
+    ++i;
+  if (i == 0 || i >= line.size() || line[i] != '-')
+    return false;
+  ++i;
+  size_t j = i;
+  while (j < line.size() && is_hex(line[j]))
+    ++j;
+  if (j == i)
+    return false;
+  return j < line.size() && line[j] == ' ';
+}
+
+bool line_should_drop(std::string_view line, FilterKind kind) {
+  if (kind == FilterKind::Mount)
+    return cb_hide::line_is_certbridge_trace(line);
+  return cb_hide::line_should_hide_maps(line);
+}
+
+ssize_t filtered_read(int fd, void *buf, size_t count, FilterKind kind) {
   if (!buf || count == 0)
     return 0;
 
-  {
-    std::lock_guard<std::mutex> lock(g_mu);
-    auto it = g_fd_pending.find(fd);
-    if (it != g_fd_pending.end()) {
-      const std::string &pend = it->second;
-      if (pend.empty()) {
+  try {
+    {
+      std::lock_guard<std::mutex> lock(g_mu);
+      auto it = g_fd_pending.find(fd);
+      if (it != g_fd_pending.end()) {
+        const std::string &pend = it->second;
+        if (pend.empty()) {
+          g_filter_fds.erase(fd);
+          g_fd_pending.erase(it);
+          return 0;
+        }
+        size_t n = pend.size() < count ? pend.size() : count;
+        std::memcpy(buf, pend.data(), n);
+        if (n == pend.size()) {
+          g_fd_pending.erase(it);
+          g_filter_fds.erase(fd);
+        } else {
+          it->second = pend.substr(n);
+        }
+        return static_cast<ssize_t>(n);
+      }
+    }
+
+    // 按行流式过滤：不全文吞进 raw，只保留跨 chunk 的半行 + 过滤后输出
+    std::string filtered;
+    std::string carry;
+    char tmp[4096];
+    constexpr size_t kMaxFiltered = 4 * 1024 * 1024;
+    const bool smaps = kind == FilterKind::Smaps;
+    bool drop_fields = false;
+
+    auto append_kept_line = [&](std::string_view line, bool with_nl) {
+      bool keep = true;
+      if (smaps) {
+        if (is_smaps_vma_header_line(line)) {
+          drop_fields = line_should_drop(line, kind);
+          keep = !drop_fields;
+        } else if (drop_fields) {
+          keep = false;
+        } else {
+          keep = !line_should_drop(line, kind);
+        }
+      } else {
+        keep = !line_should_drop(line, kind);
+      }
+      if (!keep)
+        return;
+      if (filtered.size() + line.size() + (with_nl ? 1 : 0) > kMaxFiltered)
+        return;
+      filtered.append(line.data(), line.size());
+      if (with_nl)
+        filtered.push_back('\n');
+    };
+
+    for (;;) {
+      if (!orig_read) {
+        errno = EIO;
+        return -1;
+      }
+      ssize_t n = orig_read(fd, tmp, sizeof(tmp));
+      if (n < 0) {
+        if (errno == EINTR)
+          continue;
+        return n;
+      }
+      if (n == 0) {
+        if (!carry.empty())
+          append_kept_line(carry, false);
+        break;
+      }
+      size_t start = 0;
+      for (size_t i = 0; i < static_cast<size_t>(n); ++i) {
+        if (tmp[i] != '\n')
+          continue;
+        if (carry.empty()) {
+          append_kept_line(std::string_view(tmp + start, i - start), true);
+        } else {
+          carry.append(tmp + start, i - start);
+          append_kept_line(carry, true);
+          carry.clear();
+        }
+        start = i + 1;
+      }
+      if (start < static_cast<size_t>(n)) {
+        carry.append(tmp + start, static_cast<size_t>(n) - start);
+        if (carry.size() > 256 * 1024) {
+          // 异常超长行：按整段判定一次后丢弃，避免 OOM
+          append_kept_line(carry, false);
+          carry.clear();
+        }
+      }
+      if (filtered.size() >= kMaxFiltered)
+        break;
+    }
+
+    {
+      std::lock_guard<std::mutex> lock(g_mu);
+      if (filtered.empty()) {
         g_filter_fds.erase(fd);
-        g_fd_pending.erase(it);
         return 0;
       }
-      size_t n = pend.size() < count ? pend.size() : count;
-      std::memcpy(buf, pend.data(), n);
-      if (n == pend.size()) {
-        g_fd_pending.erase(it);
-        g_filter_fds.erase(fd);
+      size_t n = filtered.size() < count ? filtered.size() : count;
+      std::memcpy(buf, filtered.data(), n);
+      if (n < filtered.size()) {
+        g_fd_pending[fd] = filtered.substr(n);
       } else {
-        it->second = pend.substr(n);
+        g_filter_fds.erase(fd);
       }
       return static_cast<ssize_t>(n);
     }
-  }
-
-  // 按行流式过滤：不全文吞进 raw，只保留跨 chunk 的半行 + 过滤后输出
-  std::string filtered;
-  std::string carry;
-  char tmp[4096];
-  constexpr size_t kMaxFiltered = 4 * 1024 * 1024;
-  auto append_kept_line = [&](std::string_view line, bool with_nl) {
-    if (cb_hide::line_is_certbridge_trace(line))
-      return;
-    if (filtered.size() + line.size() + (with_nl ? 1 : 0) > kMaxFiltered)
-      return;
-    filtered.append(line.data(), line.size());
-    if (with_nl)
-      filtered.push_back('\n');
-  };
-
-  for (;;) {
-    ssize_t n = orig_read ? orig_read(fd, tmp, sizeof(tmp)) : ::read(fd, tmp, sizeof(tmp));
-    if (n < 0) {
-      if (errno == EINTR)
-        continue;
-      return n;
-    }
-    if (n == 0) {
-      if (!carry.empty())
-        append_kept_line(carry, false);
-      break;
-    }
-    size_t start = 0;
-    for (size_t i = 0; i < static_cast<size_t>(n); ++i) {
-      if (tmp[i] != '\n')
-        continue;
-      if (carry.empty()) {
-        append_kept_line(std::string_view(tmp + start, i - start), true);
-      } else {
-        carry.append(tmp + start, i - start);
-        append_kept_line(carry, true);
-        carry.clear();
-      }
-      start = i + 1;
-    }
-    if (start < static_cast<size_t>(n)) {
-      carry.append(tmp + start, static_cast<size_t>(n) - start);
-      if (carry.size() > 256 * 1024) {
-        // 异常超长行：按整段判定一次后丢弃，避免 OOM
-        append_kept_line(carry, false);
-        carry.clear();
-      }
-    }
-    if (filtered.size() >= kMaxFiltered)
-      break;
-  }
-
-  {
-    std::lock_guard<std::mutex> lock(g_mu);
-    if (filtered.empty()) {
-      g_filter_fds.erase(fd);
-      return 0;
-    }
-    size_t n = filtered.size() < count ? filtered.size() : count;
-    std::memcpy(buf, filtered.data(), n);
-    if (n < filtered.size()) {
-      g_fd_pending[fd] = filtered.substr(n);
-    } else {
-      g_filter_fds.erase(fd);
-    }
-    return static_cast<ssize_t>(n);
+  } catch (...) {
+    // 禁止异常穿出 hooks：否则检测器进程直接 abort
+    errno = EIO;
+    return -1;
   }
 }
 
@@ -204,9 +270,11 @@ int hooked_open(const char *pathname, int flags, ...) {
     mode = static_cast<mode_t>(va_arg(ap, int));
     va_end(ap);
   }
-  int fd = orig_open
-               ? (flags & O_CREAT ? orig_open(pathname, flags, mode) : orig_open(pathname, flags))
-               : (flags & O_CREAT ? ::open(pathname, flags, mode) : ::open(pathname, flags));
+  if (!orig_open) {
+    errno = EIO;
+    return -1;
+  }
+  int fd = flags & O_CREAT ? orig_open(pathname, flags, mode) : orig_open(pathname, flags);
   mark_fd_if_sensitive(fd, pathname);
   return fd;
 }
@@ -219,10 +287,12 @@ int hooked_openat(int dirfd, const char *pathname, int flags, ...) {
     mode = static_cast<mode_t>(va_arg(ap, int));
     va_end(ap);
   }
-  int fd = orig_openat ? (flags & O_CREAT ? orig_openat(dirfd, pathname, flags, mode)
-                                          : orig_openat(dirfd, pathname, flags))
-                       : (flags & O_CREAT ? ::openat(dirfd, pathname, flags, mode)
-                                          : ::openat(dirfd, pathname, flags));
+  if (!orig_openat) {
+    errno = EIO;
+    return -1;
+  }
+  int fd = flags & O_CREAT ? orig_openat(dirfd, pathname, flags, mode)
+                           : orig_openat(dirfd, pathname, flags);
   mark_fd_if_sensitive(fd, pathname);
   return fd;
 }
@@ -232,7 +302,7 @@ int hooked_close(int fd) {
   return orig_close ? orig_close(fd) : ::close(fd);
 }
 
-ssize_t filtered_pread64(int fd, void *buf, size_t count, off64_t offset) {
+ssize_t filtered_pread64(int fd, void *buf, size_t count, off64_t offset, FilterKind kind) {
   if (!buf || count == 0)
     return 0;
   if (offset < 0) {
@@ -240,76 +310,102 @@ ssize_t filtered_pread64(int fd, void *buf, size_t count, off64_t offset) {
     return -1;
   }
 
-  std::string filtered;
-  std::string carry;
-  char tmp[4096];
-  constexpr size_t kMaxFiltered = 4 * 1024 * 1024;
-  off64_t pos = 0;
-  auto append_kept_line = [&](std::string_view line, bool with_nl) {
-    if (cb_hide::line_is_certbridge_trace(line))
-      return;
-    if (filtered.size() + line.size() + (with_nl ? 1 : 0) > kMaxFiltered)
-      return;
-    filtered.append(line.data(), line.size());
-    if (with_nl)
-      filtered.push_back('\n');
-  };
+  try {
+    std::string filtered;
+    std::string carry;
+    char tmp[4096];
+    constexpr size_t kMaxFiltered = 4 * 1024 * 1024;
+    off64_t pos = 0;
+    const bool smaps = kind == FilterKind::Smaps;
+    bool drop_fields = false;
 
-  for (;;) {
-    ssize_t n = orig_pread64 ? orig_pread64(fd, tmp, sizeof(tmp), pos)
-                             : ::pread64(fd, tmp, sizeof(tmp), pos);
-    if (n < 0) {
-      if (errno == EINTR)
-        continue;
-      return n;
-    }
-    if (n == 0) {
-      if (!carry.empty())
-        append_kept_line(carry, false);
-      break;
-    }
-    pos += n;
-    size_t start = 0;
-    for (size_t i = 0; i < static_cast<size_t>(n); ++i) {
-      if (tmp[i] != '\n')
-        continue;
-      if (carry.empty()) {
-        append_kept_line(std::string_view(tmp + start, i - start), true);
+    auto append_kept_line = [&](std::string_view line, bool with_nl) {
+      bool keep = true;
+      if (smaps) {
+        if (is_smaps_vma_header_line(line)) {
+          drop_fields = line_should_drop(line, kind);
+          keep = !drop_fields;
+        } else if (drop_fields) {
+          keep = false;
+        } else {
+          keep = !line_should_drop(line, kind);
+        }
       } else {
-        carry.append(tmp + start, i - start);
-        append_kept_line(carry, true);
-        carry.clear();
+        keep = !line_should_drop(line, kind);
       }
-      start = i + 1;
-    }
-    if (start < static_cast<size_t>(n)) {
-      carry.append(tmp + start, static_cast<size_t>(n) - start);
-      if (carry.size() > 256 * 1024) {
-        append_kept_line(carry, false);
-        carry.clear();
-      }
-    }
-    if (filtered.size() >= kMaxFiltered)
-      break;
-  }
+      if (!keep)
+        return;
+      if (filtered.size() + line.size() + (with_nl ? 1 : 0) > kMaxFiltered)
+        return;
+      filtered.append(line.data(), line.size());
+      if (with_nl)
+        filtered.push_back('\n');
+    };
 
-  if (static_cast<uint64_t>(offset) >= filtered.size())
-    return 0;
-  size_t avail = filtered.size() - static_cast<size_t>(offset);
-  size_t n = avail < count ? avail : count;
-  std::memcpy(buf, filtered.data() + static_cast<size_t>(offset), n);
-  return static_cast<ssize_t>(n);
+    for (;;) {
+      if (!orig_pread64) {
+        errno = EIO;
+        return -1;
+      }
+      ssize_t n = orig_pread64(fd, tmp, sizeof(tmp), pos);
+      if (n < 0) {
+        if (errno == EINTR)
+          continue;
+        return n;
+      }
+      if (n == 0) {
+        if (!carry.empty())
+          append_kept_line(carry, false);
+        break;
+      }
+      pos += n;
+      size_t start = 0;
+      for (size_t i = 0; i < static_cast<size_t>(n); ++i) {
+        if (tmp[i] != '\n')
+          continue;
+        if (carry.empty()) {
+          append_kept_line(std::string_view(tmp + start, i - start), true);
+        } else {
+          carry.append(tmp + start, i - start);
+          append_kept_line(carry, true);
+          carry.clear();
+        }
+        start = i + 1;
+      }
+      if (start < static_cast<size_t>(n)) {
+        carry.append(tmp + start, static_cast<size_t>(n) - start);
+        if (carry.size() > 256 * 1024) {
+          append_kept_line(carry, false);
+          carry.clear();
+        }
+      }
+      if (filtered.size() >= kMaxFiltered)
+        break;
+    }
+
+    if (static_cast<uint64_t>(offset) >= filtered.size())
+      return 0;
+    size_t avail = filtered.size() - static_cast<size_t>(offset);
+    size_t n = avail < count ? avail : count;
+    std::memcpy(buf, filtered.data() + static_cast<size_t>(offset), n);
+    return static_cast<ssize_t>(n);
+  } catch (...) {
+    errno = EIO;
+    return -1;
+  }
 }
 
 ssize_t hooked_read(int fd, void *buf, size_t count) {
-  if (g_enabled && is_filter_fd(fd))
-    return filtered_read(fd, buf, count);
+  FilterKind kind = FilterKind::Mount;
+  if (g_enabled && lookup_filter_fd(fd, &kind))
+    return filtered_read(fd, buf, count, kind);
   return orig_read ? orig_read(fd, buf, count) : ::read(fd, buf, count);
 }
 
 ssize_t hooked_pread64(int fd, void *buf, size_t count, off64_t offset) {
-  if (g_enabled && is_filter_fd(fd))
-    return filtered_pread64(fd, buf, count, offset);
+  FilterKind kind = FilterKind::Mount;
+  if (g_enabled && lookup_filter_fd(fd, &kind))
+    return filtered_pread64(fd, buf, count, offset, kind);
   return orig_pread64 ? orig_pread64(fd, buf, count, offset) : ::pread64(fd, buf, count, offset);
 }
 

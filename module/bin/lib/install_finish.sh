@@ -52,7 +52,7 @@ certbridge_install_print_summary() {
   ui_print "--------------------------------"
   ui_print " 开机将再次尝试从 App 刷新 CA"
   if [ "$INSTALL_MOUNT_MODE" = "magic" ]; then
-    ui_print " 轻量模式：system/ 仅叠启用的 addon 证书"
+    ui_print " 轻量 Magic：system/ 仅叠启用的 addon 证书"
     ui_print " Magisk 通常无需元模块；KernelSU 建议确认"
     ui_print " 已启用正确的 Magic Mount / 挂载元模块"
   else

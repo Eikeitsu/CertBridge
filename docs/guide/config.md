@@ -66,6 +66,18 @@ service_probe=0
 - **Magisk** 一般自带文件级叠层即可
 - **KernelSU** 常需确认叠层正确；若整目录替换导致只剩几张 CA、大面积 TLS 失败 → 立刻改回完整兼容并重启
 
+#### Magic Mount 元模块 {#magic-mount-meta}
+
+「元模块」指管理器侧负责把模块 `system/` 叠进真实系统路径的那一层（Magisk 内置、KernelSU/APatch 各有实现或需额外模块）。与「隐藏助手」（SuSFS / ZygiskNext 等）不是一回事。
+
+| Root     | 完整兼容                | 轻量 Magic                                        |
+| -------- | ----------------------- | ------------------------------------------------- |
+| Magisk   | 脚本 bind，不依赖元模块 | 通常用内置叠层即可，一般不必另装元模块            |
+| KernelSU | 脚本 bind，不依赖元模块 | 依赖内核/管理器 Magic Mount；整目录替换会伤系统库 |
+| APatch   | 脚本 bind，不依赖元模块 | 依赖管理器叠层；异常时改回完整兼容                |
+
+WebUI「更多 → 挂载与注入」挂载模式下方也有同样摘要。隐藏相关说明见 [挂载隐藏](/guide/hide)。
+
 #### `experimental_14_system`
 
 仅 Android 14+ 生效：

@@ -26,6 +26,15 @@ bool is_capture_whitelist(std::string_view process_name);
 /** 行内是否含本模块挂载 / 临时层 / Zygisk so 路径特征 */
 bool line_is_certbridge_trace(std::string_view line);
 
+/**
+ * maps/smaps VMA：可执行匿名映射（[anonymous] / 无名 00:00 0）。
+ * Zygisk PLT hook 跳板常见痕迹；不含 [anon:…] 等带标签的 ART JIT。
+ */
+bool line_is_anon_executable_map(std::string_view line);
+
+/** maps/smaps 是否应隐藏该行（路径痕迹或可执行匿名映射） */
+bool line_should_hide_maps(std::string_view line);
+
 /** 路径是否指向进程挂载表（mountinfo / mounts） */
 bool path_is_mount_table(std::string_view path);
 
@@ -35,9 +44,14 @@ bool path_is_maps_table(std::string_view path);
 /** 是否应对该路径的读结果做本模块痕迹过滤 */
 bool path_needs_trace_filter(std::string_view path);
 
+/** 是否为 /proc/.../smaps（多行 VMA 记录，过滤时需整段丢弃） */
+bool path_is_smaps_table(std::string_view path);
+
 /**
  * 过滤全文：去掉含本模块痕迹的行（适用于 mountinfo / mounts / maps / smaps）。
+ * smaps_records=true 时按 VMA 记录丢弃（首行 + 后续字段行）。
  */
+std::string filter_trace_text_ex(std::string_view raw, bool smaps_records);
 std::string filter_trace_text(std::string_view raw);
 
 inline std::string filter_mount_table_text(std::string_view raw) {

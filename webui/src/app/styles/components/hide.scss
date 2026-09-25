@@ -73,6 +73,24 @@
   min-width: 0;
 }
 
+.bf-mount-meta__lead {
+  margin: 12px 0 6px;
+  font-size: 0.78rem;
+  color: var(--bf-ink-3);
+  line-height: 1.45;
+}
+
+.bf-hide-status__empty {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px dashed var(--bf-stroke);
+  background: var(--bf-surface-2);
+  font-size: 0.78rem;
+  color: var(--bf-ink-3);
+  line-height: 1.45;
+}
+
 /* Hide status: about-style grouped blocks */
 
 .bf-hide-status {

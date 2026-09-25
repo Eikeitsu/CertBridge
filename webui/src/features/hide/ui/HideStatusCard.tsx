@@ -113,7 +113,8 @@ export function HideStatusCard({ variant = "list", title }: HideStatusCardProps)
     }
     if (hideKuFeat) {
       push("kernel_umount", "kernel_umount", t("hide.status.kernelUmountOn"), "ok");
-    } else if (hideKsud || (status.root || "").includes("Kernel")) {
+    } else if (hideKsud) {
+      // 有 ksud 但特性关着：有用的告警；未检测到的助手一律不占位
       push(
         "kernel_umount",
         "kernel_umount",
@@ -142,22 +143,13 @@ export function HideStatusCard({ variant = "list", title }: HideStatusCardProps)
       );
     }
 
-    if (items.length === 0) {
-      items.push({
-        id: "none",
-        label: t("hide.status.assistants"),
-        value: status.hide_assistants_label || t("hide.status.notDetected"),
-        tone: "off",
-      });
-    }
+    // 只展示已检测到的；没有则空态一句，不列「未检测到」占位芯片
     return items;
   }, [
     status.hide_assistants,
-    status.hide_assistants_label,
     status.zygisk_loader,
     status.zygisk_loader_label,
     status.zygisk_loader_ok,
-    status.root,
     hideSusfs,
     hideNohello,
     hideKsud,
@@ -314,20 +306,24 @@ export function HideStatusCard({ variant = "list", title }: HideStatusCardProps)
 
         <section className="bf-hide-status__block">
           <div className="bf-hide-status__head">{t("hide.status.groups.assistants")}</div>
-          <div className="bf-hide-status__assistants">
-            {assistants.map((item) => (
-              <div
-                key={item.id}
-                className={`bf-hide-status__chip ${toneClass(item.tone)}`}
-              >
-                <span className="bf-hide-status__dot" aria-hidden />
-                <div>
-                  <strong>{item.label}</strong>
-                  <em>{item.value}</em>
+          {assistants.length ? (
+            <div className="bf-hide-status__assistants">
+              {assistants.map((item) => (
+                <div
+                  key={item.id}
+                  className={`bf-hide-status__chip ${toneClass(item.tone)}`}
+                >
+                  <span className="bf-hide-status__dot" aria-hidden />
+                  <div>
+                    <strong>{item.label}</strong>
+                    <em>{item.value}</em>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <p className="bf-hide-status__empty">{t("hide.status.emptyAssistants")}</p>
+          )}
         </section>
 
         <section className="bf-hide-status__block">

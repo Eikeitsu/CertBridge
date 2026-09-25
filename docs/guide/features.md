@@ -42,6 +42,8 @@
 | **完整兼容** `compatible` | 默认。运行时整库合并 + bind；**不依赖** Magic Mount 元模块          |
 | **轻量 Magic** `magic`    | 仅叠 addon 到 `system/`；Magisk 一般自带；KernelSU 常需确认叠层正确 |
 
+与「隐藏助手」无关：元模块只管把模块 `system/` 叠进系统。详见 [配置说明 · Magic Mount 元模块](/guide/config#magic-mount-meta)。
+
 Android 14+：默认 `experimental_14_system=skip`，优先脚本 bind **主 APEX**，跳过 system（痕迹更少）。详情见 [配置说明](/guide/config#挂载模式)。
 
 ## 挂载隐藏（摘要）

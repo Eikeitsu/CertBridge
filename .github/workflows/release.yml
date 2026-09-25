@@ -84,7 +84,7 @@ jobs:
             echo "build_mode=rebuild" >> "$GITHUB_OUTPUT"
           fi
 
-          # versionCode：semver 映射；若 Pages/ci-dist 已见号更高则用已见+1
+          # versionCode：semver 映射；若 Pages/ci-dist 已见号 >= 映射值则用已见+1
           eval "$(RAW="$RAW" python3 scripts/resolve-release-version.py --fetch-remote)"
           TAG="${version}"
           if [ -n "$CUSTOM_NAME" ]; then

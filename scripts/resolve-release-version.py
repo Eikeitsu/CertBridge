@@ -4,9 +4,9 @@
 versionCode:
   base = MAJOR*10000 + MINOR*100 + PATCH
   seen = max(prop / update.json / Pages / ci-dist) if any
-  final = seen+1 if seen > base else base
+  final = seen+1 if seen >= base else base
 
-So when the latest CI (or prior formal) is already above the semver
+So when the latest CI (or prior formal) is already >= the semver
 mapping, the release still wins Magisk update checks; otherwise keep
 the semver-derived code.
 
@@ -69,7 +69,8 @@ def resolve(raw: str, *, fetch_remote: bool) -> tuple[str, int, int, int | None]
     collect_codes = load_version_code_helpers()
     codes = collect_codes(_REPO, fetch_remote)
     seen_max = max(codes) if codes else None
-    if seen_max is not None and seen_max > semver_code:
+    # >=：CI 已占 50001 时发 5.0.1 须升到 50002，否则 Magisk 认为无更新
+    if seen_max is not None and seen_max >= semver_code:
         code = seen_max + 1
     else:
         code = semver_code

@@ -106,56 +106,6 @@ CB_EXT_EOF
   ui_print "- CLI：$CB_EXT_DIR/cb"
 }
 
-# 升级时保留用户证书与关键状态；conf 中部分键在不冲突时回填
-certbridge_install_preserve_user() {
-  OLD_MOD="/data/adb/modules/CertBridge"
-  [ -d "$OLD_MOD" ] || return 0
-  if [ -f "$LIBDIR/hot_update.sh" ]; then
-    # shellcheck disable=SC1090
-    . "$LIBDIR/hot_update.sh"
-    hot_update_preserve_paths "$OLD_MOD" "$MODPATH" \
-      certs/custom \
-      certs/sources \
-      certs/generation/current \
-      data/state/addon-sources \
-      data/state/source-stash \
-      data/state/user.conf \
-      data/state/addon-sources.migrated \
-      data/state/applied-certs.list \
-      data/state/applied.conf \
-      data/state/hide-assist.conf \
-      data/state/source.meta
-    # 开关「开着」时证书字节可能只在旧 generation；立刻播到模块外
-    if [ -f "$MODPATH/bin/common.sh" ]; then
-      (
-        MODDIR="$MODPATH"
-        # shellcheck disable=SC1090
-        . "$MODPATH/bin/common.sh" 2>/dev/null || exit 0
-        certbridge_seed_ext_from_module "$OLD_MOD" 2>/dev/null || true
-        certbridge_seed_ext_from_module "$MODPATH" 2>/dev/null || true
-      ) || true
-    fi
-  fi
-  # 用户改过的 conf 键：在新模板上覆盖同名项（安装向导写的 reqable/proxypin/mount 仍优先）
-  if [ -f "$OLD_MOD/config/certs.conf" ] && [ -f "$MODPATH/config/certs.conf" ]; then
-    for _k in tmpfs_style hot_allow hide_allow zn_hide_allow experimental_14_system quiet_prop force_bind_capture late_inject boot_bind_zygote boot_multi_apex service_probe; do
-      _v=$(sed -n "s/^${_k}=//p" "$OLD_MOD/config/certs.conf" 2>/dev/null | head -n1 | tr -d '\r')
-      [ -n "$_v" ] || continue
-      # 本次安装若明确写入 hide/hot/zn，不回滚
-      case "$_k" in
-        hot_allow) [ "$INSTALL_HOT" = "1" ] && continue ;;
-        hide_allow) [ "$INSTALL_HIDE" = "1" ] && continue ;;
-        zn_hide_allow) [ "$INSTALL_ZN_HIDE" = "1" ] && continue ;;
-      esac
-      if grep -q "^${_k}=" "$MODPATH/config/certs.conf" 2>/dev/null; then
-        sed -i "s|^${_k}=.*|${_k}=${_v}|" "$MODPATH/config/certs.conf"
-      else
-        echo "${_k}=${_v}" >>"$MODPATH/config/certs.conf"
-      fi
-    done
-  fi
-}
-
 certbridge_install_try_hot_update() {
   if [ ! -f "$LIBDIR/hot_update.sh" ]; then
     ui_print " 安装完成，请重启设备 "
@@ -178,6 +128,8 @@ certbridge_run_install() {
   log_debug "install: MODPATH=$MODPATH"
   # 尽早给 bin 可执行权限，避免解压后无 +x 导致内置 openssl 探测失败
   chmod -R 0755 "$MODPATH/bin" 2>/dev/null || true
+  # 升级快照须在 write_config 改写 user.conf 之前
+  certbridge_install_snapshot_for_upgrade
   # zip 含多架构；安装后只保留当前 ABI，约省 20MB 占用
   trim_info=$(trim_bundled_openssl_to_abi 2>/dev/null)
   [ -n "$trim_info" ] && log_debug "install: openssl_trim: $trim_info"
@@ -199,6 +151,7 @@ certbridge_run_install() {
     ui_print "  ProxyPin 仍可使用内置证书；Reqable/自定义请重启后用 WebUI"
   fi
   certbridge_install_choose_mode
+  certbridge_install_restore_install_vars
   certbridge_install_prepare_dirs
   certbridge_install_import_reqable
   certbridge_install_import_proxypin

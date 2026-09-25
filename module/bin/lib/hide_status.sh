@@ -41,7 +41,14 @@ detect_hide_assistants() {
     _add zygisk_assistant
   fi
 
-  # Root 侧每 App 机制见「Root 方案」与隐藏说明，不塞进助手列表
+  # Root 侧每 App 隐藏机制（与 try_umount 助手并存展示）
+  root_impl=$(detect_root_impl 2>/dev/null)
+  case "$root_impl" in
+    Magisk) _add magisk_denylist ;;
+    KernelSU|SukiSU) _add ksu_umount ;;
+    APatch) _add apatch_exclude ;;
+  esac
+
   [ -n "$list" ] && echo "$list" || echo none
 }
 
@@ -136,34 +143,45 @@ emit_hide_status() {
   echo "hide_supported=1"
   echo "hide_allow=$(read_conf hide_allow 0)"
   echo "stage_root=$RUNTIME_MOUNT_ROOT"
-  # hide_allow=0：不执行 ksud / ksu_susfs / NoHello 探测（避免无谓拉起）
+
+  # 始终探测「有哪些助手」（实况展示），与 hide_allow 开关无关。
+  # 以前开关关闭时整段清零，只剩 emit_zygisk_loader_status 的 ZygiskNext，看起来像列表被砍光。
+  if hide_susfs_available; then
+    echo "hide_susfs=1"
+  else
+    echo "hide_susfs=0"
+  fi
+  if hide_ksud_kernel_umount_available; then
+    echo "hide_ksud_umount=1"
+  else
+    echo "hide_ksud_umount=0"
+  fi
+  if hide_nohello_available; then
+    echo "hide_nohello=1"
+  else
+    echo "hide_nohello=0"
+  fi
+
+  # kernel_umount 特性（KSU-Next：关着则登记了也不会卸）
+  hide_ku=0
+  if [ -x /data/adb/ksu/bin/ksud ]; then
+    if /data/adb/ksu/bin/ksud feature get kernel_umount 2>/dev/null | grep -qE 'value[=:][[:space:]]*1|enabled|true'; then
+      hide_ku=1
+    elif /data/adb/ksu/bin/ksud feature get 1 2>/dev/null | grep -qE 'value[=:][[:space:]]*1|enabled|true'; then
+      hide_ku=1
+    fi
+  fi
+  echo "hide_kernel_umount_feature=$hide_ku"
+
+  assistants=$(detect_hide_assistants)
+  echo "hide_assistants=$assistants"
+  echo "hide_assistants_label=$(hide_assistants_label "$assistants")"
+  provider=$(detect_hide_provider)
+  echo "hide_provider=$provider"
+  echo "hide_provider_label=$(hide_provider_label "$provider")"
+
   if hide_assist_enabled; then
-    if hide_susfs_available; then
-      echo "hide_susfs=1"
-    else
-      echo "hide_susfs=0"
-    fi
-    if hide_ksud_kernel_umount_available; then
-      echo "hide_ksud_umount=1"
-    else
-      echo "hide_ksud_umount=0"
-    fi
-    if hide_nohello_available; then
-      echo "hide_nohello=1"
-    else
-      echo "hide_nohello=0"
-    fi
-    # kernel_umount 特性（KSU-Next：关着则登记了也不会卸）
-    hide_ku=0
-    if [ -x /data/adb/ksu/bin/ksud ]; then
-      if /data/adb/ksu/bin/ksud feature get kernel_umount 2>/dev/null | grep -qE 'value[=:][[:space:]]*1|enabled|true'; then
-        hide_ku=1
-      elif /data/adb/ksu/bin/ksud feature get 1 2>/dev/null | grep -qE 'value[=:][[:space:]]*1|enabled|true'; then
-        hide_ku=1
-      fi
-    fi
-    echo "hide_kernel_umount_feature=$hide_ku"
-    # try_umount 持久文件中本模块相关路径（susfs4ksu / resusfs 等）
+    # 仅开关开启时读登记路径 / 是否已 applied（涉及本模块写入状态）
     hide_paths=
     _tumount=$(hide_resolve_susfs_try_umount_file 2>/dev/null) || _tumount=
     [ -n "$_tumount" ] || _tumount="$SUSFS_TRY_UMOUNT_FILE"
@@ -171,13 +189,6 @@ emit_hide_status() {
       hide_paths=$(grep -E '/cacerts$' "$_tumount" 2>/dev/null | tr '\n' ',' | sed 's/,$//')
     fi
     echo "hide_try_umount_paths=${hide_paths:-}"
-    assistants=$(detect_hide_assistants)
-    echo "hide_assistants=$assistants"
-    echo "hide_assistants_label=$(hide_assistants_label "$assistants")"
-    # 兼容旧字段
-    provider=$(detect_hide_provider)
-    echo "hide_provider=$provider"
-    echo "hide_provider_label=$(hide_provider_label "$provider")"
     if hide_read_applied; then
       echo "hide_applied=1"
     else
@@ -185,17 +196,9 @@ emit_hide_status() {
     fi
     echo "hide_summary=$(compose_hide_summary)"
   else
-    echo "hide_susfs=0"
-    echo "hide_ksud_umount=0"
-    echo "hide_nohello=0"
-    echo "hide_kernel_umount_feature=0"
     echo "hide_try_umount_paths="
-    echo "hide_assistants=none"
-    echo "hide_assistants_label=已关闭（开关未开）"
-    echo "hide_provider=none"
-    echo "hide_provider_label=已关闭（开关未开）"
     echo "hide_applied=0"
-    echo "hide_summary=隐藏协助已关闭，不会注册 try_umount"
+    echo "hide_summary=隐藏协助已关闭，不会注册 try_umount · 已检测到：$(hide_assistants_label "$assistants")"
   fi
 }
 

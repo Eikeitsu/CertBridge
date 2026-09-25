@@ -80,16 +80,12 @@ hide_susfs_cli_talks() {
 hide_kernel_has_susfs() {
   # 1) /proc/config.gz（内核开启 IKCONFIG_PROC 时可用）
   if [ -f /proc/config.gz ]; then
-    if zcat /proc/config.gz 2>/dev/null | grep -qE '^CONFIG_KSU_SUSFS(=y|_TRY_UMOUNT=y)'; then
-      return 0
-    fi
-    if zcat /proc/config.gz 2>/dev/null | grep -q '^CONFIG_KSU_SUSFS=y'; then
+    if zcat /proc/config.gz 2>/dev/null | grep -qE '^CONFIG_KSU_SUSFS(=y|_.*=y)'; then
       return 0
     fi
   fi
   if [ -f /proc/config ]; then
-    grep -qE '^CONFIG_KSU_SUSFS(=y|_TRY_UMOUNT=y)' /proc/config 2>/dev/null && return 0
-    grep -q '^CONFIG_KSU_SUSFS=y' /proc/config 2>/dev/null && return 0
+    grep -qE '^CONFIG_KSU_SUSFS(=y|_.*=y)' /proc/config 2>/dev/null && return 0
   fi
   # 2) 任意 ksu_susfs 能 show version → 内核已响应 SuSFS ioctl/prctl
   if SUSFS_BIN=$(hide_resolve_susfs_bin); then
@@ -103,6 +99,15 @@ hide_kernel_has_susfs() {
     /data/adb/resusfs/susfs_version; do
     [ -f "$f" ] && [ -s "$f" ] && return 0
   done
+  # 4) ksud 侧痕迹（部分构建无 config.gz / CLI，但 feature 列表含 susfs）
+  if [ -x /data/adb/ksu/bin/ksud ]; then
+    if /data/adb/ksu/bin/ksud feature list 2>/dev/null | grep -qi susfs; then
+      return 0
+    fi
+    if /data/adb/ksu/bin/ksud susfs 2>&1 | grep -qiE 'susfs|try_umount|usage|command'; then
+      return 0
+    fi
+  fi
   return 1
 }
 

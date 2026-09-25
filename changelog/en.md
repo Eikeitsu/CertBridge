@@ -2,10 +2,12 @@
 
 ## Unreleased
 
-- **Zygisk mount filter**: `native/zygisk_hide`, build script, default `zn_whitelist.txt`; `build:module` builds the `.so`; CI installs NDK with `REQUIRE_ZYGISK_HIDE=1`; `zn_hide_allow` follows shell `read_conf` and prefers external `user.conf`
-- **Zygisk smaps filter fix**: drop whole VMA records (header + Size/Rss fields) so detectors do not crash on broken smaps; swallow C++ exceptions inside hooks
-- **Zygisk anonymous RX**: hide `[anonymous]` / unnamed executable maps (PLT trampoline traces); keep tagged `[anon:…]` ART JIT regions
-- **SuSFS probe**: kernel-based (`/proc/config.gz` / CLI probe), not tied to manager modules; hide assist registers via `ksud` / `ksu_susfs` directly
+## v5.0.0
+
+- **Zygisk mount filter**: filter mountinfo/mounts, maps/smaps; weaken map_files readlink, not required by default, install on demand
+- **Zygisk smaps filtering repair**: discard by VMA whole paragraph (first line + Size/Rss field), avoid detecting App parsing missing smaps flashback; swallow C + + exceptions in hooks
+- **Zygisk anonymous executable mapping**: maps/smaps hide `[anonymous]`/unnamed executable page (PLT springboard trace), keep art tags such as `[anon:…]`
+- **SuSFS detection**: subject to the kernel (`/proc/config.gz`/`ksu_susfs show version`), independent of the manager module; hidden assistance is registered directly by this module `ksud`/`ksu_susfs`
 
 ## v4.3.1
 

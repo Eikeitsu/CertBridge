@@ -5,6 +5,22 @@
 
 ---
 
+## v5.0.0
+
+### 中文
+
+- **Zygisk 挂载过滤**：过滤 mountinfo/mounts、maps/smaps；弱化 map_files readlink，默认不需要，按需安装
+- **Zygisk smaps 过滤修复**：按 VMA 整段丢弃（首行+Size/Rss 字段），避免检测 App 解析残缺 smaps 闪退；hooks 内吞掉 C++ 异常
+- **Zygisk 匿名可执行映射**：maps/smaps 隐藏 `[anonymous]` / 无名可执行页（PLT 跳板痕迹），保留 `[anon:…]` 等 ART 标签
+- **SuSFS 探测**：以内核为准（`/proc/config.gz` / `ksu_susfs show version`），不依赖管理器模块；隐藏协助由本模块直接 `ksud`/`ksu_susfs` 登记
+
+### English
+
+- **Zygisk mount filter**: filter mountinfo/mounts, maps/smaps; weaken map_files readlink, not required by default, install on demand
+- **Zygisk smaps filtering repair**: discard by VMA whole paragraph (first line + Size/Rss field), avoid detecting App parsing missing smaps flashback; swallow C + + exceptions in hooks
+- **Zygisk anonymous executable mapping**: maps/smaps hide `[anonymous]`/unnamed executable page (PLT springboard trace), keep art tags such as `[anon:…]`
+- **SuSFS detection**: subject to the kernel (`/proc/config.gz`/`ksu_susfs show version`), independent of the manager module; hidden assistance is registered directly by this module `ksud`/`ksu_susfs`
+
 ## v4.3.1
 
 ### 中文

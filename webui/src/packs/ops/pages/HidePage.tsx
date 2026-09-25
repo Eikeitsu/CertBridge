@@ -6,6 +6,7 @@ import { useZnHideAllow } from "@/features/hide/hooks/useZnHideAllow";
 import { HideAllowRow } from "@/features/hide/ui/HideAllowRow";
 import { HideCaptureWarning } from "@/features/hide/ui/HideCaptureWarning";
 import { HideStatusCard } from "@/features/hide/ui/HideStatusCard";
+import { HideRootNotes } from "@/features/hide/ui/HideRootNotes";
 import { HideGuidePanel } from "@/features/hide/ui/HideGuidePanel";
 import { ZnWhitelistEditor } from "@/features/hide/ui/ZnWhitelistEditor";
 import { HideExperimentPanel } from "@/features/hide/ui/HideExperimentPanel";
@@ -78,6 +79,7 @@ export function OpsHidePage() {
 
       <HideExperimentPanel variant="block" />
       <HideStatusCard variant="table" />
+      <HideRootNotes />
       <details className="pk-ops-fold">
         <summary>{h.guideTitle}</summary>
         <div className="pk-ops-fold__body">

@@ -275,15 +275,60 @@ bool path_needs_trace_filter(std::string_view path) {
   return path_is_mount_table(path) || path_is_maps_table(path);
 }
 
-std::string filter_trace_text(std::string_view raw) {
+bool path_is_smaps_table(std::string_view path) {
+  if (path.empty())
+    return false;
+  // smaps_rollup 是汇总，按行过滤即可；多行 VMA 记录只出现在 smaps
+  if (ends_with(path, "/smaps_rollup") && contains(path, "/proc/"))
+    return false;
+  if (ends_with(path, "/smaps") && contains(path, "/proc/"))
+    return true;
+  return false;
+}
+
+bool is_smaps_vma_header(std::string_view line) {
+  // VMA 首行：<hex>-<hex> <perms> ...
+  size_t i = 0;
+  auto is_hex = [](char c) {
+    return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+  };
+  while (i < line.size() && is_hex(line[i]))
+    ++i;
+  if (i == 0 || i >= line.size() || line[i] != '-')
+    return false;
+  ++i;
+  size_t j = i;
+  while (j < line.size() && is_hex(line[j]))
+    ++j;
+  if (j == i)
+    return false;
+  return j < line.size() && line[j] == ' ';
+}
+
+std::string filter_trace_text_ex(std::string_view raw, bool smaps_records) {
   std::string out;
   out.reserve(raw.size());
   size_t start = 0;
+  bool drop_fields = false;
   while (start <= raw.size()) {
     size_t end = raw.find('\n', start);
     std::string_view line =
         end == std::string_view::npos ? raw.substr(start) : raw.substr(start, end - start);
-    if (!line_is_certbridge_trace(line)) {
+    bool keep = true;
+    if (smaps_records) {
+      if (is_smaps_vma_header(line)) {
+        drop_fields = line_is_certbridge_trace(line);
+        keep = !drop_fields;
+      } else if (drop_fields) {
+        // 丢掉被删 VMA 后面的 Size/Rss/Pss… 字段，避免解析器读到无头记录而崩
+        keep = false;
+      } else {
+        keep = !line_is_certbridge_trace(line);
+      }
+    } else {
+      keep = !line_is_certbridge_trace(line);
+    }
+    if (keep) {
       out.append(line.data(), line.size());
       if (end != std::string_view::npos)
         out.push_back('\n');
@@ -293,6 +338,10 @@ std::string filter_trace_text(std::string_view raw) {
     start = end + 1;
   }
   return out;
+}
+
+std::string filter_trace_text(std::string_view raw) {
+  return filter_trace_text_ex(raw, false);
 }
 
 } // namespace cb_hide

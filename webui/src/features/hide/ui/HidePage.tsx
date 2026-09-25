@@ -16,6 +16,7 @@ import { HideStatusCard } from "./HideStatusCard";
 import { HideGuidePanel } from "./HideGuidePanel";
 import { CaptureChecklistCard } from "./CaptureChecklistCard";
 import { ZnWhitelistEditor } from "./ZnWhitelistEditor";
+import { HideRootNotes } from "./HideRootNotes";
 import { HideExperimentPanel } from "./HideExperimentPanel";
 
 export function HidePage() {
@@ -90,6 +91,7 @@ export function HidePage() {
       ) : null}
       <HideExperimentPanel />
       <HideStatusCard />
+      <HideRootNotes />
       <HideIntroCard title={h.introTitle} body={h.introBody} docsCta={h.docsCta} />
       <HideGuidePanel title={h.guideTitle} meta={h.guideMeta} />
     </PageStack>

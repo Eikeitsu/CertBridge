@@ -275,6 +275,13 @@
     "guideTitle": "隐藏说明",
     "guideMeta": "按 Root 方案配置",
     "docsCta": "文档",
+    "rootsTitle": "按 Root 方案",
+    "rootsMeta": "隐藏助手与每 App 卸载列表",
+    "roots": {
+      "magisk": "DenyList + NoHello / ZygiskNext；脚本 bind 需 NoHello point 规则",
+      "kernelsu": "建议 SuSFS 或 ZygiskNext/ReZygisk umount；需 path_umount",
+      "apatch": "排除修改 + NoHello / ZygiskNext（apd 无路径登记 API）"
+    },
     "status": {
       "title": "挂载与隐藏实况",
       "deviceProbe": "基于当前设备探测",
@@ -304,6 +311,7 @@
       "provider": "隐藏助手",
       "assistants": "隐藏助手",
       "detected": "已检测到",
+      "emptyAssistants": "当前未检测到可用助手",
       "susfsReady": "内核已集成",
       "susfsLabel": "SuSFS",
       "noHelloReady": "已安装",
@@ -448,16 +456,17 @@
       },
       "magic": {
         "label": "轻量 Magic",
-        "short": "轻量",
+        "short": "轻量 Magic",
         "meta": "仅叠附加证书；Android 14+ 仍对 APEX 做脚本注入",
         "helpTitle": "轻量 Magic Mount",
-        "helpBody": "只把启用的附加证书叠进系统信任库。"
+        "helpBody": "只把启用的附加证书叠进系统信任库；依赖管理器 / 元模块的 Magic Mount 叠层。"
       }
     },
-    "roots": {
-      "magisk": "DenyList + NoHello / ZygiskNext；脚本 bind 需 NoHello point 规则",
-      "kernelsu": "建议 SuSFS 或 ZygiskNext/ReZygisk umount；需 path_umount",
-      "apatch": "排除修改 + NoHello / ZygiskNext（apd 无路径登记 API）"
+    "meta": {
+      "lead": "与 Magic Mount 元模块的关系：",
+      "magisk": "一般自带文件级叠层；轻量模式通常无需额外元模块。完整兼容不写 system 叠层，也不依赖元模块。",
+      "kernelsu": "完整兼容用脚本 bind，不依赖元模块。轻量模式靠内核 / 管理器 Magic Mount；若整目录替换导致只剩几张 CA，请立刻改回完整兼容。",
+      "apatch": "完整兼容同样不依赖元模块。轻量模式依赖管理器叠层行为，异常时改回完整兼容。"
     },
     "experimental14": {
       "footnote": "仅 Android 14+ 生效，与挂载模式正交；7–13 忽略。切换后需重启。",

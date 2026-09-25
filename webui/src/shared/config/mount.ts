@@ -24,16 +24,36 @@ export const MOUNT_MODE_OPTIONS = [
   MOUNT_MODES[MountMode.Magic],
 ];
 
-export const MOUNT_ROOT_NOTES = [
+/** 挂载子页：Magic Mount 元模块关系（不是隐藏助手说明） */
+export const MOUNT_META_NOTES = [
   {
     name: "Magisk",
-    noteKey: "mount.roots.magisk",
+    noteKey: "mount.meta.magisk",
   },
   {
     name: "KernelSU",
-    noteKey: "mount.roots.kernelsu",
+    noteKey: "mount.meta.kernelsu",
   },
-  { name: "APatch", noteKey: "mount.roots.apatch" },
+  {
+    name: "APatch",
+    noteKey: "mount.meta.apatch",
+  },
+] as const;
+
+/** 隐藏页：各 Root 方案的隐藏要点（从挂载子页迁出） */
+export const HIDE_ROOT_NOTES = [
+  {
+    name: "Magisk",
+    noteKey: "hide.roots.magisk",
+  },
+  {
+    name: "KernelSU",
+    noteKey: "hide.roots.kernelsu",
+  },
+  {
+    name: "APatch",
+    noteKey: "hide.roots.apatch",
+  },
 ] as const;
 
 export const MOUNT_HELP_FOOTNOTE_KEY = "mount.modeFootnote";

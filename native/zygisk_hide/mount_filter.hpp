@@ -35,9 +35,14 @@ bool path_is_maps_table(std::string_view path);
 /** 是否应对该路径的读结果做本模块痕迹过滤 */
 bool path_needs_trace_filter(std::string_view path);
 
+/** 是否为 /proc/.../smaps（多行 VMA 记录，过滤时需整段丢弃） */
+bool path_is_smaps_table(std::string_view path);
+
 /**
  * 过滤全文：去掉含本模块痕迹的行（适用于 mountinfo / mounts / maps / smaps）。
+ * smaps_records=true 时按 VMA 记录丢弃（首行 + 后续字段行）。
  */
+std::string filter_trace_text_ex(std::string_view raw, bool smaps_records);
 std::string filter_trace_text(std::string_view raw);
 
 inline std::string filter_mount_table_text(std::string_view raw) {

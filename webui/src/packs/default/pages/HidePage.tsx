@@ -9,6 +9,7 @@ import { useZnHideAllow } from "@/features/hide/hooks/useZnHideAllow";
 import { HideAllowRow } from "@/features/hide/ui/HideAllowRow";
 import { HideCaptureWarning } from "@/features/hide/ui/HideCaptureWarning";
 import { HideStatusCard } from "@/features/hide/ui/HideStatusCard";
+import { HideRootNotes } from "@/features/hide/ui/HideRootNotes";
 import { HideGuidePanel } from "@/features/hide/ui/HideGuidePanel";
 import { CaptureChecklistCard } from "@/features/hide/ui/CaptureChecklistCard";
 import { ZnWhitelistEditor } from "@/features/hide/ui/ZnWhitelistEditor";
@@ -109,6 +110,7 @@ export function DefaultHidePage() {
 
       <HideExperimentPanel variant="section" large />
       <HideStatusCard />
+      <HideRootNotes />
       <details className="pk-def-fold">
         <summary>{h.guideTitle}</summary>
         <div className="pk-def-fold__body">

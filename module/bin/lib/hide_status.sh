@@ -41,14 +41,7 @@ detect_hide_assistants() {
     _add zygisk_assistant
   fi
 
-  # Root 侧每 App 隐藏机制（与 try_umount 助手正交，一并列出）
-  root_impl=$(detect_root_impl 2>/dev/null)
-  case "$root_impl" in
-    Magisk) _add magisk_denylist ;;
-    KernelSU|SukiSU) _add ksu_umount ;;
-    APatch) _add apatch_exclude ;;
-  esac
-
+  # Root 侧每 App 机制见「Root 方案」与隐藏说明，不塞进助手列表
   [ -n "$list" ] && echo "$list" || echo none
 }
 

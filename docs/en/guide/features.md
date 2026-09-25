@@ -42,6 +42,8 @@ CertBridge does **not** save a baseline copy of the system CAs or modify system-
 | **Compatible** `compatible` | Default. Merges and binds the complete store at runtime; does not require a Magic Mount meta-module                                   |
 | **Lite Magic** `magic`      | Overlays add-ons through `system/` only; Magisk normally supports this, while KernelSU setups must verify that the overlay is correct |
 
+Meta-modules only overlay module `system/` — they are not hide helpers. See [Config · Magic Mount meta-modules](./config#magic-mount-meta).
+
 On Android 14+, `experimental_14_system=skip` is the default: scripts bind the **primary APEX** and skip the system path to reduce traces. See [Configuration: Mount modes](./config#mount-modes).
 
 ## Mount hiding at a glance

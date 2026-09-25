@@ -66,6 +66,18 @@ Choose a mode during custom installation or under WebUI **More → Mount mode**.
 - Magisk normally provides the required file overlay.
 - On KernelSU, verify that the overlay is correct. If a whole-directory replacement leaves only a handful of CAs and causes widespread TLS failures, switch back to compatible mode immediately and reboot.
 
+### Magic Mount meta-modules {#magic-mount-meta}
+
+A “meta-module” is the manager-side layer that overlays module `system/` onto real system paths (built into Magisk; KernelSU/APatch vary or need extras). It is **not** the same as hide helpers such as SuSFS or ZygiskNext.
+
+| Root     | Compatible                  | Lite Magic                                                               |
+| -------- | --------------------------- | ------------------------------------------------------------------------ |
+| Magisk   | Script bind; no meta-module | Built-in overlay is usually enough                                       |
+| KernelSU | Script bind; no meta-module | Needs kernel/manager Magic Mount; full-dir replace can wipe the CA store |
+| APatch   | Script bind; no meta-module | Depends on manager overlay; switch back to Compatible if broken          |
+
+The WebUI mount panel under **More → Mount & inject** shows the same summary. Hide-related notes live on [Mount hiding](./hide).
+
 ### `experimental_14_system`
 
 This setting applies only to Android 14+:

@@ -7,6 +7,7 @@ import { useZnHideAllow } from "@/features/hide/hooks/useZnHideAllow";
 import { HideAllowRow } from "@/features/hide/ui/HideAllowRow";
 import { HideCaptureWarning } from "@/features/hide/ui/HideCaptureWarning";
 import { HideStatusCard } from "@/features/hide/ui/HideStatusCard";
+import { HideRootNotes } from "@/features/hide/ui/HideRootNotes";
 import { HideGuidePanel } from "@/features/hide/ui/HideGuidePanel";
 import { CaptureChecklistCard } from "@/features/hide/ui/CaptureChecklistCard";
 import { ZnWhitelistEditor } from "@/features/hide/ui/ZnWhitelistEditor";
@@ -76,6 +77,7 @@ export function ConsoleHidePage() {
       ) : null}
       <HideExperimentPanel />
       <HideStatusCard variant="table" />
+      <HideRootNotes />
       <HideGuidePanel title={h.guideTitle} meta={h.guideMeta} accordion />
     </div>
   );

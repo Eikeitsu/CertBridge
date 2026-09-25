@@ -275,6 +275,13 @@
     "guideTitle": "Guide",
     "guideMeta": "Per root setup",
     "docsCta": "Docs",
+    "rootsTitle": "By root setup",
+    "rootsMeta": "Helpers and per-app unmount lists",
+    "roots": {
+      "magisk": "DenyList + NoHello / ZygiskNext; script binds need NoHello point rules",
+      "kernelsu": "Use SuSFS or ZygiskNext/ReZygisk umount with path_umount",
+      "apatch": "Exclude Modifications + NoHello / ZygiskNext; apd has no path API"
+    },
     "status": {
       "title": "Mount & hide status",
       "deviceProbe": "From current device",
@@ -304,6 +311,7 @@
       "provider": "Hide helpers",
       "assistants": "Hide helpers",
       "detected": "Detected",
+      "emptyAssistants": "No helpers detected",
       "susfsReady": "In kernel",
       "susfsLabel": "SuSFS",
       "noHelloReady": "Installed",
@@ -444,20 +452,21 @@
         "short": "Compatible",
         "meta": "Runtime full-store bind for Magisk / KernelSU / APatch",
         "helpTitle": "Full compatibility (default)",
-        "helpBody": "Merge and bind the full store at runtime. No system overlay or Magic Mount module required."
+        "helpBody": "Merge and bind the full store at runtime. No system overlay or Magic Mount meta-module required."
       },
       "magic": {
         "label": "Light Magic",
-        "short": "Light",
+        "short": "Lite Magic",
         "meta": "Overlay added CAs; script-inject APEX on Android 14+",
         "helpTitle": "Light Magic Mount",
-        "helpBody": "Overlay only enabled addon CAs into the system trust store."
+        "helpBody": "Overlay only enabled addon CAs; relies on the manager / meta-module Magic Mount overlay."
       }
     },
-    "roots": {
-      "magisk": "DenyList + NoHello / ZygiskNext; script binds need NoHello point rules",
-      "kernelsu": "Use SuSFS or ZygiskNext/ReZygisk umount with path_umount",
-      "apatch": "Exclude Modifications + NoHello / ZygiskNext; apd has no path API"
+    "meta": {
+      "lead": "How this relates to Magic Mount meta-modules:",
+      "magisk": "Usually has built-in file overlays; Light mode rarely needs an extra meta-module. Compatible mode writes no system overlay and needs none.",
+      "kernelsu": "Compatible mode uses script binds and needs no meta-module. Light mode depends on kernel/manager Magic Mount; if a full-directory replace leaves only a few CAs, switch back to Compatible immediately.",
+      "apatch": "Compatible mode also needs no meta-module. Light mode depends on manager overlay behavior; switch back to Compatible if something looks wrong."
     },
     "experimental14": {
       "footnote": "Android 14+ only; independent of mount mode. Ignored on 7–13. Reboot after changing.",

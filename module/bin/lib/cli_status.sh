@@ -60,6 +60,7 @@ emit_hide_status_quick() {
   echo "hide_ksud_umount=0"
   echo "hide_nohello=0"
   echo "hide_kernel_umount_feature=0"
+  echo "hide_kernel_umount_feature_known=0"
   echo "hide_try_umount_paths="
   echo "hide_assistants=none"
   echo "hide_assistants_label="

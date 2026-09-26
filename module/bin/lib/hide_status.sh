@@ -197,10 +197,27 @@ emit_hide_status() {
   echo "hide_nohello=$_hn"
 
   hide_ku=0
+  hide_ku_known=0
   if [ "$_hk" = "1" ] || [ -x /data/adb/ksu/bin/ksud ]; then
-    hide_ksud_umount_feature_on && hide_ku=1
+    _ku_st=$(hide_ksud_umount_feature_probe 2>/dev/null) || _ku_st=n
+    case "$_ku_st" in
+      1)
+        hide_ku=1
+        hide_ku_known=1
+        ;;
+      0)
+        hide_ku=0
+        hide_ku_known=1
+        ;;
+      *)
+        # na：本机构建无 kernel_umount feature 时不展示该项
+        hide_ku=0
+        hide_ku_known=0
+        ;;
+    esac
   fi
   echo "hide_kernel_umount_feature=$hide_ku"
+  echo "hide_kernel_umount_feature_known=$hide_ku_known"
 
   assistants=$(detect_hide_assistants "$_hs" "$_hk" "$_hn")
   # 带预传参时未写 assistants 缓存，这里补上供同 boot 后续 status

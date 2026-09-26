@@ -48,6 +48,7 @@ export function HideStatusCard({ variant = "list", title }: HideStatusCardProps)
   const hideKsud = isFlagOn(status.hide_ksud_umount);
   const hideNohello = isFlagOn(status.hide_nohello);
   const hideKuFeat = isFlagOn(status.hide_kernel_umount_feature);
+  const hideKuKnown = isFlagOn(status.hide_kernel_umount_feature_known);
   const znSupported = isFlagOn(status.zn_hide_supported);
   const znAllow = isFlagOn(status.zn_hide_allow);
   const forceBind = isFlagOn(status.force_bind_capture);
@@ -135,12 +136,17 @@ export function HideStatusCard({ variant = "list", title }: HideStatusCardProps)
       push("ksud", labelOf("ksud"), statusOf("ksud"), "ok");
     }
     if (hideKuFeat) {
-      push("kernel_umount", "kernel_umount", t("hide.status.kernelUmountOn"), "ok");
-    } else if (hideKsud) {
-      // 有 ksud 但特性关着：有用的告警；未检测到的助手一律不占位
       push(
         "kernel_umount",
+        t("hide.status.kernelUmountLabel"),
+        t("hide.status.kernelUmountOn"),
+        "ok",
+      );
+    } else if (hideKsud && hideKuKnown) {
+      // 确认有 kernel_umount feature 且为关（与管理器「内核级卸载」对应）
+      push(
         "kernel_umount",
+        t("hide.status.kernelUmountLabel"),
         t("hide.status.kernelUmountWarning"),
         "warn",
       );
@@ -177,6 +183,7 @@ export function HideStatusCard({ variant = "list", title }: HideStatusCardProps)
     hideNohello,
     hideKsud,
     hideKuFeat,
+    hideKuKnown,
     t,
   ]);
 

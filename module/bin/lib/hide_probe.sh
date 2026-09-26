@@ -218,7 +218,7 @@ hide_probe_cache_set() {
       echo "boot_epoch=$cur_epoch"
       [ "$key" = "susfs_kernel" ] || echo "susfs_kernel=0"
       [ "$key" = "ksud_umount" ] || echo "ksud_umount=0"
-      [ "$key" = "ksud_feat_on" ] || echo "ksud_feat_on=0"
+      # 勿预置 ksud_feat=0，否则尚未探测会被当成「已关」
       [ "$key" = "nohello" ] || echo "nohello=0"
       echo "$key=$value"
     } >"$tmp" 2>/dev/null || {
@@ -265,9 +265,7 @@ hide_susfs4ksu_module_present() {
 hide_susfs_manager_hint() {
   hide_susfs_persist_dir_hint
 }
-# 结果按 boot 缓存；失败不缓存
-
-# 结果按 boot 缓存；仅缓存阳性。优先一次 feature get，避免连打帮助文案。
+# 结果按 boot 缓存；仅缓存阳性
 hide_ksud_kernel_umount_available() {
   cached=$(hide_probe_cache_get ksud_umount 2>/dev/null) || cached=
   if [ "$cached" = "1" ]; then
@@ -275,23 +273,17 @@ hide_ksud_kernel_umount_available() {
   fi
   ok=0
   if [ -x /data/adb/ksu/bin/ksud ]; then
-    # 1) feature get（一次调用；顺带记下是否已开启）
-    _feat=$(/data/adb/ksu/bin/ksud feature get kernel_umount 2>/dev/null) || _feat=
-    if [ -z "$_feat" ]; then
-      _feat=$(/data/adb/ksu/bin/ksud feature get 1 2>/dev/null) || _feat=
+    hide_ksud_umount_feature_probe >/dev/null 2>&1 || true
+    _feat_state=$(hide_probe_cache_get ksud_feat 2>/dev/null) || _feat_state=
+    case "$_feat_state" in
+      1|0) ok=1 ;;
+    esac
+    if [ "$ok" != "1" ] && \
+        /data/adb/ksu/bin/ksud kernel 2>&1 | grep -qiE '(^|[[:space:]])umount([[:space:]/]|$)'; then
+      ok=1
     fi
-    if [ -n "$_feat" ] && printf '%s' "$_feat" | grep -qiE 'value|enabled|true|false|kernel_umount|[01]'; then
-      ok=1
-      if printf '%s' "$_feat" | grep -qiE 'value[=:][[:space:]]*1|[=:][[:space:]]*(true|enabled)\b'; then
-        hide_probe_cache_set ksud_feat_on 1
-      else
-        hide_probe_cache_set ksud_feat_on 0
-      fi
-    # 2) 回退：kernel 摘要含 umount 子命令
-    elif /data/adb/ksu/bin/ksud kernel 2>&1 | grep -qiE '(^|[[:space:]])umount([[:space:]/]|$)'; then
-      ok=1
-    # 3) 再回退：umount 帮助含 add/list
-    elif /data/adb/ksu/bin/ksud kernel umount 2>&1 | grep -qiE '(^|[[:space:]])(add|delete|remove|list)([[:space:]/]|$)'; then
+    if [ "$ok" != "1" ] && \
+        /data/adb/ksu/bin/ksud kernel umount 2>&1 | grep -qiE '(^|[[:space:]])(add|delete|remove|list)([[:space:]/]|$)'; then
       ok=1
     fi
   fi
@@ -302,46 +294,106 @@ hide_ksud_kernel_umount_available() {
   return 1
 }
 
-# 读已缓存的 kernel_umount 开关；未缓存则一次 feature get（供 status 复用）
-hide_ksud_umount_feature_on() {
-  cached=$(hide_probe_cache_get ksud_feat_on 2>/dev/null) || cached=
-  if [ "$cached" = "1" ] || [ "$cached" = "0" ]; then
-    [ "$cached" = "1" ]
-    return $?
+# 解析 feature get 输出 → on|off|na
+hide_ksud_parse_feature_state() {
+  _raw=$(printf '%s' "$1" | tr -d '\r')
+  [ -n "$_raw" ] || {
+    echo na
+    return 0
+  }
+  if printf '%s' "$_raw" | grep -qiE \
+      'value[=:][[:space:]]*0|[=:][[:space:]]*(false|off|disabled|no)\b|(^|[[:space:]])0([[:space:]]|$)'; then
+    if ! printf '%s' "$_raw" | grep -qiE 'value[=:][[:space:]]*1|[=:][[:space:]]*(true|on|enabled|yes)\b'; then
+      echo off
+      return 0
+    fi
   fi
-  [ -x /data/adb/ksu/bin/ksud ] || return 1
-  _feat=$(/data/adb/ksu/bin/ksud feature get kernel_umount 2>/dev/null) || _feat=
-  if [ -z "$_feat" ]; then
-    _feat=$(/data/adb/ksu/bin/ksud feature get 1 2>/dev/null) || _feat=
-  fi
-  if printf '%s' "$_feat" | grep -qiE 'value[=:][[:space:]]*1|[=:][[:space:]]*(true|enabled)\b'; then
-    hide_probe_cache_set ksud_feat_on 1
+  if printf '%s' "$_raw" | grep -qiE \
+      'value[=:][[:space:]]*1|[=:][[:space:]]*(true|on|enabled|yes)\b|(^|[[:space:]])1([[:space:]]|$)'; then
+    echo on
     return 0
   fi
-  hide_probe_cache_set ksud_feat_on 0
-  return 1
+  echo na
 }
 
-# 直接尝试 ksud 登记（探测失败时仍试一次，避免漏登）
-# KernelSU-Next 等需先打开 kernel_umount 特性，否则列表有路径也不会执行 umount
+# 探测「内核级卸载 / Kernel umount」
+# SukiSU / ReSukiSU / KSU-Next：feature 名 kernel_umount，id=1（见 ksud feature.rs）
+# 缓存 ksud_feat：1=on 0=off n=na（无此 feature 的构建）
+hide_ksud_umount_feature_probe() {
+  cached=$(hide_probe_cache_get ksud_feat 2>/dev/null) || cached=
+  case "$cached" in
+    1|0|n)
+      echo "$cached"
+      return 0
+      ;;
+  esac
+  [ -x /data/adb/ksu/bin/ksud ] || {
+    hide_probe_cache_set ksud_feat n
+    echo n
+    return 0
+  }
 
-# 直接尝试 ksud 登记（探测失败时仍试一次，避免漏登）
-# KernelSU-Next 等需先打开 kernel_umount 特性，否则列表有路径也不会执行 umount
+  _list=$(/data/adb/ksu/bin/ksud feature list 2>/dev/null) || _list=
+  _feat=$(/data/adb/ksu/bin/ksud feature get kernel_umount 2>/dev/null) || _feat=
+  _has_ku=0
+  if printf '%s' "$_list" | grep -qi 'kernel_umount'; then
+    _has_ku=1
+  elif [ -n "$_feat" ]; then
+    _has_ku=1
+  fi
+  # list 含 kernel_umount 但 get 名失败时，用 id=1（SukiSU: KernelUmount=1）
+  if [ -z "$_feat" ] && [ "$_has_ku" = "1" ]; then
+    _feat=$(/data/adb/ksu/bin/ksud feature get 1 2>/dev/null) || _feat=
+  fi
+  # 无 list、名 get 也失败：再试 id=1，仅当回包像 feature 状态
+  if [ -z "$_feat" ] && [ "$_has_ku" != "1" ]; then
+    _try=$(/data/adb/ksu/bin/ksud feature get 1 2>/dev/null) || _try=
+    if [ -n "$_try" ] && printf '%s' "$_try" | grep -qiE 'value|enabled|true|false|^[01]$'; then
+      _feat=$_try
+      _has_ku=1
+    fi
+  fi
+
+  if [ "$_has_ku" != "1" ] || [ -z "$_feat" ]; then
+    hide_probe_cache_set ksud_feat n
+    echo n
+    return 0
+  fi
+
+  case "$(hide_ksud_parse_feature_state "$_feat")" in
+    on)
+      hide_probe_cache_set ksud_feat 1
+      echo 1
+      ;;
+    off)
+      hide_probe_cache_set ksud_feat 0
+      echo 0
+      ;;
+    *)
+      hide_probe_cache_set ksud_feat n
+      echo n
+      ;;
+  esac
+}
+
+hide_ksud_umount_feature_on() {
+  [ "$(hide_ksud_umount_feature_probe)" = "1" ]
+}
+
+# 登记前尽量打开「内核级卸载」（与管理器同开关）
 hide_ensure_ksud_umount_feature() {
   [ -x /data/adb/ksu/bin/ksud ] || return 1
-  # 已开启则跳过
-  if /data/adb/ksu/bin/ksud feature get kernel_umount 2>/dev/null | grep -qE 'value[=:][[:space:]]*1|enabled|true'; then
-    return 0
-  fi
-  if /data/adb/ksu/bin/ksud feature get 1 2>/dev/null | grep -qE 'value[=:][[:space:]]*1|enabled|true'; then
-    return 0
-  fi
+  _st=$(hide_ksud_umount_feature_probe)
+  [ "$_st" = "1" ] && return 0
+  [ "$_st" = "n" ] && return 0
   /data/adb/ksu/bin/ksud feature set kernel_umount 1 >/dev/null 2>&1 && {
-    log_info "hide: enabled ksud feature kernel_umount"
+    hide_probe_cache_set ksud_feat 1
+    log_info "hide: enabled feature kernel_umount"
     return 0
   }
   /data/adb/ksu/bin/ksud feature set 1 1 >/dev/null 2>&1 && {
-    log_info "hide: enabled ksud feature id=1 (kernel_umount)"
+    hide_probe_cache_set ksud_feat 1
+    log_info "hide: enabled feature id=1 (kernel_umount)"
     return 0
   }
   return 1

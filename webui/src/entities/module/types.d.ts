@@ -85,6 +85,8 @@ export type ModuleStatus = {
   hide_ksud_umount?: string;
   hide_nohello?: string;
   hide_kernel_umount_feature?: string;
+  /** 1=已确认存在 KSU-Next 式 feature；0/空=不适用（SukiSU 等勿警告） */
+  hide_kernel_umount_feature_known?: string;
   hide_try_umount_paths?: string;
   hide_summary?: string;
   version?: string;

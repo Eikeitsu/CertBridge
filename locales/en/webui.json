@@ -323,6 +323,7 @@
       "kernelUmountOn": "Enabled",
       "kernelUmountUnknown": "Off / unknown",
       "kernelUmountWarning": "Off (registered paths may remain)",
+      "kernelUmountLabel": "Kernel umount",
       "tryUmount": "Module try_umount",
       "registeredPaths": "try_umount.txt paths",
       "zygiskFilter": "Zygisk mount filter",

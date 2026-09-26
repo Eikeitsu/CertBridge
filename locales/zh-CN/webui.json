@@ -323,6 +323,7 @@
       "kernelUmountOn": "已开启",
       "kernelUmountUnknown": "未开启/未知",
       "kernelUmountWarning": "未开启（登记了也可能不卸）",
+      "kernelUmountLabel": "内核级卸载",
       "tryUmount": "本模块 try_umount",
       "registeredPaths": "try_umount.txt 路径",
       "zygiskFilter": "Zygisk 挂载过滤",

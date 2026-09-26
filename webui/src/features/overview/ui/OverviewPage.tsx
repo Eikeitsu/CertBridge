@@ -5,7 +5,7 @@ import { selectStatusBootstrapped } from "@/features/status/model/selectors";
 import { useTrustOverview } from "@/features/overview/hooks/useTrustOverview";
 import { useStabilizingRefresh } from "@/features/overview/hooks/useStabilizingRefresh";
 import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
-import { ThemePack } from "@/entities/module/enums";
+import { ThemePack, TrustTone } from "@/entities/module/enums";
 import { PageStack } from "@/shared/ui/layout";
 import { Tag } from "@/shared/ui/primitives";
 import { HelpCollapse } from "@/shared/ui/HelpCollapse";

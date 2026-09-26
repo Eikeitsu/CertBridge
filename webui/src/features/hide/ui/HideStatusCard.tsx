@@ -101,15 +101,38 @@ export function HideStatusCard({ variant = "list", title }: HideStatusCardProps)
       items.push({ id, label, value, tone });
     };
 
-    // 细项优先（更准的状态文案）；CSV / 底座补齐其余，互不挡路
+    // 细项优先（按助手类型给状态文案）；CSV / 底座补齐其余
+    const statusOf = (id: string) => {
+      switch (id) {
+        case "susfs":
+          return t("hide.status.susfsReady");
+        case "nohello":
+          return t("hide.status.noHelloPointReady");
+        case "ksud":
+          return t("hide.status.ksudReady");
+        case "magisk_denylist":
+        case "ksu_umount":
+        case "apatch_exclude":
+          return t("hide.status.rootBuiltin");
+        case "rezygisk":
+        case "neozygisk":
+        case "zygisknext":
+        case "shamiko":
+        case "zygisk_assistant":
+          return t("hide.status.moduleInstalled");
+        default:
+          return t("hide.status.available");
+      }
+    };
+
     if (hideSusfs) {
-      push("susfs", labelOf("susfs"), t("hide.status.susfsReady"), "ok");
+      push("susfs", labelOf("susfs"), statusOf("susfs"), "ok");
     }
     if (hideNohello) {
-      push("nohello", labelOf("nohello"), t("hide.status.noHelloPointReady"), "ok");
+      push("nohello", labelOf("nohello"), statusOf("nohello"), "ok");
     }
     if (hideKsud) {
-      push("ksud", labelOf("ksud"), t("hide.status.detected"), "ok");
+      push("ksud", labelOf("ksud"), statusOf("ksud"), "ok");
     }
     if (hideKuFeat) {
       push("kernel_umount", "kernel_umount", t("hide.status.kernelUmountOn"), "ok");
@@ -128,7 +151,7 @@ export function HideStatusCard({ variant = "list", title }: HideStatusCardProps)
       for (const id of csv.split(",")) {
         const key = id.trim();
         if (!key || key === "none") continue;
-        push(key, labelOf(key), t("hide.status.detected"), "ok");
+        push(key, labelOf(key), statusOf(key), "ok");
       }
     }
 
@@ -138,12 +161,12 @@ export function HideStatusCard({ variant = "list", title }: HideStatusCardProps)
       push(
         loader,
         status.zygisk_loader_label || labelOf(loader),
-        t("hide.status.detected"),
+        t("hide.status.moduleInstalled"),
         loaderOk ? "ok" : "warn",
       );
     }
 
-    // 只展示已检测到的；没有则空态一句，不列「未检测到」占位芯片
+    // 只展示已有的；没有则空态一句，不列「未检测到」占位芯片
     return items;
   }, [
     status.hide_assistants,

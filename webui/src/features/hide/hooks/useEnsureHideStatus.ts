@@ -8,7 +8,8 @@ import {
 } from "@/features/status/model/selectors";
 
 /**
- * 隐藏页挂载后再补全慢探测（kernel_umount 等），不挡切 Tab。
+ * 隐藏页挂载后再补全慢探测（kernel_umount 等）。
+ * 延后一拍，避免与「切 Tab 挂载」同一帧抢主线程。
  */
 export function useEnsureHideStatus() {
   const dispatch = useAppDispatch();
@@ -19,12 +20,14 @@ export function useEnsureHideStatus() {
 
   useEffect(() => {
     if (!bootstrapped || refreshing || started.current) return;
-    // 非 quick 说明 enrichFull / refresh 已跑过
     if (status.status_quick && status.status_quick !== "1") {
       started.current = true;
       return;
     }
     started.current = true;
-    void dispatch(enrichFullStatus());
+    const t = window.setTimeout(() => {
+      void dispatch(enrichFullStatus());
+    }, 400);
+    return () => window.clearTimeout(t);
   }, [bootstrapped, dispatch, refreshing, status.status_quick]);
 }

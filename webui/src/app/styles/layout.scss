@@ -108,9 +108,13 @@
   stroke-width: 1.85;
 }
 
-.bf-main {
+.bf-main,
+.pk-def-main,
+.pk-ops-main,
+.pk-con-main {
   flex: 1;
   position: relative;
+  min-width: 0;
 }
 
 .bf-pane {
@@ -120,6 +124,19 @@
 
 .bf-pane.is-on {
   display: block;
+}
+
+/* 切 Tab 时盖在 main 上，不依赖目标 pane 是否已挂载 */
+.bf-tab-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bf-bg, #0b0b0c);
+  opacity: 0.92;
+  pointer-events: none;
 }
 
 .bf-tab-pending {

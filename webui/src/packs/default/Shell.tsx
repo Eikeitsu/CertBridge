@@ -8,7 +8,6 @@ import { useImmersiveChrome } from "@/features/shell/hooks/useImmersiveChrome";
 import { selectResolvedTheme } from "@/features/theme/model/selectors";
 import {
   selectDeviceLabel,
-  selectStatusBootstrapped,
   selectStatusLoading,
   selectStatusRefreshing,
 } from "@/features/status/model/selectors";
@@ -17,7 +16,7 @@ import { brandModuleIconSrc } from "@/shared/config/brand";
 import { AppSnackbar } from "@/shared/ui/AppSnackbar";
 import { ConfirmHost } from "@/shared/ui/ConfirmHost";
 import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
-import { DeferredTabPane } from "@/features/shell/ui/DeferredTabPane";
+import { TabPane, TabPendingOverlay } from "@/features/shell/ui/TabPane";
 import { DefaultHomePage } from "./pages/HomePage";
 import { DefaultCertsPage } from "./pages/CertsPage";
 import { DefaultLogPage } from "./pages/LogPage";
@@ -37,19 +36,12 @@ export function DefaultShell() {
   const deviceLabel = useAppSelector(selectDeviceLabel);
   const refreshing = useAppSelector(selectStatusRefreshing);
   const loading = useAppSelector(selectStatusLoading);
-  const bootstrapped = useAppSelector(selectStatusBootstrapped);
   const resolved = useAppSelector(selectResolvedTheme);
-  const { activeTab, switchTab, seen, prewarmTabs } = useActiveTab();
+  const { activeTab, switchTab, mounted, tabPending } = useActiveTab();
   const { tabs, showHideTab } = useVisibleTabs();
   const v = chrome;
 
   useImmersiveChrome(resolved, false, undefined, "/");
-
-  useEffect(() => {
-    if (!bootstrapped) return;
-    const t = window.setTimeout(() => prewarmTabs(), 1200);
-    return () => window.clearTimeout(t);
-  }, [bootstrapped, prewarmTabs]);
 
   useEffect(() => {
     if (!showHideTab && activeTab === TabName.Hide) switchTab(TabName.Home);
@@ -80,43 +72,44 @@ export function DefaultShell() {
         <div className="pk-def-topbar__device">{deviceLabel}</div>
       </header>
       <main className="pk-def-main">
-        <DeferredTabPane
+        <TabPendingOverlay show={tabPending} />
+        <TabPane
           active={activeTab === TabName.Home}
-          seen={!!seen[TabName.Home]}
+          mounted={!!mounted[TabName.Home]}
           className="pk-def-pane"
         >
           <DefaultHomePage />
-        </DeferredTabPane>
-        <DeferredTabPane
+        </TabPane>
+        <TabPane
           active={activeTab === TabName.Certs}
-          seen={!!seen[TabName.Certs]}
+          mounted={!!mounted[TabName.Certs]}
           className="pk-def-pane"
         >
           <DefaultCertsPage />
-        </DeferredTabPane>
-        <DeferredTabPane
+        </TabPane>
+        <TabPane
           active={activeTab === TabName.Log}
-          seen={!!seen[TabName.Log]}
+          mounted={!!mounted[TabName.Log]}
           className="pk-def-pane"
         >
           <DefaultLogPage />
-        </DeferredTabPane>
+        </TabPane>
         {showHideTab ? (
-          <DeferredTabPane
+          <TabPane
             active={activeTab === TabName.Hide}
-            seen={!!seen[TabName.Hide]}
+            mounted={!!mounted[TabName.Hide]}
             className="pk-def-pane"
           >
             <DefaultHidePage />
-          </DeferredTabPane>
+          </TabPane>
         ) : null}
-        <DeferredTabPane
+        <TabPane
           active={activeTab === TabName.More}
-          seen={!!seen[TabName.More]}
+          mounted={!!mounted[TabName.More]}
           className="pk-def-pane"
         >
           <DefaultMorePage />
-        </DeferredTabPane>
+        </TabPane>
       </main>
       <nav
         className="pk-def-dock"

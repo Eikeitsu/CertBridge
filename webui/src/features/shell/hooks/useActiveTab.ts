@@ -12,17 +12,9 @@ function resolveTabFromPath(pathname: string): TabName {
   return TabName.Home;
 }
 
-const ALL_TABS: TabName[] = [
-  TabName.Home,
-  TabName.Certs,
-  TabName.Log,
-  TabName.Hide,
-  TabName.More,
-];
-
 /**
- * Tab 切换：乐观更新 activeTab（不等等路由），并管理懒挂载 seen。
- * 避免「点了还停在旧页、Loading 画在隐藏 pane 里」。
+ * 乐观切 Tab + 按需挂载（不预热）。
+ * 未挂载的目标页：先切过去并显示壳层 Loading，下一帧再挂重树。
  */
 export function useActiveTab() {
   const navigate = useNavigate();
@@ -30,7 +22,7 @@ export function useActiveTab() {
   const routeTab = resolveTabFromPath(location.pathname);
   const [optimisticTab, setOptimisticTab] = useState<TabName | null>(null);
   const activeTab = optimisticTab ?? routeTab;
-  const [seen, setSeen] = useState<Partial<Record<TabName, boolean>>>(() => ({
+  const [mounted, setMounted] = useState<Partial<Record<TabName, boolean>>>(() => ({
     [routeTab]: true,
   }));
 
@@ -40,15 +32,28 @@ export function useActiveTab() {
     }
   }, [routeTab, optimisticTab]);
 
+  // 当前 Tab 尚未挂载：等浏览器画出 Loading 后再 mount（禁止预热抢主线程）
   useEffect(() => {
-    setSeen((prev) => (prev[activeTab] ? prev : { ...prev, [activeTab]: true }));
-  }, [activeTab]);
+    if (mounted[activeTab]) return;
+    let cancelled = false;
+    let id2 = 0;
+    const id1 = window.requestAnimationFrame(() => {
+      id2 = window.requestAnimationFrame(() => {
+        if (!cancelled) {
+          setMounted((prev) => (prev[activeTab] ? prev : { ...prev, [activeTab]: true }));
+        }
+      });
+    });
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(id1);
+      if (id2) window.cancelAnimationFrame(id2);
+    };
+  }, [activeTab, mounted]);
 
   const switchTab = useCallback(
-    (name: string) => {
+    (name: TabName | string) => {
       if (!isTabName(name) || name === activeTab) return;
-      // 同一事件内批处理：立刻高亮 + 标 seen，再改 URL
-      setSeen((prev) => (prev[name] ? prev : { ...prev, [name]: true }));
       setOptimisticTab(name);
       haptic("light");
       navigate(TAB_PATH[name], { replace: true });
@@ -56,20 +61,17 @@ export function useActiveTab() {
     [activeTab, navigate],
   );
 
-  /** 空闲时预热其它 Tab，让首次点击变成纯显示切换 */
-  const prewarmTabs = useCallback(() => {
-    setSeen((prev) => {
-      const next = { ...prev };
-      for (const tab of ALL_TABS) next[tab] = true;
-      return next;
-    });
-  }, []);
-
   return {
     activeTab,
     pathname: location.pathname,
     switchTab,
-    seen,
-    prewarmTabs,
+    /** @deprecated 用 mounted */
+    seen: mounted,
+    mounted,
+    /** 当前可见 Tab 还在等挂载 → 壳层应盖 Loading */
+    tabPending: !mounted[activeTab],
+    prewarmTabs: () => {
+      /* 已废弃：预热会堵死首次点击 */
+    },
   };
 }

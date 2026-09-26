@@ -1,30 +1,22 @@
 import type { ReactNode } from "react";
 import { TabName } from "@/entities/module/enums";
-import { DeferredTabPane } from "./DeferredTabPane";
+import { TabPane } from "./TabPane";
 
 type AppTabPaneProps = {
   tab: TabName;
   activeTab: TabName;
-  seen: boolean;
+  /** 兼容旧名 seen；与 mounted 同义 */
+  seen?: boolean;
+  mounted?: boolean;
   children: ReactNode;
   loadingLabel?: string;
 };
 
-export function AppTabPane({
-  tab,
-  activeTab,
-  seen,
-  children,
-  loadingLabel,
-}: AppTabPaneProps) {
+export function AppTabPane({ tab, activeTab, seen, mounted, children }: AppTabPaneProps) {
+  const isMounted = mounted ?? seen ?? false;
   return (
-    <DeferredTabPane
-      active={activeTab === tab}
-      seen={seen}
-      className="bf-pane"
-      loadingLabel={loadingLabel}
-    >
+    <TabPane active={activeTab === tab} mounted={isMounted} className="bf-pane">
       {children}
-    </DeferredTabPane>
+    </TabPane>
   );
 }

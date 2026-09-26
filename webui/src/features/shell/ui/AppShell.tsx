@@ -7,7 +7,6 @@ import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
 import { selectResolvedTheme } from "@/features/theme/model/selectors";
 import {
   selectDeviceLabel,
-  selectStatusBootstrapped,
   selectStatusLoading,
   selectStatusRefreshing,
 } from "@/features/status/model/selectors";
@@ -23,14 +22,14 @@ import { AppTopbar } from "./AppTopbar";
 import { AppProgressBar } from "./AppProgressBar";
 import { AppDock } from "./AppDock";
 import { AppTabPane } from "./AppTabPane";
+import { TabPendingOverlay } from "./TabPane";
 
 export function AppShell() {
   const deviceLabel = useAppSelector(selectDeviceLabel);
   const isRefreshing = useAppSelector(selectStatusRefreshing);
   const isLoading = useAppSelector(selectStatusLoading);
-  const bootstrapped = useAppSelector(selectStatusBootstrapped);
   const resolvedTheme = useAppSelector(selectResolvedTheme);
-  const { activeTab, switchTab, seen, prewarmTabs } = useActiveTab();
+  const { activeTab, switchTab, mounted, tabPending } = useActiveTab();
   const { tabs, showHideTab } = useVisibleTabs();
   const { voice } = usePackVoice();
 
@@ -44,13 +43,6 @@ export function AppShell() {
       })),
     [tabs, voice],
   );
-
-  // 首屏可交互后再预热其它 Tab，避免第一次点击才挂重树
-  useEffect(() => {
-    if (!bootstrapped) return;
-    const t = window.setTimeout(() => prewarmTabs(), 1200);
-    return () => window.clearTimeout(t);
-  }, [bootstrapped, prewarmTabs]);
 
   useEffect(() => {
     if (!showHideTab && activeTab === TabName.Hide) switchTab(TabName.Home);
@@ -67,29 +59,42 @@ export function AppShell() {
         showDevice={voice.topbar.showDevice}
       />
       <main className="bf-main">
-        <AppTabPane tab={TabName.Home} activeTab={activeTab} seen={!!seen[TabName.Home]}>
+        <TabPendingOverlay show={tabPending} />
+        <AppTabPane
+          tab={TabName.Home}
+          activeTab={activeTab}
+          mounted={!!mounted[TabName.Home]}
+        >
           <OverviewPage />
         </AppTabPane>
         <AppTabPane
           tab={TabName.Certs}
           activeTab={activeTab}
-          seen={!!seen[TabName.Certs]}
+          mounted={!!mounted[TabName.Certs]}
         >
           <CertsPage />
         </AppTabPane>
-        <AppTabPane tab={TabName.Log} activeTab={activeTab} seen={!!seen[TabName.Log]}>
+        <AppTabPane
+          tab={TabName.Log}
+          activeTab={activeTab}
+          mounted={!!mounted[TabName.Log]}
+        >
           <LogPage />
         </AppTabPane>
         {showHideTab ? (
           <AppTabPane
             tab={TabName.Hide}
             activeTab={activeTab}
-            seen={!!seen[TabName.Hide]}
+            mounted={!!mounted[TabName.Hide]}
           >
             <HidePage />
           </AppTabPane>
         ) : null}
-        <AppTabPane tab={TabName.More} activeTab={activeTab} seen={!!seen[TabName.More]}>
+        <AppTabPane
+          tab={TabName.More}
+          activeTab={activeTab}
+          mounted={!!mounted[TabName.More]}
+        >
           <SettingsPage />
         </AppTabPane>
       </main>

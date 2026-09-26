@@ -5,20 +5,11 @@ import { hydrateTheme, refreshSystemTheme } from "@/features/theme/model/themeSl
 import {
   bootstrapStatus,
   enrichBootstrapMeta,
-  enrichFullStatus,
 } from "@/features/status/model/statusSlice";
 import { selectModuleStatus } from "@/features/status/model/selectors";
 import { resolveUiLang, type UiLangPref } from "@/shared/i18n";
 import { STORAGE_KEYS } from "@/shared/config/paths";
 import { writeStorage } from "@/shared/lib/storage";
-
-function deferIdle(fn: () => void, timeout = 2500) {
-  if (typeof window.requestIdleCallback === "function") {
-    window.requestIdleCallback(() => fn(), { timeout });
-    return;
-  }
-  window.setTimeout(fn, Math.min(600, timeout));
-}
 
 function applyDocumentLang(lng: "zh-CN" | "en") {
   document.documentElement.lang = lng === "zh-CN" ? "zh-CN" : "en";
@@ -31,22 +22,16 @@ export function ThemeBootstrap({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     dispatch(hydrateTheme());
-    // 首屏：status --quick → 立刻可交互；设备名/证书列表后台补；完整 status 再延后
+    // 首屏 quick；证书列表后台补。完整 status 改由隐藏页按需拉取，避免堵首次切 Tab
     void dispatch(bootstrapStatus()).finally(() => {
       void dispatch(enrichBootstrapMeta());
-      // 完整 status 再延后，避免与首次切 Tab / 预热抢主线程与桥
-      deferIdle(() => {
-        void dispatch(enrichFullStatus());
-      }, 8000);
     });
-    // 日志改由日志页挂载后再拉，避免与 enrich 抢桥导致切 Tab 卡住
     const mediaQuery = window.matchMedia?.("(prefers-color-scheme: dark)");
     const handleSchemeChange = () => dispatch(refreshSystemTheme());
     mediaQuery?.addEventListener("change", handleSchemeChange);
     return () => mediaQuery?.removeEventListener("change", handleSchemeChange);
   }, [dispatch]);
 
-  // status 带回模块语言偏好时对齐一次（与本地缓存不一致才切，避免二次全量刷新）
   useEffect(() => {
     const raw = (status.ui_lang as UiLangPref) || "";
     if (!raw) return;

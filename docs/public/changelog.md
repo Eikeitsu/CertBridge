@@ -5,6 +5,30 @@
 
 ---
 
+## v5.0.2
+
+### 中文
+
+- **切 Tab**：去掉整表预热（曾堵死主线程）；一点即换页 + main 上盖 Loading；仅按需挂载当前页；完整 status 改隐藏页再拉
+- **kernel_umount 探测**：热路径去掉慢的 `feature list`；`na` 不缓存（刷新可重探）；`--live` 清 feat 缓存；兼容 `kernel_umount`/`KernelUmount`/id=1
+- **SuSFS 探测**：去掉 `ksud` 帮助假阳性；用 `gzip`/`toybox` 读 config.gz；认 `CONFIG_KSU_SUSFS`、`ksu_susfs` 通信、合法版本文件；阴性不缓存以免漏检
+- **ksud umount 探测收紧**：去掉对 `usage` 等帮助词的匹配，改为子命令/feature 实义特征
+- **隐藏助手探测减负**：status 各贵重探测只跑一次并 boot 缓存；SuSFS 廉价路径优先；文案由「已检测到」改为「可用 / 已安装 / Root 自带」等
+- **首页更快可交互**：首屏只用 `status --quick`；完整 status / 日志延后；无 runtime 缓存时乐观展示已应用证书；稳定态不再一进页就 `--live`
+- **kernel_umount**：对应管理器「内核级卸载 / Kernel umount」（SukiSU/ReSukiSU/KSU-Next 等 feature id=1）；探测认 feature get；页面改显示「内核级卸载」
+- **热更新清探测缓存**：避免同 boot 内仍显示热更前的「未探测到内核级卸载」
+
+### English
+
+- **switch Tab**: remove the entire table preheating (blocked the main thread); change the page one point + main cover Loading; mount the current page only as needed; change the full status to hide the page and pull
+- **kernel_umount probe**: hot path removes slow `feature list`; `na` does not cache (refreshable); `--live` clears feat cache; compatible with `kernel_umount`/`KernelUmount`/id = 1
+- **SuSFS detection**: remove `ksud` to help false positives; read config.gz with `gzip`/`toybox`; recognize `CONFIG_KSU_SUSFS`, `ksu_susfs` communication, legal version file; do not cache negative to avoid missing detection
+- **ksud umount probe tightens**: removes the matching of help words such as `usage` and changes to subcommand/feature semantic features
+- **Hidden Assistant Probe Reduction**: status Each valuable probe only runs once and is cached by boot; SuSFS cheap path is preferred; copywriting changed from "Detected" to "Available/Installed/Root included", etc.
+- **Home Faster interactive**: the first screen only uses `status --quick`; full status/log delay; optimistic display of applied certificates when there is no runtime cache; stable state `--live` no longer enters the page
+- **kernel_umount**: corresponding manager "Kernel level uninstall/Kernel umount" (SukiSU/ReSukiSU/KSU-Next etc. feature id = 1); probe and confirm feature get; page changes to display "Kernel level uninstall"
+- **hot update clean probe cache**: Avoid displaying "kernel level uninstallation not detected" before hot update in the same boot
+
 ## v5.0.1
 
 ### 中文

@@ -1,5 +1,16 @@
 # Changelog
 
+## v5.0.2
+
+- **switch Tab**: remove the entire table preheating (blocked the main thread); change the page one point + main cover Loading; mount the current page only as needed; change the full status to hide the page and pull
+- **kernel_umount probe**: hot path removes slow `feature list`; `na` does not cache (refreshable); `--live` clears feat cache; compatible with `kernel_umount`/`KernelUmount`/id = 1
+- **SuSFS detection**: remove `ksud` to help false positives; read config.gz with `gzip`/`toybox`; recognize `CONFIG_KSU_SUSFS`, `ksu_susfs` communication, legal version file; do not cache negative to avoid missing detection
+- **ksud umount probe tightens**: removes the matching of help words such as `usage` and changes to subcommand/feature semantic features
+- **Hidden Assistant Probe Reduction**: status Each valuable probe only runs once and is cached by boot; SuSFS cheap path is preferred; copywriting changed from "Detected" to "Available/Installed/Root included", etc.
+- **Home Faster interactive**: the first screen only uses `status --quick`; full status/log delay; optimistic display of applied certificates when there is no runtime cache; stable state `--live` no longer enters the page
+- **kernel_umount**: corresponding manager "Kernel level uninstall/Kernel umount" (SukiSU/ReSukiSU/KSU-Next etc. feature id = 1); probe and confirm feature get; page changes to display "Kernel level uninstall"
+- **hot update clean probe cache**: Avoid displaying "kernel level uninstallation not detected" before hot update in the same boot
+
 ## v5.0.1
 
 - **upgrade reserved configuration**: snapshot external `user.conf`/old module conf as soon as installation starts; default installation upgrade backfill `mount_mode`, switch and behavior direction keys; reserved `CERTBRIDGE_CONF_RESET_BELOW` (default 0, not triggered yet)

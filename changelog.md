@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v5.0.2
+
 - **切 Tab**：去掉整表预热（曾堵死主线程）；一点即换页 + main 上盖 Loading；仅按需挂载当前页；完整 status 改隐藏页再拉
 - **kernel_umount 探测**：热路径去掉慢的 `feature list`；`na` 不缓存（刷新可重探）；`--live` 清 feat 缓存；兼容 `kernel_umount`/`KernelUmount`/id=1
 - **SuSFS 探测**：去掉 `ksud` 帮助假阳性；用 `gzip`/`toybox` 读 config.gz；认 `CONFIG_KSU_SUSFS`、`ksu_susfs` 通信、合法版本文件；阴性不缓存以免漏检

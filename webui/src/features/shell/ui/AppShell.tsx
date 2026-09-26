@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useAppSelector } from "@/app/store/hooks";
 import { useActiveTab } from "@/features/shell/hooks/useActiveTab";
 import { useVisibleTabs } from "@/features/shell/hooks/useVisibleTabs";
@@ -7,6 +7,7 @@ import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
 import { selectResolvedTheme } from "@/features/theme/model/selectors";
 import {
   selectDeviceLabel,
+  selectStatusBootstrapped,
   selectStatusLoading,
   selectStatusRefreshing,
 } from "@/features/status/model/selectors";
@@ -27,13 +28,11 @@ export function AppShell() {
   const deviceLabel = useAppSelector(selectDeviceLabel);
   const isRefreshing = useAppSelector(selectStatusRefreshing);
   const isLoading = useAppSelector(selectStatusLoading);
+  const bootstrapped = useAppSelector(selectStatusBootstrapped);
   const resolvedTheme = useAppSelector(selectResolvedTheme);
-  const { activeTab, switchTab } = useActiveTab();
+  const { activeTab, switchTab, seen, prewarmTabs } = useActiveTab();
   const { tabs, showHideTab } = useVisibleTabs();
   const { voice } = usePackVoice();
-  const [seen, setSeen] = useState<Partial<Record<TabName, boolean>>>(() => ({
-    [activeTab]: true,
-  }));
 
   useImmersiveChrome(resolvedTheme, false, undefined, "/");
 
@@ -46,19 +45,16 @@ export function AppShell() {
     [tabs, voice],
   );
 
-  const goTab = (name: TabName) => {
-    setSeen((prev) => (prev[name] ? prev : { ...prev, [name]: true }));
-    switchTab(name);
-  };
+  // 首屏可交互后再预热其它 Tab，避免第一次点击才挂重树
+  useEffect(() => {
+    if (!bootstrapped) return;
+    const t = window.setTimeout(() => prewarmTabs(), 1200);
+    return () => window.clearTimeout(t);
+  }, [bootstrapped, prewarmTabs]);
 
   useEffect(() => {
-    setSeen((prev) => (prev[activeTab] ? prev : { ...prev, [activeTab]: true }));
-  }, [activeTab]);
-
-  useEffect(() => {
-    if (!showHideTab && activeTab === TabName.Hide) goTab(TabName.Home);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only redirect when hide tab hidden
-  }, [showHideTab, activeTab]);
+    if (!showHideTab && activeTab === TabName.Hide) switchTab(TabName.Home);
+  }, [showHideTab, activeTab, switchTab]);
 
   return (
     <div className="bf-shell">
@@ -97,7 +93,7 @@ export function AppShell() {
           <SettingsPage />
         </AppTabPane>
       </main>
-      <AppDock activeTab={activeTab} onSwitch={goTab} tabs={visibleTabs} />
+      <AppDock activeTab={activeTab} onSwitch={switchTab} tabs={visibleTabs} />
       <AppSnackbar />
       <ConfirmHost />
     </div>

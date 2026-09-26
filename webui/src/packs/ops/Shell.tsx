@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { Activity, Shield, ScrollText, EyeOff, Ellipsis } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useAppSelector } from "@/app/store/hooks";
@@ -8,6 +8,7 @@ import { useImmersiveChrome } from "@/features/shell/hooks/useImmersiveChrome";
 import { selectResolvedTheme } from "@/features/theme/model/selectors";
 import {
   selectDeviceLabel,
+  selectStatusBootstrapped,
   selectStatusLoading,
   selectStatusRefreshing,
 } from "@/features/status/model/selectors";
@@ -30,42 +31,24 @@ const ICONS: Record<TabName, LucideIcon> = {
   [TabName.More]: Ellipsis,
 };
 
-function Pane({
-  tab,
-  active,
-  seen,
-  children,
-}: {
-  tab: TabName;
-  active: TabName;
-  seen: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <DeferredTabPane active={active === tab} seen={seen} className="pk-ops-pane">
-      {children}
-    </DeferredTabPane>
-  );
-}
-
 export function OpsShell() {
   const chrome = usePackChrome();
   const deviceLabel = useAppSelector(selectDeviceLabel);
   const refreshing = useAppSelector(selectStatusRefreshing);
   const loading = useAppSelector(selectStatusLoading);
+  const bootstrapped = useAppSelector(selectStatusBootstrapped);
   const resolved = useAppSelector(selectResolvedTheme);
-  const { activeTab, switchTab } = useActiveTab();
+  const { activeTab, switchTab, seen, prewarmTabs } = useActiveTab();
   const { tabs, showHideTab } = useVisibleTabs();
   const v = chrome;
-  const [seen, setSeen] = useState<Partial<Record<TabName, boolean>>>(() => ({
-    [activeTab]: true,
-  }));
 
   useImmersiveChrome(resolved, false, undefined, "/");
 
   useEffect(() => {
-    setSeen((prev) => (prev[activeTab] ? prev : { ...prev, [activeTab]: true }));
-  }, [activeTab]);
+    if (!bootstrapped) return;
+    const t = window.setTimeout(() => prewarmTabs(), 1200);
+    return () => window.clearTimeout(t);
+  }, [bootstrapped, prewarmTabs]);
 
   useEffect(() => {
     if (!showHideTab && activeTab === TabName.Hide) switchTab(TabName.Home);
@@ -91,23 +74,43 @@ export function OpsShell() {
         <div className="pk-ops-topbar__meta">{deviceLabel}</div>
       </header>
       <main className="pk-ops-main">
-        <Pane tab={TabName.Home} active={activeTab} seen={!!seen[TabName.Home]}>
+        <DeferredTabPane
+          active={activeTab === TabName.Home}
+          seen={!!seen[TabName.Home]}
+          className="pk-ops-pane"
+        >
           <OpsHomePage />
-        </Pane>
-        <Pane tab={TabName.Certs} active={activeTab} seen={!!seen[TabName.Certs]}>
+        </DeferredTabPane>
+        <DeferredTabPane
+          active={activeTab === TabName.Certs}
+          seen={!!seen[TabName.Certs]}
+          className="pk-ops-pane"
+        >
           <OpsCertsPage />
-        </Pane>
-        <Pane tab={TabName.Log} active={activeTab} seen={!!seen[TabName.Log]}>
+        </DeferredTabPane>
+        <DeferredTabPane
+          active={activeTab === TabName.Log}
+          seen={!!seen[TabName.Log]}
+          className="pk-ops-pane"
+        >
           <OpsLogPage />
-        </Pane>
+        </DeferredTabPane>
         {showHideTab ? (
-          <Pane tab={TabName.Hide} active={activeTab} seen={!!seen[TabName.Hide]}>
+          <DeferredTabPane
+            active={activeTab === TabName.Hide}
+            seen={!!seen[TabName.Hide]}
+            className="pk-ops-pane"
+          >
             <OpsHidePage />
-          </Pane>
+          </DeferredTabPane>
         ) : null}
-        <Pane tab={TabName.More} active={activeTab} seen={!!seen[TabName.More]}>
+        <DeferredTabPane
+          active={activeTab === TabName.More}
+          seen={!!seen[TabName.More]}
+          className="pk-ops-pane"
+        >
           <OpsMorePage />
-        </Pane>
+        </DeferredTabPane>
       </main>
       <nav
         className="pk-ops-dock"
@@ -120,10 +123,7 @@ export function OpsShell() {
               key={tab.key}
               type="button"
               className={`pk-ops-dock__item${activeTab === tab.key ? " is-on" : ""}`}
-              onClick={() => {
-                setSeen((prev) => (prev[tab.key] ? prev : { ...prev, [tab.key]: true }));
-                switchTab(tab.key);
-              }}
+              onClick={() => switchTab(tab.key)}
             >
               <Icon size={18} strokeWidth={activeTab === tab.key ? 2.2 : 1.7} />
               <span>{tab.label}</span>

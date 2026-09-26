@@ -34,9 +34,10 @@ export function ThemeBootstrap({ children }: { children: ReactNode }) {
     // 首屏：status --quick → 立刻可交互；设备名/证书列表后台补；完整 status 再延后
     void dispatch(bootstrapStatus()).finally(() => {
       void dispatch(enrichBootstrapMeta());
+      // 完整 status 再延后，避免与首次切 Tab / 预热抢主线程与桥
       deferIdle(() => {
         void dispatch(enrichFullStatus());
-      }, 4000);
+      }, 8000);
     });
     // 日志改由日志页挂载后再拉，避免与 enrich 抢桥导致切 Tab 卡住
     const mediaQuery = window.matchMedia?.("(prefers-color-scheme: dark)");

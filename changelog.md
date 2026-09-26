@@ -1,5 +1,5 @@
 # CertBridge CI
 
 
-- **升级保留配置**：安装开始即快照外置 `user.conf` / 旧模块 conf；默认安装升级回填 `mount_mode`、开关与行为向键；预留 `CERTBRIDGE_CONF_RESET_BELOW`（默认 0，暂不触发）
-- 隐藏助手探测与隐藏挂载协助开关解耦
+- **SuSFS 探测收紧**：不再用 `ksud` 帮助文案 / `susfs_version` 文件判「内核已集成」；仅认 `CONFIG_KSU_SUSFS=y` 或 `ksu_susfs` 能与内核通信
+- **ksud umount 探测收紧**：去掉对 `usage` 等帮助词的匹配，改为子命令/feature 实义特征

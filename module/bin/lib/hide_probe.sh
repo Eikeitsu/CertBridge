@@ -68,45 +68,34 @@ hide_resolve_susfs_bin() {
 hide_susfs_cli_talks() {
   bin="$1"
   [ -n "$bin" ] && [ -x "$bin" ] || return 1
-  if "$bin" show version >/dev/null 2>&1; then
+  # show version：须成功且输出含版本数字（失败/空输出 ≠ 内核已集成）
+  ver=$("$bin" show version 2>/dev/null) || ver=
+  ver=$(printf '%s' "$ver" | tr -d '\r' | head -n1)
+  if [ -n "$ver" ] && printf '%s' "$ver" | grep -qE '[0-9]'; then
     return 0
   fi
+  # enabled_features：须明确出现 CONFIG_KSU_SUSFS（勿把任意 stderr 当成功）
   feats=$("$bin" show enabled_features 2>/dev/null) || feats=
   [ -n "$feats" ] || return 1
-  echo "$feats" | grep -q "CONFIG_KSU_SUSFS"
+  printf '%s\n' "$feats" | grep -qE '^CONFIG_KSU_SUSFS(=y|_|=)'
 }
 
 # 内核是否编入 SuSFS（优先读配置；不依赖管理器/模块是否安装）
+# 注意：勿用「ksud 帮助文案含 usage/command」或「存在 susfs_version 文件」判有——易假阳性。
 hide_kernel_has_susfs() {
-  # 1) /proc/config.gz（内核开启 IKCONFIG_PROC 时可用）
+  # 1) /proc/config.gz：主开关 CONFIG_KSU_SUSFS=y（不把仅子选项 / is not set 当有）
   if [ -f /proc/config.gz ]; then
-    if zcat /proc/config.gz 2>/dev/null | grep -qE '^CONFIG_KSU_SUSFS(=y|_.*=y)'; then
+    if zcat /proc/config.gz 2>/dev/null | grep -qE '^CONFIG_KSU_SUSFS=y'; then
       return 0
     fi
   fi
   if [ -f /proc/config ]; then
-    grep -qE '^CONFIG_KSU_SUSFS(=y|_.*=y)' /proc/config 2>/dev/null && return 0
+    grep -qE '^CONFIG_KSU_SUSFS=y' /proc/config 2>/dev/null && return 0
   fi
-  # 2) 任意 ksu_susfs 能 show version → 内核已响应 SuSFS ioctl/prctl
+  # 2) ksu_susfs 能与内核通信（show version / enabled_features）
   if SUSFS_BIN=$(hide_resolve_susfs_bin); then
     export SUSFS_BIN
     hide_susfs_cli_talks "$SUSFS_BIN" && return 0
-  fi
-  # 3) 部分管理器把版本写在固定文件（可选痕迹，仍指向内核能力）
-  for f in \
-    /data/adb/ksu/susfs_version \
-    /data/adb/susfs4ksu/susfs_version \
-    /data/adb/resusfs/susfs_version; do
-    [ -f "$f" ] && [ -s "$f" ] && return 0
-  done
-  # 4) ksud 侧痕迹（部分构建无 config.gz / CLI，但 feature 列表含 susfs）
-  if [ -x /data/adb/ksu/bin/ksud ]; then
-    if /data/adb/ksu/bin/ksud feature list 2>/dev/null | grep -qi susfs; then
-      return 0
-    fi
-    if /data/adb/ksu/bin/ksud susfs 2>&1 | grep -qiE 'susfs|try_umount|usage|command'; then
-      return 0
-    fi
   fi
   return 1
 }
@@ -183,8 +172,8 @@ hide_probe_cache_set() {
     {
       echo "boot_id=$cur_boot"
       echo "boot_epoch=$cur_epoch"
-      [ "$key" = "susfs" ] || echo "susfs=0"
-      [ "$key" = "ksud" ] || echo "ksud=0"
+      [ "$key" = "susfs_kernel" ] || echo "susfs_kernel=0"
+      [ "$key" = "ksud_umount" ] || echo "ksud_umount=0"
       [ "$key" = "nohello" ] || echo "nohello=0"
       echo "$key=$value"
     } >"$tmp" 2>/dev/null || {
@@ -201,15 +190,20 @@ hide_probe_cache_clear() {
 
 # SuSFS 可用 = 内核具备 SuSFS（不是「装了某个管理器模块」）。
 # 用户态管理器只是配置 UI / 附带 CLI；本模块自己用 ksud / ksu_susfs 登记 try_umount。
+# 缓存键 susfs_kernel（非旧 susfs）：升级后作废假阳性缓存。
 hide_susfs_available() {
-  cached=$(hide_probe_cache_get susfs 2>/dev/null) || cached=
+  cached=$(hide_probe_cache_get susfs_kernel 2>/dev/null) || cached=
   if [ "$cached" = "1" ]; then
     return 0
   fi
+  if [ "$cached" = "0" ]; then
+    return 1
+  fi
   if hide_kernel_has_susfs; then
-    hide_probe_cache_set susfs 1
+    hide_probe_cache_set susfs_kernel 1
     return 0
   fi
+  hide_probe_cache_set susfs_kernel 0
   return 1
 }
 
@@ -233,23 +227,36 @@ hide_susfs_manager_hint() {
 }
 # 结果按 boot 缓存；失败不缓存
 
-# 结果按 boot 缓存；失败不缓存
+# 结果按 boot 缓存；缓存键 ksud_umount（升级后作废旧的宽松探测缓存）
 hide_ksud_kernel_umount_available() {
-  cached=$(hide_probe_cache_get ksud 2>/dev/null) || cached=
+  cached=$(hide_probe_cache_get ksud_umount 2>/dev/null) || cached=
   if [ "$cached" = "1" ]; then
     return 0
   fi
+  if [ "$cached" = "0" ]; then
+    return 1
+  fi
   ok=0
   if [ -x /data/adb/ksu/bin/ksud ]; then
-    if /data/adb/ksu/bin/ksud kernel 2>&1 | grep -q "umount"; then
+    # 1) `ksud kernel` 摘要里列出 umount 子命令（整词，避免误伤）
+    if /data/adb/ksu/bin/ksud kernel 2>&1 | grep -qiE '(^|[[:space:]])umount([[:space:]/]|$)'; then
       ok=1
-    elif /data/adb/ksu/bin/ksud kernel umount 2>&1 | grep -qiE "add|umount|usage|flags"; then
-      # 部分版本 `ksud kernel` 无摘要，但子命令可用
+    # 2) 子命令帮助含 add/delete/list 等实义动词（勿匹配 usage/command）
+    elif /data/adb/ksu/bin/ksud kernel umount 2>&1 | grep -qiE '(^|[[:space:]])(add|delete|remove|list)([[:space:]/]|$)'; then
+      ok=1
+    # 3) feature 接口能读到 kernel_umount（开或关都算「有这条能力」）
+    elif /data/adb/ksu/bin/ksud feature get kernel_umount 2>/dev/null | grep -qiE 'value|enabled|true|false|[01]'; then
+      ok=1
+    elif /data/adb/ksu/bin/ksud feature get 1 2>/dev/null | grep -qiE 'kernel_umount|value[=:]'; then
       ok=1
     fi
   fi
-  [ "$ok" = "1" ] && hide_probe_cache_set ksud 1
-  [ "$ok" = "1" ]
+  if [ "$ok" = "1" ]; then
+    hide_probe_cache_set ksud_umount 1
+    return 0
+  fi
+  hide_probe_cache_set ksud_umount 0
+  return 1
 }
 
 # 直接尝试 ksud 登记（探测失败时仍试一次，避免漏登）

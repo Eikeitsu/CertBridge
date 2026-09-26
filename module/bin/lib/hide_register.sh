@@ -172,11 +172,11 @@ hide_assist_for_target() {
   if hide_susfs_bin_present; then
     if "$SUSFS_BIN" add_try_umount "$target" 1 2>/dev/null; then
       log_info "hide: susfs try_umount registered ($target)"
-      hide_probe_cache_set susfs 1
+      hide_probe_cache_set susfs_kernel 1
       live=1
     elif "$SUSFS_BIN" add_try_umount "$target" >/dev/null 2>&1; then
       log_info "hide: susfs try_umount registered legacy ($target)"
-      hide_probe_cache_set susfs 1
+      hide_probe_cache_set susfs_kernel 1
       live=1
     else
       log_warn "hide: susfs add_try_umount failed ($target)"
@@ -186,7 +186,7 @@ hide_assist_for_target() {
   # 3) ksud kernel umount（先确保 feature 开启；SuSFS v2 / KSU-Next 主路径）
   if hide_try_ksud_umount_add "$target"; then
     log_info "hide: ksud kernel umount registered ($target)"
-    hide_probe_cache_set ksud 1
+    hide_probe_cache_set ksud_umount 1
     live=1
   elif [ -x /data/adb/ksu/bin/ksud ]; then
     log_warn "hide: ksud kernel umount add failed ($target)"

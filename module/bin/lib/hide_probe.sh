@@ -233,6 +233,19 @@ hide_probe_cache_clear() {
   rm -f "$HIDE_PROBE_CACHE" 2>/dev/null
 }
 
+# 删除单个键（刷新时重探 feature，避免误缓存卡住）
+hide_probe_cache_unset() {
+  key="$1"
+  [ -n "$key" ] || return 0
+  hide_probe_cache_boot_ok || return 0
+  tmp="$HIDE_PROBE_CACHE.tmp.$$"
+  awk -F= -v key="$key" '$1 != key { print }' "$HIDE_PROBE_CACHE" >"$tmp" 2>/dev/null || {
+    rm -f "$tmp"
+    return 0
+  }
+  mv -f "$tmp" "$HIDE_PROBE_CACHE" 2>/dev/null || rm -f "$tmp"
+}
+
 # SuSFS 可用 = 内核具备 SuSFS（不是「装了某个管理器模块」）。
 # 缓存键 susfs_kernel；仅缓存阳性。阴性不缓存，避免首次探测失败/无 zcat 后整次开机卡死。
 hide_susfs_available() {
@@ -265,25 +278,62 @@ hide_susfs4ksu_module_present() {
 hide_susfs_manager_hint() {
   hide_susfs_persist_dir_hint
 }
-# 结果按 boot 缓存；仅缓存阳性
+# 解析 ksud 二进制：官方 / KSU-Next / SukiSU / ReSukiSU 等均落在 ksu 工作目录
+hide_resolve_ksud() {
+  if [ -n "${KSUD_BIN:-}" ] && [ -x "$KSUD_BIN" ]; then
+    echo "$KSUD_BIN"
+    return 0
+  fi
+  for cand in \
+    /data/adb/ksu/bin/ksud \
+    /data/adb/ksud/bin/ksud \
+    /data/adb/ksu/ksud; do
+    if [ -x "$cand" ]; then
+      echo "$cand"
+      return 0
+    fi
+  done
+  cand=$(command -v ksud 2>/dev/null) || cand=
+  [ -n "$cand" ] && [ -x "$cand" ] && echo "$cand" && return 0
+  return 1
+}
+
+# feature check 首行：supported|unsupported|managed（有子系统即通道存在）
+hide_ksud_feature_check_ku() {
+  _ksud=$(hide_resolve_ksud) || return 1
+  _chk=$("$_ksud" feature check kernel_umount 2>&1) || true
+  _chk=$(printf '%s' "$_chk" | tr -d '\r' | head -n 1 | tr 'A-Z' 'a-z')
+  case "$_chk" in
+    supported|unsupported|managed) echo "$_chk"; return 0 ;;
+  esac
+  return 1
+}
+
+# 结果按 boot 缓存「通道可用」；开关状态不在此缓存（见 feature_probe）
 hide_ksud_kernel_umount_available() {
   cached=$(hide_probe_cache_get ksud_umount 2>/dev/null) || cached=
   if [ "$cached" = "1" ]; then
     return 0
   fi
   ok=0
-  if [ -x /data/adb/ksu/bin/ksud ]; then
-    hide_ksud_umount_feature_probe >/dev/null 2>&1 || true
-    _feat_state=$(hide_probe_cache_get ksud_feat 2>/dev/null) || _feat_state=
-    case "$_feat_state" in
-      1|0) ok=1 ;;
-    esac
+  _ksud=$(hide_resolve_ksud) || _ksud=
+  if [ -n "$_ksud" ]; then
+    # feature 子系统存在（check 回包 / get 能解析）
+    if hide_ksud_feature_check_ku >/dev/null 2>&1; then
+      ok=1
+    fi
+    if [ "$ok" != "1" ]; then
+      _st=$(hide_ksud_umount_feature_probe 2>/dev/null) || _st=n
+      case "$_st" in
+        1|0) ok=1 ;;
+      esac
+    fi
     if [ "$ok" != "1" ] && \
-        /data/adb/ksu/bin/ksud kernel 2>&1 | grep -qiE '(^|[[:space:]])umount([[:space:]/]|$)'; then
+        "$_ksud" kernel 2>&1 | grep -qiE '(^|[[:space:]])umount([[:space:]/]|$)'; then
       ok=1
     fi
     if [ "$ok" != "1" ] && \
-        /data/adb/ksu/bin/ksud kernel umount 2>&1 | grep -qiE '(^|[[:space:]])(add|delete|remove|list)([[:space:]/]|$)'; then
+        "$_ksud" kernel umount 2>&1 | grep -qiE '(^|[[:space:]])(add|delete|remove|list)([[:space:]/]|$)'; then
       ok=1
     fi
   fi
@@ -294,7 +344,11 @@ hide_ksud_kernel_umount_available() {
   return 1
 }
 
-# 解析 feature get 输出 → on|off|na
+# 解析 feature get / list 输出 → on|off|na
+# SukiSU/KSU-Next 典型 get：
+#   Feature: kernel_umount (1)
+#   Value: 1
+#   Status: enabled
 hide_ksud_parse_feature_state() {
   _raw=$(printf '%s' "$1" | tr -d '\r')
   [ -n "$_raw" ] || {
@@ -302,77 +356,114 @@ hide_ksud_parse_feature_state() {
     return 0
   }
   if printf '%s' "$_raw" | grep -qiE \
-      'value[=:][[:space:]]*0|[=:][[:space:]]*(false|off|disabled|no)\b|(^|[[:space:]])0([[:space:]]|$)'; then
-    if ! printf '%s' "$_raw" | grep -qiE 'value[=:][[:space:]]*1|[=:][[:space:]]*(true|on|enabled|yes)\b'; then
-      echo off
-      return 0
-    fi
+      'not supported by kernel|unknown feature|usage:'; then
+    echo na
+    return 0
   fi
-  if printf '%s' "$_raw" | grep -qiE \
-      'value[=:][[:space:]]*1|[=:][[:space:]]*(true|on|enabled|yes)\b|(^|[[:space:]])1([[:space:]]|$)'; then
+
+  # 优先显式 Value: 行（非 0 即开）；Android awk 多无 IGNORECASE
+  _val=$(printf '%s\n' "$_raw" | awk -F': *' '
+    tolower($1) == "value" {
+      gsub(/[[:space:]]/, "", $2)
+      print $2
+      exit
+    }
+  ')
+  if [ -n "$_val" ]; then
+    case "$_val" in
+      0|0.*) echo off ;;
+      *) echo on ;;
+    esac
+    return 0
+  fi
+
+  # Status: enabled / disabled
+  if printf '%s\n' "$_raw" | grep -qiE '^[[:space:]]*Status:[[:space:]]*enabled\b'; then
     echo on
+    return 0
+  fi
+  if printf '%s\n' "$_raw" | grep -qiE '^[[:space:]]*Status:[[:space:]]*disabled\b'; then
+    echo off
+    return 0
+  fi
+
+  # list 行：[ENABLED (1)] kernel_umount (ID=1) / [DISABLED] ...
+  if printf '%s\n' "$_raw" | grep -qiE '\[ENABLED'; then
+    echo on
+    return 0
+  fi
+  if printf '%s\n' "$_raw" | grep -qiE '\[DISABLED\]'; then
+    echo off
+    return 0
+  fi
+  if printf '%s\n' "$_raw" | grep -qiE '\[NOT_SUPPORTED\]'; then
+    echo na
+    return 0
+  fi
+
+  # 兜底：整段里找 value=1 / enabled（避免误伤 Description 里的 not）
+  if printf '%s' "$_raw" | grep -qiE 'value[=:][[:space:]]*[1-9]|Status:[[:space:]]*enabled'; then
+    echo on
+    return 0
+  fi
+  if printf '%s' "$_raw" | grep -qiE 'value[=:][[:space:]]*0|Status:[[:space:]]*disabled'; then
+    echo off
     return 0
   fi
   echo na
 }
 
-# 探测「内核级卸载 / Kernel umount」
-# SukiSU / ReSukiSU / KSU-Next：feature 名 kernel_umount，id=1（见 ksud feature.rs）
-# 缓存 ksud_feat：1=on 0=off n=na（无此 feature 的构建）
+# 单次 feature get（合并 stderr；勿因非 0 退出码丢掉 stdout）
+hide_ksud_feature_get_raw() {
+  _name="$1"
+  _ksud=$(hide_resolve_ksud) || return 1
+  _out=$("$_ksud" feature get "$_name" 2>&1) || true
+  [ -n "$_out" ] || return 1
+  if printf '%s' "$_out" | grep -qiE '^usage:|unknown feature:'; then
+    return 1
+  fi
+  printf '%s' "$_out"
+}
+
+# 从 feature list 抽 kernel_umount 行
+hide_ksud_feature_list_ku_line() {
+  _ksud=$(hide_resolve_ksud) || return 1
+  _list=$("$_ksud" feature list 2>&1) || true
+  [ -n "$_list" ] || return 1
+  printf '%s\n' "$_list" | grep -i 'kernel_umount' | head -n 1
+}
+
+# 探测「内核级卸载 / Kernel umount」全局开关
+# 有 feature 子系统的构建（官方新版 KernelSU / KSU-Next / SukiSU / ReSukiSU 等）：
+#   名 kernel_umount，id=1；get 输出 Value:/Status: 或 list 行 [ENABLED]/DISABLED]
+# 无 feature 的老官方 KernelSU：返回 na（不展示此项；应用级「卸载模块」见助手 ksu_umount）
+# 开关可随时改：不缓存 on/off
 hide_ksud_umount_feature_probe() {
-  cached=$(hide_probe_cache_get ksud_feat 2>/dev/null) || cached=
-  case "$cached" in
-    1|0|n)
-      echo "$cached"
-      return 0
-      ;;
-  esac
-  [ -x /data/adb/ksu/bin/ksud ] || {
-    hide_probe_cache_set ksud_feat n
+  hide_resolve_ksud >/dev/null 2>&1 || {
     echo n
     return 0
   }
 
-  _list=$(/data/adb/ksu/bin/ksud feature list 2>/dev/null) || _list=
-  _feat=$(/data/adb/ksu/bin/ksud feature get kernel_umount 2>/dev/null) || _feat=
-  _has_ku=0
-  if printf '%s' "$_list" | grep -qi 'kernel_umount'; then
-    _has_ku=1
-  elif [ -n "$_feat" ]; then
-    _has_ku=1
-  fi
-  # list 含 kernel_umount 但 get 名失败时，用 id=1（SukiSU: KernelUmount=1）
-  if [ -z "$_feat" ] && [ "$_has_ku" = "1" ]; then
-    _feat=$(/data/adb/ksu/bin/ksud feature get 1 2>/dev/null) || _feat=
-  fi
-  # 无 list、名 get 也失败：再试 id=1，仅当回包像 feature 状态
-  if [ -z "$_feat" ] && [ "$_has_ku" != "1" ]; then
-    _try=$(/data/adb/ksu/bin/ksud feature get 1 2>/dev/null) || _try=
-    if [ -n "$_try" ] && printf '%s' "$_try" | grep -qiE 'value|enabled|true|false|^[01]$'; then
-      _feat=$_try
-      _has_ku=1
-    fi
+  _feat=
+  for _try_name in kernel_umount 1; do
+    _feat=$(hide_ksud_feature_get_raw "$_try_name") || _feat=
+    [ -n "$_feat" ] && break
+  done
+
+  # get 失败时用 list 行兜底
+  if [ -z "$_feat" ]; then
+    _feat=$(hide_ksud_feature_list_ku_line) || _feat=
   fi
 
-  if [ "$_has_ku" != "1" ] || [ -z "$_feat" ]; then
-    hide_probe_cache_set ksud_feat n
+  if [ -z "$_feat" ]; then
     echo n
     return 0
   fi
 
   case "$(hide_ksud_parse_feature_state "$_feat")" in
-    on)
-      hide_probe_cache_set ksud_feat 1
-      echo 1
-      ;;
-    off)
-      hide_probe_cache_set ksud_feat 0
-      echo 0
-      ;;
-    *)
-      hide_probe_cache_set ksud_feat n
-      echo n
-      ;;
+    on) echo 1 ;;
+    off) echo 0 ;;
+    *) echo n ;;
   esac
 }
 
@@ -382,17 +473,15 @@ hide_ksud_umount_feature_on() {
 
 # 登记前尽量打开「内核级卸载」（与管理器同开关）
 hide_ensure_ksud_umount_feature() {
-  [ -x /data/adb/ksu/bin/ksud ] || return 1
+  _ksud=$(hide_resolve_ksud) || return 1
   _st=$(hide_ksud_umount_feature_probe)
   [ "$_st" = "1" ] && return 0
   [ "$_st" = "n" ] && return 0
-  /data/adb/ksu/bin/ksud feature set kernel_umount 1 >/dev/null 2>&1 && {
-    hide_probe_cache_set ksud_feat 1
+  "$_ksud" feature set kernel_umount 1 >/dev/null 2>&1 && {
     log_info "hide: enabled feature kernel_umount"
     return 0
   }
-  /data/adb/ksu/bin/ksud feature set 1 1 >/dev/null 2>&1 && {
-    hide_probe_cache_set ksud_feat 1
+  "$_ksud" feature set 1 1 >/dev/null 2>&1 && {
     log_info "hide: enabled feature id=1 (kernel_umount)"
     return 0
   }

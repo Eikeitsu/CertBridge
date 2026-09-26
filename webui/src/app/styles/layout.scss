@@ -122,6 +122,14 @@
   display: block;
 }
 
+.bf-tab-pending {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+  padding: var(--bf-space-lg);
+}
+
 .bf-stack {
   display: flex;
   flex-direction: column;

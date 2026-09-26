@@ -20,6 +20,7 @@ import { TabName } from "@/entities/module/enums";
 import { AppSnackbar } from "@/shared/ui/AppSnackbar";
 import { ConfirmHost } from "@/shared/ui/ConfirmHost";
 import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
+import { DeferredTabPane } from "@/features/shell/ui/DeferredTabPane";
 import { ConsoleHomePage } from "./pages/HomePage";
 import { ConsoleCertsPage } from "./pages/CertsPage";
 import { ConsoleLogPage } from "./pages/LogPage";
@@ -46,12 +47,9 @@ function Pane({
   children: React.ReactNode;
 }) {
   return (
-    <section
-      className={`pk-con-pane${active === tab ? " is-on" : ""}`}
-      aria-hidden={active !== tab}
-    >
-      {seen ? children : null}
-    </section>
+    <DeferredTabPane active={active === tab} seen={seen} className="pk-con-pane">
+      {children}
+    </DeferredTabPane>
   );
 }
 
@@ -126,7 +124,10 @@ export function ConsoleShell() {
               key={tab.key}
               type="button"
               className={`pk-con-dock__item${activeTab === tab.key ? " is-on" : ""}`}
-              onClick={() => switchTab(tab.key)}
+              onClick={() => {
+                setSeen((prev) => (prev[tab.key] ? prev : { ...prev, [tab.key]: true }));
+                switchTab(tab.key);
+              }}
             >
               <Icon size={16} strokeWidth={1.5} />
               <span>{tab.label}</span>

@@ -11,14 +11,7 @@ detect_hide_assistants() {
   _pre_k="${2-}"
   _pre_n="${3-}"
 
-  # 无预传参时：整表 boot 缓存（模块目录扫描 + Root 类型很便宜，贵的是 SuSFS/ksud）
-  if [ -z "$_pre_s" ] && [ -z "$_pre_k" ] && [ -z "$_pre_n" ]; then
-    cached=$(hide_probe_cache_get assistants 2>/dev/null) || cached=
-    if [ -n "$cached" ]; then
-      echo "$cached"
-      return 0
-    fi
-  fi
+  # 助手含 Shamiko / ZygiskNext 等可随时启停模块：每次实扫，不读 boot 整表缓存
 
   list=
   _add() {
@@ -74,9 +67,6 @@ detect_hide_assistants() {
 
   out=
   [ -n "$list" ] && out=$list || out=none
-  if [ -z "$_pre_s" ] && [ -z "$_pre_k" ] && [ -z "$_pre_n" ]; then
-    hide_probe_cache_set assistants "$out"
-  fi
   echo "$out"
 }
 
@@ -198,7 +188,7 @@ emit_hide_status() {
 
   hide_ku=0
   hide_ku_known=0
-  if [ "$_hk" = "1" ] || [ -x /data/adb/ksu/bin/ksud ]; then
+  if [ "$_hk" = "1" ] || hide_resolve_ksud >/dev/null 2>&1; then
     _ku_st=$(hide_ksud_umount_feature_probe 2>/dev/null) || _ku_st=n
     case "$_ku_st" in
       1)
@@ -220,8 +210,6 @@ emit_hide_status() {
   echo "hide_kernel_umount_feature_known=$hide_ku_known"
 
   assistants=$(detect_hide_assistants "$_hs" "$_hk" "$_hn")
-  # 带预传参时未写 assistants 缓存，这里补上供同 boot 后续 status
-  hide_probe_cache_set assistants "$assistants" 2>/dev/null || true
   echo "hide_assistants=$assistants"
   echo "hide_assistants_label=$(hide_assistants_label "$assistants")"
   provider=$(detect_hide_provider "$assistants")

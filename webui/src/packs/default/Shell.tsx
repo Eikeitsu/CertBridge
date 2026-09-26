@@ -16,6 +16,7 @@ import { brandModuleIconSrc } from "@/shared/config/brand";
 import { AppSnackbar } from "@/shared/ui/AppSnackbar";
 import { ConfirmHost } from "@/shared/ui/ConfirmHost";
 import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
+import { DeferredTabPane } from "@/features/shell/ui/DeferredTabPane";
 import { DefaultHomePage } from "./pages/HomePage";
 import { DefaultCertsPage } from "./pages/CertsPage";
 import { DefaultLogPage } from "./pages/LogPage";
@@ -42,12 +43,9 @@ function Pane({
   children: React.ReactNode;
 }) {
   return (
-    <section
-      className={`pk-def-pane${active === tab ? " is-on" : ""}`}
-      aria-hidden={active !== tab}
-    >
-      {seen ? children : null}
-    </section>
+    <DeferredTabPane active={active === tab} seen={seen} className="pk-def-pane">
+      {children}
+    </DeferredTabPane>
   );
 }
 
@@ -128,7 +126,11 @@ export function DefaultShell() {
               key={tab.key}
               type="button"
               className={`pk-def-dock__item${activeTab === tab.key ? " is-on" : ""}`}
-              onClick={() => switchTab(tab.key)}
+              onClick={() => {
+                // 先标 seen，让空壳/Loading 立刻可切，再 navigate
+                setSeen((prev) => (prev[tab.key] ? prev : { ...prev, [tab.key]: true }));
+                switchTab(tab.key);
+              }}
             >
               <span className="pk-def-dock__icon">
                 <Icon strokeWidth={activeTab === tab.key ? 2.4 : 1.8} />

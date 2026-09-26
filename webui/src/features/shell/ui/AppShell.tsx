@@ -46,13 +46,19 @@ export function AppShell() {
     [tabs, voice],
   );
 
+  const goTab = (name: TabName) => {
+    setSeen((prev) => (prev[name] ? prev : { ...prev, [name]: true }));
+    switchTab(name);
+  };
+
   useEffect(() => {
     setSeen((prev) => (prev[activeTab] ? prev : { ...prev, [activeTab]: true }));
   }, [activeTab]);
 
   useEffect(() => {
-    if (!showHideTab && activeTab === TabName.Hide) switchTab(TabName.Home);
-  }, [showHideTab, activeTab, switchTab]);
+    if (!showHideTab && activeTab === TabName.Hide) goTab(TabName.Home);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only redirect when hide tab hidden
+  }, [showHideTab, activeTab]);
 
   return (
     <div className="bf-shell">
@@ -91,7 +97,7 @@ export function AppShell() {
           <SettingsPage />
         </AppTabPane>
       </main>
-      <AppDock activeTab={activeTab} onSwitch={switchTab} tabs={visibleTabs} />
+      <AppDock activeTab={activeTab} onSwitch={goTab} tabs={visibleTabs} />
       <AppSnackbar />
       <ConfirmHost />
     </div>

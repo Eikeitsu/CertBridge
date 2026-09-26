@@ -15,6 +15,7 @@ import { TabName } from "@/entities/module/enums";
 import { AppSnackbar } from "@/shared/ui/AppSnackbar";
 import { ConfirmHost } from "@/shared/ui/ConfirmHost";
 import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
+import { DeferredTabPane } from "@/features/shell/ui/DeferredTabPane";
 import { OpsHomePage } from "./pages/HomePage";
 import { OpsCertsPage } from "./pages/CertsPage";
 import { OpsLogPage } from "./pages/LogPage";
@@ -41,12 +42,9 @@ function Pane({
   children: React.ReactNode;
 }) {
   return (
-    <section
-      className={`pk-ops-pane${active === tab ? " is-on" : ""}`}
-      aria-hidden={active !== tab}
-    >
-      {seen ? children : null}
-    </section>
+    <DeferredTabPane active={active === tab} seen={seen} className="pk-ops-pane">
+      {children}
+    </DeferredTabPane>
   );
 }
 
@@ -122,7 +120,10 @@ export function OpsShell() {
               key={tab.key}
               type="button"
               className={`pk-ops-dock__item${activeTab === tab.key ? " is-on" : ""}`}
-              onClick={() => switchTab(tab.key)}
+              onClick={() => {
+                setSeen((prev) => (prev[tab.key] ? prev : { ...prev, [tab.key]: true }));
+                switchTab(tab.key);
+              }}
             >
               <Icon size={18} strokeWidth={activeTab === tab.key ? 2.2 : 1.7} />
               <span>{tab.label}</span>

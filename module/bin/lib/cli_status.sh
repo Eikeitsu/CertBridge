@@ -91,6 +91,11 @@ cmd_status() {
   if [ "$live" = "1" ]; then
     clear_stale_hot_update_marker 2>/dev/null || true
     live_finalize_runtime_status live >/dev/null 2>&1 || true
+    # 刷新时重探「通道」类缓存（SuSFS/ksud 能力）；开关态已每次实读
+    hide_probe_cache_unset ksud_umount 2>/dev/null || true
+    hide_probe_cache_unset susfs_kernel 2>/dev/null || true
+    hide_probe_cache_unset nohello 2>/dev/null || true
+    hide_probe_cache_unset ksud_feat 2>/dev/null || true
   fi
 
   api=$(get_api)

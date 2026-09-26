@@ -1,8 +1,9 @@
-import { useMemo } from "react";
+import { useMemo, useDeferredValue } from "react";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { clearActivityLog, fetchActivityLog } from "@/features/log/model/logSlice";
 import { selectActivityLog } from "@/features/log/model/selectors";
 import { useLogLevelFilter } from "@/features/log/hooks/useLogLevelFilter";
+import { useEnsureActivityLog } from "@/features/log/hooks/useEnsureActivityLog";
 import { formatByteSize } from "@/features/log/lib/formatByteSize";
 import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
 import { toast } from "@/shared/api/ksu";
@@ -18,12 +19,15 @@ export function LogPage() {
   const { text, loading, bytes, lines } = useAppSelector(selectActivityLog);
   const [levelFilter, setLevelFilter] = useLogLevelFilter();
   const { voice } = usePackVoice();
+  useEnsureActivityLog();
+  const deferredText = useDeferredValue(text);
 
-  const entries = useMemo(() => parseLogText(text), [text]);
+  const entries = useMemo(() => parseLogText(deferredText), [deferredText]);
   const filteredEntries = useMemo(
     () => filterLogEntries(entries, levelFilter),
     [entries, levelFilter],
   );
+  const parsing = deferredText !== text;
 
   const handleRefresh = async () => {
     const action = await dispatch(fetchActivityLog());
@@ -60,7 +64,7 @@ export function LogPage() {
           clearLabel={voice.log.clear}
         />
         <LogViewer
-          loading={loading}
+          loading={loading || parsing}
           entries={filteredEntries}
           levelFilter={levelFilter}
           emptyFiltered={voice.log.emptyFiltered}

@@ -1,10 +1,11 @@
-import { useMemo } from "react";
+import { useMemo, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { clearActivityLog, fetchActivityLog } from "@/features/log/model/logSlice";
 import { selectActivityLog } from "@/features/log/model/selectors";
 import { useLogLevelFilter } from "@/features/log/hooks/useLogLevelFilter";
 import { useLogWrap } from "@/features/log/hooks/useLogWrap";
+import { useEnsureActivityLog } from "@/features/log/hooks/useEnsureActivityLog";
 import { formatByteSize } from "@/features/log/lib/formatByteSize";
 import { toast } from "@/shared/api/ksu";
 import { confirmAction } from "@/shared/lib/confirmAction";
@@ -22,12 +23,15 @@ export function ConsoleLogPage() {
   const { text, loading, bytes, lines } = useAppSelector(selectActivityLog);
   const [levelFilter, setLevelFilter] = useLogLevelFilter();
   const [wrap, setWrap] = useLogWrap();
+  useEnsureActivityLog();
+  const deferredText = useDeferredValue(text);
   const v = chrome.log;
-  const entries = useMemo(() => parseLogText(text), [text]);
+  const entries = useMemo(() => parseLogText(deferredText), [deferredText]);
   const filtered = useMemo(
     () => filterLogEntries(entries, levelFilter),
     [entries, levelFilter],
   );
+  const parsing = deferredText !== text;
 
   const levelLabel = (lv: string) => {
     if (!lv) return t("log.levelAll");
@@ -82,7 +86,7 @@ export function ConsoleLogPage() {
           {v.clear}
         </button>
       </div>
-      {loading ? (
+      {loading || parsing ? (
         <Loader label={t("log.loading")} />
       ) : (
         <section className="pk-con-termframe">

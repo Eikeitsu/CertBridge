@@ -4,6 +4,7 @@ import { selectModuleStatus } from "@/features/status/model/selectors";
 import { isFlagOn } from "@/shared/lib/flag";
 import { useHideAllow } from "@/features/hide/hooks/useHideAllow";
 import { useZnHideAllow } from "@/features/hide/hooks/useZnHideAllow";
+import { useEnsureHideStatus } from "@/features/hide/hooks/useEnsureHideStatus";
 import { HideAllowRow } from "@/features/hide/ui/HideAllowRow";
 import { HideCaptureWarning } from "@/features/hide/ui/HideCaptureWarning";
 import { HideStatusCard } from "@/features/hide/ui/HideStatusCard";
@@ -19,6 +20,7 @@ export function ConsoleHidePage() {
   const chrome = usePackChrome();
   const hide = useHideAllow();
   const zn = useZnHideAllow();
+  useEnsureHideStatus();
   const status = useAppSelector(selectModuleStatus);
   const { voice } = usePackVoice();
   const h = voice.hide;

@@ -24,8 +24,8 @@ hide_try_ksud_umount_del() {
   case "$target" in
     */) target=${target%/} ;;
   esac
-  [ -x /data/adb/ksu/bin/ksud ] || return 1
-  /data/adb/ksu/bin/ksud kernel umount del "$target" >/dev/null 2>&1
+  _ksud=$(hide_resolve_ksud) || return 1
+  "$_ksud" kernel umount del "$target" >/dev/null 2>&1
 }
 
 # 关闭 hide_allow 时：对已知 cacerts 路径做内核 del（不 wipe 全表，避免误伤其它模块）

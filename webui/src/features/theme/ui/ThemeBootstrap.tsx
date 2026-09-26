@@ -8,7 +8,6 @@ import {
   enrichFullStatus,
 } from "@/features/status/model/statusSlice";
 import { selectModuleStatus } from "@/features/status/model/selectors";
-import { fetchActivityLog } from "@/features/log/model/logSlice";
 import { resolveUiLang, type UiLangPref } from "@/shared/i18n";
 import { STORAGE_KEYS } from "@/shared/config/paths";
 import { writeStorage } from "@/shared/lib/storage";
@@ -39,9 +38,7 @@ export function ThemeBootstrap({ children }: { children: ReactNode }) {
         void dispatch(enrichFullStatus());
       }, 4000);
     });
-    deferIdle(() => {
-      void dispatch(fetchActivityLog());
-    }, 5000);
+    // 日志改由日志页挂载后再拉，避免与 enrich 抢桥导致切 Tab 卡住
     const mediaQuery = window.matchMedia?.("(prefers-color-scheme: dark)");
     const handleSchemeChange = () => dispatch(refreshSystemTheme());
     mediaQuery?.addEventListener("change", handleSchemeChange);

@@ -46,6 +46,13 @@ fi
 # 避免「已卸绑定但新集合未建好」的空窗长期残留。
 export CERTBRIDGE_HOT_UPDATE=1
 
+# 作废本 boot 内旧探测缓存（否则热更后仍显示过期的「无 kernel_umount」）
+if type hide_probe_cache_clear >/dev/null 2>&1; then
+	hide_probe_cache_clear 2>/dev/null || true
+else
+	rm -f "${STATEDIR}/hide-probe.cache" 2>/dev/null || true
+fi
+
 # 永久注入依赖 post-fs-data 生成 + service 加固命名空间
 if [ -f "$MODDIR/post-fs-data.sh" ]; then
 	sh "$MODDIR/post-fs-data.sh" >/dev/null 2>&1 || true

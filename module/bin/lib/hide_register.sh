@@ -6,9 +6,9 @@
 hide_try_ksud_umount_add() {
   target="$1"
   [ -n "$target" ] || return 1
-  [ -x /data/adb/ksu/bin/ksud ] || return 1
+  _ksud=$(hide_resolve_ksud) || return 1
   hide_ensure_ksud_umount_feature 2>/dev/null || true
-  /data/adb/ksu/bin/ksud kernel umount add "$target" --flags 2 >/dev/null 2>&1
+  "$_ksud" kernel umount add "$target" --flags 2 >/dev/null 2>&1
 }
 
 # 从内核 try_umount 列表删除单路径（KSU-Next：ksud kernel umount del）
@@ -188,7 +188,7 @@ hide_assist_for_target() {
     log_info "hide: ksud kernel umount registered ($target)"
     hide_probe_cache_set ksud_umount 1
     live=1
-  elif [ -x /data/adb/ksu/bin/ksud ]; then
+  elif hide_resolve_ksud >/dev/null 2>&1; then
     log_warn "hide: ksud kernel umount add failed ($target)"
   fi
 
@@ -205,7 +205,7 @@ hide_assist_for_target() {
   elif [ "$file_ok" = "1" ]; then
     log_info "hide: path in try_umount.txt only ($target); await susfs4ksu boot-completed"
   elif ! hide_susfs_bin_present && ! hide_susfs4ksu_module_present && \
-      ! [ -x /data/adb/ksu/bin/ksud ] && ! hide_nohello_available; then
+      ! hide_resolve_ksud >/dev/null 2>&1 && ! hide_nohello_available; then
     log_warn "hide: hide_allow=1 but no SuSFS/ksud/NoHello; Magisk/APatch 请装 NoHello 或 ZygiskNext umount"
   fi
   return 0

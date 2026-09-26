@@ -9,6 +9,7 @@ import {
 import { isFlagOn } from "@/shared/lib/flag";
 import { useHideAllow } from "../hooks/useHideAllow";
 import { useZnHideAllow } from "../hooks/useZnHideAllow";
+import { useEnsureHideStatus } from "../hooks/useEnsureHideStatus";
 import { HideAllowRow } from "./HideAllowRow";
 import { HideCaptureWarning } from "./HideCaptureWarning";
 import { HideIntroCard } from "./HideIntroCard";
@@ -22,6 +23,7 @@ import { HideExperimentPanel } from "./HideExperimentPanel";
 export function HidePage() {
   const hide = useHideAllow();
   const zn = useZnHideAllow();
+  useEnsureHideStatus();
   const status = useAppSelector(selectModuleStatus);
   const bootstrapped = useAppSelector(selectStatusBootstrapped);
   const { voice } = usePackVoice();

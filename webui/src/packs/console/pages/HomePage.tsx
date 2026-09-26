@@ -1,10 +1,9 @@
-import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { selectStatusBootstrapped } from "@/features/status/model/selectors";
 import { refreshStatus } from "@/features/status/model/statusSlice";
 import { useTrustOverview } from "@/features/overview/hooks/useTrustOverview";
-import { TrustTone } from "@/entities/module/enums";
+import { useStabilizingRefresh } from "@/features/overview/hooks/useStabilizingRefresh";
 import { confirmAction } from "@/shared/lib/confirmAction";
 import { rebootDevice } from "@/shared/api/cli";
 import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
@@ -17,22 +16,7 @@ export function ConsoleHomePage() {
   const bootstrapped = useAppSelector(selectStatusBootstrapped);
   const v = chrome.home;
 
-  const title = overview.trust.title || "";
-  const stabilizing =
-    overview.trust.tone === TrustTone.Idle &&
-    (/Stable|Inject|Check|Boot|Pending/.test(title) ||
-      title.includes("\u2728") ||
-      title.includes("\u{1F50D}"));
-
-  useEffect(() => {
-    if (!bootstrapped || !stabilizing) return;
-    const timers = [2500, 8000].map((ms) =>
-      window.setTimeout(() => {
-        void dispatch(refreshStatus({ toast: false, syncApps: false, live: true }));
-      }, ms),
-    );
-    return () => timers.forEach((id) => window.clearTimeout(id));
-  }, [bootstrapped, stabilizing, dispatch]);
+  useStabilizingRefresh(bootstrapped, overview.trust.title || "", overview.trust.tone);
 
   const tone = overview.trust.tone;
 

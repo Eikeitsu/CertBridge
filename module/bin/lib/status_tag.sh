@@ -107,7 +107,9 @@ compute_status_tag() {
     i18n_msg status.tag_error
     return 0
   fi
-  i18n_msg status.tag_detect
+
+  # 无新鲜 runtime 缓存时：用已应用证书乐观展示，避免 WebUI 首屏卡在「检测中」再触发 --live
+  format_running_ok_tag
 }
 
 update_module_description() {

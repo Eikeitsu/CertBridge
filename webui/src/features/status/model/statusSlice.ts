@@ -94,22 +94,26 @@ export const bootstrapStatus = createAsyncThunk("status/bootstrap", async () => 
   return { status };
 });
 
-/** 非阻塞补齐：设备文案 + 自定义列表 + 完整 status（补 hide/zygisk） */
+/** 非阻塞补齐：设备文案 + 自定义列表（不含完整 status，避免首屏卡在 hide/zygisk 探测） */
 export const enrichBootstrapMeta = createAsyncThunk("status/enrichMeta", async () => {
-  const [device, customCertificates, status] = await Promise.all([
+  const [device, customCertificates] = await Promise.all([
     fetchDeviceInfo().catch(() => ({
       label: i18n.t("ui.deviceLocal"),
       name: i18n.t("ui.deviceLocal"),
     })),
     listCustom().catch(() => [] as CustomCertificate[]),
-    fetchStatus().catch(() => null),
   ]);
   return {
     deviceLabel: device.label,
     deviceName: device.name,
     customCertificates,
-    status,
   };
+});
+
+/** 空闲时再补完整 status（隐藏助手 / Zygisk 等慢路径） */
+export const enrichFullStatus = createAsyncThunk("status/enrichFull", async () => {
+  const status = await fetchStatus().catch(() => null);
+  return { status };
 });
 
 function formatSyncToast(sync: {
@@ -195,6 +199,8 @@ const statusSlice = createSlice({
         state.deviceLabel = action.payload.deviceLabel;
         state.deviceName = action.payload.deviceName;
         state.customCertificates = action.payload.customCertificates;
+      })
+      .addCase(enrichFullStatus.fulfilled, (state, action) => {
         if (action.payload.status) {
           state.status = action.payload.status;
           state.lastRefreshedAt = formatClockTime();

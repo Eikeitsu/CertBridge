@@ -1,11 +1,11 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
+import { useAppSelector } from "@/app/store/hooks";
 import { selectStatusBootstrapped } from "@/features/status/model/selectors";
-import { refreshStatus } from "@/features/status/model/statusSlice";
 import { useTrustOverview } from "@/features/overview/hooks/useTrustOverview";
+import { useStabilizingRefresh } from "@/features/overview/hooks/useStabilizingRefresh";
 import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
-import { ThemePack, TrustTone } from "@/entities/module/enums";
+import { ThemePack } from "@/entities/module/enums";
 import { PageStack } from "@/shared/ui/layout";
 import { Tag } from "@/shared/ui/primitives";
 import { HelpCollapse } from "@/shared/ui/HelpCollapse";
@@ -16,25 +16,11 @@ import { BuiltinPipelineCard } from "./BuiltinPipelineCard";
 
 export function OverviewPage() {
   const { t } = useTranslation("webui");
-  const dispatch = useAppDispatch();
   const overview = useTrustOverview();
   const bootstrapped = useAppSelector(selectStatusBootstrapped);
   const { pack, voice } = usePackVoice();
 
-  const stabilizing =
-    overview.trust.tone === TrustTone.Idle &&
-    (/Stable|Inject|Check|Boot|Pending/.test(overview.trust.title) ||
-      /稳定中|注入中|检测中/.test(overview.trust.title));
-
-  useEffect(() => {
-    if (!bootstrapped || !stabilizing) return;
-    const timers = [2500, 8000].map((ms) =>
-      window.setTimeout(() => {
-        void dispatch(refreshStatus({ toast: false, syncApps: false, live: true }));
-      }, ms),
-    );
-    return () => timers.forEach((id) => window.clearTimeout(id));
-  }, [bootstrapped, stabilizing, dispatch]);
+  useStabilizingRefresh(bootstrapped, overview.trust.title || "", overview.trust.tone);
 
   const desc =
     overview.injectDiagnosis?.hint ||

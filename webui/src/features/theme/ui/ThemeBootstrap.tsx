@@ -5,6 +5,7 @@ import { hydrateTheme, refreshSystemTheme } from "@/features/theme/model/themeSl
 import {
   bootstrapStatus,
   enrichBootstrapMeta,
+  enrichFullStatus,
 } from "@/features/status/model/statusSlice";
 import { selectModuleStatus } from "@/features/status/model/selectors";
 import { fetchActivityLog } from "@/features/log/model/logSlice";
@@ -12,12 +13,12 @@ import { resolveUiLang, type UiLangPref } from "@/shared/i18n";
 import { STORAGE_KEYS } from "@/shared/config/paths";
 import { writeStorage } from "@/shared/lib/storage";
 
-function deferIdle(fn: () => void) {
+function deferIdle(fn: () => void, timeout = 2500) {
   if (typeof window.requestIdleCallback === "function") {
-    window.requestIdleCallback(() => fn(), { timeout: 2500 });
+    window.requestIdleCallback(() => fn(), { timeout });
     return;
   }
-  window.setTimeout(fn, 600);
+  window.setTimeout(fn, Math.min(600, timeout));
 }
 
 function applyDocumentLang(lng: "zh-CN" | "en") {
@@ -31,13 +32,16 @@ export function ThemeBootstrap({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     dispatch(hydrateTheme());
-    // 先拉 status 进页；设备名 / 自定义列表 / 日志后台补
+    // 首屏：status --quick → 立刻可交互；设备名/证书列表后台补；完整 status 再延后
     void dispatch(bootstrapStatus()).finally(() => {
       void dispatch(enrichBootstrapMeta());
+      deferIdle(() => {
+        void dispatch(enrichFullStatus());
+      }, 4000);
     });
     deferIdle(() => {
       void dispatch(fetchActivityLog());
-    });
+    }, 5000);
     const mediaQuery = window.matchMedia?.("(prefers-color-scheme: dark)");
     const handleSchemeChange = () => dispatch(refreshSystemTheme());
     mediaQuery?.addEventListener("change", handleSchemeChange);

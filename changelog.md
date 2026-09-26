@@ -1,7 +1,7 @@
 # CertBridge CI
 
 
-- **切 Tab 不卡旧页**：隐藏/日志等首次切换先上 Loading 再挂重树；日志进页后再拉、解析用 deferred；完整 hide 探测进隐藏页再补
+- **切 Tab**：乐观切换（不等路由）；Loading 只画在可见页；首屏后空闲预热其它 Tab，避免首次点击才挂重树
 - **kernel_umount 探测**：热路径去掉慢的 `feature list`；`na` 不缓存（刷新可重探）；`--live` 清 feat 缓存；兼容 `kernel_umount`/`KernelUmount`/id=1
 - **SuSFS 探测**：去掉 `ksud` 帮助假阳性；用 `gzip`/`toybox` 读 config.gz；认 `CONFIG_KSU_SUSFS`、`ksu_susfs` 通信、合法版本文件；阴性不缓存以免漏检
 - **ksud umount 探测收紧**：去掉对 `usage` 等帮助词的匹配，改为子命令/feature 实义特征

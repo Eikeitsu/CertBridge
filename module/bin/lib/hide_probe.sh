@@ -16,7 +16,8 @@ hide_assist_enabled() {
   [ "$(read_conf hide_allow 0)" = "1" ]
 }
 
-# susfs4ksu 模块开机 post-mount 会按此文件重登记（仅在目录存在时写入）
+# 仅 susfs4ksu / resusfs 等「模块」会开机读此文件重登记。
+# SukiSU/BakaSU 自带 SuSFS 管理页不读这里（读 App SharedPreferences），无对应模块时写了也无效。
 SUSFS_TRY_UMOUNT_FILE="${SUSFS_TRY_UMOUNT_FILE:-/data/adb/susfs4ksu/try_umount.txt}"
 # NoHello Mount Rule System（≥0.0.5）：按 App 排除列表 umount 时匹配这些 point
 NOHELLO_DIR="${NOHELLO_DIR:-/data/adb/nohello}"
@@ -144,10 +145,40 @@ hide_kernel_has_susfs() {
   return 1
 }
 
+# sidex15 susfs4ksu 是否已安装（modules 目录在即可，含 disable）
+hide_susfs4ksu_module_installed() {
+  [ -d /data/adb/modules/susfs4ksu ] || [ -d /data/adb/modules_update/susfs4ksu ]
+}
+
+# 其它 resusfs 类模块配置目录是否有对应模块
+_hide_susfs_persist_module_ok() {
+  _cfg="$1"
+  case "$_cfg" in
+    /data/adb/susfs4ksu) hide_susfs4ksu_module_installed ;;
+    /data/adb/resusfs)
+      [ -d /data/adb/modules/resusfs ] || [ -d /data/adb/modules_update/resusfs ]
+      ;;
+    /data/adb/ReSuFS)
+      [ -d /data/adb/modules/ReSuFS ] || [ -d /data/adb/modules_update/ReSuFS ]
+      ;;
+    *) return 1 ;;
+  esac
+}
+
+# 清理误建且无模块消费的配置目录（旧版 mkdir 遗留）
+hide_cleanup_orphan_susfs_persist_dirs() {
+  if [ -d /data/adb/susfs4ksu ] && ! hide_susfs4ksu_module_installed; then
+    rm -rf /data/adb/susfs4ksu 2>/dev/null || true
+    log_info "hide: removed orphan /data/adb/susfs4ksu (susfs4ksu module not installed)"
+  fi
+}
+
 # 可选：管理器配置目录（仅用于 try_umount.txt 持久化，不作为「有无 SuSFS」判据）
 hide_susfs_persist_dir_hint() {
   for d in /data/adb/susfs4ksu /data/adb/resusfs /data/adb/ReSuFS; do
-    [ -d "$d" ] && return 0
+    [ -d "$d" ] || continue
+    _hide_susfs_persist_module_ok "$d" || continue
+    return 0
   done
   for prop in /data/adb/modules/*/module.prop; do
     [ -f "$prop" ] || continue
@@ -163,17 +194,17 @@ hide_susfs_persist_dir_hint() {
   return 1
 }
 
-# 解析 try_umount 持久化文件：有管理器目录才写；没有则只靠本模块当场 ksud/ksu_susfs 登记
+# 解析 try_umount 持久化文件：仅当对应 susfs 模块已安装且配置目录存在才写。
 hide_resolve_susfs_try_umount_file() {
-  if [ -n "${SUSFS_TRY_UMOUNT_FILE:-}" ]; then
-    echo "$SUSFS_TRY_UMOUNT_FILE"
+  if [ -n "${SUSFS_TRY_UMOUNT_FILE_OVERRIDE:-}" ]; then
+    echo "$SUSFS_TRY_UMOUNT_FILE_OVERRIDE"
     return 0
   fi
   for d in /data/adb/susfs4ksu /data/adb/resusfs /data/adb/ReSuFS; do
-    if [ -d "$d" ]; then
-      echo "$d/try_umount.txt"
-      return 0
-    fi
+    [ -d "$d" ] || continue
+    _hide_susfs_persist_module_ok "$d" || continue
+    echo "$d/try_umount.txt"
+    return 0
   done
   return 1
 }
@@ -278,7 +309,7 @@ hide_susfs4ksu_module_present() {
 hide_susfs_manager_hint() {
   hide_susfs_persist_dir_hint
 }
-# 解析 ksud 二进制：官方 / KSU-Next / SukiSU / ReSukiSU 等均落在 ksu 工作目录
+# 解析 ksud 二进制：官方 / KSU-Next / SukiSU / BakaSU(原 ReSukiSU) 等均落在 ksu 工作目录
 hide_resolve_ksud() {
   if [ -n "${KSUD_BIN:-}" ] && [ -x "$KSUD_BIN" ]; then
     echo "$KSUD_BIN"
@@ -434,7 +465,7 @@ hide_ksud_feature_list_ku_line() {
 }
 
 # 探测「内核级卸载 / Kernel umount」全局开关
-# 有 feature 子系统的构建（官方新版 KernelSU / KSU-Next / SukiSU / ReSukiSU 等）：
+# 有 feature 子系统的构建（官方新版 KernelSU / KSU-Next / SukiSU / BakaSU 等）：
 #   名 kernel_umount，id=1；get 输出 Value:/Status: 或 list 行 [ENABLED]/DISABLED]
 # 无 feature 的老官方 KernelSU：返回 na（不展示此项；应用级「卸载模块」见助手 ksu_umount）
 # 开关可随时改：不缓存 on/off

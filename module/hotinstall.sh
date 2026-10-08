@@ -52,6 +52,7 @@ if type hide_probe_cache_clear >/dev/null 2>&1; then
 else
 	rm -f "${STATEDIR}/hide-probe.cache" 2>/dev/null || true
 fi
+rm -f "${STATEDIR}/root-impl.cache" 2>/dev/null || true
 
 # 永久注入依赖 post-fs-data 生成 + service 加固命名空间
 if [ -f "$MODDIR/post-fs-data.sh" ]; then

@@ -3,12 +3,74 @@
 # 挂载隐藏协助（可选组件）
 # try_umount 登记与注入后回调
 
+# 退出码：0=新登记成功；2=已存在（视为成功）；1=失败（原因在 HIDE_UMOUNT_ERR）
+HIDE_UMOUNT_ERR=
+
+_hide_umount_err_is_exists() {
+  printf '%s' "$1" | grep -qiE \
+    'already|exist|exists|duplicate|duplicated|has been added|in (the )?list|registered'
+}
+
 hide_try_ksud_umount_add() {
   target="$1"
+  HIDE_UMOUNT_ERR=
   [ -n "$target" ] || return 1
   _ksud=$(hide_resolve_ksud) || return 1
   hide_ensure_ksud_umount_feature 2>/dev/null || true
-  "$_ksud" kernel umount add "$target" --flags 2 >/dev/null 2>&1
+  _out=$("$_ksud" kernel umount add "$target" --flags 2 2>&1)
+  _rc=$?
+  HIDE_UMOUNT_ERR=$(printf '%s' "$_out" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
+  if [ "$_rc" = "0" ]; then
+    # BakaSU：再写入 umount-config，管理器「卸载路径」页会标为持久并开机重载
+    hide_try_ksud_umount_config_add "$target" 2>/dev/null || true
+    return 0
+  fi
+  # 无退出码时仍可能 stderr 表示已在列表
+  if _hide_umount_err_is_exists "$HIDE_UMOUNT_ERR"; then
+    hide_try_ksud_umount_config_add "$target" 2>/dev/null || true
+    return 2
+  fi
+  # 部分构建：已存在也返回非 0 且无文案；用 list 确认
+  if "$_ksud" kernel umount list 2>/dev/null | grep -qxF "$target"; then
+    HIDE_UMOUNT_ERR="${HIDE_UMOUNT_ERR:-already in kernel umount list}"
+    hide_try_ksud_umount_config_add "$target" 2>/dev/null || true
+    return 2
+  fi
+  return 1
+}
+
+# BakaSU / 部分分支：ksud umount-config → /data/adb/ksu/.umount（管理器持久列表）
+# 无此子命令时静默跳过（官方 KSU / SukiSU 等）
+hide_try_ksud_umount_config_add() {
+  target="$1"
+  [ -n "$target" ] || return 1
+  _ksud=$(hide_resolve_ksud) || return 1
+  "$_ksud" umount-config add "$target" --flags 2 >/dev/null 2>&1 || \
+    "$_ksud" umount-config add "$target" >/dev/null 2>&1
+}
+
+hide_try_susfs_umount_add() {
+  target="$1"
+  HIDE_UMOUNT_ERR=
+  SUSFS_BIN=$(hide_resolve_susfs_bin) || return 1
+  _out=$("$SUSFS_BIN" add_try_umount "$target" 1 2>&1)
+  _rc=$?
+  if [ "$_rc" != "0" ]; then
+    _out2=$("$SUSFS_BIN" add_try_umount "$target" 2>&1)
+    _rc2=$?
+    if [ "$_rc2" = "0" ]; then
+      HIDE_UMOUNT_ERR=
+      return 0
+    fi
+    [ -n "$_out2" ] && _out="$_out2"
+    _rc=$_rc2
+  fi
+  HIDE_UMOUNT_ERR=$(printf '%s' "$_out" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
+  [ "$_rc" = "0" ] && return 0
+  if _hide_umount_err_is_exists "$HIDE_UMOUNT_ERR"; then
+    return 2
+  fi
+  return 1
 }
 
 # 从内核 try_umount 列表删除单路径（KSU-Next：ksud kernel umount del）
@@ -136,8 +198,9 @@ hide_persist_try_umount() {
   [ -n "$target" ] || return 1
   persist=$(hide_resolve_susfs_try_umount_file 2>/dev/null) || persist=
   [ -n "$persist" ] || return 1
+  # 目录须已由 susfs4ksu 等模块创建；不主动 mkdir 以免留下无人消费的空配置
   pdir=$(dirname "$persist")
-  mkdir -p "$pdir" 2>/dev/null || return 1
+  [ -d "$pdir" ] || return 1
   if [ ! -f "$persist" ]; then
     printf '%s\n' "# CertBridge cacerts try_umount paths" >"$persist" 2>/dev/null || return 1
   fi
@@ -170,26 +233,36 @@ hide_assist_for_target() {
 
   # 2) 当场登记：有 ksu_susfs 就试（不因 feature 探测失败而跳过）
   if hide_susfs_bin_present; then
-    if "$SUSFS_BIN" add_try_umount "$target" 1 2>/dev/null; then
+    hide_try_susfs_umount_add "$target"
+    _s_rc=$?
+    if [ "$_s_rc" = "0" ]; then
       log_info "hide: susfs try_umount registered ($target)"
       hide_probe_cache_set susfs_kernel 1
       live=1
-    elif "$SUSFS_BIN" add_try_umount "$target" >/dev/null 2>&1; then
-      log_info "hide: susfs try_umount registered legacy ($target)"
+    elif [ "$_s_rc" = "2" ]; then
+      log_debug "hide: susfs try_umount already present ($target)"
       hide_probe_cache_set susfs_kernel 1
       live=1
     else
-      log_warn "hide: susfs add_try_umount failed ($target)"
+      log_warn "hide: susfs add_try_umount failed ($target)${HIDE_UMOUNT_ERR:+: $HIDE_UMOUNT_ERR}"
     fi
   fi
 
-  # 3) ksud kernel umount（先确保 feature 开启；SuSFS v2 / KSU-Next 主路径）
-  if hide_try_ksud_umount_add "$target"; then
-    log_info "hide: ksud kernel umount registered ($target)"
-    hide_probe_cache_set ksud_umount 1
-    live=1
-  elif hide_resolve_ksud >/dev/null 2>&1; then
-    log_warn "hide: ksud kernel umount add failed ($target)"
+  # 3) ksud kernel umount（先确保 feature 开启；SuSFS v2 / KSU-Next / BakaSU 主路径）
+  if hide_resolve_ksud >/dev/null 2>&1; then
+    hide_try_ksud_umount_add "$target"
+    _k_rc=$?
+    if [ "$_k_rc" = "0" ]; then
+      log_info "hide: ksud kernel umount registered ($target)"
+      hide_probe_cache_set ksud_umount 1
+      live=1
+    elif [ "$_k_rc" = "2" ]; then
+      log_debug "hide: ksud kernel umount already present ($target)"
+      hide_probe_cache_set ksud_umount 1
+      live=1
+    else
+      log_warn "hide: ksud kernel umount add failed ($target)${HIDE_UMOUNT_ERR:+: $HIDE_UMOUNT_ERR}"
+    fi
   fi
 
   # 4) NoHello point 规则（Magisk / APatch）
@@ -203,7 +276,7 @@ hide_assist_for_target() {
   if [ "$live" = "1" ]; then
     hide_record_applied
   elif [ "$file_ok" = "1" ]; then
-    log_info "hide: path in try_umount.txt only ($target); await susfs4ksu boot-completed"
+    log_info "hide: path only in try_umount.txt ($target); need susfs4ksu module to re-apply at boot"
   elif ! hide_susfs_bin_present && ! hide_susfs4ksu_module_present && \
       ! hide_resolve_ksud >/dev/null 2>&1 && ! hide_nohello_available; then
     log_warn "hide: hide_allow=1 but no SuSFS/ksud/NoHello; Magisk/APatch 请装 NoHello 或 ZygiskNext umount"
@@ -215,6 +288,9 @@ hide_assist_for_target() {
 
 # 注入完成后对所有目标路径注册隐藏协助
 hide_assist_after_inject() {
+  # 先清误建的 susfs4ksu 配置目录（无对应模块时）
+  hide_cleanup_orphan_susfs_persist_dirs 2>/dev/null || true
+
   hide_assist_enabled || {
     # 仅当本模块曾写过隐藏状态 / 托管规则时才清理，避免「装了但关着」每次开机无谓调 ksud
     if hide_read_applied 2>/dev/null || \

@@ -7,6 +7,7 @@ import { HIDE_PROVIDER_LABELS, TMPFS_STYLES } from "@/shared/config/mount";
 import { parseEnum } from "@/shared/lib/enum";
 import { MountMode, TmpfsStyle } from "@/entities/module/enums";
 import { Card } from "@/shared/ui/primitives";
+import { formatRootLabel } from "@/shared/lib/rootLabel";
 
 type HideStatusCardProps = {
   variant?: "list" | "table";
@@ -193,7 +194,11 @@ export function HideStatusCard({ variant = "list", title }: HideStatusCardProps)
     .filter(Boolean);
 
   const mountItems: KvItem[] = [
-    { id: "root", label: t("hide.status.root"), value: status.root || "—" },
+    {
+      id: "root",
+      label: t("hide.status.root"),
+      value: formatRootLabel(status.root, status.root_flavor),
+    },
     { id: "mount", label: t("hide.status.mount"), value: mountModeLabel },
     {
       id: "stage",

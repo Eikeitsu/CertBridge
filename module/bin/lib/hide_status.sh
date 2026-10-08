@@ -58,10 +58,11 @@ detect_hide_assistants() {
     _add zygisk_assistant
   fi
 
+  # 助手只看 L1 大类（分支在 root_flavor）
   root_impl=$(detect_root_impl 2>/dev/null)
   case "$root_impl" in
     Magisk) _add magisk_denylist ;;
-    KernelSU|SukiSU) _add ksu_umount ;;
+    KernelSU) _add ksu_umount ;;
     APatch) _add apatch_exclude ;;
   esac
 

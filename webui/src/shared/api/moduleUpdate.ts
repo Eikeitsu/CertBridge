@@ -31,6 +31,8 @@ const MANAGER_PACKAGES = [
   "io.github.vvb2060.magisk",
   "me.bmax.apatch",
   "com.sukisu.ultra",
+  "org.bakasu.bakasu",
+  "com.resukisu.resukisu",
 ] as const;
 
 const INSTALL_TIMEOUT_MS = 300_000;

@@ -24,7 +24,10 @@ export type ModuleStatus = {
   disabled?: string;
   api?: string;
   release?: string;
+  /** L1 大类：Magisk | KernelSU | APatch | Unknown */
   root?: string;
+  /** L2 分支：official | SukiSU | BakaSU | KernelSU-Next | Kitsune | … */
+  root_flavor?: string;
   active_count?: string;
   custom_count?: string;
   base_count?: string;

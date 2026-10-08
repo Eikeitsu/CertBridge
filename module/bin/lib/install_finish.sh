@@ -124,6 +124,8 @@ certbridge_install_try_hot_update() {
 
 # Magisk customize 主流程（权限设置仍由 customize.sh 完成）
 certbridge_run_install() {
+  log_use_install
+  log_reset_install
   log_info "install: ==== CertBridge install start ===="
   log_debug "install: MODPATH=$MODPATH"
   # 尽早给 bin 可执行权限，避免解压后无 +x 导致内置 openssl 探测失败
@@ -164,6 +166,13 @@ certbridge_run_install() {
   tr -d '\r\n' </proc/sys/kernel/random/boot_id >"$INSTALL_BOOT_FILE" 2>/dev/null
   certbridge_install_dump_tree
   certbridge_install_print_summary
+  # 安装阶段即清误留的 susfs4ksu 配置（未装该模块时；不依赖隐藏组件是否勾选）
+  if [ -d /data/adb/susfs4ksu ] && \
+      [ ! -d /data/adb/modules/susfs4ksu ] && \
+      [ ! -d /data/adb/modules_update/susfs4ksu ]; then
+    rm -rf /data/adb/susfs4ksu 2>/dev/null || true
+    log_info "install: removed orphan /data/adb/susfs4ksu (susfs4ksu module not installed)"
+  fi
   certbridge_install_try_hot_update
   ui_print "********************************"
   log_info "install: ==== CertBridge install end ===="

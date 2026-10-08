@@ -13,6 +13,7 @@ import {
 import { resolveTrustLabel } from "@/shared/lib/sanitize";
 import { isFlagOn } from "@/shared/lib/flag";
 import { EMPTY_PLACEHOLDER } from "@/shared/config/constants";
+import { formatRootLabel } from "@/shared/lib/rootLabel";
 import { BUILTIN_CERTS, builtinStatusKeys } from "@/shared/config/certs";
 import { MOUNT_MODES, TMPFS_STYLES } from "@/shared/config/mount";
 import { defaultStatusDesc, resolveApexLabel, resolveHotLabel } from "../lib/labels";
@@ -152,7 +153,7 @@ export function useTrustOverview() {
     trustScore,
     deviceLabel: deviceLabel || deviceFallback,
     deviceName: deviceName || deviceLabel || deviceFallback,
-    rootLabel: status.root || EMPTY_PLACEHOLDER,
+    rootLabel: formatRootLabel(status.root, status.root_flavor, EMPTY_PLACEHOLDER),
     apexLabel: resolveApexLabel(status.apex_ok),
     mountModeLabel: t(MOUNT_MODES[mountMode].shortLabelKey),
     mountModeMeta: t(MOUNT_MODES[mountMode].metaKey),

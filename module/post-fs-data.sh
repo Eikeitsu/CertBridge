@@ -12,6 +12,9 @@ post_cleanup() {
 trap post_cleanup 0
 trap 'post_cleanup; exit 1' 1 2 15
 
+# 运行日志跨开机清空；安装日志保留在 install.log
+log_use_runtime
+log_reset_runtime
 log_msg "post-fs-data start (api=$(get_api))"
 # 软重启不换内核 boot_id：先递增 epoch，立刻让旧 runtime-status / 热会话缓存失效
 bump_boot_epoch

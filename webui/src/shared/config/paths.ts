@@ -10,8 +10,17 @@ export const PATHS = {
   get CLI() {
     return `${MODDIR}/bin/cert_manager.sh`;
   },
-  get LOG() {
+  /** 最近一次安装/升级过程 */
+  get INSTALL_LOG() {
     return `${MODDIR}/data/install.log`;
+  },
+  /** 当前开机注入/运行（跨 reboot 会清空） */
+  get RUNTIME_LOG() {
+    return `${MODDIR}/data/runtime.log`;
+  },
+  /** @deprecated 兼容旧引用 → 运行日志 */
+  get LOG() {
+    return `${MODDIR}/data/runtime.log`;
   },
 } as const;
 

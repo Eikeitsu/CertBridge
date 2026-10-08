@@ -30,7 +30,12 @@ certbridge_init_paths() {
   GEN_CERTS="$GEN_CURRENT/cacerts"
   GEN_ACTIVE_BOOT="$GEN_ROOT/active-boot-id"
   CONF="$CONFDIR/certs.conf"
-  LOG_FILE="$DATADIR/install.log"
+  # 双日志：安装过程 vs 开机/运行时（勿混写）
+  INSTALL_LOG_FILE="$DATADIR/install.log"
+  RUNTIME_LOG_FILE="$DATADIR/runtime.log"
+  # 默认写入 runtime；install / post-fs 会切换通道
+  LOG_CHANNEL="${LOG_CHANNEL:-runtime}"
+  LOG_FILE="$RUNTIME_LOG_FILE"
   APPLIED_MAP="$STATEDIR/applied-certs.list"
   APPLIED_CONF="$STATEDIR/applied.conf"
   SOURCE_META="$STATEDIR/source.meta"
@@ -109,6 +114,7 @@ certbridge_load_libs_runtime() {
     hide_assist_enabled() { return 1; }
     hide_assist_for_target() { return 0; }
     hide_assist_after_inject() { return 0; }
+    hide_cleanup_orphan_susfs_persist_dirs() { return 0; }
     emit_hide_status() {
       echo "hide_supported=0"
       echo "hide_allow=0"

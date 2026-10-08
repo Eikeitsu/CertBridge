@@ -96,6 +96,8 @@ cmd_status() {
     hide_probe_cache_unset susfs_kernel 2>/dev/null || true
     hide_probe_cache_unset nohello 2>/dev/null || true
     hide_probe_cache_unset ksud_feat 2>/dev/null || true
+    # Root 分支指纹也可能随热更/换管理器变化
+    rm -f "${ROOT_CACHE_FILE:-$STATEDIR/root-impl.cache}" 2>/dev/null || true
   fi
 
   api=$(get_api)
@@ -157,7 +159,11 @@ hot_failed=0"
   echo "disabled=$disabled"
   echo "api=$api"
   echo "release=$release"
-  echo "root=$(detect_root_impl)"
+  # Root 两级：root=大类，root_flavor=分支（official 表示原版）
+  _root_fam=$(detect_root_impl 2>/dev/null) || _root_fam=Unknown
+  _root_flv=$(detect_root_flavor 2>/dev/null) || _root_flv=official
+  echo "root=$_root_fam"
+  echo "root_flavor=$_root_flv"
   echo "active_count=$applied"
   echo "custom_count=$custom"
   echo "base_count=$(grep '^source_count=' "$SOURCE_META" 2>/dev/null | cut -d= -f2)"

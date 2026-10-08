@@ -99,11 +99,8 @@ inject_one_target() {
     orphan_tmpfs_stage "$stage"
     log_debug "inject: orphaned stage $stage"
   fi
-  # 登记 try_umount：成功 bind，或目标上已有本模块 runtime bind（service 晚注入
-  # 时 bind_current 失败不应挡住登记，否则 KSU 卸载模块无法卸脚本 bind）
-  if [ "$rc" = "0" ] || is_certbridge_runtime_bind "$target" 2>/dev/null; then
-    hide_assist_for_target "$target"
-  fi
+  # try_umount 统一由 inject_* 末尾 hide_assist_after_inject 登记，避免同一路径连登两次
+  # （第二次常因「已存在」被误报 failed）
   return "$rc"
 }
 

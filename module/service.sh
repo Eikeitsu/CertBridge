@@ -1,6 +1,7 @@
 #!/system/bin/sh
 MODDIR=${0%/*}
 . "$MODDIR/bin/common.sh"
+log_use_runtime
 
 SERVICE_HAS_LOCK=0
 service_finalize() {

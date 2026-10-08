@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { EMPTY_PLACEHOLDER } from "@/shared/config/constants";
+import { formatRootLabel } from "@/shared/lib/rootLabel";
 import { useAppSelector } from "@/app/store/hooks";
 import { selectDeviceName, selectModuleStatus } from "@/features/status/model/selectors";
 import { isFlagOn } from "@/shared/lib/flag";
@@ -73,7 +74,7 @@ export function useAboutModuleRows(): AboutRow[] {
     {
       key: "root",
       label: "Root",
-      value: status.root || EMPTY_PLACEHOLDER,
+      value: formatRootLabel(status.root, status.root_flavor, EMPTY_PLACEHOLDER),
       group: "env",
     },
     {

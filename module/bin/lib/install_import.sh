@@ -152,5 +152,5 @@ certbridge_install_dump_tree() {
     done <"$MODPATH/config/install-profile.conf"
   fi
   log_debug "install: --- cert tree end ---"
-  ui_print " 详细日志：data/install.log"
+  ui_print " 详细日志：data/install.log（安装）· data/runtime.log（开机）"
 }

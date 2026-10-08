@@ -219,8 +219,25 @@ export async function readLog(
   lineCount = LOG_TAIL_LINES,
 ): Promise<{ text: string; bytes: number }> {
   const safeCount = Math.max(LOG_LINE_MIN, Math.min(LOG_LINE_MAX, lineCount));
+  // 合并展示：安装日志（保留）+ 运行日志（每开机清空）
   const result = await exec(
-    `{ wc -c < '${PATHS.LOG}' 2>/dev/null; echo '---'; tail -n ${safeCount} '${PATHS.LOG}' 2>/dev/null; } || true`,
+    `{
+  i='${PATHS.INSTALL_LOG}'; r='${PATHS.RUNTIME_LOG}'
+  ib=0; rb=0
+  [ -f "$i" ] && ib=$(wc -c <"$i" 2>/dev/null | tr -d ' ')
+  [ -f "$r" ] && rb=$(wc -c <"$r" 2>/dev/null | tr -d ' ')
+  echo $((ib + rb))
+  echo '---'
+  if [ -s "$i" ]; then
+    echo '==== install.log ===='
+    tail -n ${safeCount} "$i" 2>/dev/null
+    echo
+  fi
+  if [ -s "$r" ]; then
+    echo '==== runtime.log ===='
+    tail -n ${safeCount} "$r" 2>/dev/null
+  fi
+} || true`,
   );
   const rawOutput = result.stdout || "";
   const separatorIndex = rawOutput.indexOf("---");
@@ -234,7 +251,8 @@ export async function readLog(
 }
 
 export async function clearLog() {
-  return exec(`: > '${PATHS.LOG}'`);
+  // 清空按钮：只清运行日志，保留最近一次安装记录
+  return exec(`: > '${PATHS.RUNTIME_LOG}'`);
 }
 
 export async function rebootDevice() {

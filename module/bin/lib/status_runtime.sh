@@ -67,35 +67,266 @@ EOF
   mv -f "$tmp" "$RUNTIME_STATUS_FILE"
 }
 
-detect_root_impl() {
-  if [ -f "$ROOT_CACHE_FILE" ]; then
-    cached=$(tr -d '\r\n' <"$ROOT_CACHE_FILE" 2>/dev/null)
-    case "$cached" in
-      Magisk|KernelSU|SukiSU|APatch|Unknown)
-        echo "$cached"
-        return 0
-        ;;
-    esac
-  fi
+# ── Root 两级探测 ──────────────────────────────────────────────
+# L1 root（大类）：Magisk | KernelSU | APatch | Unknown
+# L2 root_flavor（分支）：official | SukiSU | BakaSU | KernelSU-Next | …
+# BakaSU 原名 ReSukiSU（旧包名 com.resukisu.resukisu，新 org.bakasu.bakasu）
 
-  result=Unknown
+_root_resolve_ksud() {
+  if type hide_resolve_ksud >/dev/null 2>&1; then
+    hide_resolve_ksud
+    return $?
+  fi
+  for cand in \
+    /data/adb/ksu/bin/ksud \
+    /data/adb/ksud/bin/ksud \
+    /data/adb/ksu/ksud; do
+    [ -x "$cand" ] && echo "$cand" && return 0
+  done
+  return 1
+}
+
+_root_blob_has() {
+  _blob="$1"
+  _pat="$2"
+  [ -n "$_blob" ] && [ -f "$_blob" ] || return 1
+  grep -aql -i "$_pat" "$_blob" 2>/dev/null
+}
+
+_root_mgr_pkg_installed() {
+  _pkg="$1"
+  [ -n "$_pkg" ] || return 1
+  if [ -f /data/system/packages.list ]; then
+    grep -qE "^${_pkg}([[:space:]]|$)" /data/system/packages.list 2>/dev/null && return 0
+  fi
+  ls -1d /data/app/"${_pkg}"-* /data/app/*/"${_pkg}"-* 2>/dev/null | head -n 1 | grep -q . && return 0
+  return 1
+}
+
+# 规范化分支名（旧 ReSukiSU → BakaSU）
+_root_normalize_flavor() {
+  case "$1" in
+    ReSukiSU|resukisu|ReSuki) echo BakaSU ;;
+    ""|official|Official|KernelSU) echo official ;;
+    *) echo "$1" ;;
+  esac
+}
+
+# L1：大类
+detect_root_family() {
   if [ "$APATCH" = "true" ] || [ -d /data/adb/ap ] || [ -f /data/adb/ap/bin/apd ]; then
-    result=APatch
-  elif [ "$KSU" = "true" ] || [ -d /data/adb/ksu ] || [ -f /data/adb/ksu/bin/ksud ]; then
-    if [ -f /data/adb/ksu/bin/ksud ] && \
-        grep -aql sukisu /data/adb/ksu/bin/ksud 2>/dev/null; then
-      result=SukiSU
-    else
-      result=KernelSU
+    echo APatch
+    return 0
+  fi
+  if [ "$KSU" = "true" ] || [ -d /data/adb/ksu ] || [ -f /data/adb/ksu/bin/ksud ] || \
+      [ -f /data/adb/ksud/bin/ksud ]; then
+    echo KernelSU
+    return 0
+  fi
+  if [ -d /data/adb/magisk ] || [ -f /data/adb/magisk/magisk ] || [ -f /sbin/magisk ] || \
+      [ "$MAGISK_VER_CODE" != "" ]; then
+    echo Magisk
+    return 0
+  fi
+  echo Unknown
+}
+
+# L2：KernelSU 系分支（不含大类名本身）
+detect_ksu_flavor() {
+  _ksud=$(_root_resolve_ksud) || _ksud=
+  _hit=
+
+  if [ -n "$_ksud" ]; then
+    # BakaSU / 旧 ReSukiSU 必须先于 SukiSU（二进制常残留 sukisu 串）
+    if _root_blob_has "$_ksud" 'bakasu' || \
+        _root_blob_has "$_ksud" 'org.bakasu' || \
+        _root_blob_has "$_ksud" 'resukisu' || \
+        _root_blob_has "$_ksud" 'com.resukisu'; then
+      echo BakaSU
+      return 0
     fi
-  elif [ -d /data/adb/magisk ] || [ -f /data/adb/magisk/magisk ] || [ -f /sbin/magisk ]; then
-    result=Magisk
+    if _root_blob_has "$_ksud" 'sukisu' || \
+        _root_blob_has "$_ksud" 'com.sukisu.ultra'; then
+      _hit=SukiSU
+    elif _root_blob_has "$_ksud" 'kernelsu-next' || \
+        _root_blob_has "$_ksud" 'KernelSU-Next' || \
+        _root_blob_has "$_ksud" 'ksunext' || \
+        _root_blob_has "$_ksud" 'com.rifsxd.ksunext'; then
+      _hit=KernelSU-Next
+    elif _root_blob_has "$_ksud" '5ec1cff' && _root_blob_has "$_ksud" 'mksu'; then
+      _hit=MKSU
+    elif _root_blob_has "$_ksud" 'rsuntk' || _root_blob_has "$_ksud" 'com.rsuntk'; then
+      _hit=RKSU
+    fi
   fi
 
+  if [ -z "$_hit" ] && [ -n "$_ksud" ]; then
+    _ver=$("$_ksud" -V 2>&1) || _ver=
+    [ -n "$_ver" ] || _ver=$("$_ksud" --version 2>&1) || _ver=
+    if printf '%s' "$_ver" | grep -qiE 'bakasu|resukisu'; then
+      _hit=BakaSU
+    elif printf '%s' "$_ver" | grep -qi 'sukisu'; then
+      _hit=SukiSU
+    elif printf '%s' "$_ver" | grep -qiE 'kernelsu-next|ksu.?next|ksunext'; then
+      _hit=KernelSU-Next
+    fi
+  fi
+
+  if [ -z "$_hit" ]; then
+    if _root_mgr_pkg_installed org.bakasu.bakasu || \
+        _root_mgr_pkg_installed com.resukisu.resukisu; then
+      _hit=BakaSU
+    elif _root_mgr_pkg_installed com.sukisu.ultra || \
+        _root_mgr_pkg_installed com.sukisu.ultra.debug; then
+      _hit=SukiSU
+    elif _root_mgr_pkg_installed com.rifsxd.ksunext || \
+        _root_mgr_pkg_installed com.rifsxd.ksunext.debug; then
+      _hit=KernelSU-Next
+    elif _root_mgr_pkg_installed me.weishu.kernelsu; then
+      _hit=official
+    fi
+  fi
+
+  _root_normalize_flavor "${_hit:-official}"
+}
+
+# L2：Magisk 系分支
+detect_magisk_flavor() {
+  _bin=
+  for cand in /data/adb/magisk/magisk /sbin/magisk; do
+    [ -x "$cand" ] || [ -f "$cand" ] && _bin="$cand" && break
+  done
+  if [ -n "$_bin" ]; then
+    if _root_blob_has "$_bin" 'kitsune' || _root_blob_has "$_bin" 'magiskdelta' || \
+        _root_blob_has "$_bin" 'fox2code'; then
+      echo Kitsune
+      return 0
+    fi
+    if _root_blob_has "$_bin" 'magisk alpha' || _root_blob_has "$_bin" 'magiskalpha'; then
+      echo Alpha
+      return 0
+    fi
+  fi
+  if _root_mgr_pkg_installed io.github.vvb2060.magisk || \
+      _root_mgr_pkg_installed io.github.huskydg.magisk; then
+    echo Kitsune
+    return 0
+  fi
+  if _root_mgr_pkg_installed io.github.vvb2060.magisk.alpha; then
+    echo Alpha
+    return 0
+  fi
+  echo official
+}
+
+# L2：APatch 系分支
+detect_apatch_flavor() {
+  _apd=
+  for cand in /data/adb/ap/bin/apd /data/adb/apd; do
+    [ -x "$cand" ] || [ -f "$cand" ] && _apd="$cand" && break
+  done
+  if [ -n "$_apd" ]; then
+    if _root_blob_has "$_apd" 'apatch-next' || _root_blob_has "$_apd" 'apatchnext'; then
+      echo APatch-Next
+      return 0
+    fi
+  fi
+  if _root_mgr_pkg_installed me.bmax.apatch.next; then
+    echo APatch-Next
+    return 0
+  fi
+  echo official
+}
+
+# 读/写两级缓存：family|flavor
+_root_cache_read() {
+  [ -f "$ROOT_CACHE_FILE" ] || return 1
+  _line=$(tr -d '\r\n' <"$ROOT_CACHE_FILE" 2>/dev/null)
+  [ -n "$_line" ] || return 1
+  # 新格式 family|flavor
+  case "$_line" in
+    *\|*)
+      ROOT_CACHE_FAMILY=${_line%%\|*}
+      ROOT_CACHE_FLAVOR=${_line#*\|}
+      ROOT_CACHE_FLAVOR=$(_root_normalize_flavor "$ROOT_CACHE_FLAVOR")
+      case "$ROOT_CACHE_FAMILY" in
+        Magisk|KernelSU|APatch|Unknown) return 0 ;;
+      esac
+      return 1
+      ;;
+  esac
+  # 旧单值缓存迁移
+  case "$_line" in
+    Magisk|APatch|Unknown)
+      ROOT_CACHE_FAMILY=$_line
+      ROOT_CACHE_FLAVOR=official
+      return 0
+      ;;
+    KernelSU)
+      ROOT_CACHE_FAMILY=KernelSU
+      ROOT_CACHE_FLAVOR=official
+      return 0
+      ;;
+    SukiSU|KernelSU-Next|MKSU|RKSU|BakaSU|ReSukiSU)
+      ROOT_CACHE_FAMILY=KernelSU
+      ROOT_CACHE_FLAVOR=$(_root_normalize_flavor "$_line")
+      return 0
+      ;;
+  esac
+  return 1
+}
+
+_root_cache_write() {
+  _fam="$1"
+  _flv="$2"
   mkdir -p "$STATEDIR" 2>/dev/null
-  echo "$result" >"$ROOT_CACHE_FILE.tmp.$$" 2>/dev/null && \
+  echo "${_fam}|${_flv}" >"$ROOT_CACHE_FILE.tmp.$$" 2>/dev/null && \
     mv -f "$ROOT_CACHE_FILE.tmp.$$" "$ROOT_CACHE_FILE" 2>/dev/null
-  echo "$result"
+}
+
+# 探测并填充 ROOT_FAMILY / ROOT_FLAVOR（带 boot 缓存）
+detect_root_pair() {
+  if _root_cache_read; then
+    ROOT_FAMILY=$ROOT_CACHE_FAMILY
+    ROOT_FLAVOR=$ROOT_CACHE_FLAVOR
+    return 0
+  fi
+
+  ROOT_FAMILY=$(detect_root_family)
+  case "$ROOT_FAMILY" in
+    KernelSU) ROOT_FLAVOR=$(detect_ksu_flavor) ;;
+    Magisk) ROOT_FLAVOR=$(detect_magisk_flavor) ;;
+    APatch) ROOT_FLAVOR=$(detect_apatch_flavor) ;;
+    *) ROOT_FLAVOR=official ;;
+  esac
+  ROOT_FLAVOR=$(_root_normalize_flavor "$ROOT_FLAVOR")
+  _root_cache_write "$ROOT_FAMILY" "$ROOT_FLAVOR"
+}
+
+# L1 兼容入口：只返回大类（隐藏助手 case 等用）
+detect_root_impl() {
+  detect_root_pair
+  echo "$ROOT_FAMILY"
+}
+
+# L2 入口
+detect_root_flavor() {
+  detect_root_pair
+  echo "$ROOT_FLAVOR"
+}
+
+# 展示用：能判出 L2 只显示分支（BakaSU），否则显示 L1（KernelSU）
+format_root_label() {
+  detect_root_pair
+  if [ "$ROOT_FAMILY" = "Unknown" ]; then
+    echo Unknown
+    return 0
+  fi
+  if [ -n "$ROOT_FLAVOR" ] && [ "$ROOT_FLAVOR" != "official" ]; then
+    echo "$ROOT_FLAVOR"
+    return 0
+  fi
+  echo "$ROOT_FAMILY"
 }
 
 hot_session_recorded() {

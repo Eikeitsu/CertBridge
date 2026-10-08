@@ -29,7 +29,7 @@ _ver=$(grep '^version=' "$MODDIR/module.prop" 2>/dev/null | cut -d= -f2-)
 
 _api=$(get_api 2>/dev/null)
 _rel=$(getprop ro.build.version.release 2>/dev/null)
-_root=$(detect_root_impl 2>/dev/null)
+_root=$(format_root_label 2>/dev/null) || _root=$(detect_root_impl 2>/dev/null)
 [ -n "$_api" ] && echo "系统: Android ${_rel:-?} (API $_api)"
 [ -n "$_root" ] && echo "Root: $_root"
 echo "boot-token: $(current_boot_token 2>/dev/null)"
@@ -127,10 +127,12 @@ echo "管理器简介已刷新"
 
 # ---- 工具 ----
 echo "-------- 工具 --------"
-echo "日志: $LOG_FILE"
-if [ -f "$LOG_FILE" ]; then
-  _tail=$(tail -n 2 "$LOG_FILE" 2>/dev/null | tr '\n' ' ' | tr -d '\r')
-  [ -n "$_tail" ] && echo "日志尾: $_tail"
+echo "安装日志: ${INSTALL_LOG_FILE:-$DATADIR/install.log}"
+echo "运行日志: ${RUNTIME_LOG_FILE:-$DATADIR/runtime.log}"
+_rt="${RUNTIME_LOG_FILE:-$DATADIR/runtime.log}"
+if [ -f "$_rt" ]; then
+  _tail=$(tail -n 2 "$_rt" 2>/dev/null | tr '\n' ' ' | tr -d '\r')
+  [ -n "$_tail" ] && echo "运行日志尾: $_tail"
 fi
 echo "状态 CLI: sh $BINDIR/cert_manager.sh status"
 echo "证书开关 / 自定义导入 / 热挂载 → WebUI"

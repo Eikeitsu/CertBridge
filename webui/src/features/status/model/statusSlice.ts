@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/tool
 import {
   fetchDeviceInfo,
   fetchStatus,
+  fetchStatusDeferred,
   listCustom,
   rebootDevice,
   syncAppSources,
@@ -110,11 +111,15 @@ export const enrichBootstrapMeta = createAsyncThunk("status/enrichMeta", async (
   };
 });
 
-/** 空闲时再补完整 status（隐藏助手 / Zygisk 等慢路径） */
-export const enrichFullStatus = createAsyncThunk("status/enrichFull", async () => {
-  const status = await fetchStatus().catch(() => null);
-  return { status };
-});
+/** 空闲时再补完整 status（隐藏助手 / Zygisk 等慢路径；可 abort） */
+export const enrichFullStatus = createAsyncThunk(
+  "status/enrichFull",
+  async (_, { signal }) => {
+    const status = await fetchStatusDeferred(signal).catch(() => null);
+    if (signal.aborted) return { status: null };
+    return { status };
+  },
+);
 
 function formatSyncToast(sync: {
   updated: number;

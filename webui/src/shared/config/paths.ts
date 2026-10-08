@@ -10,6 +10,13 @@ export const PATHS = {
   get CLI() {
     return `${MODDIR}/bin/cert_manager.sh`;
   },
+  get STATE() {
+    return `${MODDIR}/data/state`;
+  },
+  /** 后台完整 status 落盘（避免堵死 WebUI 桥） */
+  get STATUS_FULL_OUT() {
+    return `${MODDIR}/data/state/status-full.out`;
+  },
   /** 最近一次安装/升级过程 */
   get INSTALL_LOG() {
     return `${MODDIR}/data/install.log`;

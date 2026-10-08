@@ -51,6 +51,40 @@ export async function fetchStatus(
   return parseKv(result.stdout) as ModuleStatus;
 }
 
+/**
+ * 完整 status 放到后台跑，桥立刻返回；轮询落盘结果。
+ * 离开隐藏页时可 abort，避免堵死切 Tab。
+ */
+export async function fetchStatusDeferred(
+  signal?: AbortSignal,
+): Promise<ModuleStatus | null> {
+  const out = PATHS.STATUS_FULL_OUT;
+  const tmp = `${out}.tmp`;
+  const stateDir = PATHS.STATE;
+  await exec(
+    `mkdir -p '${stateDir}' && rm -f '${out}' '${tmp}' && ` +
+      `( sh '${PATHS.CLI}' status >'${tmp}' 2>/dev/null && mv -f '${tmp}' '${out}' || rm -f '${tmp}' ) >/dev/null 2>&1 &`,
+    5_000,
+  );
+  const deadline = Date.now() + 45_000;
+  while (Date.now() < deadline) {
+    if (signal?.aborted) return null;
+    const tick = await exec(
+      `if [ -f '${out}' ]; then cat '${out}'; rm -f '${out}'; else echo '__pending__'; fi`,
+      8_000,
+    );
+    if (signal?.aborted) return null;
+    const text = String(tick.stdout || "");
+    if (text.trim() === "__pending__") {
+      await new Promise((r) => window.setTimeout(r, 280));
+      continue;
+    }
+    if (!text.trim()) return null;
+    return parseKv(text) as ModuleStatus;
+  }
+  return null;
+}
+
 export async function listCustom(): Promise<CustomCertificate[]> {
   const result = await cli("list_custom");
   const rows: CustomCertificate[] = [];

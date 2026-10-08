@@ -218,12 +218,8 @@ emit_hide_status() {
   echo "hide_provider_label=$(hide_provider_label "$provider")"
 
   if hide_assist_enabled; then
-    hide_paths=
-    _tumount=$(hide_resolve_susfs_try_umount_file 2>/dev/null) || _tumount=
-    [ -n "$_tumount" ] || _tumount="$SUSFS_TRY_UMOUNT_FILE"
-    if [ -f "$_tumount" ]; then
-      hide_paths=$(grep -E '/cacerts$' "$_tumount" 2>/dev/null | tr '\n' ',' | sed 's/,$//')
-    fi
+    # 已登记路径：优先 ksud 列表；有 susfs4ksu 模块时再并 try_umount.txt（勿回落默认空目录）
+    hide_paths=$(hide_collect_registered_umount_paths 2>/dev/null | tr '\n' ',' | sed 's/,$//')
     echo "hide_try_umount_paths=${hide_paths:-}"
     if hide_read_applied; then
       echo "hide_applied=1"
@@ -236,6 +232,23 @@ emit_hide_status() {
     echo "hide_applied=0"
     echo "hide_summary=隐藏协助已关闭，不会注册 try_umount · 可用助手：$(hide_assistants_label "$assistants")"
   fi
+}
+
+# 收集本模块相关 cacerts 卸载路径（ksud 实况 + 可选 try_umount.txt）
+hide_collect_registered_umount_paths() {
+  {
+    # 1) ksud kernel umount list（BakaSU 多为 JSON；其它可能是纯路径行）
+    _ksud=$(hide_resolve_ksud 2>/dev/null) || _ksud=
+    if [ -n "$_ksud" ]; then
+      _list=$("$_ksud" kernel umount list 2>/dev/null) || _list=
+      printf '%s\n' "$_list" | grep -oE '/[^[:space:]",{}]+/cacerts' 2>/dev/null
+    fi
+    # 2) 仅当真正装了 susfs4ksu/resusfs 等时读其 try_umount.txt
+    _tumount=$(hide_resolve_susfs_try_umount_file 2>/dev/null) || _tumount=
+    if [ -n "$_tumount" ] && [ -f "$_tumount" ]; then
+      grep -E '/cacerts$' "$_tumount" 2>/dev/null
+    fi
+  } | awk 'NF && !seen[$0]++'
 }
 
 HIDE_ASSIST_LOADED=1

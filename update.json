@@ -1,6 +1,6 @@
 {
-  "version": "v5.0.2",
-  "versionCode": 50008,
-  "zipUrl": "https://eikeitsu.github.io/CertBridge/releases/CertBridge_v5.0.2_arm64.zip",
+  "version": "v5.0.3",
+  "versionCode": 50013,
+  "zipUrl": "https://eikeitsu.github.io/CertBridge/releases/CertBridge_v5.0.3_arm64.zip",
   "changelog": "https://eikeitsu.github.io/CertBridge/changelog.md"
 }

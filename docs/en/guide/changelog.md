@@ -1,5 +1,15 @@
 # Changelog
 
+## v5.0.3
+
+- **dual log**: split `install.log` (new installation only) and `runtime.log` (each post-fs emptying); WebUI merge display, empty button only clear runtime
+- **Hidden registration**: After the same path is no longer bind, log in once with after_inject; ksud/SuSFS failure Note stderr; "already exists" is considered successful
+- **uninstallation path registration**: BakaSU synchronously writes to `ksud umount-config` (bootable and reloadable, persistent manager mark); no longer creates `susfs4ksu` configuration directory, if the module is not installed, clean up the left `/data/adb/susfs4ksu`; the registered path changes to the ksud list (does not rely on the mistakenly built susfs4ksu directory)
+- **uninstall cleanup**: `uninstall.sh` cleanup ksud umount/umount-config, SuSFS try_umount.txt, NoHello managed blocks; still need reboot to remove cacerts script bind/Magic Mount
+- **Hidden page switch Tab**: Full status Change the background tray polling, leave the hidden page to abort, avoid blocking the WebUI bridge
+- **Hidden page probe experience**: probe shows "probe in progress..." instead of "no assistant"; this boot caches hide status; registers path to write module status and displays
+- **SuSFS try_umount CLI**: Upstream v2 deprecated `add_try_umount`, changed to official `ksud kernel umount`; skipped and only played debug when no such subcommand was detected (non-registration failed)
+
 ## v5.0.2
 
 - **switch Tab**: remove the entire table preheating (blocked the main thread); change the page one point + main cover Loading; mount the current page only as needed; change the full status to hide the page and pull

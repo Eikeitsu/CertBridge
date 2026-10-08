@@ -302,6 +302,27 @@ hide_susfs_bin_present() {
   return 1
 }
 
+# 该 ksu_susfs 是否仍提供 add_try_umount（BakaSU 等已迁到 ksud，无此子命令）
+hide_susfs_supports_try_umount() {
+  cached=$(hide_probe_cache_get susfs_try_umount_cmd 2>/dev/null) || cached=
+  case "$cached" in
+    1) return 0 ;;
+    0) return 1 ;;
+  esac
+  hide_susfs_bin_present || {
+    hide_probe_cache_set susfs_try_umount_cmd 0
+    return 1
+  }
+  _help=$("$SUSFS_BIN" --help 2>&1) || _help=
+  [ -n "$_help" ] || _help=$("$SUSFS_BIN" 2>&1) || _help=
+  if printf '%s' "$_help" | grep -qiE 'add_try_umount'; then
+    hide_probe_cache_set susfs_try_umount_cmd 1
+    return 0
+  fi
+  hide_probe_cache_set susfs_try_umount_cmd 0
+  return 1
+}
+
 # 兼容旧名：是否有可写的管理器配置目录（仅持久化用）
 hide_susfs4ksu_module_present() {
   hide_susfs_persist_dir_hint

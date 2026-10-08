@@ -49,10 +49,15 @@ hide_try_ksud_umount_config_add() {
     "$_ksud" umount-config add "$target" >/dev/null 2>&1
 }
 
+# 退出码：0=成功；2=已存在；3=本机构建无 add_try_umount（改走 ksud）；1=失败
 hide_try_susfs_umount_add() {
   target="$1"
   HIDE_UMOUNT_ERR=
-  SUSFS_BIN=$(hide_resolve_susfs_bin) || return 1
+  hide_susfs_bin_present || return 1
+  if ! hide_susfs_supports_try_umount; then
+    HIDE_UMOUNT_ERR="add_try_umount not in this ksu_susfs (use ksud)"
+    return 3
+  fi
   _out=$("$SUSFS_BIN" add_try_umount "$target" 1 2>&1)
   _rc=$?
   if [ "$_rc" != "0" ]; then
@@ -69,6 +74,11 @@ hide_try_susfs_umount_add() {
   [ "$_rc" = "0" ] && return 0
   if _hide_umount_err_is_exists "$HIDE_UMOUNT_ERR"; then
     return 2
+  fi
+  # 运行时才发现无子命令（help 探测漏了）
+  if printf '%s' "$HIDE_UMOUNT_ERR" | grep -qiE 'unrecognized subcommand|unknown command|invalid command'; then
+    hide_probe_cache_set susfs_try_umount_cmd 0
+    return 3
   fi
   return 1
 }
@@ -260,7 +270,7 @@ hide_assist_for_target() {
     file_ok=1
   fi
 
-  # 2) 当场登记：有 ksu_susfs 就试（不因 feature 探测失败而跳过）
+  # 2) 当场登记：仅当 ksu_susfs 仍支持 add_try_umount（BakaSU 等多已迁到 ksud）
   if hide_susfs_bin_present; then
     hide_try_susfs_umount_add "$target"
     _s_rc=$?
@@ -272,6 +282,8 @@ hide_assist_for_target() {
       log_debug "hide: susfs try_umount already present ($target)"
       hide_probe_cache_set susfs_kernel 1
       live=1
+    elif [ "$_s_rc" = "3" ]; then
+      log_debug "hide: skip susfs add_try_umount (unsupported; use ksud)"
     else
       log_warn "hide: susfs add_try_umount failed ($target)${HIDE_UMOUNT_ERR:+: $HIDE_UMOUNT_ERR}"
     fi

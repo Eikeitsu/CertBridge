@@ -1,11 +1,7 @@
 # CertBridge CI
 
 
-- **切 Tab**：去掉整表预热（曾堵死主线程）；一点即换页 + main 上盖 Loading；仅按需挂载当前页；完整 status 改隐藏页再拉
-- **kernel_umount 探测**：热路径去掉慢的 `feature list`；`na` 不缓存（刷新可重探）；`--live` 清 feat 缓存；兼容 `kernel_umount`/`KernelUmount`/id=1
-- **SuSFS 探测**：去掉 `ksud` 帮助假阳性；用 `gzip`/`toybox` 读 config.gz；认 `CONFIG_KSU_SUSFS`、`ksu_susfs` 通信、合法版本文件；阴性不缓存以免漏检
-- **ksud umount 探测收紧**：去掉对 `usage` 等帮助词的匹配，改为子命令/feature 实义特征
-- **隐藏助手探测减负**：status 各贵重探测只跑一次并 boot 缓存；SuSFS 廉价路径优先；文案由「已检测到」改为「可用 / 已安装 / Root 自带」等
-- **首页更快可交互**：首屏只用 `status --quick`；完整 status / 日志延后；无 runtime 缓存时乐观展示已应用证书；稳定态不再一进页就 `--live`
-- **kernel_umount**：对应管理器「内核级卸载 / Kernel umount」（SukiSU/ReSukiSU/KSU-Next 等 feature id=1）；探测认 feature get；页面改显示「内核级卸载」
-- **热更新清探测缓存**：避免同 boot 内仍显示热更前的「未探测到内核级卸载」
+- **双日志**：拆分 `install.log`（仅新安装清空）与 `runtime.log`（每次 post-fs 清空）；WebUI 合并展示，清空按钮只清 runtime
+- **隐藏登记**：同一路径不再 bind 后与 after_inject 各登一次；ksud/SuSFS 失败记下 stderr；「已存在」视为成功
+- **卸载路径登记**：BakaSU 同步写入 `ksud umount-config`（开机可重载、管理器标持久）；不再创建 `susfs4ksu` 配置目录，若未安装该模块则清理误留的 `/data/adb/susfs4ksu`
+- **卸载清理**：`uninstall.sh` 补清 ksud umount / umount-config、SuSFS try_umount.txt、NoHello 托管块；仍需重启才能去掉 cacerts 脚本 bind / Magic Mount

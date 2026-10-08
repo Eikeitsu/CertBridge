@@ -7,3 +7,4 @@
 - **卸载清理**：`uninstall.sh` 补清 ksud umount / umount-config、SuSFS try_umount.txt、NoHello 托管块；仍需重启才能去掉 cacerts 脚本 bind / Magic Mount
 - **隐藏页切 Tab**：完整 status 改后台落盘轮询，离开隐藏页即 abort，避免堵 WebUI 桥
 - **隐藏页探测体验**：探测中显示「正在探测…」而非「无助手」；本 boot 缓存 hide status；登记路径写入模块状态并展示
+- **SuSFS try_umount CLI**：上游 v2 已弃用 `add_try_umount`、改走官方 `ksud kernel umount`；探测到无该子命令时跳过并只打 DEBUG（非登记失败）

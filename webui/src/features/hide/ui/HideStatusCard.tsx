@@ -44,6 +44,7 @@ export function HideStatusCard({ variant = "list", title }: HideStatusCardProps)
   const status = useAppSelector(selectModuleStatus);
   const mountMode = parseEnum(MountMode, status.mount_mode, MountMode.Compatible);
   const tmpfsStyle = parseEnum(TmpfsStyle, status.tmpfs_style, TmpfsStyle.Dev);
+  const hideProbing = isFlagOn(status.hide_probe_pending);
   const hideApplied = isFlagOn(status.hide_applied);
   const hideSusfs = isFlagOn(status.hide_susfs);
   const hideKsud = isFlagOn(status.hide_ksud_umount);
@@ -69,11 +70,13 @@ export function HideStatusCard({ variant = "list", title }: HideStatusCardProps)
   const metaParts = [status.hide_summary, status.zn_hide_summary].filter(Boolean);
   const meta = metaParts.length ? metaParts.join(" · ") : t("hide.status.deviceProbe");
   const canRegister = hideSusfs || hideKsud || hideNohello;
-  const tryUmountLabel = hideApplied
-    ? t("hide.status.registered")
-    : canRegister
-      ? t("hide.status.notRegistered")
-      : t("hide.status.noProvider");
+  const tryUmountLabel = hideProbing
+    ? t("hide.status.probing")
+    : hideApplied
+      ? t("hide.status.registered")
+      : canRegister
+        ? t("hide.status.notRegistered")
+        : t("hide.status.noProvider");
   const mountModeLabel =
     mountMode === MountMode.Magic
       ? t("hide.status.mountModeMagic")
@@ -357,7 +360,11 @@ export function HideStatusCard({ variant = "list", title }: HideStatusCardProps)
               ))}
             </div>
           ) : (
-            <p className="bf-hide-status__empty">{t("hide.status.emptyAssistants")}</p>
+            <p className="bf-hide-status__empty">
+              {hideProbing
+                ? t("hide.status.probingAssistants")
+                : t("hide.status.emptyAssistants")}
+            </p>
           )}
         </section>
 

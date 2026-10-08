@@ -25,6 +25,8 @@ NOHELLO_UMOUNT_FILE="${NOHELLO_UMOUNT_FILE:-$NOHELLO_DIR/umount}"
 NOHELLO_BEGIN_MARK="${NOHELLO_BEGIN_MARK:-# BEGIN CertBridge}"
 NOHELLO_END_MARK="${NOHELLO_END_MARK:-# END CertBridge}"
 HIDE_PROBE_CACHE="${HIDE_PROBE_CACHE:-$STATEDIR/hide-probe.cache}"
+# 完整 hide status 快照（供 --quick 首屏，避免「无助手」假象）
+HIDE_STATUS_CACHE="${HIDE_STATUS_CACHE:-$STATEDIR/hide-status.cache}"
 
 hide_module_enabled() {
   moddir="$1"

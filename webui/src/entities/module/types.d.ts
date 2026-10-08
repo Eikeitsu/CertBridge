@@ -92,6 +92,8 @@ export type ModuleStatus = {
   /** 1=已确认存在 KSU-Next 式 feature；0/空=不适用（SukiSU 等勿警告） */
   hide_kernel_umount_feature_known?: string;
   hide_try_umount_paths?: string;
+  /** 1=完整 hide 探测尚未完成（勿把空助手当成最终结果） */
+  hide_probe_pending?: string;
   hide_summary?: string;
   version?: string;
   hot_active?: string;

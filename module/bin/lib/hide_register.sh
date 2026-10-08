@@ -183,13 +183,42 @@ $target"
 }
 
 hide_record_applied() {
+  _add_path="${1:-}"
+  case "$_add_path" in
+    */) _add_path=${_add_path%/} ;;
+  esac
   mkdir -p "$STATEDIR" 2>/dev/null
-  echo "hide_applied=1" >"$HIDE_STATE_FILE.tmp.$$" 2>/dev/null && \
+  _paths=
+  if [ -f "$HIDE_STATE_FILE" ]; then
+    _paths=$(awk -F= '$1 == "hide_paths" { sub(/^[^=]*=/, ""); print; exit }' "$HIDE_STATE_FILE" 2>/dev/null | tr -d '\r')
+  fi
+  if [ -n "$_add_path" ]; then
+    case ",${_paths}," in
+      *",${_add_path},"*) ;;
+      *)
+        if [ -n "$_paths" ]; then
+          _paths="${_paths},${_add_path}"
+        else
+          _paths="$_add_path"
+        fi
+        ;;
+    esac
+  fi
+  {
+    echo "hide_applied=1"
+    [ -n "$_paths" ] && echo "hide_paths=$_paths"
+  } >"$HIDE_STATE_FILE.tmp.$$" 2>/dev/null && \
     mv -f "$HIDE_STATE_FILE.tmp.$$" "$HIDE_STATE_FILE" 2>/dev/null
 }
 
 hide_read_applied() {
   [ -f "$HIDE_STATE_FILE" ] && grep -q '^hide_applied=1' "$HIDE_STATE_FILE" 2>/dev/null
+}
+
+hide_read_recorded_paths() {
+  [ -f "$HIDE_STATE_FILE" ] || return 0
+  awk -F= '$1 == "hide_paths" { sub(/^[^=]*=/, ""); gsub(/,/, "\n"); print; exit }' \
+    "$HIDE_STATE_FILE" 2>/dev/null | tr -d '\r'
 }
 
 # 写入 SuSFS 管理器持久列表（susfs4ksu / resusfs 等已有目录时），供其开机重登记
@@ -272,9 +301,9 @@ hide_assist_for_target() {
     fi
   fi
 
-  # 仅当场登记成功才标 hide_applied；只写文件不够
+  # 仅当场登记成功才标 hide_applied；只写文件不够；路径写入状态供 WebUI 展示
   if [ "$live" = "1" ]; then
-    hide_record_applied
+    hide_record_applied "$target"
   elif [ "$file_ok" = "1" ]; then
     log_info "hide: path only in try_umount.txt ($target); need susfs4ksu module to re-apply at boot"
   elif ! hide_susfs_bin_present && ! hide_susfs4ksu_module_present && \

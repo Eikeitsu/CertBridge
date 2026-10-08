@@ -316,6 +316,8 @@
       "rootBuiltin": "Built into root",
       "ksudReady": "umount supported",
       "emptyAssistants": "No helpers available",
+      "probing": "Probing…",
+      "probingAssistants": "Probing hide assistants…",
       "susfsReady": "In kernel",
       "susfsLabel": "SuSFS",
       "noHelloReady": "Installed",

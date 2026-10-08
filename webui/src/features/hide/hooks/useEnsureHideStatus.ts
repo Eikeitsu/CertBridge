@@ -42,7 +42,7 @@ export function useEnsureHideStatus() {
           doneRef.current = true;
         }
       });
-    }, 500);
+    }, 120);
 
     return () => {
       aborted = true;

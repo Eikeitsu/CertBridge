@@ -13,6 +13,7 @@ hide_clear_applied() {
 
 hide_probe_cache_clear() {
   rm -f "$HIDE_PROBE_CACHE" 2>/dev/null
+  rm -f "${HIDE_STATUS_CACHE:-$STATEDIR/hide-status.cache}" 2>/dev/null
 }
 
 # 结果按 boot 缓存；失败不缓存，避免 post-fs 过早探测失败后整轮开机不再登记

@@ -51,24 +51,7 @@ _emit_builtin_cert_block() {
   fi
 }
 
-# 首屏：只读 conf，不跑 ksud / SuSFS 探测
-emit_hide_status_quick() {
-  echo "hide_supported=1"
-  echo "hide_allow=$(read_conf hide_allow 0)"
-  echo "stage_root=${RUNTIME_MOUNT_ROOT:-}"
-  echo "hide_susfs=0"
-  echo "hide_ksud_umount=0"
-  echo "hide_nohello=0"
-  echo "hide_kernel_umount_feature=0"
-  echo "hide_kernel_umount_feature_known=0"
-  echo "hide_try_umount_paths="
-  echo "hide_assistants=none"
-  echo "hide_assistants_label="
-  echo "hide_provider=none"
-  echo "hide_provider_label="
-  echo "hide_applied=0"
-  echo "hide_summary="
-}
+# emit_hide_status_quick 在 hide_status.sh（有本 boot 缓存 / pending，避免「无助手」假象）
 
 emit_zygisk_loader_status_quick() {
   cache="$STATEDIR/zygisk-loader.cache"

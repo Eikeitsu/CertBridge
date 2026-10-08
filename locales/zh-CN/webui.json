@@ -316,6 +316,8 @@
       "rootBuiltin": "Root 自带",
       "ksudReady": "支持 umount",
       "emptyAssistants": "当前无可用助手",
+      "probing": "探测中…",
+      "probingAssistants": "正在探测隐藏助手…",
       "susfsReady": "内核已集成",
       "susfsLabel": "SuSFS",
       "noHelloReady": "已安装",

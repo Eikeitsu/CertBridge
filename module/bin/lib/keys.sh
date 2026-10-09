@@ -1,12 +1,29 @@
 #!/system/bin/sh
-# 音量键读取（仅供安装 customize / install_flow 使用；Action 不再等键）
+# 音量键读取（仅供安装 customize / install_flow；Action 不再等键）
 # 返回：0=音量上，1=音量下，2=超时或无法读取
 # 可选参数：超时秒数（默认 20）
 #
-# - 只认 KEY_* DOWN（认 UP 会把松手当成新选择）
-# - 先短时 drain 残留按键，避免提示未看清就选中
-# - 用剩余整段时间阻塞等下一条，减少轮询漏键
-# - 等待过程不刷屏；仅结果输出（上/下/超时）
+# 优先 install/tools/volkey（EVIOCGRAB，不弹系统音量条）；装完随 install/ 清除。
+# 缺二进制时回退 getevent（BakaSU / 官方 KSU 管理器常会弹 HUD）。
+
+certbridge_volume_volkey_bin() {
+  _base="${MODPATH:-${MODDIR:-}}/install/tools"
+  [ -d "$_base" ] || return 1
+  _name=
+  case "${ARCH:-}" in
+    arm64 | arm64-v8a) _name=volkey-arm64 ;;
+    arm | armeabi-v7a | armeabi) _name=volkey-arm ;;
+    *)
+      case "$(getprop ro.product.cpu.abi 2>/dev/null)" in
+        arm64*) _name=volkey-arm64 ;;
+        armeabi* | arm*) _name=volkey-arm ;;
+        *) return 1 ;;
+      esac
+      ;;
+  esac
+  [ -x "$_base/$_name" ] || return 1
+  echo "$_base/$_name"
+}
 
 certbridge_volume_getevent_bin() {
   if [ -x /system/bin/getevent ]; then
@@ -36,7 +53,7 @@ certbridge_volume_read_one() {
   w=0
 
   case "$max_sec" in
-    ""|*[!0-9]*) max_sec=1 ;;
+    "" | *[!0-9]*) max_sec=1 ;;
   esac
   [ "$max_sec" -ge 1 ] || max_sec=1
 
@@ -61,7 +78,6 @@ certbridge_volume_read_one() {
   return 0
 }
 
-# 约 1s 内吞掉残留按键
 certbridge_volume_drain() {
   ge="$1"
   event_file="$2"
@@ -83,7 +99,7 @@ certbridge_volume_drain() {
   rm -f "$event_file"
 }
 
-certbridge_volume_choice() {
+certbridge_volume_choice_getevent() {
   timeout_sec="${1:-20}"
   event_file=""
   ge=""
@@ -91,11 +107,6 @@ certbridge_volume_choice() {
   now_ts=0
   elapsed=0
   remaining=0
-
-  case "$timeout_sec" in
-    ""|*[!0-9]*) timeout_sec=20 ;;
-  esac
-  [ "$timeout_sec" -ge 3 ] || timeout_sec=3
 
   event_file="${TMPDIR:-/data/local/tmp}/certbridge-key-events.$$"
   ge="$(certbridge_volume_getevent_bin)" || return 2
@@ -138,4 +149,34 @@ certbridge_volume_choice() {
   rm -f "$event_file"
   echo "  $(i18n_msg install.vol_timeout_label 2>/dev/null || echo '→ timeout')"
   return 2
+}
+
+certbridge_volume_choice() {
+  timeout_sec="${1:-20}"
+  case "$timeout_sec" in
+    "" | *[!0-9]*) timeout_sec=20 ;;
+  esac
+  [ "$timeout_sec" -ge 3 ] || timeout_sec=3
+
+  vk="$(certbridge_volume_volkey_bin 2>/dev/null)" || vk=
+  if [ -n "$vk" ] && [ -x "$vk" ]; then
+    "$vk" "$timeout_sec"
+    _vk_rc=$?
+    case "$_vk_rc" in
+      0)
+        echo "  $(i18n_msg install.vol_up_label 2>/dev/null || echo '→ Vol+')"
+        return 0
+        ;;
+      1)
+        echo "  $(i18n_msg install.vol_down_label 2>/dev/null || echo '→ Vol-')"
+        return 1
+        ;;
+      *)
+        echo "  $(i18n_msg install.vol_timeout_label 2>/dev/null || echo '→ timeout')"
+        return 2
+        ;;
+    esac
+  fi
+
+  certbridge_volume_choice_getevent "$timeout_sec"
 }

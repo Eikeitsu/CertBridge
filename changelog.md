@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **安装音量键**：`install/tools/volkey`（`EVIOCGRAB`）仅安装期防系统音量条；装完随 `install/` / `META-INF` / `customize.sh` 清除，不进运行时模块目录；缺省回退 `getevent`
+
 ## v5.0.3
 
 - **双日志**：拆分 `install.log`（仅新安装清空）与 `runtime.log`（每次 post-fs 清空）；WebUI 合并展示，清空按钮只清 runtime

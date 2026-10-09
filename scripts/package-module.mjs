@@ -493,6 +493,10 @@ async function packageOne(edition, version, abi = null) {
   copyDirFromModule("config");
   copyDirFromModule("bin");
   copyDirFromModule("certs");
+  // 安装期工具（volkey 等）；装机结束会从 MODPATH 清掉 install/
+  if (existsSync(join(moduleRoot, "install"))) {
+    copyDirFromModule("install");
+  }
   // Zygisk so（由 build:zygisk-hide 生成）；仅复制 .so，不打入 README 占位
   if (existsSync(join(moduleRoot, "zygisk"))) {
     mkdirSync(join(staging, "zygisk"), { recursive: true });
@@ -557,6 +561,37 @@ if (editions.includes("full")) {
   validateOpensslBinaries();
 }
 
+function ensureVolkey() {
+  const volkeyDir = join(moduleRoot, "install", "tools");
+  const bins = ["volkey-arm64", "volkey-arm"];
+  if (bins.every((name) => existsSync(join(volkeyDir, name)))) {
+    log("install volkey up to date");
+    return;
+  }
+  if (process.env.SKIP_VOLKEY === "1" || process.env.SKIP_ZYGISK_HIDE === "1") {
+    log("install volkey: skip (SKIP_VOLKEY / SKIP_ZYGISK_HIDE)");
+    return;
+  }
+  const script = join(repoRoot, "scripts", "build-volkey.mjs");
+  if (!existsSync(script)) {
+    log("install volkey: build script missing — skip");
+    return;
+  }
+  log("building install volkey");
+  try {
+    execSync(`node ${JSON.stringify(script)}`, { cwd: repoRoot, stdio: "inherit" });
+  } catch {
+    log("install volkey: build failed — package will fall back to getevent");
+  }
+  const shipped = bins.filter((name) => existsSync(join(volkeyDir, name)));
+  if (shipped.length) {
+    log(`install/tools volkey: ${shipped.join(", ")}`);
+  } else {
+    log("install/tools volkey: missing — 安装时退回 getevent");
+  }
+}
+
+ensureVolkey();
 validateSources();
 
 for (const edition of editions) {

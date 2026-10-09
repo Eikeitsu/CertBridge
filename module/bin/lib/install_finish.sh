@@ -174,6 +174,12 @@ certbridge_run_install() {
     log_info "install: removed orphan /data/adb/susfs4ksu (susfs4ksu module not installed)"
   fi
   certbridge_install_try_hot_update
+  # 安装期工具 / 片段：zip 需要，装完从模块目录清掉（运行期不用）
+  if [ -n "${MODPATH:-}" ] && [ -d "$MODPATH" ]; then
+    rm -rf "$MODPATH/install" "$MODPATH/META-INF" 2>/dev/null || true
+    rm -f "$MODPATH/customize.sh" 2>/dev/null || true
+    log_debug "install: stripped install ephemeral (install/ META-INF customize.sh)"
+  fi
   ui_print "********************************"
   log_info "install: ==== CertBridge install end ===="
 }

@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { Card, Notice } from "@/shared/ui/primitives";
 import { useAppSelector } from "@/app/store/hooks";
 import { selectModuleStatus } from "@/features/status/model/selectors";
-import { isFlagOn } from "@/shared/lib/flag";
 import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
 import { useZnHideAllow } from "../hooks/useZnHideAllow";
 import { useZnFilterMode } from "../hooks/useZnFilterMode";
@@ -21,6 +20,16 @@ type ZnFilterBlockProps = {
   loaderWarn?: ReactNode;
 };
 
+/** quick / unknown 都是探测中，不能当「未检测到」终态展示 */
+function isZygiskLoaderSettled(status: {
+  status_quick?: string;
+  zygisk_loader?: string;
+}): boolean {
+  if (status.status_quick === "1") return false;
+  const loader = status.zygisk_loader;
+  return !!loader && loader !== "unknown";
+}
+
 /**
  * Zygisk 过滤整块：总开关 + 过滤≠umount 提示 + 名单模式 + 名单编辑。
  */
@@ -36,14 +45,15 @@ export function ZnFilterBlock({
   const status = useAppSelector(selectModuleStatus);
   const { voice } = usePackVoice();
   const h = voice.hide;
-  const loaderOk = isFlagOn(status.zygisk_loader_ok);
 
   if (!zn.znHideSupported) return null;
+
+  const showLoaderWarn = isZygiskLoaderSettled(status) && status.zygisk_loader === "none";
 
   const defaultLoaderWarn =
     loaderWarn !== undefined ? (
       loaderWarn
-    ) : !loaderOk ? (
+    ) : showLoaderWarn ? (
       variant === "ops" ? (
         <div className="pk-ops-alert">{h.loaderWarnBody}</div>
       ) : variant === "section" ? (

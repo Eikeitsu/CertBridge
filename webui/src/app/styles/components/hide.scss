@@ -106,6 +106,26 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  padding: 2px 14px 14px;
+  box-sizing: border-box;
+}
+
+/* 分组内开关行自带左右 padding 时去掉，避免双重缩进 */
+.bf-zn-filter__body > .bf-hide-switch-card {
+  padding-inline: 0;
+}
+
+/* Card / ops 外壳已有内边距，避免双重缩进 */
+.bf-card > .bf-zn-filter__body,
+.pk-ops-panel > .bf-zn-filter__body {
+  padding-inline: 0;
+  padding-bottom: 0;
+  max-width: none;
+  width: auto;
+}
+
+.pk-con-block > .bf-zn-filter__body {
+  padding-top: 10px;
 }
 
 .bf-zn-filter__tip {
@@ -131,7 +151,7 @@
 }
 
 .bf-zn-filter__mode {
-  padding-top: 4px;
+  padding-top: 10px;
   border-top: 1px dashed var(--bf-stroke);
 }
 
@@ -155,15 +175,25 @@
   width: 100%;
   margin: 0;
   padding: 14px;
-  border: 1px solid var(--bf-stroke);
+  border: 1px solid color-mix(in srgb, var(--bf-stroke) 85%, transparent);
   border-radius: 14px;
-  background: var(--bf-surface-2);
+  background: var(--bf-surface);
   color: inherit;
   text-align: left;
   cursor: pointer;
+  box-sizing: border-box;
   transition:
     background 0.15s ease,
     border-color 0.15s ease;
+}
+
+/* 已在分组壳内时去掉二次描边 */
+.pk-def-group > .bf-labs-entry,
+.bf-card > .bf-labs-entry {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 14px;
 }
 
 .bf-labs-entry:active {
@@ -203,6 +233,8 @@
   flex-direction: column;
   gap: 14px;
   min-height: 0;
+  padding: 4px 2px 8px;
+  box-sizing: border-box;
 }
 
 .bf-labs-sheet__intro {
@@ -223,17 +255,17 @@
 }
 
 .bf-labs-sheet__item {
-  padding: 10px 0;
+  padding: 12px 2px;
   border-bottom: 1px solid var(--bf-stroke);
 }
 
 .bf-labs-sheet__item:first-child {
-  padding-top: 0;
+  padding-top: 2px;
 }
 
 .bf-labs-sheet__item:last-child {
   border-bottom: none;
-  padding-bottom: 0;
+  padding-bottom: 2px;
 }
 
 .bf-labs-sheet__footer {

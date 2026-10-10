@@ -90,6 +90,16 @@
   }
 }
 
+.pk-def-main {
+  /* 空 pane 时仍撑开可视高度，避免 Tab Loading 贴顶栏 */
+
+  /* prettier-ignore */
+  --pk-main-chrome: calc(var(--bf-inset-top) + var(--pk-top) + var(--pk-below-top) + var(--bf-inset-bottom) + 92px);
+
+  position: relative;
+  min-height: calc(100dvh - var(--pk-main-chrome));
+}
+
 .pk-def-pane {
   display: none;
 }

@@ -118,6 +118,14 @@ html[data-theme="light"] .pk-ops-topbar {
   }
 }
 
+.pk-ops-main {
+  /* prettier-ignore */
+  --pk-main-chrome: calc(var(--bf-inset-top) + var(--pk-top) + var(--pk-below-top) + var(--bf-inset-bottom) + 64px);
+
+  position: relative;
+  min-height: calc(100dvh - var(--pk-main-chrome));
+}
+
 .pk-ops-pane {
   display: none;
 }

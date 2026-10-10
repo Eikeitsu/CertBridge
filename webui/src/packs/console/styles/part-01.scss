@@ -104,7 +104,12 @@ html[data-theme="light"] .pk-con-topbar {
 }
 
 .pk-con-main {
+  /* prettier-ignore */
+  --pk-main-chrome: calc(var(--bf-inset-top) + var(--pk-top) + var(--pk-below-top) + var(--bf-inset-bottom) + var(--pk-dock) + 8px);
+
+  position: relative;
   min-width: 0;
+  min-height: calc(100dvh - var(--pk-main-chrome));
 }
 
 .pk-con-pane {

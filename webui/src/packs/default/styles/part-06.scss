@@ -18,3 +18,12 @@
   padding: 12px 14px;
   min-height: 52px;
 }
+
+/* Zygisk 块内开关已由 body 提供左右边距 */
+.pk-def-shell .bf-zn-filter__body > .bf-hide-switch-card {
+  padding-inline: 0;
+}
+
+.pk-def-shell .bf-zn-filter__body > .pk-def-banner {
+  margin: 0;
+}

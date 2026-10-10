@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## v5.1.1
+
+- **Documentation**: [LSPosed Module] Added membership module (Fuck for VIP/NewHookVip) description - its "extension" often contains the same kind of capabilities as SSL bypass and VPN detection
+- **Zygisk filtering robustness (so)**: non-target process `DLCLOSE` dumpstore; target process preserves so. mountinfo/mounts**scrubbing path literals, keeps the entire row**(no longer deleting row tearing mount id). hooks exception**fail-open**; rewrite readlink target to benign path (no longer `ENOENT`). Updating `zygisk/*.so` will take effect after **restarts**
+- **hook target default collection springboard maps**: "Do not hide anonymous pages by default" was changed to —— Hide `[anonymous]` executable pages from maps/smaps by default after the blacklist hit (PLT springboard; smaps are still discarded by the entire VMA); anonymous `00:00 0` executable pages are only hidden ≤ 4MiB. Explicit `zn_hide_anon_exec=0` can be closed. Force stop the app after changing the list
+
 ## v5.1.0
 
 - **Document**: Added [LSPosed module](docs/guide/lsposed.md) page to collect some ssl certificate related XP modules and vpn proxy related modules in the community

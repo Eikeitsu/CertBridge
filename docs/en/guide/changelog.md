@@ -1,8 +1,14 @@
 # Changelog
 
+## v5.1.1
+
+- **Documentation**: [LSPosed Module] Added membership module (Fuck for VIP/NewHookVip) description - its "extension" often contains the same kind of capabilities as SSL bypass and VPN detection
+- **Zygisk filtering robustness (so)**: non-target process `DLCLOSE` dumpstore; target process preserves so. mountinfo/mounts**scrubbing path literals, keeps the entire row**(no longer deleting row tearing mount id). hooks exception**fail-open**; rewrite readlink target to benign path (no longer `ENOENT`). Updating `zygisk/*.so` will take effect after **restarts**
+- **hook target default collection springboard maps**: "Do not hide anonymous pages by default" was changed to —— Hide `[anonymous]` executable pages from maps/smaps by default after the blacklist hit (PLT springboard; smaps are still discarded by the entire VMA); anonymous `00:00 0` executable pages are only hidden ≤ 4MiB. Explicit `zn_hide_anon_exec=0` can be closed. Force stop the app after changing the list
+
 ## v5.1.0
 
-- **Document**: Added [LSPosed modules] page to collect community SSL / pinning XP modules and VPN-related modules
+- **Document**: Added [LSPosed module](docs/guide/lsposed.md) page to collect some ssl certificate related XP modules and vpn proxy related modules in the community
 - **Install volume key**: `install/tools/volkey` (`EVIOCGRAB`) Install only the anti-volume system volume bar; clear with `install/`/`META-INF`/`customize.sh` after installation, do not enter the runtime module directory; default fallback `getevent`
 - **Repair Zygisk Filter Error Normal App**: Anonymous executable pages are no longer removed from maps/smaps by default (which has caused flashback/network loss); only the path traces of this module are filtered. Optional `zn_hide_anon_exec=1`; tighten mount table path matching
 - **Zygisk black and white list**: `zn_filter_mode=blacklist` (default, only blacklist filtering, empty = no filtering)\ | `whitelist` (in-list exemption, empty ≈ full machine); `zn_blacklist.txt`/`zn_whitelist.txt`; permanent exemption from capture

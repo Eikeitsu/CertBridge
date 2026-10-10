@@ -2,9 +2,15 @@
 
 ## Unreleased
 
+## v5.1.1
+
+- **文档**：[LSPosed 模块] 增补会员类模块（Fuck for VIP / NewHookVip）说明——其「拓展」常含与 SSL 绕过、去 VPN 检测等同类能力
+- **Zygisk 过滤稳健性（so）**：非目标进程 `DLCLOSE` 卸库；目标进程保留 so。mountinfo/mounts **擦洗路径字面量、保留整行**（不再删行扯断 mount id）。hooks 异常 **fail-open**；readlink 目标改写为良性路径（不再 `ENOENT`）。更新 `zygisk/*.so` 需**重启**后生效
+- **挂钩目标默认藏跳板 maps**：「默认不藏匿名页」改为——黑名单命中后默认从 maps/smaps 隐藏 `[anonymous]` 可执行页（PLT 跳板；smaps 仍整段 VMA 丢弃）；无名 `00:00 0` 可执行页仅藏 ≤4MiB。显式 `zn_hide_anon_exec=0` 可关。改名单后强停 App
+
 ## v5.1.0
 
-- **文档**：新增 [LSPosed 模块](docs/guide/lsposed.md) 页面，收集社区一些 ssl 证书相关 XP 模块以及 vpn 代理相关模块
+- **文档**：新增 [LSPosed 模块] 页面，收集社区一些 ssl 证书相关 XP 模块以及 vpn 代理相关模块
 - **安装音量键**：`install/tools/volkey`（`EVIOCGRAB`）仅安装期防系统音量条；装完随 `install/` / `META-INF` / `customize.sh` 清除，不进运行时模块目录；缺省回退 `getevent`
 - **修复 Zygisk 过滤误伤正常 App**：默认不再从 maps/smaps 抽掉匿名可执行页（曾导致闪退/断网）；仅过滤本模块路径痕迹。可选 `zn_hide_anon_exec=1`；收紧 mount 表路径匹配
 - **Zygisk 黑白名单**：`zn_filter_mode=blacklist`（默认，仅过滤黑名单，空=不过滤）\| `whitelist`（名单内豁免，空≈全机）；`zn_blacklist.txt` / `zn_whitelist.txt`；抓包永久豁免

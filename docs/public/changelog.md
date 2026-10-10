@@ -5,6 +5,20 @@
 
 ---
 
+## v5.1.1
+
+### 中文
+
+- **文档**：[LSPosed 模块] 增补会员类模块（Fuck for VIP / NewHookVip）说明——其「拓展」常含与 SSL 绕过、去 VPN 检测等同类能力
+- **Zygisk 过滤稳健性（so）**：非目标进程 `DLCLOSE` 卸库；目标进程保留 so。mountinfo/mounts **擦洗路径字面量、保留整行**（不再删行扯断 mount id）。hooks 异常 **fail-open**；readlink 目标改写为良性路径（不再 `ENOENT`）。更新 `zygisk/*.so` 需**重启**后生效
+- **挂钩目标默认藏跳板 maps**：「默认不藏匿名页」改为——黑名单命中后默认从 maps/smaps 隐藏 `[anonymous]` 可执行页（PLT 跳板；smaps 仍整段 VMA 丢弃）；无名 `00:00 0` 可执行页仅藏 ≤4MiB。显式 `zn_hide_anon_exec=0` 可关。改名单后强停 App
+
+### English
+
+- **Documentation**: [LSPosed Module] Added membership module (Fuck for VIP/NewHookVip) description - its "extension" often contains the same kind of capabilities as SSL bypass and VPN detection
+- **Zygisk filtering robustness (so)**: non-target process `DLCLOSE` dumpstore; target process preserves so. mountinfo/mounts**scrubbing path literals, keeps the entire row**(no longer deleting row tearing mount id). hooks exception**fail-open**; rewrite readlink target to benign path (no longer `ENOENT`). Updating `zygisk/*.so` will take effect after **restarts**
+- **hook target default collection springboard maps**: "Do not hide anonymous pages by default" was changed to —— Hide `[anonymous]` executable pages from maps/smaps by default after the blacklist hit (PLT springboard; smaps are still discarded by the entire VMA); anonymous `00:00 0` executable pages are only hidden ≤ 4MiB. Explicit `zn_hide_anon_exec=0` can be closed. Force stop the app after changing the list
+
 ## v5.1.0
 
 ### 中文
@@ -20,7 +34,7 @@
 
 ### English
 
-- **Document**: Added [LSPosed modules](/en/guide/lsposed) page to collect community SSL / pinning XP modules and VPN-related modules
+- **Document**: Added [LSPosed module](docs/guide/lsposed.md) page to collect some ssl certificate related XP modules and vpn proxy related modules in the community
 - **Install volume key**: `install/tools/volkey` (`EVIOCGRAB`) Install only the anti-volume system volume bar; clear with `install/`/`META-INF`/`customize.sh` after installation, do not enter the runtime module directory; default fallback `getevent`
 - **Repair Zygisk Filter Error Normal App**: Anonymous executable pages are no longer removed from maps/smaps by default (which has caused flashback/network loss); only the path traces of this module are filtered. Optional `zn_hide_anon_exec=1`; tighten mount table path matching
 - **Zygisk black and white list**: `zn_filter_mode=blacklist` (default, only blacklist filtering, empty = no filtering)\ | `whitelist` (in-list exemption, empty ≈ full machine); `zn_blacklist.txt`/`zn_whitelist.txt`; permanent exemption from capture

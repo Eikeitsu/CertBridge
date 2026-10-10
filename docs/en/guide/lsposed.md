@@ -73,6 +73,22 @@ If the issue is the app **refusing to run while VPN is detected** (not missing t
 
 Apps with anti–LSPosed checks may break in-process modules; **VPN Hide** (system framework scope + in-app target list) is often tried first.
 
+## Similar extras in VIP / unlock modules {#vip-ext}
+
+Some community LSPosed modules focus on **membership unlock / lifting feature limits** (e.g. Fuck for VIP, HookVip / NewHookVip). They are not dedicated SSL or VPN tools, but many ship an in-app **“extensions”** panel with hooks that overlap this page—for example:
+
+- SSL / certificate-check bypass (e.g. JustTrustMe++ under HookVip extensions);
+- Hide VPN detection, hide Root / Xposed, lift screenshot limits, and similar generic hooks.
+
+If you already use one of these modules, try enabling the relevant **extension** for the target app when pinning or VPN detection blocks capture. Prefer the dedicated modules above when you want a clearer, capture-focused setup. These are **not** CertBridge dependencies—assess risk and legality yourself; scope and supported app versions follow each module’s own docs.
+
+| Module                    | Role                                                                                              | Repo / download                                                                                                                                                    |
+| ------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Fuck for VIP** (fckvip) | Unlocks selected apps’ VIP features; extensions may include VPN hide, Root/Xposed hide, UI blocks | [bug-bit/fckvip](https://github.com/bug-bit/fckvip) · package `com.bug.hookvip` · [Module repo](https://modules.lsposed.org/module/com.bug.hookvip/)               |
+| **NewHookVip** (HookVip)  | Membership / advanced unlocks; extensions may include JustTrustMe++ (SSL bypass) and more         | [Xposed-Modules-Repo/top.hookvip.pro](https://github.com/Xposed-Modules-Repo/top.hookvip.pro) · [Module repo](https://modules.lsposed.org/module/top.hookvip.pro/) |
+
+There are many forks and lookalikes; download only from channels you trust. CertBridge does not integrate with them.
+
 ## Do not confuse with SSL bypass
 
 | Module           | Actual purpose                                                                                                 | Repo                                                          | Download                                                    |

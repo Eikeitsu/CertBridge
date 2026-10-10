@@ -75,6 +75,22 @@
 
 有 LSPosed 内存注入检测的 App 可能对进程内 Hook 模块失效；可优先试 **VPN Hide** 的「只勾系统框架 + 目标列表在 App 内配置」方案。
 
+## 会员类模块里的同类拓展 {#vip-ext}
+
+社区还有一批以**解锁会员 / 解除功能限制**为主的 LSPosed 模块（如 Fuck for VIP、HookVip / NewHookVip）。它们与上表专用 SSL / VPN 模块定位不同，但模块内常带「**拓展**」能力，其中不少与本文前述场景**同类**，例如：
+
+- 绕过 / 放宽 SSL 证书校验（如 HookVip 拓展里的 JustTrustMe++）；
+- 隐藏 VPN 检测、藏 Root / Xposed、解除截屏限制等通用 Hook。
+
+抓包遇 pinning 或「检测到 VPN 就断网」时，若已安装这类模块，可先在其**拓展**页按目标 App 打开对应开关试一下；仍建议优先用上文专用模块，效果更可预期。**非证书桥依赖**，请自行评估风险与合规性；作用域与适配版本以各模块说明为准。
+
+| 模块                       | 作用简述                                                                    | 仓库 / 下载                                                                                                                                                   |
+| -------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Fuck for VIP**（fckvip） | 解锁部分软件会员；拓展含去 VPN 检测、藏 Root/Xposed、控件拦截等（见模块内） | [bug-bit/fckvip](https://github.com/bug-bit/fckvip) · 包名 `com.bug.hookvip` · [模块仓](https://modules.lsposed.org/module/com.bug.hookvip/)                  |
+| **NewHookVip**（HookVip）  | 解锁会员 / 高级功能；拓展含 JustTrustMe++（SSL 绕过）等（见模块内）         | [Xposed-Modules-Repo/top.hookvip.pro](https://github.com/Xposed-Modules-Repo/top.hookvip.pro) · [模块仓](https://modules.lsposed.org/module/top.hookvip.pro/) |
+
+同类「会员 + 拓展」模块还有不少分支 / 仿品，下载请认准作者渠道；与证书桥无集成关系。
+
 ## 勿与 SSL 绕过混淆
 
 | 模块             | 实际用途                                                                                | 仓库                                                          | 下载                                                        |

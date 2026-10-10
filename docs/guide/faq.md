@@ -100,7 +100,7 @@ Reqable / 黄鸟等会在**各自数据目录**里生成 MITM 根证书；重装
 
 则系统 CA 注入链路已成立，断网应优先排查该 App 的 pinning / 私有信任策略，而不是反复重装本模块。
 
-**可行方向（与证书桥无关）：** 使用针对 pinning 或 SSL 校验的 **Xposed / LSPosed 模块**（或抓包软件自带的对应方案），在目标进程内放宽校验。常用模块与仓库 / 下载见 [LSPosed 模块](/guide/lsposed)（TrustMe、SSLBypass、SSL Kill Switch、TrustMeAlready 等）。Tricky Store 用于密钥证明，**不是** pinning 绕过。具体效果因 App 与版本而异，需自行评估风险与合规性。
+**可行方向（与证书桥无关）：** 使用针对 pinning 或 SSL 校验的 **Xposed / LSPosed 模块**（或抓包软件自带的对应方案），在目标进程内放宽校验。常用模块与仓库 / 下载见 [LSPosed 模块](/guide/lsposed)（TrustMe、SSLBypass、SSL Kill Switch、TrustMeAlready 等；部分会员类模块如 Fuck for VIP / HookVip 的「拓展」里也有同类 SSL / 去 VPN 检测开关）。Tricky Store 用于密钥证明，**不是** pinning 绕过。具体效果因 App 与版本而异，需自行评估风险与合规性。
 
 ### 白名单为空能抓、只抓单个 App 却断网？ {#whitelist-disconnect}
 
@@ -148,4 +148,4 @@ Reqable / 黄鸟等会在**各自数据目录**里生成 MITM 根证书；重装
 
 ### 相关抓包软件 / LSPosed 模块？
 
-抓包工具见 [相关软件](/guide/related)；SSL / pinning 绕过见 [LSPosed 模块](/guide/lsposed)。
+抓包工具见 [相关软件](/guide/related)；SSL / pinning 绕过见 [LSPosed 模块](/guide/lsposed)（含会员类模块的同类拓展说明）。

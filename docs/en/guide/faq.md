@@ -93,7 +93,7 @@ CertBridge only places the capture CA in Android's system trust store. Some apps
 
 If the capture tool's certificate manager shows its root as installed, CertBridge reports a healthy live status, and fingerprints match, system injection is working. Investigate the app's pinning or private trust policy instead of repeatedly reinstalling CertBridge.
 
-Solutions for bypassing app-level TLS checks, such as an Xposed/LSPosed module or a capture tool's own facility, are outside CertBridge. Common modules and download links are listed under [LSPosed modules](./lsposed) (TrustMe, SSLBypass, SSL Kill Switch, TrustMeAlready, and others). Tricky Store targets key attestation, **not** pinning bypass. Compatibility, security, and legal implications depend on the app and version.
+Solutions for bypassing app-level TLS checks, such as an Xposed/LSPosed module or a capture tool's own facility, are outside CertBridge. Common modules and download links are listed under [LSPosed modules](./lsposed) (TrustMe, SSLBypass, SSL Kill Switch, TrustMeAlready, and others; some VIP/unlock modules such as Fuck for VIP / HookVip also expose similar SSL or VPN-hide toggles under their in-app “extensions”). Tricky Store targets key attestation, **not** pinning bypass. Compatibility, security, and legal implications depend on the app and version.
 
 ### Capturing all apps works, but selecting one app disconnects it {#whitelist-disconnect}
 
@@ -141,4 +141,4 @@ This is expected: hot-mount sessions are temporary. For persistence, import a cu
 
 ### Which capture tools and LSPosed modules are supported?
 
-Capture apps: [Related software](./related). SSL / pinning bypass: [LSPosed modules](./lsposed).
+Capture apps: [Related software](./related). SSL / pinning bypass: [LSPosed modules](./lsposed) (including similar extras in VIP/unlock modules).

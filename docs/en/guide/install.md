@@ -99,7 +99,8 @@ Supported managers and WebUI can update CertBridge without an immediate reboot. 
 │   ├── generation/              # complete set generated for this boot
 │   └── hot/                     # temporary session, removed on unmount
 ├── config/certs.conf
-├── config/zn_whitelist.txt      # when the Zygisk component is installed
+├── config/zn_blacklist.txt      # Zygisk blacklist (default mode)
+├── config/zn_whitelist.txt      # Zygisk whitelist (whitelist mode)
 ├── zygisk/                      # optional *.so
 ├── data/state/                  # applied list and runtime state
 └── webroot/                     # optional WebUI

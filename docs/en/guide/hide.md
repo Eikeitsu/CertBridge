@@ -1,101 +1,113 @@
 # Mount hiding
 
-CertBridge uses **bind mounts** to place the merged CA set on Android trust-store paths. A detector may still find those changes through `mountinfo`, path patterns, or trust-store contents.
+CertBridge **bind-mounts** the merged CA into system trust-store paths. Detectors may still see anomalies via `mountinfo`, path fingerprints, or trust-store contents.
 
-- Changing the temporary path is **not hiding**: `tmpfs_style` cannot replace unmounting.
-- Kernel-side unmounting relies on SuSFS, `ksud`, NoHello, or another `try_umount` implementation.
-- The optional Zygisk filter removes relevant lines from process-visible mount and maps files.
+- **Changing the temporary layer path ≠ hiding**: `tmpfs_style` alone does not replace umount
+- **Kernel-side unmount**: SuSFS / `ksud` / NoHello try_umount helpers
+- **In-process table views**: optional Zygisk filtering strips CertBridge-related lines
 
-These mechanisms are complementary; neither replaces the other.
+These two capabilities are **parallel and not substitutes**.
 
-## Required reading for traffic capture
+## Capture must-read
 
-For a CA to work, the process must see the cacerts **bind mount**. Enabling “unmount modules,” DenyList unmounting, or “exclude modifications” for an app removes that certificate layer from the app's mount namespace.
+For the certificate to work, the process must see the cacerts **bind**. Enabling “Unmount modules / Umount / DenyList+umount / Exclude modifications” for an app also removes the certificate layer from that process’s mount namespace.
 
-| App                                        | Result when unmounting is enabled                                                              |
-| ------------------------------------------ | ---------------------------------------------------------------------------------------------- |
-| Reqable, ProxyPin, or another capture tool | Cannot see its capture CA in the system store and reports **“root certificate not installed”** |
-| The target app being captured              | TLS cannot see the capture CA, causing certificate errors or loss of networking                |
+| Target                  | If umount is enabled                         | Typical symptom                             |
+| ----------------------- | -------------------------------------------- | ------------------------------------------- |
+| Reqable / ProxyPin etc. | Cannot read capture CA from the system store | In-app “**root certificate not installed**” |
+| Capture target app      | TLS cannot see the capture CA                | **Offline** / certificate errors            |
 
-Enable unmounting only for apps that must avoid detection and are **not participating in the current capture**. Keep it disabled for both the capture tool and every target app.
+**Correct approach**: only enable module unmount for apps that need to evade detection and are **not** part of the current capture session; never for capture tools or the target app.
 
-## Mount-hide assistance: SuSFS/kernel
+## Hide assistance (SuSFS / kernel)
 
-| Installation profile | Component                 | Initial `hide_allow`                                 |
-| -------------------- | ------------------------- | ---------------------------------------------------- |
-| Default              | **Installed**             | **Off** (`0`); enable it on WebUI's Hide page        |
-| Custom               | Selected with volume keys | **On** (`1`) when selected; it can be disabled later |
+| Install mode | Component           | Default `hide_allow`               |
+| ------------ | ------------------- | ---------------------------------- |
+| Default      | **Installed**       | **Off** (`0`; toggle on Hide page) |
+| Custom       | Volume-key optional | On after check (`1`)               |
 
-When omitted, no helper script remains on the device. If the Zygisk filter is also omitted, WebUI does not show the Hide page.
+When missing: no assist scripts on device; if Zygisk filtering is also missing, WebUI **hides the Hide tab**.
 
 When installed:
 
-- WebUI's Hide page controls `hide_allow`.
-- After successful injection or hot mount, the helper registers paths with SuSFS, `ksud kernel umount`, NoHello, and supported alternatives.
-- Disabling it clears registrations immediately. With `ksud`, it deletes known paths and does **not** wipe the whole table.
-- The switch writes configuration and returns immediately; registration continues in the background without blocking WebUI.
-- To verify unmounting, force-stop and reopen the target app. Rebooting solely to register paths is unnecessary.
+- Hide page switch (`hide_allow`)
+- On: successful inject / hot-mount registers with SuSFS, `ksud kernel umount`, NoHello, etc.
+- Off: clears registration immediately (with `ksud`, `umount del` for known paths; **no** full wipe)
+- Switch writes conf and returns; registration runs in the background
+- To verify unmount: **force-stop and reopen** the target app
 
-Without a helper, detectors may still see the bind in mountinfo. The Hide status card lists available helpers side by side (SuSFS, ksud, NoHello, ZygiskNext, and so on)—they can work together; there is no exclusive priority. CertBridge registers paths itself via `ksud kernel umount` / `ksu_susfs add_try_umount`.
+Without helpers, bind mounts may still appear in mountinfo. The page lists available SuSFS / ksud / NoHello / ZygiskNext assistants (can coexist).
 
-## Zygisk mount-trace filtering
+## Zygisk mount-trace filtering {#zygisk-mount-trace-filtering}
 
-Release packages may contain `zygisk/<abi>.so`. It is **not installed by default**, but custom installation can select it and starts with `zn_hide_allow=1`.
+Packages may include `zygisk/<abi>.so`. **Not installed by default**; custom install can select it and starts with `zn_hide_allow=1`.
 
-| Track             | Technology                                  | Scope                                              | Packaging                                        |
-| ----------------- | ------------------------------------------- | -------------------------------------------------- | ------------------------------------------------ |
-| **A (primary)**   | Classic Zygisk API via `zygisk/*.so`        | Filters mount/maps views in ordinary app processes | Shipped when the binary is available             |
-| **B (auxiliary)** | ZN Module via `zn_modules.txt` and an `.so` | Services launched by init                          | No placeholder package; omitted until calibrated |
+| Track            | Tech                             | Scope                                   | Packaging                                                       |
+| ---------------- | -------------------------------- | --------------------------------------- | --------------------------------------------------------------- |
+| **A (primary)**  | Classic Zygisk `zygisk/*.so`     | Only apps on the **filter target list** | Shipped when `.so` exists                                       |
+| **B (optional)** | ZN Module: `zn_modules.txt` + so | Init-started service processes          | Only when `zn_modules.txt` has active lines and the so is built |
 
-| Item          | Details                                                                                           |
-| ------------- | ------------------------------------------------------------------------------------------------- |
-| Filtering     | Line-by-line filtering for mountinfo/mounts and maps/smaps; reduces `map_files` readlink exposure |
-| Setting       | `zn_hide_allow`, independent of `hide_allow`                                                      |
-| Requirement   | Zygisk built in or supplied by ZygiskNext, ReZygisk, NeoZygisk, or another compatible loader      |
-| Whitelist     | `config/zn_whitelist.txt`; capture apps are included by default and are not filtered              |
-| Not installed | No `.so` means `zn_hide_supported=0`; Hide appears only if this or hide assistance exists         |
+When enabled (and the process is on the target list), process-visible tables drop **this module’s** traces, e.g.:
 
-The shared object remains in memory, and PLT hooks or the Zygisk framework itself may still be detectable. Filtering is not complete invisibility.
+- `mountinfo` / `mounts` lines containing `CertBridge`, `sys-ca-merge`, `/dev/.fs*`, `/mnt/.ca*`, etc.
+- `maps` / `smaps` lines mapped to this module’s `zygisk/*.so` or the temporary layer
+- `readlink` to module paths appears as missing
 
-## Guidance by root solution
+**Does not unmount or change trust-store contents**: the cacerts bind remains; HTTPS still uses the module CA. Complements Root “unmount modules”—only the latter removes the overlay from the namespace.
+
+| Item          | Notes                                                                                                                                                                          |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Config        | `zn_hide_allow`; `zn_filter_mode`; `zn_hide_anon_exec` off by default                                                                                                          |
+| List mode     | **Blacklist (default)**: filter only `zn_blacklist.txt`; empty = filter none. **Whitelist**: skip `zn_whitelist.txt`; empty ≈ filter all (careful). Capture apps always exempt |
+| Not installed | No `.so` → `zn_hide_supported=0`                                                                                                                                               |
+
+> The so stays in memory; Zygisk / PLT / other Root traces are out of scope. Filtering is not full stealth.  
+> **Filter ≠ module umount**: the former keeps the CA; the latter tears down mounts.
+
+### Path fingerprints (with filtering)
+
+Script inject copies certs to a short tmpfs path (default `/dev/.fs0`) then bind-mounts, and orphans the staging mount afterward so mountinfo does not keep pointing at the module tree. If you still see `modules/CertBridge`, that is often **Magic Mount**—prefer `mount_mode=compatible` + `tmpfs_style=dev`, then add packages to the blacklist as needed.
+
+## By Root solution
 
 ### KernelSU / SukiSU
 
-1. Enable **Unmount modules** only for apps that need detection resistance.
-2. Never enable it for Reqable, ProxyPin, or target apps being captured.
-3. With SuSFS, `hide_allow=1` automatically calls `add_try_umount`.
-4. For in-process mountinfo filtering, install the Zygisk component and a compatible loader.
+1. Enable **Unmount modules** only for apps that need evasion
+2. **Do not** enable for Reqable / ProxyPin / capture targets
+3. With SuSFS, `hide_allow=1` auto `add_try_umount`
+4. For in-process mountinfo filtering, install Zygisk filtering + a compatible loader, then add packages to the target list
 
 ### Magisk
 
-1. When using DenyList, Shamiko, or Zygisk unmounting, keep the complete capture path outside the unmount list.
-2. ZygiskNext, ReZygisk, or NeoZygisk can be used; they often require disabling built-in Zygisk.
-3. With NoHello or Zygisk Assistant, `hide_allow=1` can register cacerts `point` rules.
-4. Magisk has no official equivalent of `ksud kernel umount`; script binds depend on those helpers or Zygisk filtering.
+1. DenyList / Shamiko / Zygisk umount: same rule—keep capture path off unmount lists
+2. ZygiskNext / ReZygisk / NeoZygisk (often disable built-in Zygisk)
+3. NoHello / Zygisk Assistant: `hide_allow=1` can write cacerts `point` rules
+4. Magisk has no official `ksud kernel umount` equivalent
 
 ### APatch
 
-1. Enable **Exclude modifications** only for apps that need it.
-2. Do not enable it for capture tools or targets.
-3. NeoZygisk, ReZygisk, ZygiskNext, or NoHello may provide the supporting mechanisms.
+1. Enable **Exclude modifications** only for evasion targets
+2. Do not enable for the capture path
+3. NeoZygisk / ReZygisk / ZygiskNext; or NoHello assist
 
 ## WebUI Hide page
 
-| Section              | Contents                                                                              |
-| -------------------- | ------------------------------------------------------------------------------------- |
-| Live status          | Root solution, mount mode, temporary layer, detected helpers, and registration status |
-| Hide assistance      | `hide_allow` and immediate re-registration                                            |
-| Zygisk               | `zn_hide_allow` and whitelist editor when installed                                   |
-| Capture checklist    | A dismissible warning card                                                            |
-| Advanced experiments | Force binding, late injection, zygote, multi-APEX, and service probing                |
+| Area        | Content                                                             |
+| ----------- | ------------------------------------------------------------------- |
+| Status      | Root, mount mode, stage path, assistants, registration              |
+| Hide assist | `hide_allow`, re-register now                                       |
+| Zygisk      | `zn_hide_allow`, black/white list mode and editors (when installed) |
+| Note        | “Filter ≠ module umount”                                            |
+| Checklist   | Dismissible capture reminder                                        |
+| Experiments | Force-bind / late inject / zygote / multi-APEX / service probe      |
 
 See [WebUI](./webui) and [Configuration](./config).
 
-## Capability summary
+## Capability matrix
 
-| Capability           | Entry point                             | Key point                                                          |
-| -------------------- | --------------------------------------- | ------------------------------------------------------------------ |
-| SuSFS/kernel unmount | Install helper and set `hide_allow`     | Removes mounts for apps on the root manager's unmount list         |
-| Zygisk filtering     | Custom installation and `zn_hide_allow` | Filters CertBridge mount/maps lines seen by processes              |
-| Short temporary path | `tmpfs_style`                           | Reduces path fingerprints but does **not** replace unmounting      |
-| Advanced experiments | All off by default                      | Enable compatibility options only when certificate injection fails |
+| Capability             | Entry                                                       | Notes                                                  |
+| ---------------------- | ----------------------------------------------------------- | ------------------------------------------------------ |
+| SuSFS / kernel unmount | Component + `hide_allow`                                    | Unmounts for apps on the manager umount list           |
+| Zygisk filter          | Custom install + `zn_hide_allow` + `zn_filter_mode` + lists | Filters this module’s mount/maps lines per mode        |
+| Short stage path       | `tmpfs_style`                                               | Reduces path fingerprints; **not** a umount substitute |
+| Experiments            | All off by default                                          | Enable only when diagnosing certificate issues         |

@@ -50,6 +50,8 @@ First check whether root hiding removed the certificate mount:
 
 Disable module unmounting for Reqable/ProxyPin **and every target being captured**. Enable it only for apps outside the capture path. See [Mount hiding](./hide).
 
+Optional Zygisk mount filtering is not the same as module umount: it only hides this module’s path traces in process-visible tables and **does not** remove the CA. Default is blacklist mode (empty = filter nothing); whitelist mode with an empty list ≈ filter all apps—use carefully. Capture apps are always exempt. See [Mount hiding · Zygisk](./hide#zygisk-mount-trace-filtering).
+
 ### Status is healthy, but capture still breaks networking
 
 A very common cause is that the capture app's current root CA is not the certificate enabled in CertBridge.
@@ -61,6 +63,26 @@ A very common cause is that the capture app's current root CA is not the certifi
 
 Use refresh/verify or `cb sync_apps`, or import the CA as a custom certificate and **reboot**. Hot mount can be used for a temporary test.
 
+### Main-space Reqable shows the root installed, but the clone copy of the capture app does not? {#clone-capture-cert-ui}
+
+**Most often: main and clone use different root CAs, while CertBridge only injects the main-space one into the system store.**
+
+Reqable, HttpCanary, and similar tools generate a MITM root in **each app data directory**. Reinstalling, tapping **regenerate certificate**, or first launch in a **clone instance** often produces a **new fingerprint**. Main-space Reqable shows “installed” when the system / APEX store contains **the root it is currently using** (usually from CertBridge’s Reqable sync or your custom import). Clone Reqable checks **its own** root—if that fingerprint is not in the system store, it shows “not installed”. That is a **mismatch**, not “CertBridge failed to write any CA”.
+
+`sync_apps` / install import reads **user 0 (primary)** paths only, **not** the clone copy’s `reqable-root.crt`.
+
+| Goal                                                        | What to do                                                                                                                                                                                                                                                                                                   |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| One root for the whole device (including clone target apps) | **Pin one root in main space**; avoid regenerating separately in main vs clone. After generating in main → WebUI refresh / `cb sync_apps` → **reboot**. If clone Reqable can **import/reuse** the same root, align it with main; otherwise capture from main Reqable and keep only target apps in the clone. |
+| Must use clone Reqable and want a green badge there         | Export the **clone’s current** root as PEM → WebUI **custom import** (multiple CAs can coexist) → **reboot**; or rely on custom import only so main sync does not overwrite your choice.                                                                                                                     |
+| Two different roots actively in use                         | The system store must **include both** (main sync + clone custom import) for both UIs to turn green; CertBridge does not auto-sync per clone user.                                                                                                                                                           |
+
+**Same “certificate ID” / subject in main vs clone, different keys—can they coexist?** Android names trust-store files by **subject hash** (e.g. `a1b2c3d4.0`). Two different roots with the same subject share that prefix; only one distinct blob can occupy `.0`, but CertBridge collision handling adds **`hash.1`, `hash.2`, …**, so **both can live in the system store** and TLS usually accepts either anchor. It still fails if you only sync main space and **never custom-import the clone PEM**—the system has main’s public key on `.0` while clone Reqable signs with another private key. Regenerating in main and running `sync_apps` can also replace `.0` and leave the clone on a key that is not in the store. **Simplest fix: one root everywhere** (generate in main, import the same file into clone Reqable if supported) rather than running two MITM roots as `.0` + `.1`.
+
+**Less common:** clone processes cannot see the cacerts bind (hide / umount, ColorOS meta isolation)—if main is green, clone is red, and **decryption never works**, see [root cert missing](./faq#root-cert-missing) and `force_bind_capture`.
+
+**CertBridge cannot** share one on-disk key file between main and clone Reqable automatically, or tap “install to system” inside the clone for you—it only injects **PEMs you configure** into the system trust store.
+
 ### The system CA works, but an individual app still loses networking {#cert-pinning}
 
 CertBridge only places the capture CA in Android's system trust store. Some apps do not rely entirely on those trust anchors:
@@ -71,11 +93,13 @@ CertBridge only places the capture CA in Android's system trust store. Some apps
 
 If the capture tool's certificate manager shows its root as installed, CertBridge reports a healthy live status, and fingerprints match, system injection is working. Investigate the app's pinning or private trust policy instead of repeatedly reinstalling CertBridge.
 
-Solutions for bypassing app-level TLS checks, such as an Xposed/LSPosed module or a capture tool's own facility, are outside CertBridge. Compatibility, security, and legal implications depend on the app and version.
+Solutions for bypassing app-level TLS checks, such as an Xposed/LSPosed module or a capture tool's own facility, are outside CertBridge. Common modules and download links are listed under [LSPosed modules](./lsposed) (TrustMe, SSLBypass, SSL Kill Switch, TrustMeAlready, and others). Tricky Store targets key attestation, **not** pinning bypass. Compatibility, security, and legal implications depend on the app and version.
 
 ### Capturing all apps works, but selecting one app disconnects it {#whitelist-disconnect}
 
 This is usually a capture-tool interception-scope, per-app VPN, or DNS issue rather than CertBridge. Test capture for all apps first; if it still fails, check CA fingerprints and unmount settings.
+
+**ColorOS / OPPO app clone:** If the main copy captures but the clone does not, the OS often isolates `VpnService` / TUN from the clone user—CertBridge **cannot** force traffic into the tunnel. Try Wi‑Fi proxy, install the capture app inside the clone space, or a community LSPosed patch such as [Coloros VPN fix](https://github.com/fengxi555/Coloros-VPN-fix). If the app blocks because it **detects** VPN rather than missing tunnel traffic, see [LSPosed modules · VPN / clones](./lsposed#clone-vpn).
 
 ### Why is status abnormal immediately after reboot, then healthy later?
 
@@ -115,6 +139,6 @@ Common commands include `status --live`, `set`, `sync_apps`, and `hot_mount`. Se
 
 This is expected: hot-mount sessions are temporary. For persistence, import a custom certificate or keep the Reqable/ProxyPin source enabled and reboot.
 
-### Which capture tools are supported?
+### Which capture tools and LSPosed modules are supported?
 
-See [Related software](./related) for Reqable, ProxyPin, HttpCanary, ADGuard, and manual-import guidance.
+Capture apps: [Related software](./related). SSL / pinning bypass: [LSPosed modules](./lsposed).

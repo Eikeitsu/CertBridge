@@ -2,12 +2,13 @@
 
 推荐用 **WebUI** 修改。也可用 `bin/cb set` / `cb get`，或直接编辑文件。
 
-| 文件                          | 内容                                       |
-| ----------------------------- | ------------------------------------------ |
-| `config/certs.conf`           | 证书开关、挂载模式、热挂载、隐藏与冷门实验 |
-| `config/zn_whitelist.txt`     | Zygisk 过滤白名单（一行一个包名）          |
-| `config/install-profile.conf` | 安装时写入的组件档案（只读状态）           |
-| `data/state/`                 | 运行态缓存、隐藏协助状态等                 |
+| 文件                          | 内容                                            |
+| ----------------------------- | ----------------------------------------------- |
+| `config/certs.conf`           | 证书开关、挂载模式、热挂载、隐藏与冷门实验      |
+| `config/zn_blacklist.txt`     | Zygisk 过滤黑名单（`zn_filter_mode=blacklist`） |
+| `config/zn_whitelist.txt`     | Zygisk 过滤白名单（`zn_filter_mode=whitelist`） |
+| `config/install-profile.conf` | 安装时写入的组件档案（只读状态）                |
+| `data/state/`                 | 运行态缓存、隐藏协助状态等                      |
 
 路径前缀：`/data/adb/modules/CertBridge/`。
 
@@ -31,10 +32,12 @@ service_probe=0
 
 安装了对应组件后，还可能出现：
 
-| 键              | 含义                                  |
-| --------------- | ------------------------------------- |
-| `hide_allow`    | `1`=开启 SuSFS / 内核 try_umount 登记 |
-| `zn_hide_allow` | `1`=开启 Zygisk 挂载过滤              |
+| 键                  | 含义                                                           |
+| ------------------- | -------------------------------------------------------------- |
+| `hide_allow`        | `1`=开启 SuSFS / 内核 try_umount 登记                          |
+| `zn_hide_allow`     | `1`=开启 Zygisk 挂载过滤（默认只藏本模块路径痕迹）             |
+| `zn_filter_mode`    | `blacklist`（默认）\| `whitelist`                              |
+| `zn_hide_anon_exec` | `1`=额外藏 maps 匿名可执行页；**默认关**（误开易误伤正常 App） |
 
 ### 证书开关
 
@@ -126,11 +129,18 @@ WebUI「更多 → 挂载与注入」挂载模式下方也有同样摘要。隐�
 
 临时层会合并当前已启用的永久 addon，避免盖掉 Reqable / ProxyPin。重启后临时会话消失。CLI：`cb hot_mount` / `cb hot_unmount`。
 
-## Zygisk 白名单
+## Zygisk 黑白名单
 
-路径：`config/zn_whitelist.txt`。一行一个包名（可含 `:进程` 前缀匹配）；`#` 开头为注释。默认含 Reqable / ProxyPin 相关包名，名单内**不过滤** mount/maps，避免抓包 App 读不到系统 CA。
+由 `zn_filter_mode` 决定读哪份名单（两文件互不混用）：
 
-WebUI「隐藏」页可编辑；保存后需**强停相关 App** 或重启生效。CLI：`cb get_zn_whitelist` / `cb set_zn_whitelist`。
+| 模式                | 文件                      | 名单内     | 空名单                     |
+| ------------------- | ------------------------- | ---------- | -------------------------- |
+| `blacklist`（默认） | `config/zn_blacklist.txt` | **要过滤** | 不过滤任何 App             |
+| `whitelist`         | `config/zn_whitelist.txt` | **不过滤** | 过滤几乎全机（抓包仍豁免） |
+
+一行一个包名（可含 `:进程`）；`#` 注释。抓包 App 永久豁免。
+
+WebUI「隐藏」页可切模式并编辑当前名单；保存后**强停相关 App**。CLI：`cb set_zn_filter_mode`、`get|set_zn_blacklist`、`get|set_zn_whitelist`。
 
 ## 相关文档
 

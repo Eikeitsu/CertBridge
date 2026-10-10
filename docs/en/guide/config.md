@@ -5,7 +5,8 @@ WebUI is the recommended way to change settings. You can also use `bin/cb set` /
 | File                          | Contents                                                                      |
 | ----------------------------- | ----------------------------------------------------------------------------- |
 | `config/certs.conf`           | Certificate switches, mount mode, hot mount, hiding, and advanced experiments |
-| `config/zn_whitelist.txt`     | Zygisk-filter whitelist, one package per line                                 |
+| `config/zn_blacklist.txt`     | Zygisk filter blacklist (`zn_filter_mode=blacklist`)                          |
+| `config/zn_whitelist.txt`     | Zygisk filter whitelist (`zn_filter_mode=whitelist`)                          |
 | `config/install-profile.conf` | Read-only record of components selected at installation                       |
 | `data/state/`                 | Runtime caches and hide-assistance state                                      |
 
@@ -31,10 +32,12 @@ service_probe=0
 
 When the corresponding components are installed, these may also appear:
 
-| Key             | Meaning                                            |
-| --------------- | -------------------------------------------------- |
-| `hide_allow`    | `1` enables SuSFS/kernel `try_umount` registration |
-| `zn_hide_allow` | `1` enables Zygisk mount filtering                 |
+| Key                 | Meaning                                                                                      |
+| ------------------- | -------------------------------------------------------------------------------------------- |
+| `hide_allow`        | `1` enables SuSFS/kernel `try_umount` registration                                           |
+| `zn_hide_allow`     | `1` enables Zygisk mount filtering (CertBridge path traces only by default)                  |
+| `zn_filter_mode`    | `blacklist` (default) or `whitelist`                                                         |
+| `zn_hide_anon_exec` | `1` also hides anonymous executable maps entries; **off by default** (can break normal apps) |
 
 ### Certificate switches
 
@@ -126,11 +129,18 @@ This requires the hot-mount component and `hot_allow=1`.
 
 The temporary layer also merges all currently enabled permanent add-ons so it does not hide Reqable or ProxyPin. It disappears after reboot. CLI commands are `cb hot_mount` and `cb hot_unmount`.
 
-## Zygisk whitelist
+## Zygisk black / white lists
 
-`config/zn_whitelist.txt` contains one package name per line, supports `:process` prefix matching, and treats lines beginning with `#` as comments. Reqable and ProxyPin packages are included by default; whitelisted processes are **not** filtered so capture apps can still see the system CA.
+`zn_filter_mode` selects which file applies (the two lists are not mixed):
 
-Edit it on WebUI's Hide page. Force-stop affected apps or reboot after saving. CLI commands are `cb get_zn_whitelist` and `cb set_zn_whitelist`.
+| Mode                  | File                      | Listed apps      | Empty list                               |
+| --------------------- | ------------------------- | ---------------- | ---------------------------------------- |
+| `blacklist` (default) | `config/zn_blacklist.txt` | **Filtered**     | Filter no apps                           |
+| `whitelist`           | `config/zn_whitelist.txt` | **Not filtered** | Filter almost all (capture still exempt) |
+
+One package per line (`:process` ok); `#` comments. Capture apps are always exempt.
+
+Edit mode and the active list on the Hide page. Force-stop apps after saving. CLI: `cb set_zn_filter_mode`, `get|set_zn_blacklist`, `get|set_zn_whitelist`.
 
 ## Related documentation
 

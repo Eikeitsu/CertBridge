@@ -103,7 +103,8 @@
 │   ├── generation/      # 本次启动生成的完整证书集
 │   └── hot/             # 临时会话（卸载后删除）
 ├── config/certs.conf
-├── config/zn_whitelist.txt   # Zygisk 白名单（有组件时）
+├── config/zn_blacklist.txt   # Zygisk 黑名单（默认模式）
+├── config/zn_whitelist.txt   # Zygisk 白名单（whitelist 模式）
 ├── zygisk/              # 可选 *.so
 ├── data/state/          # applied 列表、运行时状态等
 └── webroot/             # 可选 WebUI

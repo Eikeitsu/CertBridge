@@ -15,7 +15,8 @@ const zhNav = [
       { text: "隐藏", link: "/guide/hide" },
       { text: "WebUI", link: "/guide/webui" },
       { text: "CLI", link: "/guide/cli" },
-      { text: "相关", link: "/guide/related" },
+      { text: "相关软件", link: "/guide/related" },
+      { text: "LSPosed", link: "/guide/lsposed" },
     ],
   },
   { text: "更新日志", link: "/guide/changelog" },
@@ -43,6 +44,7 @@ const zhSidebar = [
     text: "其它",
     items: [
       { text: "相关软件", link: "/guide/related" },
+      { text: "LSPosed 模块", link: "/guide/lsposed" },
       { text: "更新日志", link: "/guide/changelog" },
       { text: "致谢", link: "/guide/credits" },
     ],
@@ -62,6 +64,7 @@ const enNav = [
       { text: "WebUI", link: "/en/guide/webui" },
       { text: "CLI", link: "/en/guide/cli" },
       { text: "Related", link: "/en/guide/related" },
+      { text: "LSPosed", link: "/en/guide/lsposed" },
     ],
   },
   { text: "Changelog", link: "/en/guide/changelog" },
@@ -89,6 +92,7 @@ const enSidebar = [
     text: "Other",
     items: [
       { text: "Related", link: "/en/guide/related" },
+      { text: "LSPosed modules", link: "/en/guide/lsposed" },
       { text: "Changelog", link: "/en/guide/changelog" },
       { text: "Credits", link: "/en/guide/credits" },
     ],

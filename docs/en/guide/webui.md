@@ -66,7 +66,7 @@ Inspect `data/install.log` and runtime logs, filter by severity, or search for t
 This page appears only when a related component is installed. It contains:
 
 - Live mount/hide status and instructions specific to the current root solution
-- `hide_allow`, `zn_hide_allow`, whitelist editing, and immediate re-registration
+- `hide_allow`, `zn_hide_allow`, black/white list mode and editors, and immediate re-registration; “filter ≠ module umount” tip
 - A dismissible capture checklist
 - **Advanced experiments:** `force_bind_capture`, `late_inject`, `boot_bind_zygote`, `boot_multi_apex`, and `service_probe`
 

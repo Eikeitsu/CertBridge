@@ -64,7 +64,7 @@ WebUI 在模块管理器中打开（KernelSU、SukiSU、APatch 系、MMRL、WebU
 仅组件已装时出现。包含：
 
 - 挂载与隐藏实况、分 Root 方案说明
-- `hide_allow` / `zn_hide_allow`、白名单、立刻重登记
+- `hide_allow` / `zn_hide_allow`、黑白名单模式与名单、立刻重登记；「过滤 ≠ 卸载模块」提示
 - 抓包检查清单（可关闭）
 - **冷门实验**：`force_bind_capture`、`late_inject`、`boot_bind_zygote`、`boot_multi_apex`、`service_probe`
 

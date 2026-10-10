@@ -31,8 +31,11 @@ The external `/data/adb/certbridge/cb` entry forwards to the module's `cert_mana
 | `set_hide_allow` / `hide` `0\|1`            | Toggle mount-hide assistance                                           |
 | `hide_reregister` / `hr`                    | Immediately register `try_umount` paths again                          |
 | `set_zn_hide_allow` / `zn` `0\|1`           | Toggle Zygisk filtering                                                |
-| `get_zn_whitelist` / `gzn`                  | Read the Zygisk whitelist                                              |
-| `set_zn_whitelist` / `szn` `<base64>`       | Write the whitelist                                                    |
+| `set_zn_filter_mode` / `znm`                | `blacklist` or `whitelist`                                             |
+| `get_zn_blacklist` / `gzb`                  | Read blacklist                                                         |
+| `set_zn_blacklist` / `szb` `<base64>`       | Write blacklist                                                        |
+| `get_zn_whitelist` / `gzn`                  | Read whitelist                                                         |
+| `set_zn_whitelist` / `szn` `<base64>`       | Write whitelist                                                        |
 
 The old `reinject` and `sync` commands are disabled and report that a reboot is required because hot reloading is no longer supported.
 

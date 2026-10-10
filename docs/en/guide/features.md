@@ -97,7 +97,8 @@ These options are off by default to minimize traces. Enable them under **Hide â†
 ```text
 /data/adb/modules/CertBridge/
 /data/adb/modules/CertBridge/config/certs.conf
-/data/adb/modules/CertBridge/config/zn_whitelist.txt   # when Zygisk filtering is installed
+/data/adb/modules/CertBridge/config/zn_blacklist.txt   # Zygisk blacklist
+/data/adb/modules/CertBridge/config/zn_whitelist.txt   # Zygisk whitelist
 /data/adb/modules/CertBridge/bin/cb
 /data/adb/modules/CertBridge/data/install.log
 /data/adb/certbridge/                                  # short-lived external update files, etc.

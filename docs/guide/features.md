@@ -97,7 +97,8 @@ Android 14+：默认 `experimental_14_system=skip`，优先脚本 bind **主 APE
 ```text
 /data/adb/modules/CertBridge/
 /data/adb/modules/CertBridge/config/certs.conf
-/data/adb/modules/CertBridge/config/zn_whitelist.txt   # 装了 Zygisk 过滤时
+/data/adb/modules/CertBridge/config/zn_blacklist.txt   # Zygisk 黑名单
+/data/adb/modules/CertBridge/config/zn_whitelist.txt   # Zygisk 白名单
 /data/adb/modules/CertBridge/bin/cb
 /data/adb/modules/CertBridge/data/install.log
 /data/adb/certbridge/                                  # 热更新等外部短时文件

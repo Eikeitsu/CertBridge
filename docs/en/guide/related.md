@@ -2,6 +2,8 @@
 
 CertBridge only writes CAs into the **system trust store**; it does not provide a traffic-capture proxy. The following tools are detected for automatic or prompted import, or are commonly imported manually.
 
+If an individual app still fails due to certificate pinning, see [LSPosed modules](./lsposed).
+
 ## Automatic or installation-time import
 
 | Software       | Link                                                 | CertBridge integration                                                                                                                      |

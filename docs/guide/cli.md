@@ -31,6 +31,9 @@
 | `set_hide_allow` / `hide` `0\|1`          | 隐藏协助开关                                  |
 | `hide_reregister` / `hr`                  | 立刻重登记 try_umount                         |
 | `set_zn_hide_allow` / `zn` `0\|1`         | Zygisk 过滤开关                               |
+| `set_zn_filter_mode` / `znm`              | `blacklist` \| `whitelist`                    |
+| `get_zn_blacklist` / `gzb`                | 读黑名单                                      |
+| `set_zn_blacklist` / `szb` `<b64>`        | 写黑名单                                      |
 | `get_zn_whitelist` / `gzn`                | 读白名单                                      |
 | `set_zn_whitelist` / `szn` `<b64>`        | 写白名单                                      |
 

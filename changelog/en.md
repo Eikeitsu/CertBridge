@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## v5.1.0
+
+- **Document**: Added [LSPosed module](docs/guide/lsposed.md) page to collect some ssl certificate related XP modules and vpn proxy related modules in the community
+- **Install volume key**: `install/tools/volkey` (`EVIOCGRAB`) Install only the anti-volume system volume bar; clear with `install/`/`META-INF`/`customize.sh` after installation, do not enter the runtime module directory; default fallback `getevent`
+- **Repair Zygisk Filter Error Normal App**: Anonymous executable pages are no longer removed from maps/smaps by default (which has caused flashback/network loss); only the path traces of this module are filtered. Optional `zn_hide_anon_exec=1`; tighten mount table path matching
+- **Zygisk black and white list**: `zn_filter_mode=blacklist` (default, only blacklist filtering, empty = no filtering)\ | `whitelist` (in-list exemption, empty ≈ full machine); `zn_blacklist.txt`/`zn_whitelist.txt`; permanent exemption from capture
+- **complementary reading meter leakage network path**: relative to `maps` + `/proc` dirfd, `fopen`, `__open_2`; host single test `npm run test:zygisk-filter`
+- **hidden page**: explicitly "filter ≠ uninstall module"; grab packet check prompt umount will be invalidated; do not plug normal apps into the "do not filter list" when repairing
+- **Track B (ZN Module)**: Packed only when `zn_modules.txt` has active rows and so is built; list of prohibited shell brushes
+- **path fingerprint**: orphan staging after injection; alarm (Magic Mount) when mountinfo still contains `modules/CertBridge`, it is recommended that `compatible` + `tmpfs_style=dev`
+
 ## v5.0.3
 
 - **dual log**: split `install.log` (new installation only) and `runtime.log` (each post-fs emptying); WebUI merge display, empty button only clear runtime

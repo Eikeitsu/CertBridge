@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v5.1.0
+
 - **文档**：新增 [LSPosed 模块](docs/guide/lsposed.md) 页面，收集社区一些 ssl 证书相关 XP 模块以及 vpn 代理相关模块
 - **安装音量键**：`install/tools/volkey`（`EVIOCGRAB`）仅安装期防系统音量条；装完随 `install/` / `META-INF` / `customize.sh` 清除，不进运行时模块目录；缺省回退 `getevent`
 - **修复 Zygisk 过滤误伤正常 App**：默认不再从 maps/smaps 抽掉匿名可执行页（曾导致闪退/断网）；仅过滤本模块路径痕迹。可选 `zn_hide_anon_exec=1`；收紧 mount 表路径匹配

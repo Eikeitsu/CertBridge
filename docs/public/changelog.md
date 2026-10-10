@@ -5,6 +5,30 @@
 
 ---
 
+## v5.1.0
+
+### 中文
+
+- **文档**：新增 [LSPosed 模块](docs/guide/lsposed.md) 页面，收集社区一些 ssl 证书相关 XP 模块以及 vpn 代理相关模块
+- **安装音量键**：`install/tools/volkey`（`EVIOCGRAB`）仅安装期防系统音量条；装完随 `install/` / `META-INF` / `customize.sh` 清除，不进运行时模块目录；缺省回退 `getevent`
+- **修复 Zygisk 过滤误伤正常 App**：默认不再从 maps/smaps 抽掉匿名可执行页（曾导致闪退/断网）；仅过滤本模块路径痕迹。可选 `zn_hide_anon_exec=1`；收紧 mount 表路径匹配
+- **Zygisk 黑白名单**：`zn_filter_mode=blacklist`（默认，仅过滤黑名单，空=不过滤）\| `whitelist`（名单内豁免，空≈全机）；`zn_blacklist.txt` / `zn_whitelist.txt`；抓包永久豁免
+- **补齐读表漏网路径**：相对 `maps`+`/proc` dirfd、`fopen`、`__open_2`；主机单测 `npm run test:zygisk-filter`
+- **隐藏页**：明确「过滤 ≠ 卸载模块」；抓包检查提示 umount 会没证；勿再把正常 App 塞进「不过滤白名单」当修复
+- **轨 B（ZN Module）**：仅当 `zn_modules.txt` 有活动行且 so 已构建时打包；禁止空壳刷列表
+- **路径指纹**：注入后 orphan staging；mountinfo 仍含 `modules/CertBridge` 时告警（Magic Mount），建议 `compatible` + `tmpfs_style=dev`
+
+### English
+
+- **Document**: Added [LSPosed module](docs/guide/lsposed.md) page to collect some ssl certificate related XP modules and vpn proxy related modules in the community
+- **Install volume key**: `install/tools/volkey` (`EVIOCGRAB`) Install only the anti-volume system volume bar; clear with `install/`/`META-INF`/`customize.sh` after installation, do not enter the runtime module directory; default fallback `getevent`
+- **Repair Zygisk Filter Error Normal App**: Anonymous executable pages are no longer removed from maps/smaps by default (which has caused flashback/network loss); only the path traces of this module are filtered. Optional `zn_hide_anon_exec=1`; tighten mount table path matching
+- **Zygisk black and white list**: `zn_filter_mode=blacklist` (default, only blacklist filtering, empty = no filtering)\ | `whitelist` (in-list exemption, empty ≈ full machine); `zn_blacklist.txt`/`zn_whitelist.txt`; permanent exemption from capture
+- **complementary reading meter leakage network path**: relative to `maps` + `/proc` dirfd, `fopen`, `__open_2`; host single test `npm run test:zygisk-filter`
+- **hidden page**: explicitly "filter ≠ uninstall module"; grab packet check prompt umount will be invalidated; do not plug normal apps into the "do not filter list" when repairing
+- **Track B (ZN Module)**: Packed only when `zn_modules.txt` has active rows and so is built; list of prohibited shell brushes
+- **path fingerprint**: orphan staging after injection; alarm (Magic Mount) when mountinfo still contains `modules/CertBridge`, it is recommended that `compatible` + `tmpfs_style=dev`
+
 ## v5.0.3
 
 ### 中文

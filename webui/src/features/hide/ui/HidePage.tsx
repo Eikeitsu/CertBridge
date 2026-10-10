@@ -18,7 +18,7 @@ import { HideStatusCard } from "./HideStatusCard";
 import { HideGuidePanel } from "./HideGuidePanel";
 import { CaptureChecklistCard } from "./CaptureChecklistCard";
 import { ZnFilterModeRow } from "./ZnFilterModeRow";
-import { ZnWhitelistEditor } from "./ZnWhitelistEditor";
+import { ZnFilterListEditor } from "./ZnFilterListEditor";
 import { HideRootNotes } from "./HideRootNotes";
 import { HideExperimentPanel } from "./HideExperimentPanel";
 
@@ -100,7 +100,7 @@ export function HidePage() {
               onChange={znMode.handleChange}
             />
           </Card>
-          <ZnWhitelistEditor
+          <ZnFilterListEditor
             listKind={znMode.mode === "whitelist" ? "whitelist" : "blacklist"}
             saveLabel={h.whitelistSave}
           />

@@ -1,13 +1,16 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, Button } from "@/shared/ui/primitives";
 import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
+import { AppPicker } from "@/features/app-picker/AppPicker";
+import { listTextFromPackages, packagesFromListText } from "@/shared/api/apps";
 import { getZnFilterList, setZnFilterList, type ZnListKind } from "@/shared/api/cli";
 import { errorFromResult } from "@/shared/api/errors";
 import { toast } from "@/shared/api/ksu";
 import { isCliFailure } from "@/shared/lib/cliResult";
 import { useAsyncLock } from "@/shared/hooks/useAsyncLock";
 
-type ZnWhitelistEditorProps = {
+type ZnFilterListEditorProps = {
   /** blacklist = 要过滤；whitelist = 豁免不过滤 */
   listKind?: ZnListKind;
   title?: string;
@@ -17,18 +20,20 @@ type ZnWhitelistEditorProps = {
   rows?: number;
 };
 
-export function ZnWhitelistEditor({
+export function ZnFilterListEditor({
   listKind = "blacklist",
   title,
   meta,
   hint,
   saveLabel,
   rows = 5,
-}: ZnWhitelistEditorProps) {
+}: ZnFilterListEditorProps) {
+  const { t } = useTranslation("webui");
   const { voice } = usePackVoice();
   const h = voice.hide;
   const [text, setText] = useState("");
   const [loaded, setLoaded] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const { isPending, runExclusive } = useAsyncLock();
 
   const resolvedTitle =
@@ -38,6 +43,8 @@ export function ZnWhitelistEditor({
   const resolvedHint =
     hint ?? (listKind === "whitelist" ? h.whitelistHint : h.blacklistHint);
   const savedToast = listKind === "whitelist" ? h.whitelistSaved : h.blacklistSaved;
+
+  const selectedPkgs = useMemo(() => packagesFromListText(text), [text]);
 
   useEffect(() => {
     let cancelled = false;
@@ -68,6 +75,10 @@ export function ZnWhitelistEditor({
     });
   }, [runExclusive, text, listKind, savedToast]);
 
+  const handlePickerConfirm = useCallback((pkgs: string[]) => {
+    setText((prev) => listTextFromPackages(pkgs, prev));
+  }, []);
+
   return (
     <Card title={resolvedTitle} meta={resolvedMeta}>
       {resolvedHint ? (
@@ -84,10 +95,33 @@ export function ZnWhitelistEditor({
         spellCheck={false}
       />
       <div className="bf-btn-row" style={{ marginTop: 12 }}>
-        <Button variant="primary" disabled={!loaded || isPending} onClick={handleSave}>
+        <Button
+          type="button"
+          disabled={!loaded || isPending}
+          onClick={() => setPickerOpen(true)}
+        >
+          {t("hide.appPicker.open")}
+        </Button>
+        <Button
+          type="button"
+          variant="primary"
+          disabled={!loaded || isPending}
+          onClick={handleSave}
+        >
           {saveLabel ?? h.whitelistSave}
         </Button>
       </div>
+      <AppPicker
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        value={selectedPkgs}
+        onConfirm={handlePickerConfirm}
+        title={
+          listKind === "whitelist"
+            ? t("hide.appPicker.titleWhitelist")
+            : t("hide.appPicker.titleBlacklist")
+        }
+      />
     </Card>
   );
 }

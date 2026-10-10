@@ -15,7 +15,7 @@ import { HideRootNotes } from "@/features/hide/ui/HideRootNotes";
 import { HideGuidePanel } from "@/features/hide/ui/HideGuidePanel";
 import { CaptureChecklistCard } from "@/features/hide/ui/CaptureChecklistCard";
 import { ZnFilterModeRow } from "@/features/hide/ui/ZnFilterModeRow";
-import { ZnWhitelistEditor } from "@/features/hide/ui/ZnWhitelistEditor";
+import { ZnFilterListEditor } from "@/features/hide/ui/ZnFilterListEditor";
 import { HideExperimentPanel } from "@/features/hide/ui/HideExperimentPanel";
 import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
 import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
@@ -122,7 +122,7 @@ export function DefaultHidePage() {
               />
             </div>
           </section>
-          <ZnWhitelistEditor
+          <ZnFilterListEditor
             listKind={znMode.mode === "whitelist" ? "whitelist" : "blacklist"}
             saveLabel={h.whitelistSave}
             rows={5}

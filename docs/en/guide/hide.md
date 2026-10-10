@@ -92,14 +92,14 @@ Script inject copies certs to a short tmpfs path (default `/dev/.fs0`) then bind
 
 ## WebUI Hide page
 
-| Area        | Content                                                             |
-| ----------- | ------------------------------------------------------------------- |
-| Status      | Root, mount mode, stage path, assistants, registration              |
-| Hide assist | `hide_allow`, re-register now                                       |
-| Zygisk      | `zn_hide_allow`, black/white list mode and editors (when installed) |
-| Note        | “Filter ≠ module umount”                                            |
-| Checklist   | Dismissible capture reminder                                        |
-| Experiments | Force-bind / late inject / zygote / multi-APEX / service probe      |
+| Area        | Content                                                                            |
+| ----------- | ---------------------------------------------------------------------------------- |
+| Status      | Root, mount mode, stage path, assistants, registration                             |
+| Hide assist | `hide_allow`, re-register now                                                      |
+| Zygisk      | `zn_hide_allow`, black/white list mode; “Pick apps” into the list (when installed) |
+| Note        | “Filter ≠ module umount”                                                           |
+| Checklist   | Dismissible capture reminder                                                       |
+| Experiments | Force-bind / late inject / zygote / multi-APEX / service probe                     |
 
 See [WebUI](./webui) and [Configuration](./config).
 

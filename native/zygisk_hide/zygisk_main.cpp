@@ -1,8 +1,9 @@
 /*
- * CertBridge Zygisk：过滤 App 内 mountinfo/mounts，并削弱对本模块 zygisk so 的
- * maps/smaps/readlink 可见性。挂钩体仍在 so 内，不能 DLCLOSE。
- * zn_hide_allow 门控；按 zn_filter_mode + 黑/白名单过滤；
- * 抓包 App 永久豁免。
+ * CertBridge Zygisk：对「过滤目标」App 过滤 mountinfo/mounts，并削弱对本模块
+ * zygisk so 的 maps/smaps/readlink 可见性。
+ * 目标进程：挂钩体仍在 so 内，不能 DLCLOSE。
+ * 非目标进程：preAppSpecialize 里 DLCLOSE，避免 so 留在 maps 被检测器杀掉。
+ * zn_hide_allow 门控；按 zn_filter_mode + 黑/白名单；抓包 App 永久豁免。
  */
 
 #include "mount_filter.hpp"
@@ -525,10 +526,17 @@ public:
     this->env = env;
   }
 
+  void unload_if_idle() {
+    // 未安装 PLT 时可卸 so；已挂钩则绝不能 DLCLOSE（钩子落在本库）
+    if (api && !should_hook)
+      api->setOption(zygisk::Option::DLCLOSE_MODULE_LIBRARY);
+  }
+
   void preAppSpecialize(AppSpecializeArgs *args) override {
     should_hook = false;
-    if (!api)
+    if (!api) {
       return;
+    }
 
     const char *name = nullptr;
     if (args->nice_name) {
@@ -538,20 +546,32 @@ public:
     if (name)
       env->ReleaseStringUTFChars(args->nice_name, name);
 
-    if (proc.empty() || proc == "system_server")
+    if (proc.empty() || proc == "system_server") {
+      unload_if_idle();
       return;
+    }
 
     int modfd = api->getModuleDir();
-    if (modfd < 0)
+    if (modfd < 0) {
+      unload_if_idle();
       return;
-    if (!cb_hide::read_zn_hide_allow(modfd))
+    }
+    const bool allow = cb_hide::read_zn_hide_allow(modfd);
+    if (!allow) {
+      ::close(modfd);
+      unload_if_idle();
       return;
+    }
     cb_hide::load_lists_from_moddir(modfd);
-    // opt-in：仅目标名单内的 App；抓包 App 永久豁免
-    if (!cb_hide::should_filter_process(proc))
+    // 仅过滤目标：黑名单勾选的检测 App（白名单模式则名单外全部）
+    if (!cb_hide::should_filter_process(proc)) {
+      ::close(modfd);
+      unload_if_idle();
       return;
+    }
     // 默认不藏匿名可执行页：误开会导致正常 App 闪退/断网
     cb_hide::set_hide_anon_exec(cb_hide::read_zn_hide_anon_exec(modfd));
+    ::close(modfd);
 
     should_hook = true;
   }
@@ -562,8 +582,7 @@ public:
       return;
     g_enabled = true;
     install_hooks(api);
-    // 挂钩实现位于本 so：不可 DLCLOSE_MODULE_LIBRARY，否则 PLT 悬空。
-    // 自藏靠过滤 maps/smaps 与 readlink，而非卸载 so。
+    // 已挂钩：不可 DLCLOSE。自藏靠过滤 maps/smaps 与 readlink。
   }
 
 private:

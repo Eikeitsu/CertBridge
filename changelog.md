@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Zygisk 非目标进程 DLCLOSE**：黑名单未命中 / 过滤关闭时卸掉模块 so，避免 so 留在 maps 被春秋等检测器直接闪退；目标进程仍保留 so 并用读表过滤自藏
+
 ## v5.1.0
 
 - **文档**：新增 [LSPosed 模块](docs/guide/lsposed.md) 页面，收集社区一些 ssl 证书相关 XP 模块以及 vpn 代理相关模块

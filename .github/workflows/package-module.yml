@@ -148,6 +148,12 @@ jobs:
         uses: ./.github/actions/setup-ndk-clang
         id: ndk
 
+      - name: Host unit test (mount_filter)
+        if: steps.digest.outputs.unchanged != '1' && hashFiles('native/zygisk_hide/**') != ''
+        env:
+          REQUIRE_ZYGISK_FILTER_TEST: "1"
+        run: npm run test:zygisk-filter
+
       - name: Build module zip
         if: steps.digest.outputs.unchanged != '1'
         env:

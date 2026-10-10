@@ -75,7 +75,7 @@ build_boot_generation() {
   fi
   if [ "$conf_changed" != "1" ] && [ -f "$USER_CONF" ] && [ -f "$APPLIED_CONF" ]; then
     for _k in reqable proxypin mount_mode tmpfs_style experimental_14_system \
-        hot_allow hide_allow zn_hide_allow force_bind_capture late_inject \
+        hot_allow hide_allow zn_hide_allow zn_hide_anon_exec zn_filter_mode force_bind_capture late_inject \
         boot_bind_zygote boot_multi_apex service_probe quiet_prop; do
       _c=$(read_conf "$_k" "")
       _a=$(read_applied_conf "$_k" "")

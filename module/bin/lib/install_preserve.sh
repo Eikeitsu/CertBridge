@@ -29,7 +29,7 @@ certbridge_preserve_keys_default_install() {
 
 # 仅当本次仍安装对应组件时保留
 certbridge_preserve_keys_component() {
-  printf '%s\n' hot_allow hide_allow zn_hide_allow
+  printf '%s\n' hot_allow hide_allow zn_hide_allow zn_filter_mode
 }
 
 certbridge_preserve_snap_dir() {
@@ -197,9 +197,10 @@ _certbridge_preserve_apply_key() {
       [ "${INSTALL_HIDE:-0}" = "1" ] || return 1
       [ "${INSTALL_MODE:-}" = "custom" ] && return 1
       ;;
-    zn_hide_allow)
+    zn_hide_allow|zn_filter_mode)
       [ "${INSTALL_ZN_HIDE:-0}" = "1" ] || return 1
-      [ "${INSTALL_MODE:-}" = "custom" ] && return 1
+      # 自定义安装：allow 以本次向导为准；mode 仍可保留用户名单策略
+      [ "$_key" = "zn_hide_allow" ] && [ "${INSTALL_MODE:-}" = "custom" ] && return 1
       ;;
     mount_mode|reqable|proxypin)
       # 已由 restore_install_vars + write_config 处理；此处再写一次作兜底
@@ -242,7 +243,8 @@ certbridge_install_preserve_user() {
       data/state/applied.conf \
       data/state/hide-assist.conf \
       data/state/source.meta \
-      config/zn_whitelist.txt
+      config/zn_whitelist.txt \
+      config/zn_blacklist.txt
     if [ -f "$MODPATH/bin/common.sh" ]; then
       (
         MODDIR="$MODPATH"

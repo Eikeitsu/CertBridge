@@ -9,6 +9,7 @@ import {
 import { isFlagOn } from "@/shared/lib/flag";
 import { useHideAllow } from "../hooks/useHideAllow";
 import { useZnHideAllow } from "../hooks/useZnHideAllow";
+import { useZnFilterMode } from "../hooks/useZnFilterMode";
 import { useEnsureHideStatus } from "../hooks/useEnsureHideStatus";
 import { HideAllowRow } from "./HideAllowRow";
 import { HideCaptureWarning } from "./HideCaptureWarning";
@@ -16,6 +17,7 @@ import { HideIntroCard } from "./HideIntroCard";
 import { HideStatusCard } from "./HideStatusCard";
 import { HideGuidePanel } from "./HideGuidePanel";
 import { CaptureChecklistCard } from "./CaptureChecklistCard";
+import { ZnFilterModeRow } from "./ZnFilterModeRow";
 import { ZnWhitelistEditor } from "./ZnWhitelistEditor";
 import { HideRootNotes } from "./HideRootNotes";
 import { HideExperimentPanel } from "./HideExperimentPanel";
@@ -23,6 +25,7 @@ import { HideExperimentPanel } from "./HideExperimentPanel";
 export function HidePage() {
   const hide = useHideAllow();
   const zn = useZnHideAllow();
+  const znMode = useZnFilterMode();
   useEnsureHideStatus();
   const status = useAppSelector(selectModuleStatus);
   const bootstrapped = useAppSelector(selectStatusBootstrapped);
@@ -82,14 +85,26 @@ export function HidePage() {
           <p className="bf-page-sub">{h.znMissingBody}</p>
         </Card>
       ) : null}
+      {zn.znHideSupported || hide.hideSupported ? (
+        <Card title={h.filterVsUmountTitle}>
+          <p className="bf-page-sub">{h.filterVsUmountBody}</p>
+        </Card>
+      ) : null}
       {loaderWarn}
       {zn.znHideSupported ? (
-        <ZnWhitelistEditor
-          title={h.whitelistTitle}
-          meta={h.whitelistMeta}
-          hint={h.whitelistHint}
-          saveLabel={h.whitelistSave}
-        />
+        <>
+          <Card title={h.filterModeTitle}>
+            <ZnFilterModeRow
+              mode={znMode.mode}
+              disabled={znMode.isPending}
+              onChange={znMode.handleChange}
+            />
+          </Card>
+          <ZnWhitelistEditor
+            listKind={znMode.mode === "whitelist" ? "whitelist" : "blacklist"}
+            saveLabel={h.whitelistSave}
+          />
+        </>
       ) : null}
       <HideExperimentPanel />
       <HideStatusCard />

@@ -9,25 +9,23 @@
 | **A 经典 Zygisk** | `module/zygisk/<abi>.so`                     | **始终构建**（有 NDK 时）                         |
 | **B ZN Module**   | `libcb_zn_hide.so` + 模块根 `zn_modules.txt` | **关闭**；须校准会读 mountinfo 的 init 服务后再开 |
 
-禁止空 `zn_modules.txt` 仅为出现在 ZN 列表。当前发布包只交付 A。
+禁止空 `zn_modules.txt` 仅为出现在 ZN 列表。`module/zn_modules.txt` 有非注释活动行时，`npm run build:zygisk-hide` 会自动 `BUILD_ZN_MODULE=ON`；打包仅在存在活动行且 so 已构建时打入轨 B。
 
 ```bash
-# 需 Android NDK（ANDROID_NDK_HOME）
 npm run build:zygisk-hide
-
-# 无 NDK 时跳过
-SKIP_ZYGISK_HIDE=1 npm run build:zygisk-hide
-
-# 仅在校准目标后开启辅路径（并自行写入非空 zn_modules.txt）
-# cmake … -DBUILD_ZN_MODULE=ON
+SKIP_ZYGISK_HIDE=1 npm run build:zygisk-hide   # 无 NDK
+npm run test:zygisk-filter                       # 主机单测
 ```
 
-CI 打包会设置 `REQUIRE_ZYGISK_HIDE=1` 并编译 arm64-v8a / armeabi-v7a（仅轨 A）。
+CI：`REQUIRE_ZYGISK_HIDE=1` + `REQUIRE_ZYGISK_FILTER_TEST=1`。
 
-行为概要：
+## 过滤判定
 
-- 读取 `zn_hide_allow`：与 shell `read_conf` 同序（外置 `user.conf` → legacy → 模块 `certs.conf`）
-- 轨 A：对非抓包白名单进程挂钩，过滤 mountinfo / mounts / maps / smaps 中的本模块痕迹；指向本模块的 readlink 对外为不存在
-- 轨 B（可选）：对声明的服务进程做同类过滤；与 A 共用 `mount_filter.*`
-- 挂钩实现位于 so 内，不能 `DLCLOSE_MODULE_LIBRARY`
-- 与 SuSFS `hide_assist` 相互独立
+- `zn_hide_allow` 门控
+- `zn_filter_mode=blacklist`（默认）：仅 `config/zn_blacklist.txt` 内挂钩；空=不过滤
+- `zn_filter_mode=whitelist`：除 `config/zn_whitelist.txt` 外挂钩；空≈全机（慎用）
+- 抓包 App 永久豁免
+
+挂钩：`open` / `__open_2` / `openat` / `fopen` / `read` / `pread64` / `readlink*`。  
+默认不藏匿名可执行 maps（`zn_hide_anon_exec=1` 才开）。  
+更新 so 后需重装并强停相关 App（或重启）才生效。

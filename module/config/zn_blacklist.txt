@@ -1,0 +1,5 @@
+# Zygisk 过滤黑名单：一行一个包名（可含 :进程后缀）
+# 仅当 zn_filter_mode=blacklist（默认）时生效：名单内的 App 会过滤本模块 mount/maps 痕迹。
+# 抓包 App（Reqable / ProxyPin）永久豁免，写在此处也不会过滤。
+# 留空 = 不向任何 App 挂钩（推荐）。
+# 以 # 开头为注释。修改后需强停相关 App 或重启后生效。

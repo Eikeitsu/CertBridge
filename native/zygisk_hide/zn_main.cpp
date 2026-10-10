@@ -47,7 +47,7 @@ bool module_prop_is_certbridge(const char *prop_path) {
   return std::strstr(buf, "id=CertBridge") != nullptr;
 }
 
-/** 打开 CertBridge 模块目录 fd，供 read_zn_hide_allow / 白名单使用 */
+/** 打开 CertBridge 模块目录 fd，供 read_zn_hide_allow 使用 */
 int open_certbridge_moddir() {
   static constexpr const char *kDirect[] = {
       "/data/adb/modules/CertBridge",
@@ -179,7 +179,9 @@ int hooked_openat(int dirfd, const char *pathname, int flags, ...) {
                                           : orig_openat(dirfd, pathname, flags))
                        : (flags & O_CREAT ? ::openat(dirfd, pathname, flags, mode)
                                           : ::openat(dirfd, pathname, flags));
-  mark_fd_if_mount_table(fd, pathname);
+  // 相对 maps/mountinfo + dirfd=/proc/self 等漏网路径
+  std::string resolved = cb_hide::resolve_openat_path(dirfd, pathname);
+  mark_fd_if_mount_table(fd, resolved.empty() ? pathname : resolved.c_str());
   return fd;
 }
 
@@ -203,10 +205,12 @@ extern "C" [[gnu::visibility("default")]] void zn_module_entry_v1(ZnApiTableV1 *
     return;
   int modfd = open_certbridge_moddir();
   const bool allow = cb_hide::read_zn_hide_allow(modfd);
+  const bool anon = cb_hide::read_zn_hide_anon_exec(modfd);
   if (modfd >= 0)
     ::close(modfd);
   if (!allow)
     return;
+  cb_hide::set_hide_anon_exec(anon);
   g_enabled = true;
   api->pltHook(".*libc\\.so$", "open", reinterpret_cast<void *>(hooked_open),
                reinterpret_cast<void **>(&orig_open));

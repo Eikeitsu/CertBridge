@@ -1,13 +1,15 @@
 /*
  * CertBridge Zygisk：过滤 App 内 mountinfo/mounts，并削弱对本模块 zygisk so 的
  * maps/smaps/readlink 可见性。挂钩体仍在 so 内，不能 DLCLOSE。
- * zn_hide_allow 门控；抓包白名单不过滤。
+ * zn_hide_allow 门控；按 zn_filter_mode + 黑/白名单过滤；
+ * 抓包 App 永久豁免。
  */
 
 #include "mount_filter.hpp"
 #include "zygisk.hpp"
 
 #include <cerrno>
+#include <climits>
 #include <cstdarg>
 #include <cstdint>
 #include <cstdio>
@@ -20,6 +22,10 @@
 #include <sys/sysmacros.h>
 #include <unistd.h>
 #include <unordered_map>
+
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
 
 namespace {
 
@@ -36,12 +42,14 @@ std::unordered_map<int, FilterKind> g_filter_fds;
 std::unordered_map<int, std::string> g_fd_pending;
 
 int (*orig_open)(const char *, int, ...) = nullptr;
+int (*orig_open_2)(const char *, int) = nullptr;
 int (*orig_openat)(int, const char *, int, ...) = nullptr;
 int (*orig_close)(int) = nullptr;
 ssize_t (*orig_read)(int, void *, size_t) = nullptr;
 ssize_t (*orig_pread64)(int, void *, size_t, off64_t) = nullptr;
 ssize_t (*orig_readlink)(const char *, char *, size_t) = nullptr;
 ssize_t (*orig_readlinkat)(int, const char *, char *, size_t) = nullptr;
+FILE *(*orig_fopen)(const char *, const char *) = nullptr;
 
 bool find_libc(dev_t *dev, ino_t *inode) {
   // 挂钩安装前直接读 maps，避免依赖已被替换的 open
@@ -85,6 +93,35 @@ void mark_fd_if_sensitive(int fd, const char *path) {
   std::lock_guard<std::mutex> lock(g_mu);
   g_filter_fds[fd] = kind;
   g_fd_pending.erase(fd);
+}
+
+void mark_fd_openat(int fd, int dirfd, const char *pathname) {
+  if (fd < 0 || !pathname || !g_enabled)
+    return;
+  std::string resolved = cb_hide::resolve_openat_path(dirfd, pathname);
+  const char *use = resolved.empty() ? pathname : resolved.c_str();
+  if (!resolved.empty()) {
+    // 再判相对名 + /proc dir（resolve 失败时的兜底已在 path helpers）
+    mark_fd_if_sensitive(fd, use);
+    return;
+  }
+  // resolve 失败：尝试 basename + dirfd 是否为 proc
+  char linkbuf[64];
+  char dirbuf[PATH_MAX];
+  if (dirfd >= 0) {
+    std::snprintf(linkbuf, sizeof(linkbuf), "/proc/self/fd/%d", dirfd);
+    ssize_t n = ::readlink(linkbuf, dirbuf, sizeof(dirbuf) - 1);
+    if (n > 0) {
+      dirbuf[n] = '\0';
+      if (cb_hide::path_needs_trace_filter_resolved(pathname, dirbuf)) {
+        std::string full(dirbuf, static_cast<size_t>(n));
+        if (!full.empty() && full.back() != '/')
+          full.push_back('/');
+        full.append(pathname);
+        mark_fd_if_sensitive(fd, full.c_str());
+      }
+    }
+  }
 }
 
 void unmark_fd(int fd) {
@@ -279,6 +316,23 @@ int hooked_open(const char *pathname, int flags, ...) {
   return fd;
 }
 
+/** Bionic fortify 路径常走 __open_2，不带 mode */
+int hooked_open_2(const char *pathname, int flags) {
+  if (!orig_open_2) {
+    // 部分 libc 无符号时回落到 open
+    if (!orig_open) {
+      errno = EIO;
+      return -1;
+    }
+    int fd = orig_open(pathname, flags);
+    mark_fd_if_sensitive(fd, pathname);
+    return fd;
+  }
+  int fd = orig_open_2(pathname, flags);
+  mark_fd_if_sensitive(fd, pathname);
+  return fd;
+}
+
 int hooked_openat(int dirfd, const char *pathname, int flags, ...) {
   mode_t mode = 0;
   if (flags & O_CREAT) {
@@ -293,8 +347,19 @@ int hooked_openat(int dirfd, const char *pathname, int flags, ...) {
   }
   int fd = flags & O_CREAT ? orig_openat(dirfd, pathname, flags, mode)
                            : orig_openat(dirfd, pathname, flags);
-  mark_fd_if_sensitive(fd, pathname);
+  mark_fd_openat(fd, dirfd, pathname);
   return fd;
+}
+
+FILE *hooked_fopen(const char *pathname, const char *mode) {
+  if (!orig_fopen) {
+    errno = EIO;
+    return nullptr;
+  }
+  FILE *fp = orig_fopen(pathname, mode);
+  if (fp && pathname)
+    mark_fd_if_sensitive(fileno(fp), pathname);
+  return fp;
 }
 
 int hooked_close(int fd) {
@@ -433,6 +498,9 @@ void install_hooks(Api *api) {
 
   api->pltHookRegister(dev, inode, "open", reinterpret_cast<void *>(hooked_open),
                        reinterpret_cast<void **>(&orig_open));
+  // fortify / 部分 bionic 调用链；无符号时 PLT 注册失败可忽略
+  api->pltHookRegister(dev, inode, "__open_2", reinterpret_cast<void *>(hooked_open_2),
+                       reinterpret_cast<void **>(&orig_open_2));
   api->pltHookRegister(dev, inode, "openat", reinterpret_cast<void *>(hooked_openat),
                        reinterpret_cast<void **>(&orig_openat));
   api->pltHookRegister(dev, inode, "close", reinterpret_cast<void *>(hooked_close),
@@ -445,6 +513,8 @@ void install_hooks(Api *api) {
                        reinterpret_cast<void **>(&orig_readlink));
   api->pltHookRegister(dev, inode, "readlinkat", reinterpret_cast<void *>(hooked_readlinkat),
                        reinterpret_cast<void **>(&orig_readlinkat));
+  api->pltHookRegister(dev, inode, "fopen", reinterpret_cast<void *>(hooked_fopen),
+                       reinterpret_cast<void **>(&orig_fopen));
   api->pltHookCommit();
 }
 
@@ -474,11 +544,14 @@ public:
     int modfd = api->getModuleDir();
     if (modfd < 0)
       return;
-    cb_hide::load_whitelist_from_moddir(modfd);
-    if (cb_hide::is_capture_whitelist(proc))
-      return;
     if (!cb_hide::read_zn_hide_allow(modfd))
       return;
+    cb_hide::load_lists_from_moddir(modfd);
+    // opt-in：仅目标名单内的 App；抓包 App 永久豁免
+    if (!cb_hide::should_filter_process(proc))
+      return;
+    // 默认不藏匿名可执行页：误开会导致正常 App 闪退/断网
+    cb_hide::set_hide_anon_exec(cb_hide::read_zn_hide_anon_exec(modfd));
 
     should_hook = true;
   }

@@ -65,6 +65,7 @@ export type ModuleStatus = {
   service_probe?: string;
   zn_hide_supported?: string;
   zn_hide_allow?: string;
+  zn_filter_mode?: string;
   zn_hide_zn_module?: string;
   zn_hide_summary?: string;
   zygisk_loader?: string;

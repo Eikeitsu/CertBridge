@@ -145,6 +145,24 @@ cmd_set_zn_hide_allow() {
   echo "hint=已保存；强停相关 App 后生效（不必整机重启）"
 }
 
+cmd_set_zn_hide_anon_exec() {
+  val="$1"
+  case "$val" in
+    0|1) ;;
+    *) echo "error=invalid_zn_hide_anon_exec"; return 1 ;;
+  esac
+  zn_hide_component_present || { echo "error=zn_hide_feature_not_installed"; return 1; }
+  write_conf zn_hide_anon_exec "$val" || { echo "error=write_failed"; return 1; }
+  log_info "config: zn_hide_anon_exec=$val (anon exec maps hide; default 0)"
+  echo "ok=1"
+  echo "zn_hide_anon_exec=$val"
+  if [ "$val" = "1" ]; then
+    echo "hint=已开启匿名可执行页隐藏；可能误伤正常 App。强停相关 App 后生效"
+  else
+    echo "hint=已关闭（推荐）；强停相关 App 后生效"
+  fi
+}
+
 cmd_set_force_bind_capture() {
   val="$1"
   case "$val" in
@@ -262,27 +280,17 @@ cmd_set_ui_lang() {
   echo "ui_lang_resolved=$(resolve_ui_lang)"
 }
 
+ZN_BLACKLIST_FILE="$CONFDIR/zn_blacklist.txt"
 ZN_WHITELIST_FILE="$CONFDIR/zn_whitelist.txt"
 
-cmd_get_zn_whitelist() {
-  zn_hide_component_present || { echo "error=zn_hide_feature_not_installed"; return 1; }
-  echo "ok=1"
-  if [ -f "$ZN_WHITELIST_FILE" ]; then
-    # 正文用 marker 包起，便于 WebUI 原样还原
-    echo "begin_whitelist"
-    cat "$ZN_WHITELIST_FILE" 2>/dev/null
-    echo "end_whitelist"
-  else
-    echo "begin_whitelist"
-    echo "end_whitelist"
-  fi
-}
-
-cmd_set_zn_whitelist() {
-  b64="$1"
+_zn_write_list_file() {
+  dest="$1"
+  b64="$2"
+  label="$3"
+  empty_hint="$4"
   zn_hide_component_present || { echo "error=zn_hide_feature_not_installed"; return 1; }
   mkdir -p "$CONFDIR" 2>/dev/null || { echo "error=write_failed"; return 1; }
-  raw="$DATADIR/zn_wl.$$.txt"
+  raw="$DATADIR/zn_list.$$.txt"
   mkdir -p "$DATADIR" 2>/dev/null
   if [ -z "$b64" ]; then
     : >"$raw"
@@ -299,8 +307,7 @@ cmd_set_zn_whitelist() {
     echo "error=invalid_size"
     return 1
   fi
-  # 只保留包名行与注释，去掉空行过多噪音
-  filtered="$DATADIR/zn_wl.$$.f"
+  filtered="$DATADIR/zn_list.$$.f"
   awk '
     {
       line=$0
@@ -310,17 +317,67 @@ cmd_set_zn_whitelist() {
     }
   ' "$raw" >"$filtered" 2>/dev/null || cp -f "$raw" "$filtered"
   chmod 0600 "$filtered" 2>/dev/null
-  if cat "$filtered" >"$ZN_WHITELIST_FILE" 2>/dev/null; then
+  if cat "$filtered" >"$dest" 2>/dev/null; then
     rm -f "$raw" "$filtered"
-  elif mv -f "$filtered" "$ZN_WHITELIST_FILE" 2>/dev/null; then
+  elif mv -f "$filtered" "$dest" 2>/dev/null; then
     rm -f "$raw"
   else
     rm -f "$raw" "$filtered"
     echo "error=write_failed"
     return 1
   fi
-  chmod 0600 "$ZN_WHITELIST_FILE" 2>/dev/null
-  log_info "config: zn_whitelist updated ($(wc -l <"$ZN_WHITELIST_FILE" | tr -d ' ') lines)"
+  chmod 0600 "$dest" 2>/dev/null
+  log_info "config: $label updated ($(wc -l <"$dest" | tr -d ' ') lines)"
   echo "ok=1"
-  echo "hint=白名单已保存；强停相关 App 或重启后 Zygisk 过滤按新名单生效"
+  echo "hint=${empty_hint}"
+}
+
+cmd_set_zn_filter_mode() {
+  val="$1"
+  case "$val" in
+    blacklist|whitelist) ;;
+    black|bl) val=blacklist ;;
+    white|wl) val=whitelist ;;
+    *) echo "error=invalid_zn_filter_mode"; return 1 ;;
+  esac
+  zn_hide_component_present || { echo "error=zn_hide_feature_not_installed"; return 1; }
+  write_conf zn_filter_mode "$val" || { echo "error=write_failed"; return 1; }
+  log_info "config: zn_filter_mode=$val"
+  echo "ok=1"
+  echo "zn_filter_mode=$val"
+  if [ "$val" = "whitelist" ]; then
+    echo "hint=白名单模式：名单内不过滤，其余会过滤（空名单≈全机）。强停 App 后生效"
+  else
+    echo "hint=黑名单模式：仅过滤名单内 App（空=不过滤）。强停 App 后生效"
+  fi
+}
+
+cmd_get_zn_blacklist() {
+  zn_hide_component_present || { echo "error=zn_hide_feature_not_installed"; return 1; }
+  echo "ok=1"
+  echo "begin_blacklist"
+  if [ -f "$ZN_BLACKLIST_FILE" ]; then
+    cat "$ZN_BLACKLIST_FILE" 2>/dev/null
+  fi
+  echo "end_blacklist"
+}
+
+cmd_set_zn_blacklist() {
+  _zn_write_list_file "$ZN_BLACKLIST_FILE" "$1" "zn_blacklist" \
+    "黑名单已保存；黑名单模式下空=不过滤。强停相关 App 或重启后生效"
+}
+
+cmd_get_zn_whitelist() {
+  zn_hide_component_present || { echo "error=zn_hide_feature_not_installed"; return 1; }
+  echo "ok=1"
+  echo "begin_whitelist"
+  if [ -f "$ZN_WHITELIST_FILE" ]; then
+    cat "$ZN_WHITELIST_FILE" 2>/dev/null
+  fi
+  echo "end_whitelist"
+}
+
+cmd_set_zn_whitelist() {
+  _zn_write_list_file "$ZN_WHITELIST_FILE" "$1" "zn_whitelist" \
+    "白名单已保存；白名单模式下空=过滤其余全部 App（抓包仍豁免）。强停后生效"
 }

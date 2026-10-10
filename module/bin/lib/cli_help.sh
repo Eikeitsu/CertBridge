@@ -19,11 +19,15 @@ cli_normalize_cmd() {
     set_hide_allow|hide) echo set_hide_allow ;;
     hide_reregister|hr) echo hide_reregister ;;
     set_zn_hide_allow|zn) echo set_zn_hide_allow ;;
+    set_zn_hide_anon_exec|zna) echo set_zn_hide_anon_exec ;;
+    set_zn_filter_mode|znm|zmode) echo set_zn_filter_mode ;;
     set_force_bind_capture|fb|force) echo set_force_bind_capture ;;
     set_late_inject|li|late) echo set_late_inject ;;
     set_boot_bind_zygote|bbz|zygote) echo set_boot_bind_zygote ;;
     set_boot_multi_apex|bma|apex) echo set_boot_multi_apex ;;
     set_service_probe|sp|probe) echo set_service_probe ;;
+    get_zn_blacklist|gzb) echo get_zn_blacklist ;;
+    set_zn_blacklist|szb) echo set_zn_blacklist ;;
     get_zn_whitelist|gzn) echo get_zn_whitelist ;;
     set_zn_whitelist|szn) echo set_zn_whitelist ;;
     install_custom|ic) echo install_custom ;;
@@ -40,7 +44,7 @@ cli_normalize_cmd() {
 }
 
 cli_conf_keys() {
-  echo "reqable proxypin mount_mode experimental_14_system tmpfs_style quiet_prop hot_allow hide_allow zn_hide_allow force_bind_capture late_inject boot_bind_zygote boot_multi_apex service_probe"
+  echo "reqable proxypin mount_mode experimental_14_system tmpfs_style quiet_prop hot_allow hide_allow zn_hide_allow zn_hide_anon_exec zn_filter_mode force_bind_capture late_inject boot_bind_zygote boot_multi_apex service_probe"
 }
 
 cmd_get_conf() {
@@ -51,7 +55,7 @@ cmd_get_conf() {
     return 1
   }
   case "$key" in
-    reqable|proxypin|mount_mode|experimental_14_system|tmpfs_style|quiet_prop|hot_allow|hide_allow|zn_hide_allow|force_bind_capture|late_inject|boot_bind_zygote|boot_multi_apex|service_probe)
+    reqable|proxypin|mount_mode|experimental_14_system|tmpfs_style|quiet_prop|hot_allow|hide_allow|zn_hide_allow|zn_hide_anon_exec|zn_filter_mode|force_bind_capture|late_inject|boot_bind_zygote|boot_multi_apex|service_probe)
       ;;
     schema_version)
       echo "schema_version=$(read_conf schema_version 4)"
@@ -99,6 +103,8 @@ cmd_set_conf() {
     hot_allow|ha) cmd_set_hot_allow "$val" ;;
     hide_allow|hide) cmd_set_hide_allow "$val" ;;
     zn_hide_allow|zn) cmd_set_zn_hide_allow "$val" ;;
+    zn_hide_anon_exec|zna) cmd_set_zn_hide_anon_exec "$val" ;;
+    zn_filter_mode|znm|zmode) cmd_set_zn_filter_mode "$val" ;;
     force_bind_capture|fb|force) cmd_set_force_bind_capture "$val" ;;
     late_inject|li|late) cmd_set_late_inject "$val" ;;
     boot_bind_zygote|bbz|zygote) cmd_set_boot_bind_zygote "$val" ;;
@@ -107,7 +113,7 @@ cmd_set_conf() {
     reqable|proxypin) cmd_toggle "$key" "$val" ;;
     *)
       echo "error=invalid_key"
-      echo "hint=可设键: $(cli_conf_keys)；白名单用: cb set_zn_whitelist；见 cb help set"
+      echo "hint=可设键: $(cli_conf_keys)；名单: cb set_zn_blacklist / set_zn_whitelist；见 cb help set"
       return 1
       ;;
   esac
@@ -147,12 +153,16 @@ CertBridge CLI (cb / cert_manager.sh)
   set_hot_allow|ha …
   set_hide_allow|hide …
   set_zn_hide_allow|zn …
+  set_zn_hide_anon_exec|zna …
   set_force_bind_capture|fb|force …
   set_late_inject|li|late …
   set_boot_bind_zygote|bbz …
   set_boot_multi_apex|bma …
   set_service_probe|sp …
   hide_reregister|hr       立刻重登记 try_umount
+  set_zn_filter_mode|znm …
+  get_zn_blacklist|gzb
+  set_zn_blacklist|szb <b64>
   get_zn_whitelist|gzn
   set_zn_whitelist|szn <b64>
 
@@ -178,6 +188,8 @@ cb set <key> <value>
   hot_allow                  0 | 1
   hide_allow                 0 | 1
   zn_hide_allow              0 | 1
+  zn_hide_anon_exec          0 | 1（默认 0；额外藏 maps 匿名可执行页，易误伤正常 App）
+  zn_filter_mode             blacklist | whitelist（默认 blacklist）
   force_bind_capture         0 | 1
   late_inject                0 | 1
   boot_bind_zygote           0 | 1（默认 0=开机不进 zygote）
@@ -222,6 +234,10 @@ EOF
 cb set_hide_allow|hide <0|1>
 cb hide_reregister|hr
 cb set_zn_hide_allow|zn <0|1>
+cb set_zn_hide_anon_exec|zna <0|1>
+cb set_zn_filter_mode|znm <blacklist|whitelist>
+cb get_zn_blacklist|gzb
+cb set_zn_blacklist|szb <base64>
 cb get_zn_whitelist|gzn
 cb set_zn_whitelist|szn <base64>
 cb set_force_bind_capture|fb <0|1>
@@ -267,9 +283,9 @@ cli_unknown() {
   for c in \
     help status verify get set list_custom list_applied_fps toggle sync_apps \
     set_mount_mode set_experimental_14_system set_tmpfs_style set_quiet_prop \
-    set_hot_allow set_hide_allow hide_reregister set_zn_hide_allow \
+    set_hot_allow set_hide_allow hide_reregister set_zn_hide_allow set_zn_hide_anon_exec set_zn_filter_mode \
     set_force_bind_capture set_late_inject set_boot_bind_zygote set_boot_multi_apex \
-    set_service_probe get_zn_whitelist set_zn_whitelist \
+    set_service_probe get_zn_blacklist set_zn_blacklist get_zn_whitelist set_zn_whitelist \
     install_custom import_app_preset remove_custom cert_info hot_mount hot_unmount
   do
     case "$c" in

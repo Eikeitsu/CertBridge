@@ -4,6 +4,7 @@ import { selectModuleStatus } from "@/features/status/model/selectors";
 import { isFlagOn } from "@/shared/lib/flag";
 import { useHideAllow } from "@/features/hide/hooks/useHideAllow";
 import { useZnHideAllow } from "@/features/hide/hooks/useZnHideAllow";
+import { useZnFilterMode } from "@/features/hide/hooks/useZnFilterMode";
 import { useEnsureHideStatus } from "@/features/hide/hooks/useEnsureHideStatus";
 import { HideAllowRow } from "@/features/hide/ui/HideAllowRow";
 import { HideCaptureWarning } from "@/features/hide/ui/HideCaptureWarning";
@@ -11,6 +12,7 @@ import { HideStatusCard } from "@/features/hide/ui/HideStatusCard";
 import { HideRootNotes } from "@/features/hide/ui/HideRootNotes";
 import { HideGuidePanel } from "@/features/hide/ui/HideGuidePanel";
 import { CaptureChecklistCard } from "@/features/hide/ui/CaptureChecklistCard";
+import { ZnFilterModeRow } from "@/features/hide/ui/ZnFilterModeRow";
 import { ZnWhitelistEditor } from "@/features/hide/ui/ZnWhitelistEditor";
 import { HideExperimentPanel } from "@/features/hide/ui/HideExperimentPanel";
 import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
@@ -20,6 +22,7 @@ export function ConsoleHidePage() {
   const chrome = usePackChrome();
   const hide = useHideAllow();
   const zn = useZnHideAllow();
+  const znMode = useZnFilterMode();
   useEnsureHideStatus();
   const status = useAppSelector(selectModuleStatus);
   const { voice } = usePackVoice();
@@ -69,13 +72,27 @@ export function ConsoleHidePage() {
           <p className="pk-def-muted">{h.loaderWarnBody}</p>
         </Card>
       ) : null}
+      {zn.znHideSupported || hide.hideSupported ? (
+        <section className="pk-con-block">
+          <div className="pk-con-block__head">{h.filterVsUmountTitle}</div>
+          <p className="pk-def-muted">{h.filterVsUmountBody}</p>
+        </section>
+      ) : null}
       {zn.znHideSupported ? (
-        <ZnWhitelistEditor
-          title={h.whitelistTitle}
-          meta={h.whitelistMeta}
-          hint={h.whitelistHint}
-          saveLabel={h.whitelistSave}
-        />
+        <>
+          <section className="pk-con-block">
+            <div className="pk-con-block__head">{h.filterModeTitle}</div>
+            <ZnFilterModeRow
+              mode={znMode.mode}
+              disabled={znMode.isPending}
+              onChange={znMode.handleChange}
+            />
+          </section>
+          <ZnWhitelistEditor
+            listKind={znMode.mode === "whitelist" ? "whitelist" : "blacklist"}
+            saveLabel={h.whitelistSave}
+          />
+        </>
       ) : null}
       <HideExperimentPanel />
       <HideStatusCard variant="table" />

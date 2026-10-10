@@ -30,6 +30,7 @@
     "i18n:gen": "node scripts/i18n/gen-shell-catalog.mjs",
     "package:module": "npm run i18n:gen && node scripts/package-module.mjs",
     "build:zygisk-hide": "node scripts/build-zygisk-hide.mjs",
+    "test:zygisk-filter": "node scripts/test-mount-filter.mjs",
     "build:volkey": "node scripts/build-volkey.mjs",
     "build:module": "npm run build:web && npm run build:zygisk-hide && npm run package:module",
     "dev:docs": "vitepress dev docs",

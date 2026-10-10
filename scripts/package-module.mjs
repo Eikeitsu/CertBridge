@@ -505,22 +505,31 @@ async function packageOne(edition, version, abi = null) {
       copyFromModule(`zygisk/${name}`);
     }
   }
-  // ZN Module 辅路径：禁止空壳。仅当 PACK_ZN_MODULE=1 且 zn_modules.txt 非空、so 存在时打入
-  if (process.env.PACK_ZN_MODULE === "1") {
+  // ZN Module 辅路径：禁止空壳。zn_modules.txt 须有非注释活动行，且 so 已构建
+  {
     const znTxt = join(moduleRoot, "zn_modules.txt");
     const znSo = join(moduleRoot, "libcb_zn_hide.so");
+    const forcePack = process.env.PACK_ZN_MODULE === "1";
+    let hasActive = false;
+    if (existsSync(znTxt)) {
+      const text = readFileSync(znTxt, "utf8");
+      hasActive = text.split(/\r?\n/).some((line) => {
+        const t = line.trim();
+        return t.length > 0 && !t.startsWith("#");
+      });
+    }
     if (
-      existsSync(znTxt) &&
-      statSync(znTxt).size > 0 &&
+      (forcePack || hasActive) &&
       existsSync(znSo) &&
-      statSync(znSo).size > 1000
+      statSync(znSo).size > 1000 &&
+      hasActive
     ) {
       copyFromModule("zn_modules.txt");
       copyFromModule("libcb_zn_hide.so");
       log("packaged ZN module track (zn_modules.txt + libcb_zn_hide.so)");
-    } else {
+    } else if (forcePack) {
       log(
-        "PACK_ZN_MODULE=1 but missing non-empty zn_modules.txt or libcb_zn_hide.so — skipped",
+        "PACK_ZN_MODULE=1 but need active (non-comment) zn_modules.txt lines and libcb_zn_hide.so — skipped",
       );
     }
   }

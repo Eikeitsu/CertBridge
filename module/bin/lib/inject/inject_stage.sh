@@ -28,6 +28,8 @@ try_remount_ro_pid() {
   :
 }
 
+# 在 RUNTIME_MOUNT_ROOT 下建短路径 tmpfs（源字段为中性 "tmpfs"，不暴露模块树）。
+# 证书从 generation 拷入后再 bind；成功后由 orphan_tmpfs_stage 拆掉 staging 挂载点。
 ensure_stage_tmpfs() {
   stage="$1"
   if mountpoint -q "$stage" 2>/dev/null; then

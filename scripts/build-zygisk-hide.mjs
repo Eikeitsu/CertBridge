@@ -7,13 +7,15 @@
  *   ZYGISK_ABIS — 逗号分隔 ABI，默认 arm64-v8a,armeabi-v7a
  *   SKIP_ZYGISK_HIDE=1 — 跳过（无 NDK 时本地打包用）
  *   REQUIRE_ZYGISK_HIDE=1 — 无 NDK 时失败（CI）
- *   BUILD_ZN_MODULE=1 — 额外构建 libcb_zn_hide（默认关闭；须另备非空 zn_modules.txt）
+ *   BUILD_ZN_MODULE=1 — 强制构建 libcb_zn_hide
+ *   （若未设置：module/zn_modules.txt 有非注释非空行时自动开启）
  */
 import { execSync } from "node:child_process";
 import {
   cpSync,
   existsSync,
   mkdirSync,
+  readFileSync,
   readdirSync,
   rmSync,
   statSync,
@@ -28,7 +30,20 @@ const repoRoot = join(__dirname, "..");
 const srcDir = join(repoRoot, "native", "zygisk_hide");
 const outDir = join(repoRoot, "module", "zygisk");
 const buildRoot = join(repoRoot, ".build", "zygisk_hide");
-const buildZn = process.env.BUILD_ZN_MODULE === "1";
+const znModulesPath = join(repoRoot, "module", "zn_modules.txt");
+
+function znModulesHasActiveLines() {
+  if (!existsSync(znModulesPath)) return false;
+  const text = readFileSync(znModulesPath, "utf8");
+  return text.split(/\r?\n/).some((line) => {
+    const t = line.trim();
+    return t.length > 0 && !t.startsWith("#");
+  });
+}
+
+const buildZn =
+  process.env.BUILD_ZN_MODULE === "1" ||
+  (process.env.BUILD_ZN_MODULE !== "0" && znModulesHasActiveLines());
 
 function log(msg) {
   console.log(`[build-zygisk-hide] ${msg}`);
@@ -199,6 +214,9 @@ if (!ndk) {
 }
 
 log(`NDK=${ndk}`);
+log(
+  `BUILD_ZN_MODULE=${buildZn ? "ON" : "OFF"} (active zn_modules lines=${znModulesHasActiveLines()})`,
+);
 const cmakeBin = resolveCmake();
 if (!cmakeBin) {
   console.error(

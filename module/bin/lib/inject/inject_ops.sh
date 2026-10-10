@@ -99,6 +99,13 @@ inject_one_target() {
     orphan_tmpfs_stage "$stage"
     log_debug "inject: orphaned stage $stage"
   fi
+  # 路径指纹：若 cacerts 目标的 mountinfo 仍含 modules/CertBridge，多半是 Magic Mount 叠层
+  # （脚本 bind 应用 tmpfs stage，一般不会长期暴露模块树路径）
+  if [ -f /proc/1/mountinfo ]; then
+    if grep -E '/cacerts' /proc/1/mountinfo 2>/dev/null | grep -q 'modules/CertBridge'; then
+      log_warn "inject: mountinfo still shows modules/CertBridge on a cacerts target (Magic Mount?). Prefer mount_mode=compatible + tmpfs_style=dev for shorter fingerprints; Zygisk filter can hide remaining lines for opted-in apps."
+    fi
+  fi
   # try_umount 统一由 inject_* 末尾 hide_assist_after_inject 登记，避免同一路径连登两次
   # （第二次常因「已存在」被误报 failed）
   return "$rc"

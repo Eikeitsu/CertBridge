@@ -13,6 +13,7 @@ emit_zn_hide_status() {
   if zn_hide_component_present; then
     echo "zn_hide_supported=1"
     echo "zn_hide_allow=$(read_conf zn_hide_allow 0)"
+    echo "zn_filter_mode=$(read_conf zn_filter_mode blacklist)"
     # 非空 zn_modules.txt 视为启用了 ZN Module 辅路径声明（禁止空壳）
     zn_mod=0
     if [ -f "$MODDIR/zn_modules.txt" ] && [ -s "$MODDIR/zn_modules.txt" ]; then

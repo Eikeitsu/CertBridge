@@ -222,22 +222,54 @@ function textToBase64(text: string): string {
   return btoa(binary);
 }
 
+export type ZnFilterMode = "blacklist" | "whitelist";
+export type ZnListKind = "blacklist" | "whitelist";
+
+function parseZnListBody(stdout: string, kinds: readonly [string, string][]): string {
+  for (const [beginTag, endTag] of kinds) {
+    const begin = stdout.indexOf(beginTag);
+    const end = stdout.indexOf(endTag);
+    if (begin < 0 || end < 0 || end <= begin) continue;
+    return stdout
+      .slice(begin + beginTag.length, end)
+      .replace(/^\r?\n/, "")
+      .replace(/\r?\n$/, "");
+  }
+  return "";
+}
+
+export async function setZnFilterMode(mode: ZnFilterMode) {
+  return cli(`set_zn_filter_mode ${mode}`);
+}
+
+export async function getZnBlacklist(): Promise<string> {
+  const result = await cli("get_zn_blacklist");
+  if (result.errno && result.errno !== 0) return "";
+  return parseZnListBody(result.stdout || "", [["begin_blacklist", "end_blacklist"]]);
+}
+
+export async function setZnBlacklist(text: string) {
+  const payload = textToBase64(text);
+  return cli(`set_zn_blacklist '${payload}'`, CLI_TIMEOUT_MS.IMPORT);
+}
+
 export async function getZnWhitelist(): Promise<string> {
   const result = await cli("get_zn_whitelist");
   if (result.errno && result.errno !== 0) return "";
-  const stdout = result.stdout || "";
-  const begin = stdout.indexOf("begin_whitelist");
-  const end = stdout.indexOf("end_whitelist");
-  if (begin < 0 || end < 0 || end <= begin) return "";
-  return stdout
-    .slice(begin + "begin_whitelist".length, end)
-    .replace(/^\r?\n/, "")
-    .replace(/\r?\n$/, "");
+  return parseZnListBody(result.stdout || "", [["begin_whitelist", "end_whitelist"]]);
 }
 
 export async function setZnWhitelist(text: string) {
   const payload = textToBase64(text);
   return cli(`set_zn_whitelist '${payload}'`, CLI_TIMEOUT_MS.IMPORT);
+}
+
+export async function getZnFilterList(kind: ZnListKind): Promise<string> {
+  return kind === "whitelist" ? getZnWhitelist() : getZnBlacklist();
+}
+
+export async function setZnFilterList(kind: ZnListKind, text: string) {
+  return kind === "whitelist" ? setZnWhitelist(text) : setZnBlacklist(text);
 }
 
 export async function hotMount(mode: HotMountMode, sdPath?: string) {

@@ -6,6 +6,7 @@ import {
 import { isFlagOn } from "@/shared/lib/flag";
 import { useHideAllow } from "@/features/hide/hooks/useHideAllow";
 import { useZnHideAllow } from "@/features/hide/hooks/useZnHideAllow";
+import { useZnFilterMode } from "@/features/hide/hooks/useZnFilterMode";
 import { useEnsureHideStatus } from "@/features/hide/hooks/useEnsureHideStatus";
 import { HideAllowRow } from "@/features/hide/ui/HideAllowRow";
 import { HideCaptureWarning } from "@/features/hide/ui/HideCaptureWarning";
@@ -13,6 +14,7 @@ import { HideStatusCard } from "@/features/hide/ui/HideStatusCard";
 import { HideRootNotes } from "@/features/hide/ui/HideRootNotes";
 import { HideGuidePanel } from "@/features/hide/ui/HideGuidePanel";
 import { CaptureChecklistCard } from "@/features/hide/ui/CaptureChecklistCard";
+import { ZnFilterModeRow } from "@/features/hide/ui/ZnFilterModeRow";
 import { ZnWhitelistEditor } from "@/features/hide/ui/ZnWhitelistEditor";
 import { HideExperimentPanel } from "@/features/hide/ui/HideExperimentPanel";
 import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
@@ -22,6 +24,7 @@ export function DefaultHidePage() {
   const chrome = usePackChrome();
   const hide = useHideAllow();
   const zn = useZnHideAllow();
+  const znMode = useZnFilterMode();
   useEnsureHideStatus();
   const status = useAppSelector(selectModuleStatus);
   const bootstrapped = useAppSelector(selectStatusBootstrapped);
@@ -100,14 +103,31 @@ export function DefaultHidePage() {
         </div>
       ) : null}
 
+      {zn.znHideSupported || hide.hideSupported ? (
+        <section className="pk-def-section">
+          <h2 className="pk-def-section__title">{h.filterVsUmountTitle}</h2>
+          <p className="pk-def-muted">{h.filterVsUmountBody}</p>
+        </section>
+      ) : null}
+
       {zn.znHideSupported ? (
-        <ZnWhitelistEditor
-          title={h.whitelistTitle}
-          meta={h.whitelistMeta}
-          hint={h.whitelistHint}
-          saveLabel={h.whitelistSave}
-          rows={5}
-        />
+        <>
+          <section className="pk-def-section">
+            <h2 className="pk-def-section__title">{h.filterModeTitle}</h2>
+            <div className="pk-def-group">
+              <ZnFilterModeRow
+                mode={znMode.mode}
+                disabled={znMode.isPending}
+                onChange={znMode.handleChange}
+              />
+            </div>
+          </section>
+          <ZnWhitelistEditor
+            listKind={znMode.mode === "whitelist" ? "whitelist" : "blacklist"}
+            saveLabel={h.whitelistSave}
+            rows={5}
+          />
+        </>
       ) : null}
 
       <HideExperimentPanel variant="section" large />

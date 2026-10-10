@@ -2,14 +2,9 @@ import { Card } from "@/shared/ui/primitives";
 import { PageStack } from "@/shared/ui/layout";
 import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
 import { useAppSelector } from "@/app/store/hooks";
-import {
-  selectModuleStatus,
-  selectStatusBootstrapped,
-} from "@/features/status/model/selectors";
-import { isFlagOn } from "@/shared/lib/flag";
+import { selectStatusBootstrapped } from "@/features/status/model/selectors";
 import { useHideAllow } from "../hooks/useHideAllow";
 import { useZnHideAllow } from "../hooks/useZnHideAllow";
-import { useZnFilterMode } from "../hooks/useZnFilterMode";
 import { useEnsureHideStatus } from "../hooks/useEnsureHideStatus";
 import { HideAllowRow } from "./HideAllowRow";
 import { HideCaptureWarning } from "./HideCaptureWarning";
@@ -17,28 +12,18 @@ import { HideIntroCard } from "./HideIntroCard";
 import { HideStatusCard } from "./HideStatusCard";
 import { HideGuidePanel } from "./HideGuidePanel";
 import { CaptureChecklistCard } from "./CaptureChecklistCard";
-import { ZnFilterModeRow } from "./ZnFilterModeRow";
-import { ZnFilterListEditor } from "./ZnFilterListEditor";
+import { ZnFilterBlock } from "./ZnFilterBlock";
 import { HideRootNotes } from "./HideRootNotes";
 import { HideExperimentPanel } from "./HideExperimentPanel";
 
 export function HidePage() {
   const hide = useHideAllow();
   const zn = useZnHideAllow();
-  const znMode = useZnFilterMode();
   useEnsureHideStatus();
-  const status = useAppSelector(selectModuleStatus);
   const bootstrapped = useAppSelector(selectStatusBootstrapped);
   const { voice } = usePackVoice();
   const h = voice.hide;
-  const loaderOk = isFlagOn(status.zygisk_loader_ok);
   const anyHide = hide.hideSupported || zn.znHideSupported;
-  const loaderWarn =
-    zn.znHideSupported && !loaderOk ? (
-      <Card title={h.loaderWarnTitle} meta={h.loaderWarnMeta}>
-        <p className="bf-page-sub">{h.loaderWarnBody}</p>
-      </Card>
-    ) : null;
 
   return (
     <PageStack className="bf-stack--loose">
@@ -69,42 +54,11 @@ export function HidePage() {
           />
         </Card>
       ) : null}
-      {zn.znHideSupported ? (
-        <Card title={h.znSwitchTitle} meta={h.znSwitchMeta}>
-          <HideAllowRow
-            checked={zn.znHideAllow}
-            disabled={false}
-            onChange={zn.handleChange}
-            title={h.znAllowTitle}
-            descOn={h.znAllowOn}
-            descOff={h.znAllowOff}
-          />
-        </Card>
-      ) : bootstrapped && hide.hideSupported ? (
+      <ZnFilterBlock variant="card" />
+      {bootstrapped && hide.hideSupported && !zn.znHideSupported ? (
         <Card title={h.znMissingTitle} meta={h.znMissingMeta}>
           <p className="bf-page-sub">{h.znMissingBody}</p>
         </Card>
-      ) : null}
-      {zn.znHideSupported || hide.hideSupported ? (
-        <Card title={h.filterVsUmountTitle}>
-          <p className="bf-page-sub">{h.filterVsUmountBody}</p>
-        </Card>
-      ) : null}
-      {loaderWarn}
-      {zn.znHideSupported ? (
-        <>
-          <Card title={h.filterModeTitle}>
-            <ZnFilterModeRow
-              mode={znMode.mode}
-              disabled={znMode.isPending}
-              onChange={znMode.handleChange}
-            />
-          </Card>
-          <ZnFilterListEditor
-            listKind={znMode.mode === "whitelist" ? "whitelist" : "blacklist"}
-            saveLabel={h.whitelistSave}
-          />
-        </>
       ) : null}
       <HideExperimentPanel />
       <HideStatusCard />

@@ -6,6 +6,8 @@ type HideAllowRowProps = {
   disabled?: boolean;
   onChange: (checked: boolean) => void;
   title?: string;
+  /** 固定简要说明（不随开关切换） */
+  note?: string;
   descOn?: string;
   descOff?: string;
   large?: boolean;
@@ -16,6 +18,7 @@ export function HideAllowRow({
   disabled,
   onChange,
   title,
+  note,
   descOn,
   descOff,
   large,
@@ -24,12 +27,14 @@ export function HideAllowRow({
   const resolvedTitle = title ?? t("hide.allowTitle");
   const resolvedDescOn = descOn ?? t("hide.allowOn");
   const resolvedDescOff = descOff ?? t("hide.allowOff");
+  const stateDesc = checked ? resolvedDescOn : resolvedDescOff;
   if (large) {
     return (
       <div className="bf-hide-switch-card">
         <div className="bf-hide-switch-card__text">
           <div className="bf-row__title">{resolvedTitle}</div>
-          <div className="bf-row__desc">{checked ? resolvedDescOn : resolvedDescOff}</div>
+          {note ? <div className="bf-hide-switch-card__note">{note}</div> : null}
+          <div className="bf-row__desc">{stateDesc}</div>
         </div>
         <Switch checked={checked} disabled={disabled} onChange={onChange} />
       </div>
@@ -37,10 +42,18 @@ export function HideAllowRow({
   }
 
   return (
-    <Row
-      title={resolvedTitle}
-      desc={checked ? resolvedDescOn : resolvedDescOff}
-      extra={<Switch checked={checked} disabled={disabled} onChange={onChange} />}
-    />
+    <div className="bf-hide-switch-row">
+      <Row
+        title={resolvedTitle}
+        desc={note ? undefined : stateDesc}
+        extra={<Switch checked={checked} disabled={disabled} onChange={onChange} />}
+      />
+      {note ? (
+        <div className="bf-hide-switch-row__note">
+          <p>{note}</p>
+          <span className="bf-hide-switch-row__state">{stateDesc}</span>
+        </div>
+      ) : null}
+    </div>
   );
 }

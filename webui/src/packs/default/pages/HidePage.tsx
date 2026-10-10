@@ -1,12 +1,7 @@
 import { useAppSelector } from "@/app/store/hooks";
-import {
-  selectModuleStatus,
-  selectStatusBootstrapped,
-} from "@/features/status/model/selectors";
-import { isFlagOn } from "@/shared/lib/flag";
+import { selectStatusBootstrapped } from "@/features/status/model/selectors";
 import { useHideAllow } from "@/features/hide/hooks/useHideAllow";
 import { useZnHideAllow } from "@/features/hide/hooks/useZnHideAllow";
-import { useZnFilterMode } from "@/features/hide/hooks/useZnFilterMode";
 import { useEnsureHideStatus } from "@/features/hide/hooks/useEnsureHideStatus";
 import { HideAllowRow } from "@/features/hide/ui/HideAllowRow";
 import { HideCaptureWarning } from "@/features/hide/ui/HideCaptureWarning";
@@ -14,8 +9,7 @@ import { HideStatusCard } from "@/features/hide/ui/HideStatusCard";
 import { HideRootNotes } from "@/features/hide/ui/HideRootNotes";
 import { HideGuidePanel } from "@/features/hide/ui/HideGuidePanel";
 import { CaptureChecklistCard } from "@/features/hide/ui/CaptureChecklistCard";
-import { ZnFilterModeRow } from "@/features/hide/ui/ZnFilterModeRow";
-import { ZnFilterListEditor } from "@/features/hide/ui/ZnFilterListEditor";
+import { ZnFilterBlock } from "@/features/hide/ui/ZnFilterBlock";
 import { HideExperimentPanel } from "@/features/hide/ui/HideExperimentPanel";
 import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
 import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
@@ -24,13 +18,10 @@ export function DefaultHidePage() {
   const chrome = usePackChrome();
   const hide = useHideAllow();
   const zn = useZnHideAllow();
-  const znMode = useZnFilterMode();
   useEnsureHideStatus();
-  const status = useAppSelector(selectModuleStatus);
   const bootstrapped = useAppSelector(selectStatusBootstrapped);
   const { voice } = usePackVoice();
   const h = voice.hide;
-  const loaderOk = isFlagOn(status.zygisk_loader_ok);
   const anyHide = hide.hideSupported || zn.znHideSupported;
 
   return (
@@ -71,63 +62,13 @@ export function DefaultHidePage() {
         </section>
       ) : null}
 
-      {zn.znHideSupported ? (
-        <section className="pk-def-section">
-          <h2 className="pk-def-section__title">{h.znSwitchTitle}</h2>
-          <div className="pk-def-group">
-            <HideAllowRow
-              checked={zn.znHideAllow}
-              disabled={zn.isPending}
-              onChange={zn.handleChange}
-              title={h.znAllowTitle}
-              descOn={h.znAllowOn}
-              descOff={h.znAllowOff}
-              large
-            />
-          </div>
-          {h.znSwitchMeta ? (
-            <p className="pk-def-muted pk-def-muted--tight">{h.znSwitchMeta}</p>
-          ) : null}
-        </section>
-      ) : bootstrapped && hide.hideSupported ? (
+      <ZnFilterBlock variant="section" large listRows={5} />
+
+      {bootstrapped && hide.hideSupported && !zn.znHideSupported ? (
         <section className="pk-def-section">
           <h2 className="pk-def-section__title">{h.znMissingTitle}</h2>
           <p className="pk-def-muted">{h.znMissingBody}</p>
         </section>
-      ) : null}
-
-      {zn.znHideSupported && !loaderOk ? (
-        <div className="pk-def-banner is-warn">
-          <strong>{h.loaderWarnTitle}</strong>
-          <div>{h.loaderWarnBody}</div>
-        </div>
-      ) : null}
-
-      {zn.znHideSupported || hide.hideSupported ? (
-        <section className="pk-def-section">
-          <h2 className="pk-def-section__title">{h.filterVsUmountTitle}</h2>
-          <p className="pk-def-muted">{h.filterVsUmountBody}</p>
-        </section>
-      ) : null}
-
-      {zn.znHideSupported ? (
-        <>
-          <section className="pk-def-section">
-            <h2 className="pk-def-section__title">{h.filterModeTitle}</h2>
-            <div className="pk-def-group">
-              <ZnFilterModeRow
-                mode={znMode.mode}
-                disabled={znMode.isPending}
-                onChange={znMode.handleChange}
-              />
-            </div>
-          </section>
-          <ZnFilterListEditor
-            listKind={znMode.mode === "whitelist" ? "whitelist" : "blacklist"}
-            saveLabel={h.whitelistSave}
-            rows={5}
-          />
-        </>
       ) : null}
 
       <HideExperimentPanel variant="section" large />

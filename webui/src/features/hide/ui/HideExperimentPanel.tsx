@@ -54,65 +54,100 @@ export function HideExperimentPanel({
     toastOff: h.serviceProbeToastOff,
   });
 
+  const options = [
+    {
+      key: "force",
+      checked: force.forceBind,
+      disabled: force.isPending,
+      onChange: force.handleChange,
+      title: h.forceBindTitle,
+      note: h.forceBindNote,
+      descOn: h.forceBindOn,
+      descOff: h.forceBindOff,
+    },
+    {
+      key: "late",
+      checked: late.lateInject,
+      disabled: late.isPending,
+      onChange: late.handleChange,
+      title: h.lateInjectTitle,
+      note: h.lateInjectNote,
+      descOn: h.lateInjectOn,
+      descOff: h.lateInjectOff,
+    },
+    {
+      key: "zygote",
+      checked: zygote.checked,
+      disabled: zygote.isPending,
+      onChange: zygote.handleChange,
+      title: h.bootZygoteTitle,
+      note: h.bootZygoteNote,
+      descOn: h.bootZygoteOn,
+      descOff: h.bootZygoteOff,
+    },
+    {
+      key: "multiApex",
+      checked: multiApex.checked,
+      disabled: multiApex.isPending,
+      onChange: multiApex.handleChange,
+      title: h.bootMultiApexTitle,
+      note: h.bootMultiApexNote,
+      descOn: h.bootMultiApexOn,
+      descOff: h.bootMultiApexOff,
+    },
+    {
+      key: "probe",
+      checked: probe.checked,
+      disabled: probe.isPending,
+      onChange: probe.handleChange,
+      title: h.serviceProbeTitle,
+      note: h.serviceProbeNote,
+      descOn: h.serviceProbeOn,
+      descOff: h.serviceProbeOff,
+    },
+  ] as const;
+
   const entry = (
-    <Button
-      type="button"
-      variant="ghost"
-      className="bf-btn--block"
-      onClick={() => setOpen(true)}
-    >
-      {h.experimentEntryCta}
-    </Button>
+    <button type="button" className="bf-labs-entry" onClick={() => setOpen(true)}>
+      <span className="bf-labs-entry__text">
+        <span className="bf-labs-entry__title">{h.experimentEntryCta}</span>
+        <span className="bf-labs-entry__meta">{h.experimentEntryHint}</span>
+      </span>
+      <span className="bf-labs-entry__chev" aria-hidden>
+        ›
+      </span>
+    </button>
   );
 
   const sheetBody = (
-    <div className="bf-stack bf-stack--loose">
-      <p className="bf-page-sub">{h.experimentIntro}</p>
-      <HideAllowRow
-        checked={force.forceBind}
-        disabled={force.isPending}
-        onChange={force.handleChange}
-        title={h.forceBindTitle}
-        descOn={h.forceBindOn}
-        descOff={h.forceBindOff}
-        large={large}
-      />
-      <HideAllowRow
-        checked={late.lateInject}
-        disabled={late.isPending}
-        onChange={late.handleChange}
-        title={h.lateInjectTitle}
-        descOn={h.lateInjectOn}
-        descOff={h.lateInjectOff}
-        large={large}
-      />
-      <HideAllowRow
-        checked={zygote.checked}
-        disabled={zygote.isPending}
-        onChange={zygote.handleChange}
-        title={h.bootZygoteTitle}
-        descOn={h.bootZygoteOn}
-        descOff={h.bootZygoteOff}
-        large={large}
-      />
-      <HideAllowRow
-        checked={multiApex.checked}
-        disabled={multiApex.isPending}
-        onChange={multiApex.handleChange}
-        title={h.bootMultiApexTitle}
-        descOn={h.bootMultiApexOn}
-        descOff={h.bootMultiApexOff}
-        large={large}
-      />
-      <HideAllowRow
-        checked={probe.checked}
-        disabled={probe.isPending}
-        onChange={probe.handleChange}
-        title={h.serviceProbeTitle}
-        descOn={h.serviceProbeOn}
-        descOff={h.serviceProbeOff}
-        large={large}
-      />
+    <div className="bf-labs-sheet">
+      <p className="bf-labs-sheet__intro">{h.experimentIntro}</p>
+      <div className="bf-labs-sheet__list">
+        {options.map((opt) => (
+          <div key={opt.key} className="bf-labs-sheet__item">
+            <HideAllowRow
+              checked={opt.checked}
+              disabled={opt.disabled}
+              onChange={opt.onChange}
+              title={opt.title}
+              note={opt.note}
+              descOn={opt.descOn}
+              descOff={opt.descOff}
+              large={large}
+            />
+          </div>
+        ))}
+      </div>
+      <div className="bf-labs-sheet__footer">
+        <Button
+          type="button"
+          variant="ghost"
+          className="bf-btn--block"
+          onClick={() => setOpen(false)}
+        >
+          {h.experimentSheetDone}
+        </Button>
+      </div>
     </div>
   );
 
@@ -130,7 +165,7 @@ export function HideExperimentPanel({
   if (variant === "section") {
     return (
       <>
-        <section className="pk-def-section">
+        <section className="pk-def-section bf-labs">
           <h2 className="pk-def-section__title">{h.experimentEntryTitle}</h2>
           <p className="pk-def-muted pk-def-muted--tight">{h.experimentEntryMeta}</p>
           <div className="pk-def-group">{entry}</div>
@@ -143,9 +178,9 @@ export function HideExperimentPanel({
   if (variant === "block") {
     return (
       <>
-        <section className="pk-ops-panel">
+        <section className="pk-ops-panel bf-labs">
           <h2 className="pk-ops-panel__title">{h.experimentEntryTitle}</h2>
-          <p className="bf-page-sub">{h.experimentEntryMeta}</p>
+          <p className="pk-ops-empty">{h.experimentEntryMeta}</p>
           {entry}
         </section>
         {sheet}
@@ -155,7 +190,11 @@ export function HideExperimentPanel({
 
   return (
     <>
-      <Card title={h.experimentEntryTitle} meta={h.experimentEntryMeta}>
+      <Card
+        title={h.experimentEntryTitle}
+        meta={h.experimentEntryMeta}
+        className="bf-labs"
+      >
         {entry}
       </Card>
       {sheet}

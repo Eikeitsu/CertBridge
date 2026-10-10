@@ -1,4 +1,4 @@
-import { HideAllowRow } from "./HideAllowRow";
+import { Segment } from "@/shared/ui/primitives";
 import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
 import type { ZnFilterMode } from "@/shared/api/cli";
 
@@ -8,20 +8,32 @@ type ZnFilterModeRowProps = {
   onChange: (mode: ZnFilterMode) => void;
 };
 
-/** 黑名单=默认安全；切白名单用开关呈现（关=黑名单，开=白名单） */
+/** 黑/白名单用分段选择，避免「开=白名单」开关语义含糊 */
 export function ZnFilterModeRow({ mode, disabled, onChange }: ZnFilterModeRowProps) {
   const { voice } = usePackVoice();
   const h = voice.hide;
-  const whitelistOn = mode === "whitelist";
 
   return (
-    <HideAllowRow
-      checked={whitelistOn}
-      disabled={!!disabled}
-      onChange={(next) => onChange(next ? "whitelist" : "blacklist")}
-      title={h.filterModeTitle}
-      descOn={h.filterModeWhitelist}
-      descOff={h.filterModeBlacklist}
-    />
+    <div className="bf-zn-mode">
+      <div className="bf-zn-mode__label">{h.filterModeTitle}</div>
+      <Segment
+        layout="stack"
+        value={mode}
+        disabled={disabled}
+        onChange={(v) => onChange(v === "whitelist" ? "whitelist" : "blacklist")}
+        options={[
+          {
+            value: "blacklist",
+            label: h.filterModeBlacklist,
+            hint: h.filterModeBlacklistHint,
+          },
+          {
+            value: "whitelist",
+            label: h.filterModeWhitelist,
+            hint: h.filterModeWhitelistHint,
+          },
+        ]}
+      />
+    </div>
   );
 }

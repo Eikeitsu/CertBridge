@@ -205,7 +205,7 @@ extern "C" [[gnu::visibility("default")]] void zn_module_entry_v1(ZnApiTableV1 *
     return;
   int modfd = open_certbridge_moddir();
   const bool allow = cb_hide::read_zn_hide_allow(modfd);
-  const bool anon = cb_hide::read_zn_hide_anon_exec(modfd);
+  const bool anon = cb_hide::read_zn_hide_anon_exec_default_on(modfd);
   if (modfd >= 0)
     ::close(modfd);
   if (!allow)

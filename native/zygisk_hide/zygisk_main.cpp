@@ -201,6 +201,8 @@ ssize_t filtered_read(int fd, void *buf, size_t count, FilterKind kind) {
     bool drop_fields = false;
 
     auto append_kept_line = [&](std::string_view line, bool with_nl) {
+      std::string scrub_storage;
+      std::string_view emit = line;
       bool keep = true;
       if (smaps) {
         if (is_smaps_vma_header_line(line)) {
@@ -211,14 +213,23 @@ ssize_t filtered_read(int fd, void *buf, size_t count, FilterKind kind) {
         } else {
           keep = !line_should_drop(line, kind);
         }
+      } else if (kind == FilterKind::Mount) {
+        // 挂载表：擦路径字面量、保留行（避免删行扯断 mount id 图）
+        if (cb_hide::line_is_certbridge_trace(line)) {
+          scrub_storage = cb_hide::sanitize_mount_line(line);
+          if (scrub_storage.empty())
+            keep = false;
+          else
+            emit = scrub_storage;
+        }
       } else {
         keep = !line_should_drop(line, kind);
       }
       if (!keep)
         return;
-      if (filtered.size() + line.size() + (with_nl ? 1 : 0) > kMaxFiltered)
+      if (filtered.size() + emit.size() + (with_nl ? 1 : 0) > kMaxFiltered)
         return;
-      filtered.append(line.data(), line.size());
+      filtered.append(emit.data(), emit.size());
       if (with_nl)
         filtered.push_back('\n');
     };
@@ -280,24 +291,30 @@ ssize_t filtered_read(int fd, void *buf, size_t count, FilterKind kind) {
       return static_cast<ssize_t>(n);
     }
   } catch (...) {
-    // 禁止异常穿出 hooks：否则检测器进程直接 abort
+    // fail-open：检测器对 EIO 更敏感，宁可露出痕迹也不要闪退
+    if (orig_read)
+      return orig_read(fd, buf, count);
     errno = EIO;
     return -1;
   }
 }
 
-/** readlink 目标若指向本模块路径，对外表现为不存在 */
+/** readlink 目标若指向本模块路径：改写为良性路径，避免 ENOENT 触发检测器异常路径 */
 ssize_t scrub_readlink_result(ssize_t n, char *buf, size_t bufsiz) {
-  if (n <= 0 || !buf)
+  if (n <= 0 || !buf || bufsiz == 0)
     return n;
   size_t len = static_cast<size_t>(n);
   if (len >= bufsiz)
-    len = bufsiz; // readlink 可不写 NUL
+    len = bufsiz;
   std::string_view target(buf, len);
   if (!cb_hide::line_is_certbridge_trace(target))
     return n;
-  errno = ENOENT;
-  return -1;
+  static constexpr char kBenign[] = "/system/framework/framework.jar";
+  size_t copy = sizeof(kBenign) - 1;
+  if (copy > bufsiz)
+    copy = bufsiz;
+  std::memcpy(buf, kBenign, copy);
+  return static_cast<ssize_t>(copy);
 }
 
 int hooked_open(const char *pathname, int flags, ...) {
@@ -386,6 +403,8 @@ ssize_t filtered_pread64(int fd, void *buf, size_t count, off64_t offset, Filter
     bool drop_fields = false;
 
     auto append_kept_line = [&](std::string_view line, bool with_nl) {
+      std::string scrub_storage;
+      std::string_view emit = line;
       bool keep = true;
       if (smaps) {
         if (is_smaps_vma_header_line(line)) {
@@ -396,14 +415,22 @@ ssize_t filtered_pread64(int fd, void *buf, size_t count, off64_t offset, Filter
         } else {
           keep = !line_should_drop(line, kind);
         }
+      } else if (kind == FilterKind::Mount) {
+        if (cb_hide::line_is_certbridge_trace(line)) {
+          scrub_storage = cb_hide::sanitize_mount_line(line);
+          if (scrub_storage.empty())
+            keep = false;
+          else
+            emit = scrub_storage;
+        }
       } else {
         keep = !line_should_drop(line, kind);
       }
       if (!keep)
         return;
-      if (filtered.size() + line.size() + (with_nl ? 1 : 0) > kMaxFiltered)
+      if (filtered.size() + emit.size() + (with_nl ? 1 : 0) > kMaxFiltered)
         return;
-      filtered.append(line.data(), line.size());
+      filtered.append(emit.data(), emit.size());
       if (with_nl)
         filtered.push_back('\n');
     };
@@ -456,6 +483,8 @@ ssize_t filtered_pread64(int fd, void *buf, size_t count, off64_t offset, Filter
     std::memcpy(buf, filtered.data() + static_cast<size_t>(offset), n);
     return static_cast<ssize_t>(n);
   } catch (...) {
+    if (orig_pread64)
+      return orig_pread64(fd, buf, count, offset);
     errno = EIO;
     return -1;
   }
@@ -563,14 +592,15 @@ public:
       return;
     }
     cb_hide::load_lists_from_moddir(modfd);
-    // 仅过滤目标：黑名单勾选的检测 App（白名单模式则名单外全部）
+    // 仅过滤目标：黑名单命中（白名单模式则名单外全部）
     if (!cb_hide::should_filter_process(proc)) {
       ::close(modfd);
       unload_if_idle();
       return;
     }
-    // 默认不藏匿名可执行页：误开会导致正常 App 闪退/断网
-    cb_hide::set_hide_anon_exec(cb_hide::read_zn_hide_anon_exec(modfd));
+    // 挂钩目标默认藏 [anonymous] 跳板页（Duck Memory 主因）；zn_hide_anon_exec=0 可关
+    // 仅藏 ≤4MiB 且非 [anon:…] 的页，降低误伤 ART/大缓存导致的闪退
+    cb_hide::set_hide_anon_exec(cb_hide::read_zn_hide_anon_exec_default_on(modfd));
     ::close(modfd);
 
     should_hook = true;

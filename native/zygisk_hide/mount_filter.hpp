@@ -18,8 +18,13 @@ namespace cb_hide {
  */
 bool read_zn_hide_allow(int moddir_fd);
 
-/** 是否额外隐藏匿名可执行 maps（默认关；user.conf `zn_hide_anon_exec=1`） */
+/** 是否额外隐藏匿名可执行 maps（显式 =1 才为 true；兼容旧语义） */
 bool read_zn_hide_anon_exec(int moddir_fd);
+
+/**
+ * 挂钩目标用：缺省开启藏匿名跳板页；仅当 conf 显式 `zn_hide_anon_exec=0` 时关闭。
+ */
+bool read_zn_hide_anon_exec_default_on(int moddir_fd);
 
 /** 过滤名单模式：黑名单=仅过滤名单内；白名单=过滤名单外 */
 enum class FilterMode : uint8_t { Blacklist = 0, Whitelist = 1 };
@@ -76,16 +81,26 @@ void host_test_set_filter_state(FilterMode mode, const std::vector<std::string> 
 bool line_is_certbridge_trace(std::string_view line);
 
 /**
+ * 擦除 mountinfo/mounts 行内的本模块路径字面量，保留整行（含 mount id/parent）。
+ * 避免「删行」造成挂载图断裂 → 检测器 mount-ID/一致性命中或解析闪退。
+ * 擦不净时返回空，由调用方决定丢弃。
+ */
+std::string sanitize_mount_line(std::string_view line);
+
+/** 是否像 mountinfo/mounts 行（相对 maps 行） */
+bool looks_like_mount_table_line(std::string_view line);
+
+/**
  * maps/smaps VMA：可执行匿名映射（[anonymous] / 无名 00:00 0）。
  * 默认不用于过滤（见 set_hide_anon_exec）；误开会误伤正常 App。
  */
 bool line_is_anon_executable_map(std::string_view line);
 
-/** 是否额外隐藏匿名可执行 maps 行（默认关；对应 zn_hide_anon_exec=1） */
+/** 运行时开关：是否隐藏匿名可执行 maps 行（挂钩目标默认开） */
 void set_hide_anon_exec(bool on);
 bool hide_anon_exec_enabled();
 
-/** maps/smaps 是否应隐藏该行（默认仅路径痕迹；可选匿名可执行页） */
+/** maps/smaps 是否应隐藏该行（模块路径 + 可选匿名跳板） */
 bool line_should_hide_maps(std::string_view line);
 
 /** 路径是否指向进程挂载表（mountinfo / mounts） */

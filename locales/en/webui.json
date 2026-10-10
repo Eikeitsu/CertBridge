@@ -276,7 +276,7 @@
     "filterModeToastWhitelist": "Whitelist mode",
     "blacklistTitle": "Filter blacklist",
     "blacklistMeta": "Listed apps are filtered; empty = none",
-    "blacklistHint": "One package per line. Apps that must not see CertBridge paths. Capture apps always exempt. Force-stop after save.",
+    "blacklistHint": "One package per line. Listed apps get hooks + table filtering (including detectors). Capture apps always exempt. Force-stop after save.",
     "blacklistSaved": "Blacklist saved",
     "whitelistTitle": "Filter whitelist",
     "whitelistMeta": "Listed apps skip filtering; empty = filter the rest",

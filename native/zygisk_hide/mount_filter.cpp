@@ -345,6 +345,11 @@ bool read_zn_hide_anon_exec(int moddir_fd) {
   return read_conf_tri_layers(moddir_fd, "zn_hide_anon_exec") == ConfTri::On;
 }
 
+bool read_zn_hide_anon_exec_default_on(int moddir_fd) {
+  // 缺省 On：挂钩必然带 PLT 跳板，maps 不藏会被 Memory 扫描打到
+  return read_conf_tri_layers(moddir_fd, "zn_hide_anon_exec") != ConfTri::Off;
+}
+
 FilterMode read_zn_filter_mode(int moddir_fd) {
   std::string raw;
   if (!read_conf_str_layers(moddir_fd, "zn_filter_mode", &raw))
@@ -451,16 +456,104 @@ bool line_is_certbridge_trace(std::string_view line) {
   return false;
 }
 
+static void replace_all_sv(std::string &s, std::string_view from, std::string_view to) {
+  if (from.empty())
+    return;
+  size_t pos = 0;
+  while ((pos = s.find(from, pos)) != std::string::npos) {
+    s.replace(pos, from.size(), to);
+    pos += to.size();
+  }
+}
+
+bool looks_like_mount_table_line(std::string_view line) {
+  if (line.empty())
+    return false;
+  // mountinfo: "ID parent maj:min root mountpoint ... - fstype source"
+  if (line[0] >= '0' && line[0] <= '9' && contains(line, " - "))
+    return true;
+  // mounts: "source target fstype opts ..."
+  if (line[0] == '/' && contains(line, " "))
+    return true;
+  return false;
+}
+
+std::string sanitize_mount_line(std::string_view line) {
+  if (!line_is_certbridge_trace(line))
+    return std::string(line);
+  std::string out(line);
+  // 长前缀优先，尽量只改字面量、保留字段数与 mount id
+  replace_all_sv(out, "/data/adb/modules_update/CertBridge", "/system");
+  replace_all_sv(out, "/data/adb/modules/CertBridge", "/system");
+  replace_all_sv(out, "/mnt/.ca", "/mnt/.x");
+  replace_all_sv(out, "/dev/.fs0", "/dev/zero");
+  replace_all_sv(out, "/dev/.fs1", "/dev/zero");
+  replace_all_sv(out, "/dev/.cb", "/dev/.x");
+  replace_all_sv(out, "sys-ca-merge", "sys-merge");
+  replace_all_sv(out, "/.fs0", "/.x0");
+  replace_all_sv(out, "/.fs1", "/.x1");
+  replace_all_sv(out, "/.cb0", "/.x0");
+  replace_all_sv(out, "/.cb1", "/.x1");
+  replace_all_sv(out, "/.ca0", "/.x0");
+  replace_all_sv(out, "/.ca1", "/.x1");
+  replace_all_sv(out, "/CertBridge/", "/");
+  replace_all_sv(out, "/CertBridge", "");
+  // 残留大小写变体（固定长度替换，避免死循环）
+  for (;;) {
+    bool hit = false;
+    constexpr std::string_view kNeedle = "certbridge";
+    for (size_t i = 0; i + kNeedle.size() <= out.size(); ++i) {
+      if (!contains_ci(std::string_view(out).substr(i, kNeedle.size()), kNeedle))
+        continue;
+      out.replace(i, kNeedle.size(), "cbhiddenxx");
+      hit = true;
+      break;
+    }
+    if (!hit)
+      break;
+  }
+  if (line_is_certbridge_trace(out))
+    return {};
+  return out;
+}
+
 bool is_smaps_vma_header(std::string_view line);
 
 bool line_is_anon_executable_map(std::string_view line) {
   if (!is_smaps_vma_header(line))
     return false;
 
-  size_t sp = line.find(' ');
-  if (sp == std::string_view::npos)
+  // 地址范围：只藏偏「跳板」体量的页，避免误藏巨大 JIT/缓存区导致闪退
+  size_t dash = line.find('-');
+  size_t sp0 = line.find(' ');
+  if (dash == std::string_view::npos || sp0 == std::string_view::npos || dash > sp0)
     return false;
-  size_t perm_start = sp + 1;
+  auto parse_hex = [](std::string_view s, uint64_t *out) -> bool {
+    if (s.empty() || !out)
+      return false;
+    uint64_t v = 0;
+    for (char c : s) {
+      v <<= 4;
+      if (c >= '0' && c <= '9')
+        v |= static_cast<uint64_t>(c - '0');
+      else if (c >= 'a' && c <= 'f')
+        v |= static_cast<uint64_t>(c - 'a' + 10);
+      else if (c >= 'A' && c <= 'F')
+        v |= static_cast<uint64_t>(c - 'A' + 10);
+      else
+        return false;
+    }
+    *out = v;
+    return true;
+  };
+  uint64_t a0 = 0, a1 = 0;
+  if (!parse_hex(line.substr(0, dash), &a0) || !parse_hex(line.substr(dash + 1, sp0 - dash - 1), &a1))
+    return false;
+  if (a1 <= a0)
+    return false;
+  const uint64_t span = a1 - a0;
+
+  size_t perm_start = sp0 + 1;
   while (perm_start < line.size() && line[perm_start] == ' ')
     ++perm_start;
   size_t perm_end = perm_start;
@@ -478,6 +571,7 @@ bool line_is_anon_executable_map(std::string_view line) {
   if (!exec)
     return false;
 
+  // 保留带标签的 ART/分配器映射
   if (contains(line, "[anon:"))
     return false;
   if (contains(line, "[heap]") || contains(line, "[stack]"))
@@ -485,9 +579,14 @@ bool line_is_anon_executable_map(std::string_view line) {
   if (contains(line, "[vdso]") || contains(line, "[vvar]") || contains(line, "[vectors]"))
     return false;
 
+  // Duck Memory 点名的就是 [anonymous]；整段从 maps 抹掉（页仍在，只是读表不可见）
   if (contains(line, "[anonymous]"))
     return true;
 
+  // 无名 r-xp + 00:00 0：限制体量，避免误藏巨大码缓存
+  constexpr uint64_t kMaxUnnamed = 4ull * 1024ull * 1024ull;
+  if (span > kMaxUnnamed)
+    return false;
   if (line.find('[') != std::string_view::npos)
     return false;
   if (line.find(" /") != std::string_view::npos)
@@ -633,6 +732,8 @@ std::string filter_trace_text_ex(std::string_view raw, bool smaps_records) {
     std::string_view line =
         end == std::string_view::npos ? raw.substr(start) : raw.substr(start, end - start);
     bool keep = true;
+    std::string scrubbed;
+    std::string_view emit = line;
     if (smaps_records) {
       if (is_smaps_vma_header(line)) {
         drop_fields = line_should_hide_maps(line);
@@ -642,11 +743,21 @@ std::string filter_trace_text_ex(std::string_view raw, bool smaps_records) {
       } else {
         keep = !line_should_hide_maps(line);
       }
-    } else {
-      keep = !line_is_certbridge_trace(line);
+    } else if (line_is_certbridge_trace(line)) {
+      if (looks_like_mount_table_line(line)) {
+        scrubbed = sanitize_mount_line(line);
+        if (scrubbed.empty()) {
+          keep = false;
+        } else {
+          emit = scrubbed;
+        }
+      } else {
+        // maps 等：整行丢弃
+        keep = false;
+      }
     }
     if (keep) {
-      out.append(line.data(), line.size());
+      out.append(emit.data(), emit.size());
       if (end != std::string_view::npos)
         out.push_back('\n');
     }

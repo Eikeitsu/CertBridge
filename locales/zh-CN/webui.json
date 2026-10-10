@@ -276,7 +276,7 @@
     "filterModeToastWhitelist": "已切到白名单模式",
     "blacklistTitle": "过滤黑名单",
     "blacklistMeta": "名单内要过滤；空=不过滤",
-    "blacklistHint": "一行一个包名；只填需要藏 CertBridge 路径的 App。抓包永久豁免。保存后强停",
+    "blacklistHint": "一行一个包名；名单内挂钩并过滤读表（含检测 App）。抓包永久豁免。保存后强停",
     "blacklistSaved": "黑名单已保存",
     "whitelistTitle": "过滤白名单",
     "whitelistMeta": "名单内不过滤；空=过滤其余全部",

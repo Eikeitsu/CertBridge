@@ -25,9 +25,9 @@ CI：`REQUIRE_ZYGISK_HIDE=1` + `REQUIRE_ZYGISK_FILTER_TEST=1`。
 - `zn_filter_mode=blacklist`（默认）：仅 `config/zn_blacklist.txt` 内挂钩；空=不过滤
 - `zn_filter_mode=whitelist`：除 `config/zn_whitelist.txt` 外挂钩；空≈全机（慎用）
 - 抓包 App 永久豁免
-- **非目标**进程：`DLCLOSE_MODULE_LIBRARY`（避免 so 留 maps 被检测器闪退）
-- **目标**进程：保留 so + 读表过滤自藏（已挂钩不可 DLCLOSE）
+- **非目标**进程：`DLCLOSE_MODULE_LIBRARY`
+- **目标**进程：保留 so + 读表过滤（已挂钩不可 DLCLOSE）；默认藏 ≤4MiB `[anonymous]` 跳板 maps（`zn_hide_anon_exec=0` 关）
+- **mountinfo/mounts**：擦洗路径字面量、保留行；maps 丢模块路径行 + 可选匿名跳板
 
 挂钩：`open` / `__open_2` / `openat` / `fopen` / `read` / `pread64` / `readlink*`。  
-默认不藏匿名可执行 maps（`zn_hide_anon_exec=1` 才开）。  
 更新 so / 改名单后需重装或强停相关 App（或重启）才生效。

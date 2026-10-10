@@ -57,12 +57,12 @@ When enabled (and the process is on the target list), process-visible tables dro
 
 | Item          | Notes                                                                                                                                                                          |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Config        | `zn_hide_allow`; `zn_filter_mode`; `zn_hide_anon_exec` off by default                                                                                                          |
+| Config        | `zn_hide_allow`; `zn_filter_mode`; trampoline maps hide on for targets (`zn_hide_anon_exec=0` to disable)                                                                      |
 | List mode     | **Blacklist (default)**: filter only `zn_blacklist.txt`; empty = filter none. **Whitelist**: skip `zn_whitelist.txt`; empty ≈ filter all (careful). Capture apps always exempt |
 | Not installed | No `.so` → `zn_hide_supported=0`                                                                                                                                               |
 
-> Putting detection apps on the blacklist is intended (filter this module’s table traces for those targets). Non-targets get `DLCLOSE` so the module so does not linger in maps and trip detectors; targets keep the so and self-hide via filtered reads. Force-stop apps after list changes.  
-> **Filter ≠ module umount**: the former keeps the CA; the latter tears down mounts.
+> **Blacklist hit**: install PLT + filter mount/maps; by default also hide ≤4MiB `[anonymous]` trampoline pages from maps (Memory scans). Mount lines scrub paths without dropping rows; hooks fail-open. Set `zn_hide_anon_exec=0` to disable trampoline hiding. Non-targets get `DLCLOSE`. Force-stop after list changes.  
+> **Filter ≠ module umount**: the former keeps the CA; the latter tears down mounts. Mount-ID/consistency after umount-only is usually Root/KSU overlay structure.
 
 ### Path fingerprints (with filtering)
 

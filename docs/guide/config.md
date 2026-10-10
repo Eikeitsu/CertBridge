@@ -32,12 +32,12 @@ service_probe=0
 
 安装了对应组件后，还可能出现：
 
-| 键                  | 含义                                                           |
-| ------------------- | -------------------------------------------------------------- |
-| `hide_allow`        | `1`=开启 SuSFS / 内核 try_umount 登记                          |
-| `zn_hide_allow`     | `1`=开启 Zygisk 挂载过滤（默认只藏本模块路径痕迹）             |
-| `zn_filter_mode`    | `blacklist`（默认）\| `whitelist`                              |
-| `zn_hide_anon_exec` | `1`=额外藏 maps 匿名可执行页；**默认关**（误开易误伤正常 App） |
+| 键                  | 含义                                                              |
+| ------------------- | ----------------------------------------------------------------- |
+| `hide_allow`        | `1`=开启 SuSFS / 内核 try_umount 登记                             |
+| `zn_hide_allow`     | `1`=开启 Zygisk 挂载过滤（默认只藏本模块路径痕迹）                |
+| `zn_filter_mode`    | `blacklist`（默认）\| `whitelist`                                 |
+| `zn_hide_anon_exec` | 挂钩目标：**缺省开**（藏 `[anonymous]` 跳板 maps）；显式 `0` 关闭 |
 
 ### 证书开关
 

@@ -153,7 +153,7 @@ cmd_set_zn_hide_anon_exec() {
   esac
   zn_hide_component_present || { echo "error=zn_hide_feature_not_installed"; return 1; }
   write_conf zn_hide_anon_exec "$val" || { echo "error=write_failed"; return 1; }
-  log_info "config: zn_hide_anon_exec=$val (anon exec maps hide; default 0)"
+  log_info "config: zn_hide_anon_exec=$val (filter targets default on; 0=disable trampoline maps hide)"
   echo "ok=1"
   echo "zn_hide_anon_exec=$val"
   if [ "$val" = "1" ]; then

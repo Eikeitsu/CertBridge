@@ -32,12 +32,12 @@ service_probe=0
 
 When the corresponding components are installed, these may also appear:
 
-| Key                 | Meaning                                                                                      |
-| ------------------- | -------------------------------------------------------------------------------------------- |
-| `hide_allow`        | `1` enables SuSFS/kernel `try_umount` registration                                           |
-| `zn_hide_allow`     | `1` enables Zygisk mount filtering (CertBridge path traces only by default)                  |
-| `zn_filter_mode`    | `blacklist` (default) or `whitelist`                                                         |
-| `zn_hide_anon_exec` | `1` also hides anonymous executable maps entries; **off by default** (can break normal apps) |
+| Key                 | Meaning                                                                                        |
+| ------------------- | ---------------------------------------------------------------------------------------------- |
+| `hide_allow`        | `1` enables SuSFS/kernel `try_umount` registration                                             |
+| `zn_hide_allow`     | `1` enables Zygisk mount filtering (CertBridge path traces only by default)                    |
+| `zn_filter_mode`    | `blacklist` (default) or `whitelist`                                                           |
+| `zn_hide_anon_exec` | For filter targets: **on by default** (hide `[anonymous]` trampoline maps); set `0` to disable |
 
 ### Certificate switches
 

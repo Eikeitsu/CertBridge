@@ -188,7 +188,7 @@ cb set <key> <value>
   hot_allow                  0 | 1
   hide_allow                 0 | 1
   zn_hide_allow              0 | 1
-  zn_hide_anon_exec          0 | 1（默认 0；额外藏 maps 匿名可执行页，易误伤正常 App）
+  zn_hide_anon_exec          0 | 1（挂钩目标默认开；=0 关闭藏 [anonymous] 跳板 maps）
   zn_filter_mode             blacklist | whitelist（默认 blacklist）
   force_bind_capture         0 | 1
   late_inject                0 | 1

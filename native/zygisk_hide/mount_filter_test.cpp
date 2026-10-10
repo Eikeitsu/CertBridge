@@ -23,21 +23,19 @@ static void test_trace_lines() {
   expect(cb_hide::line_is_certbridge_trace(
              "120 1 0:1 / /apex/com.android.conscrypt/cacerts rw - tmpfs /dev/.fs0/apex"),
          "fs0 stage path");
-  expect(cb_hide::line_is_certbridge_trace(
-             "x /data/adb/modules/CertBridge/zygisk/arm64-v8a.so"),
+  expect(cb_hide::line_is_certbridge_trace("x /data/adb/modules/CertBridge/zygisk/arm64-v8a.so"),
          "module so path");
-  expect(cb_hide::line_is_certbridge_trace(
-             "overlay upperdir=/data/adb/modules/CertBridge/system/etc"),
-         "overlay upperdir");
+  expect(
+      cb_hide::line_is_certbridge_trace("overlay upperdir=/data/adb/modules/CertBridge/system/etc"),
+      "overlay upperdir");
   expect(!cb_hide::line_is_certbridge_trace("120 1 0:1 / /system/etc/security/cacerts rw"),
          "plain cacerts not our path");
 }
 
 static void test_filter_mount_text() {
-  const char *raw =
-      "10 1 0:1 / /system rw\n"
-      "11 1 0:2 / /apex/com.android.conscrypt/cacerts rw - tmpfs /dev/.fs0/apex\n"
-      "12 1 0:3 / /vendor rw\n";
+  const char *raw = "10 1 0:1 / /system rw\n"
+                    "11 1 0:2 / /apex/com.android.conscrypt/cacerts rw - tmpfs /dev/.fs0/apex\n"
+                    "12 1 0:3 / /vendor rw\n";
   std::string out = cb_hide::filter_trace_text(raw);
   expect(out.find("/dev/.fs0") == std::string::npos, "filtered fs0 line");
   expect(out.find("/system rw") != std::string::npos, "kept system");
@@ -61,7 +59,8 @@ static void test_path_helpers() {
   expect(cb_hide::path_is_mount_table("/proc/self/mountinfo"), "mountinfo");
   expect(!cb_hide::path_is_mount_table("/proc/self/mountstats"), "not mountstats");
   expect(cb_hide::path_needs_trace_filter_resolved("maps", "/proc/self"), "rel maps under proc");
-  expect(!cb_hide::path_needs_trace_filter_resolved("maps", "/data/local"), "rel maps not under proc");
+  expect(!cb_hide::path_needs_trace_filter_resolved("maps", "/data/local"),
+         "rel maps not under proc");
 }
 
 static void test_blacklist_mode() {

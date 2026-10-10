@@ -28,9 +28,15 @@ static int openat(int, const char *, int, ...) {
   errno = ENOENT;
   return -1;
 }
-static ssize_t read(int, void *, size_t) { return 0; }
-static int close(int) { return 0; }
-static ssize_t readlink(const char *, char *, size_t) { return -1; }
+static ssize_t read(int, void *, size_t) {
+  return 0;
+}
+static int close(int) {
+  return 0;
+}
+static ssize_t readlink(const char *, char *, size_t) {
+  return -1;
+}
 #ifndef O_RDONLY
 #define O_RDONLY 0
 #endif
@@ -493,9 +499,13 @@ bool line_is_anon_executable_map(std::string_view line) {
 
 static bool g_hide_anon_exec = false;
 
-void set_hide_anon_exec(bool on) { g_hide_anon_exec = on; }
+void set_hide_anon_exec(bool on) {
+  g_hide_anon_exec = on;
+}
 
-bool hide_anon_exec_enabled() { return g_hide_anon_exec; }
+bool hide_anon_exec_enabled() {
+  return g_hide_anon_exec;
+}
 
 bool line_should_hide_maps(std::string_view line) {
   if (line_is_certbridge_trace(line))
@@ -508,8 +518,8 @@ bool line_should_hide_maps(std::string_view line) {
 bool path_is_mount_table(std::string_view path) {
   if (path.empty())
     return false;
-  if (ends_with(path, "/mountinfo") || path == "/proc/self/mountinfo" || path == "/proc/mountinfo" ||
-      path == "mountinfo")
+  if (ends_with(path, "/mountinfo") || path == "/proc/self/mountinfo" ||
+      path == "/proc/mountinfo" || path == "mountinfo")
     return true;
   if (ends_with(path, "/mounts") || path == "/proc/mounts" || path == "/proc/self/mounts" ||
       path == "mounts")

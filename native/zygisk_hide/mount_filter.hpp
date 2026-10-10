@@ -37,7 +37,9 @@ FilterMode read_zn_filter_mode(int moddir_fd);
 void load_lists_from_moddir(int moddir_fd);
 
 /** @deprecated 同 load_lists_from_moddir */
-inline void load_whitelist_from_moddir(int moddir_fd) { load_lists_from_moddir(moddir_fd); }
+inline void load_whitelist_from_moddir(int moddir_fd) {
+  load_lists_from_moddir(moddir_fd);
+}
 
 /** 是否为内置抓包 App（永久不过滤，避免读不到系统 CA） */
 bool is_capture_exempt(std::string_view process_name);

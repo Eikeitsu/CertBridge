@@ -547,7 +547,8 @@ bool line_is_anon_executable_map(std::string_view line) {
     return true;
   };
   uint64_t a0 = 0, a1 = 0;
-  if (!parse_hex(line.substr(0, dash), &a0) || !parse_hex(line.substr(dash + 1, sp0 - dash - 1), &a1))
+  if (!parse_hex(line.substr(0, dash), &a0) ||
+      !parse_hex(line.substr(dash + 1, sp0 - dash - 1), &a1))
     return false;
   if (a1 <= a0)
     return false;

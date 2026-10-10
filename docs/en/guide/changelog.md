@@ -2,7 +2,7 @@
 
 ## v5.1.0
 
-- **Document**: Added [LSPosed module](docs/guide/lsposed.md) page to collect some ssl certificate related XP modules and vpn proxy related modules in the community
+- **Document**: Added [LSPosed modules] page to collect community SSL / pinning XP modules and VPN-related modules
 - **Install volume key**: `install/tools/volkey` (`EVIOCGRAB`) Install only the anti-volume system volume bar; clear with `install/`/`META-INF`/`customize.sh` after installation, do not enter the runtime module directory; default fallback `getevent`
 - **Repair Zygisk Filter Error Normal App**: Anonymous executable pages are no longer removed from maps/smaps by default (which has caused flashback/network loss); only the path traces of this module are filtered. Optional `zn_hide_anon_exec=1`; tighten mount table path matching
 - **Zygisk black and white list**: `zn_filter_mode=blacklist` (default, only blacklist filtering, empty = no filtering)\ | `whitelist` (in-list exemption, empty ≈ full machine); `zn_blacklist.txt`/`zn_whitelist.txt`; permanent exemption from capture

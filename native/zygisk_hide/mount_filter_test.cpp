@@ -42,8 +42,9 @@ static void test_filter_mount_text() {
   expect(out.find("/system rw") != std::string::npos, "kept system");
   expect(out.find("/vendor rw") != std::string::npos, "kept vendor");
 
-  std::string scrub = cb_hide::sanitize_mount_line(
-      "11 1 0:2 /data/adb/modules/CertBridge/x /system/etc/security/cacerts rw - tmpfs /dev/.fs0 rw");
+  std::string scrub =
+      cb_hide::sanitize_mount_line("11 1 0:2 /data/adb/modules/CertBridge/x "
+                                   "/system/etc/security/cacerts rw - tmpfs /dev/.fs0 rw");
   expect(!scrub.empty(), "sanitize returns line");
   expect(scrub.find("CertBridge") == std::string::npos, "sanitize drops module path");
   expect(scrub.find("/dev/.fs0") == std::string::npos, "sanitize drops fs0");
@@ -81,7 +82,6 @@ static void test_blacklist_mode() {
   expect(cb_hide::should_filter_process("tv.danmaku.bili:push"), "bl prefix");
   expect(!cb_hide::should_filter_process("com.example.app"), "bl miss");
   expect(!cb_hide::should_filter_process("com.reqable.android"), "capture still exempt on bl");
-
 }
 
 static void test_whitelist_mode() {

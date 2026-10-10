@@ -9,7 +9,7 @@
 
 ### 中文
 
-- **文档**：新增 [LSPosed 模块](docs/guide/lsposed.md) 页面，收集社区一些 ssl 证书相关 XP 模块以及 vpn 代理相关模块
+- **文档**：新增 [LSPosed 模块] 页面，收集社区一些 ssl 证书相关 XP 模块以及 vpn 代理相关模块
 - **安装音量键**：`install/tools/volkey`（`EVIOCGRAB`）仅安装期防系统音量条；装完随 `install/` / `META-INF` / `customize.sh` 清除，不进运行时模块目录；缺省回退 `getevent`
 - **修复 Zygisk 过滤误伤正常 App**：默认不再从 maps/smaps 抽掉匿名可执行页（曾导致闪退/断网）；仅过滤本模块路径痕迹。可选 `zn_hide_anon_exec=1`；收紧 mount 表路径匹配
 - **Zygisk 黑白名单**：`zn_filter_mode=blacklist`（默认，仅过滤黑名单，空=不过滤）\| `whitelist`（名单内豁免，空≈全机）；`zn_blacklist.txt` / `zn_whitelist.txt`；抓包永久豁免
@@ -20,7 +20,7 @@
 
 ### English
 
-- **Document**: Added [LSPosed module](docs/guide/lsposed.md) page to collect some ssl certificate related XP modules and vpn proxy related modules in the community
+- **Document**: Added [LSPosed modules](/en/guide/lsposed) page to collect community SSL / pinning XP modules and VPN-related modules
 - **Install volume key**: `install/tools/volkey` (`EVIOCGRAB`) Install only the anti-volume system volume bar; clear with `install/`/`META-INF`/`customize.sh` after installation, do not enter the runtime module directory; default fallback `getevent`
 - **Repair Zygisk Filter Error Normal App**: Anonymous executable pages are no longer removed from maps/smaps by default (which has caused flashback/network loss); only the path traces of this module are filtered. Optional `zn_hide_anon_exec=1`; tighten mount table path matching
 - **Zygisk black and white list**: `zn_filter_mode=blacklist` (default, only blacklist filtering, empty = no filtering)\ | `whitelist` (in-list exemption, empty ≈ full machine); `zn_blacklist.txt`/`zn_whitelist.txt`; permanent exemption from capture

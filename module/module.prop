@@ -7,5 +7,6 @@ description=让系统信任抓包 CA，支持 Reqable / ProxyPin / 自定义；�
 updateJson=https://eikeitsu.github.io/CertBridge/update.json
 webuiIcon=icon.png
 actionIcon=icon.png
+banner=banner.png
 minApi=24
 maxApi=36

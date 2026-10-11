@@ -35,6 +35,7 @@ const ROOT_FILES = [
   "uninstall.sh",
   "hotinstall.sh",
   "icon.png",
+  "banner.png",
 ];
 
 function log(message) {

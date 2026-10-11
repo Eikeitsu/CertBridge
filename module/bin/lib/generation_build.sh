@@ -17,35 +17,36 @@ source_identity() {
 # 是否仍有命名空间直接挂着 generation 目录本身（不可安全替换）
 # 注意：运行时 tmpfs 拷贝层（RUNTIME_MOUNT_ROOT）不算 —— 软重启后仍可能残留，
 # 但不应阻止重建 GEN_CURRENT；后续 inject 会刷新 tmpfs 内容。
-# 只扫 init + zygote，避免遍历全机 /proc（开机关键路径）
+# 默认只读 /proc/1/mountinfo（无 nsenter）。boot_bind_zygote/late_inject=1 时才扫 zygote。
 generation_source_busy() {
-  generation_id=$(path_identity "$GEN_CERTS")
-  [ -n "$generation_id" ] || return 1
+  [ -n "$GEN_CERTS" ] || return 1
   generation_seen="|"
   generation_pids="1"
-  for generation_proc in zygote zygote64; do
-    generation_pids="$generation_pids $(pidof "$generation_proc" 2>/dev/null)"
-  done
+  if [ "$(read_conf boot_bind_zygote 0)" = "1" ] || [ "$(read_conf late_inject 0)" = "1" ]; then
+    for generation_proc in zygote zygote64; do
+      generation_pids="$generation_pids $(pidof "$generation_proc" 2>/dev/null)"
+    done
+  fi
   for generation_pid in $generation_pids; do
-    [ -n "$generation_pid" ] && [ -d "/proc/$generation_pid/ns" ] || continue
+    [ -n "$generation_pid" ] || continue
+    mi="/proc/$generation_pid/mountinfo"
+    [ -r "$mi" ] || continue
     generation_ns=$(readlink "/proc/$generation_pid/ns/mnt" 2>/dev/null)
     [ -n "$generation_ns" ] || continue
     case "$generation_seen" in *"|$generation_ns|"*) continue ;; esac
     generation_seen="$generation_seen$generation_ns|"
     for generation_target in $(list_target_stores); do
-      [ "$(namespace_path_identity "$generation_pid" "$generation_target")" = "$generation_id" ] && return 0
-      generation_mount_state=$(nsenter --mount=/proc/"$generation_pid"/ns/mnt -- \
-        awk -v target="$generation_target" \
-          -v source="$GEN_CERTS" \
-          -v adb_source="/adb/modules/CertBridge/certs/generation/current/cacerts" \
-          -v module_source="/CertBridge/certs/generation/current/cacerts" '
-          $5 == target && (
-            index($0, source) > 0 ||
-            index($0, adb_source) > 0 ||
-            index($0, module_source) > 0
-          ) { found=1 }
-          END { print found ? "mounted" : "clear" }
-        ' /proc/self/mountinfo 2>/dev/null)
+      generation_mount_state=$(awk -v target="$generation_target" \
+        -v source="$GEN_CERTS" \
+        -v adb_source="/adb/modules/CertBridge/certs/generation/current/cacerts" \
+        -v module_source="/CertBridge/certs/generation/current/cacerts" '
+        $5 == target && (
+          index($0, source) > 0 ||
+          index($0, adb_source) > 0 ||
+          index($0, module_source) > 0
+        ) { found=1 }
+        END { print found ? "mounted" : "clear" }
+      ' "$mi" 2>/dev/null)
       [ "$generation_mount_state" = "mounted" ] && return 0
     done
   done

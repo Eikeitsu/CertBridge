@@ -364,18 +364,21 @@ hide_assist_after_inject() {
       fi
     done
   fi
-  for process in zygote zygote64; do
-    for pid in $(pidof "$process" 2>/dev/null); do
-      [ -f "/proc/$pid/mountinfo" ] || continue
-      for target in $(hide_collect_live_cacert_mounts "/proc/$pid/mountinfo"); do
-        if is_certbridge_runtime_bind "$target" "/proc/$pid/mountinfo" 2>/dev/null || \
-            is_tmpfs_cacert_overlay "$target" "/proc/$pid/mountinfo" 2>/dev/null; then
-          case "$seen" in *"|$target|"*) continue ;; esac
-          seen="$seen$target|"
-          log_info "hide: register zygote mountinfo path ($target)"
-          hide_assist_for_target "$target"
-        fi
+  # 默认不进 zygote；仅 boot_bind_zygote/late_inject=1 时扫（减少 pidof/ns 痕迹）
+  if [ "$(read_conf boot_bind_zygote 0)" = "1" ] || [ "$(read_conf late_inject 0)" = "1" ]; then
+    for process in zygote zygote64; do
+      for pid in $(pidof "$process" 2>/dev/null); do
+        [ -f "/proc/$pid/mountinfo" ] || continue
+        for target in $(hide_collect_live_cacert_mounts "/proc/$pid/mountinfo"); do
+          if is_certbridge_runtime_bind "$target" "/proc/$pid/mountinfo" 2>/dev/null || \
+              is_tmpfs_cacert_overlay "$target" "/proc/$pid/mountinfo" 2>/dev/null; then
+            case "$seen" in *"|$target|"*) continue ;; esac
+            seen="$seen$target|"
+            log_info "hide: register zygote mountinfo path ($target)"
+            hide_assist_for_target "$target"
+          fi
+        done
       done
     done
-  done
+  fi
 }

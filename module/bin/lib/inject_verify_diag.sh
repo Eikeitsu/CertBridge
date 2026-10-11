@@ -8,19 +8,35 @@ diagnose_verify_failure_reason() {
       return 0
     fi
   fi
+  lean=0
+  verify_zygote=0
+  if [ "$(read_conf late_inject 0)" = "0" ]; then
+    lean=1
+  fi
+  if [ "${CERTBRIDGE_VERIFY_ZYGOTE:-0}" = "1" ] || [ "$(read_conf late_inject 0)" = "1" ]; then
+    verify_zygote=1
+    lean=0
+  fi
   for target in $(list_status_verify_targets); do
-    if ! namespace_store_operational 1 "$target" 2>/dev/null; then
+    if [ "$lean" = "1" ]; then
+      if ! init_store_operational_lean "$target" 2>/dev/null; then
+        echo verify_init_failed
+        return 0
+      fi
+    elif ! namespace_store_operational 1 "$target" 2>/dev/null; then
       echo verify_init_failed
       return 0
     fi
-    for zygote in zygote zygote64; do
-      pid=$(pidof "$zygote" 2>/dev/null | awk '{print $1; exit}')
-      [ -n "$pid" ] || continue
-      if ! namespace_store_operational "$pid" "$target" 2>/dev/null; then
-        echo verify_zygote_failed
-        return 0
-      fi
-    done
+    if [ "$verify_zygote" = "1" ]; then
+      for zygote in zygote zygote64; do
+        pid=$(pidof "$zygote" 2>/dev/null | awk '{print $1; exit}')
+        [ -n "$pid" ] || continue
+        if ! namespace_store_operational "$pid" "$target" 2>/dev/null; then
+          echo verify_zygote_failed
+          return 0
+        fi
+      done
+    fi
   done
   echo verify_failed
 }

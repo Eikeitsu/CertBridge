@@ -142,9 +142,13 @@ hot_failed=0"
   echo "disabled=$disabled"
   echo "api=$api"
   echo "release=$release"
-  # Root 两级：root=大类，root_flavor=分支（official 表示原版）
+  # Root：大类始终轻量探测。--quick 跳过分支；完整 status 用包名/二进制串判 flavor（默认不执行 ksud -V）。
   _root_fam=$(detect_root_impl 2>/dev/null) || _root_fam=Unknown
-  _root_flv=$(detect_root_flavor 2>/dev/null) || _root_flv=official
+  if [ "$quick" = "1" ]; then
+    _root_flv=official
+  else
+    _root_flv=$(detect_root_flavor 2>/dev/null) || _root_flv=official
+  fi
   echo "root=$_root_fam"
   echo "root_flavor=$_root_flv"
   echo "active_count=$applied"

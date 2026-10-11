@@ -98,6 +98,25 @@ namespace_store_operational() {
   return 1
 }
 
+# late_inject=0 专用：只读 /proc/1/mountinfo（+ 当前 ns 可见时的直读 cksum），不 nsenter。
+# orphan 后 stage 已拆，namespace_bind_owned 常失败，旧路径会落到 nsenter+整库 cksum，易放大 Found KSU。
+init_store_operational_lean() {
+  target="$1"
+  mi=/proc/1/mountinfo
+  [ -f "$mi" ] || mi=/proc/self/mountinfo
+  if [ -f "$mi" ] && is_certbridge_runtime_bind "$target" "$mi" 2>/dev/null; then
+    if [ -d "$target" ] && verify_direct_addons "$target" 2>/dev/null; then
+      return 0
+    fi
+    log_debug "verify: lean init bind present for $target (skip nsenter)"
+    return 0
+  fi
+  if [ -d "$target" ] && verify_direct_store "$target" 2>/dev/null; then
+    return 0
+  fi
+  return 1
+}
+
 # 状态页只校验 TLS 实际使用的主路径，避免 system / conscrypt@版本号 误报
 list_status_verify_targets() {
   primary=$(get_target_store)
@@ -117,18 +136,26 @@ check_store_injected() {
     fi
   fi
 
-  # late_inject=0：状态只看 init（pid 1）。boot 已把 bind 打进 zygote，子进程继承；
-  # service / heal 再 nsenter zygote 做 cksum 会放大开机痕迹，易 Found KSU。
-  # late_inject=1 或显式 CERTBRIDGE_VERIFY_ZYGOTE=1 时才进 zygote 复核。
+  # late_inject=0：状态只看 init，且走 lean（mountinfo，不 nsenter）。
+  # late_inject=1 或 CERTBRIDGE_VERIFY_ZYGOTE=1：才 nsenter 复核 / 进 zygote。
+  lean_init=0
   verify_zygote=0
+  if [ "$(read_conf late_inject 0)" = "0" ]; then
+    lean_init=1
+  fi
   if [ "${CERTBRIDGE_VERIFY_ZYGOTE:-0}" = "1" ] || [ "$(read_conf late_inject 0)" = "1" ]; then
     verify_zygote=1
+    lean_init=0
   fi
 
   has_bind_target=0
   for target in $(list_status_verify_targets); do
     has_bind_target=1
-    namespace_store_operational 1 "$target" || { echo 0; return 0; }
+    if [ "$lean_init" = "1" ]; then
+      init_store_operational_lean "$target" || { echo 0; return 0; }
+    else
+      namespace_store_operational 1 "$target" || { echo 0; return 0; }
+    fi
     if [ "$verify_zygote" = "1" ]; then
       for zygote in zygote zygote64; do
         # 只取第一个主 Zygote，避免次要/残留进程误杀状态

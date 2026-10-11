@@ -233,44 +233,80 @@ emit_hide_status_quick() {
   echo "hide_summary="
 }
 
+# hide_allow=0：只做目录/文件存在性探测，不执行 ksud / ksu_susfs（减轻 Found KSU）。
+# 结果写入调用方 _hs / _hk / _hn（脚本被 source，同 shell）。
+hide_probe_presence_only() {
+  _hs=0
+  for f in \
+    /data/adb/ksu/susfs_version \
+    /data/adb/susfs4ksu/susfs_version \
+    /data/adb/resusfs/susfs_version; do
+    [ -f "$f" ] || continue
+    _sv=$(tr -d '\r \t' <"$f" 2>/dev/null | head -n1)
+    if printf '%s' "$_sv" | grep -qE '^v?[0-9]+\.[0-9]+'; then
+      _hs=1
+      break
+    fi
+  done
+  if [ "$_hs" != "1" ] && {
+      [ -d /data/adb/modules/susfs4ksu ] || [ -d /data/adb/modules_update/susfs4ksu ]
+    }; then
+    _hs=1
+  fi
+  _hk=0
+  if [ -x /data/adb/ksu/bin/ksud ] || [ -x /data/adb/ksud/bin/ksud ] || \
+      [ -x /data/adb/ksu/ksud ]; then
+    _hk=1
+  elif command -v ksud >/dev/null 2>&1; then
+    _hk=1
+  fi
+  _hn=0
+  hide_nohello_available && _hn=1
+  return 0
+}
+
 emit_hide_status() {
   echo "hide_supported=1"
   echo "hide_allow=$(read_conf hide_allow 0)"
   echo "stage_root=$RUNTIME_MOUNT_ROOT"
   echo "hide_probe_pending=0"
 
-  # 各贵重探测只跑一次，再拼 assistants / summary
-  _hs=0
-  hide_susfs_available && _hs=1
-  _hk=0
-  hide_ksud_kernel_umount_available && _hk=1
-  _hn=0
-  hide_nohello_available && _hn=1
+  hide_ku=0
+  hide_ku_known=0
+  if hide_assist_enabled; then
+    # 各贵重探测只跑一次，再拼 assistants / summary
+    _hs=0
+    hide_susfs_available && _hs=1
+    _hk=0
+    hide_ksud_kernel_umount_available && _hk=1
+    _hn=0
+    hide_nohello_available && _hn=1
+
+    if [ "$_hk" = "1" ] || hide_resolve_ksud >/dev/null 2>&1; then
+      _ku_st=$(hide_ksud_umount_feature_probe 2>/dev/null) || _ku_st=n
+      case "$_ku_st" in
+        1)
+          hide_ku=1
+          hide_ku_known=1
+          ;;
+        0)
+          hide_ku=0
+          hide_ku_known=1
+          ;;
+        *)
+          hide_ku=0
+          hide_ku_known=0
+          ;;
+      esac
+    fi
+  else
+    # 关闭隐藏协助：不跑 ksud/SuSFS CLI，仅目录提示
+    hide_probe_presence_only
+  fi
 
   echo "hide_susfs=$_hs"
   echo "hide_ksud_umount=$_hk"
   echo "hide_nohello=$_hn"
-
-  hide_ku=0
-  hide_ku_known=0
-  if [ "$_hk" = "1" ] || hide_resolve_ksud >/dev/null 2>&1; then
-    _ku_st=$(hide_ksud_umount_feature_probe 2>/dev/null) || _ku_st=n
-    case "$_ku_st" in
-      1)
-        hide_ku=1
-        hide_ku_known=1
-        ;;
-      0)
-        hide_ku=0
-        hide_ku_known=1
-        ;;
-      *)
-        # na：本机构建无 kernel_umount feature 时不展示该项
-        hide_ku=0
-        hide_ku_known=0
-        ;;
-    esac
-  fi
   echo "hide_kernel_umount_feature=$hide_ku"
   echo "hide_kernel_umount_feature_known=$hide_ku_known"
 

@@ -132,10 +132,32 @@ detect_root_family() {
 }
 
 # L2：KernelSU 系分支（不含大类名本身）
+# 默认不执行 ksud -V / --version（易触发 Found KSU）。
+# 仅用管理器包名 + 二进制字符串；显式 CERTBRIDGE_PROBE_KSUD=1 才跑 CLI。
 detect_ksu_flavor() {
-  _ksud=$(_root_resolve_ksud) || _ksud=
   _hit=
 
+  if _root_mgr_pkg_installed org.bakasu.bakasu || \
+      _root_mgr_pkg_installed com.resukisu.resukisu; then
+    echo BakaSU
+    return 0
+  fi
+  if _root_mgr_pkg_installed com.sukisu.ultra || \
+      _root_mgr_pkg_installed com.sukisu.ultra.debug; then
+    echo SukiSU
+    return 0
+  fi
+  if _root_mgr_pkg_installed com.rifsxd.ksunext || \
+      _root_mgr_pkg_installed com.rifsxd.ksunext.debug; then
+    echo KernelSU-Next
+    return 0
+  fi
+  if _root_mgr_pkg_installed me.weishu.kernelsu; then
+    echo official
+    return 0
+  fi
+
+  _ksud=$(_root_resolve_ksud) || _ksud=
   if [ -n "$_ksud" ]; then
     # BakaSU / 旧 ReSukiSU 必须先于 SukiSU（二进制常残留 sukisu 串）
     if _root_blob_has "$_ksud" 'bakasu' || \
@@ -160,7 +182,7 @@ detect_ksu_flavor() {
     fi
   fi
 
-  if [ -z "$_hit" ] && [ -n "$_ksud" ]; then
+  if [ -z "$_hit" ] && [ "${CERTBRIDGE_PROBE_KSUD:-0}" = "1" ] && [ -n "$_ksud" ]; then
     _ver=$("$_ksud" -V 2>&1) || _ver=
     [ -n "$_ver" ] || _ver=$("$_ksud" --version 2>&1) || _ver=
     if printf '%s' "$_ver" | grep -qiE 'bakasu|resukisu'; then
@@ -169,21 +191,6 @@ detect_ksu_flavor() {
       _hit=SukiSU
     elif printf '%s' "$_ver" | grep -qiE 'kernelsu-next|ksu.?next|ksunext'; then
       _hit=KernelSU-Next
-    fi
-  fi
-
-  if [ -z "$_hit" ]; then
-    if _root_mgr_pkg_installed org.bakasu.bakasu || \
-        _root_mgr_pkg_installed com.resukisu.resukisu; then
-      _hit=BakaSU
-    elif _root_mgr_pkg_installed com.sukisu.ultra || \
-        _root_mgr_pkg_installed com.sukisu.ultra.debug; then
-      _hit=SukiSU
-    elif _root_mgr_pkg_installed com.rifsxd.ksunext || \
-        _root_mgr_pkg_installed com.rifsxd.ksunext.debug; then
-      _hit=KernelSU-Next
-    elif _root_mgr_pkg_installed me.weishu.kernelsu; then
-      _hit=official
     fi
   fi
 
@@ -303,10 +310,14 @@ detect_root_pair() {
   _root_cache_write "$ROOT_FAMILY" "$ROOT_FLAVOR"
 }
 
-# L1 兼容入口：只返回大类（隐藏助手 case 等用）
+# L1 兼容入口：只返回大类（隐藏助手 / Action / status root=）
+# 此处不得触发 detect_ksu_flavor / ksud -V（易 Found KSU）。
 detect_root_impl() {
-  detect_root_pair
-  echo "$ROOT_FAMILY"
+  if _root_cache_read; then
+    echo "$ROOT_CACHE_FAMILY"
+    return 0
+  fi
+  detect_root_family
 }
 
 # L2 入口

@@ -29,7 +29,8 @@ _ver=$(grep '^version=' "$MODDIR/module.prop" 2>/dev/null | cut -d= -f2-)
 
 _api=$(get_api 2>/dev/null)
 _rel=$(getprop ro.build.version.release 2>/dev/null)
-_root=$(format_root_label 2>/dev/null) || _root=$(detect_root_impl 2>/dev/null)
+# Action 只报 Root 大类，避免 format_root_label → ksud 探测（Found KSU）
+_root=$(detect_root_impl 2>/dev/null)
 [ -n "$_api" ] && echo "系统: Android ${_rel:-?} (API $_api)"
 [ -n "$_root" ] && echo "Root: $_root"
 echo "boot-token: $(current_boot_token 2>/dev/null)"

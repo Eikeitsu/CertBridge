@@ -5,6 +5,20 @@
 
 ---
 
+## v5.1.2
+
+### 中文
+
+- **KernelSU Next 模块横幅**：`module.prop` 增加 `banner=banner.png`，打包打入根目录背景图（管理器模块卡片背景）
+- **KernelSU Modules 清单**：仓库根目录增加 `module.yaml`（`assetPattern` 指向 `CertBridge_*_arm64.zip`）
+- **修复 Found KSU 回归**：收回会放大痕迹的探测——`hide_allow=0` 时 status 不再跑 ksud/SuSFS CLI；`detect_root_impl` 只报 Root 大类；默认不执行 `ksud -V`（需 `CERTBRIDGE_PROBE_KSUD=1`）；Action 只用大类；`--quick` 跳过 flavor。另减开机 nsenter：`late_inject=0` 时状态校验读 mountinfo；orphan / generation_busy 少进 ns；隐藏登记默认不扫 zygote
+
+### English
+
+- **KernelSU Next module banner**: `module.prop` Add `banner=banner.png`, package into the root directory background image (manager module card background)
+- **KernelSU Modules manifest**: Add `module.yaml` to repository root (`assetPattern` points to `CertBridge_*_arm64.zip`)
+- **Repair Found KSU Return to**: Retract the detection that will amplify the trace - status no longer runs ksud/SuSFS CLI when `hide_allow=0`; `detect_root_impl` only reports the Root category; default does not execute `ksud -V` (requires `CERTBRIDGE_PROBE_KSUD=1`); Action only uses the large category; `--quick` skips flavor. Also reduce the startup nsenter: status check when `late_inject=0` read mountinfo; orphan/generation_busy less ns; hide registration default does not sweep zygote
+
 ## v5.1.1
 
 ### 中文

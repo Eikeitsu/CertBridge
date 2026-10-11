@@ -1,5 +1,11 @@
 # Changelog
 
+## v5.1.2
+
+- **KernelSU Next module banner**: `module.prop` Add `banner=banner.png`, package into the root directory background image (manager module card background)
+- **KernelSU Modules manifest**: Add `module.yaml` to repository root (`assetPattern` points to `CertBridge_*_arm64.zip`)
+- **Repair Found KSU Return to**: Retract the detection that will amplify the trace - status no longer runs ksud/SuSFS CLI when `hide_allow=0`; `detect_root_impl` only reports the Root category; default does not execute `ksud -V` (requires `CERTBRIDGE_PROBE_KSUD=1`); Action only uses the large category; `--quick` skips flavor. Also reduce the startup nsenter: status check when `late_inject=0` read mountinfo; orphan/generation_busy less ns; hide registration default does not sweep zygote
+
 ## v5.1.1
 
 - **Documentation**: [LSPosed Module] Added membership module (Fuck for VIP/NewHookVip) description - its "extension" often contains the same kind of capabilities as SSL bypass and VPN detection

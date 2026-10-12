@@ -159,6 +159,19 @@ def _mt_plain(text: str) -> str:
         except Exception as exc:  # noqa: BLE001
             print(f"warn: DeepL failed ({exc}); trying Google", file=sys.stderr)
 
+    def _rate_limited(exc: BaseException) -> bool:
+        msg = str(exc).lower()
+        return any(
+            token in msg
+            for token in (
+                "too many requests",
+                "rate limit",
+                "rate-limit",
+                "429",
+                "quota",
+            )
+        )
+
     last_err: Exception | None = None
     backends: list[tuple[str, object]] = []
     try:
@@ -177,6 +190,13 @@ def _mt_plain(text: str) -> str:
                 return str(out)
             except Exception as exc:  # noqa: BLE001
                 last_err = exc
+                # 免费 Google 易限流：别空等 2+4+6s，马上换 MyMemory
+                if _rate_limited(exc):
+                    print(
+                        f"warn: {name} rate-limited; switching backend",
+                        file=sys.stderr,
+                    )
+                    break
                 wait = 2.0 * (attempt + 1)
                 print(
                     f"warn: {name} attempt {attempt + 1} failed ({exc}); retry in {wait:.1f}s",

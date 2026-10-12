@@ -28,9 +28,6 @@ fi
 python3 scripts/promote-changelog.py "$RAW" changelog.md
 cp changelog.md changelog/zh-CN.md
 
-# 机翻本版中文条目 → 英文 changelog（可选 DEEPL_AUTH_KEY；默认 Google 免 key）
-python3 scripts/sync-changelog-en.py "$RAW" changelog.md changelog/en.md
-
 if grep -Fxq "## ${RAW}" changelog.md 2>/dev/null; then
   echo "changelog.md 已有 ${RAW}（含手写 Unreleased 提升），不再用 git log 覆盖"
   : >.release-notes.md
@@ -77,7 +74,7 @@ def inject_notes(path: pathlib.Path, section: str) -> None:
         changelog = section + ("\n\n" + changelog.rstrip() + "\n" if changelog.strip() else "\n")
     path.write_text(changelog.rstrip() + "\n", encoding="utf-8")
 
-# 仅当中文侧仍缺本版（Unreleased 空、靠 git log 补）时才注入；英文再机翻一次
+# 仅当中文侧仍缺本版（Unreleased 空、靠 git log 补）时才注入
 if notes:
     section = f"## {raw}\n\n{notes}"
     inject_notes(pathlib.Path("changelog.md"), section)
@@ -89,7 +86,8 @@ print(text)
 PY
 rm -f .release-notes.md
 
-# git-log 补丁只进了中文时，再同步英文
+# 中文定稿后再机翻一次（避免先前重复 sync 打爆免费 Google 配额）
+# 可选 DEEPL_AUTH_KEY；默认 Google，限流则切 MyMemory
 python3 scripts/sync-changelog-en.py "$RAW" changelog.md changelog/en.md
 cp changelog.md changelog/zh-CN.md
 

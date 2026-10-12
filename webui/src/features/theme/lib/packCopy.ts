@@ -127,6 +127,7 @@ export type PackChrome = {
     builtin: string;
     custom: string;
     import: string;
+    importing: string;
     refresh: string;
     hot: string;
     empty: string;
@@ -173,6 +174,7 @@ export function buildPackVoice(t: TFunction<"webui">): PackVoice {
       customTitle: t("certs.customTitle"),
       customEmpty: t("certs.customEmpty"),
       importLabel: t("certs.importLabel"),
+      importing: t("certs.importing"),
       detailLabel: t("certs.detailLabel"),
       refresh: t("certs.refresh"),
       hotTitle: t("certs.hotTitle"),
@@ -258,6 +260,7 @@ export function buildPackChrome(t: TFunction<"webui">): PackChrome {
       builtin: t("certs.builtinTitle"),
       custom: t("certs.customTitle"),
       import: t("certs.importLabel"),
+      importing: t("certs.importing"),
       refresh: t("certs.refresh"),
       hot: t("certs.hotTitle"),
       empty: t("certs.customEmpty"),

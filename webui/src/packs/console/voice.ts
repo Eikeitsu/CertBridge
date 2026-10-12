@@ -25,6 +25,7 @@ export const CONSOLE_VOICE = {
     builtin: "builtin",
     custom: "custom",
     import: "import",
+    importing: "importing…",
     refresh: "sync",
     hot: "hot.mount",
     empty: "custom=[]",

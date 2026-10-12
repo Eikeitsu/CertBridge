@@ -20,6 +20,7 @@ export function CertsPage() {
   const detail = useCertDetail();
   const {
     isPending,
+    isImporting,
     handleToggleBuiltin,
     handleImportFile,
     handleImportPreset,
@@ -48,6 +49,7 @@ export function CertsPage() {
       <CustomCertsPanel
         certificates={customCertificates}
         isPending={isPending}
+        isImporting={isImporting}
         onImport={handleImportFile}
         onImportPreset={handleImportPreset}
         onExportFingerprints={handleExportFingerprints}
@@ -56,6 +58,7 @@ export function CertsPage() {
         title={`${voice.certs.customTitle} (${customCertificates.length})`}
         emptyLabel={voice.certs.customEmpty}
         importLabel={voice.certs.importLabel}
+        importingLabel={voice.certs.importing}
         detailLabel={voice.certs.detailLabel}
         presetsTitle={voice.certs.presetsTitle}
         presetsMeta={voice.certs.presetsMeta}

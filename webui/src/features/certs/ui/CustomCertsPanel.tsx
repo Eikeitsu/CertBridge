@@ -14,6 +14,7 @@ const PRESET_BUTTONS: { kind: AppPresetKind; label: string }[] = [
 type CustomCertsPanelProps = {
   certificates: CustomCertificate[];
   isPending: boolean;
+  isImporting?: boolean;
   onImport: (file: File) => void | Promise<unknown>;
   onImportPreset?: (kind: AppPresetKind) => void;
   onExportFingerprints?: () => void;
@@ -22,6 +23,7 @@ type CustomCertsPanelProps = {
   title?: string;
   emptyLabel?: string;
   importLabel?: string;
+  importingLabel?: string;
   detailLabel?: string;
   presetsTitle?: string;
   presetsMeta?: string;
@@ -31,6 +33,7 @@ type CustomCertsPanelProps = {
 export function CustomCertsPanel({
   certificates,
   isPending,
+  isImporting = false,
   onImport,
   onImportPreset,
   onExportFingerprints,
@@ -39,6 +42,7 @@ export function CustomCertsPanel({
   title,
   emptyLabel = "暂无自定义证书",
   importLabel = "导入 CA",
+  importingLabel = "导入中…",
   detailLabel = "详情",
   presetsTitle = "从常见路径导入",
   presetsMeta,
@@ -80,7 +84,13 @@ export function CustomCertsPanel({
         )}
       </ListGroup>
       <div style={{ marginTop: 12 }}>
-        <CertImportButton disabled={isPending} onImport={onImport} label={importLabel} />
+        <CertImportButton
+          disabled={isPending}
+          busy={isImporting}
+          onImport={onImport}
+          label={importLabel}
+          busyLabel={importingLabel}
+        />
       </div>
       {onImportPreset ? (
         <div style={{ marginTop: 14 }}>

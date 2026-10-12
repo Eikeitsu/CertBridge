@@ -6,6 +6,7 @@ import { useCertActions } from "@/features/certs/hooks/useCertActions";
 import { useBuiltinCerts } from "@/features/certs/hooks/useBuiltinCerts";
 import { useCertDetail } from "@/features/certs/hooks/useCertDetail";
 import type { AppPresetKind } from "@/shared/api/cli";
+import { CERT_IMPORT_ACCEPT_ATTR } from "@/shared/config/certs";
 import { Switch } from "@/shared/ui/primitives";
 import { CertDetailSheet } from "@/features/certs/ui/CertDetailSheet";
 import { HotMountPanel } from "@/features/certs/ui/HotMountPanel";
@@ -29,6 +30,7 @@ export function DefaultCertsPage() {
   const v = chrome.certs;
   const {
     isPending,
+    isImporting,
     handleToggleBuiltin,
     handleImportFile,
     handleImportPreset,
@@ -90,11 +92,22 @@ export function DefaultCertsPage() {
           <h2 className="pk-def-section__title">
             {v.custom} · {customs.length}
           </h2>
-          <label className="pk-def-btn is-primary pk-def-file">
-            {v.import}
+          <label
+            className={`pk-def-btn is-primary pk-def-file${isPending ? " is-disabled" : ""}${isImporting ? " bf-btn--busy" : ""}`}
+            aria-busy={isImporting || undefined}
+            style={
+              isImporting
+                ? { display: "inline-flex", alignItems: "center", gap: 8, opacity: 0.92 }
+                : isPending
+                  ? { opacity: 0.5 }
+                  : undefined
+            }
+          >
+            {isImporting ? <span className="bf-btn__spin" aria-hidden /> : null}
+            {isImporting ? v.importing : v.import}
             <input
               type="file"
-              accept=".pem,.crt,.cer,.der,.zip"
+              accept={CERT_IMPORT_ACCEPT_ATTR}
               hidden
               disabled={isPending}
               onChange={(e) => {

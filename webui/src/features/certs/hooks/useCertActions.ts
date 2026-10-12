@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAppDispatch } from "@/app/store/hooks";
 import {
@@ -38,6 +38,7 @@ export function useCertActions() {
   const { voice } = usePackVoice();
   const c = voice.certs;
   const { isPending, runExclusive } = useAsyncLock();
+  const [isImporting, setIsImporting] = useState(false);
 
   const hotTargetLabel = useCallback(
     (mode: HotMountMode) => {
@@ -84,6 +85,8 @@ export function useCertActions() {
   const handleImportFile = useCallback(
     async (file: File) => {
       await runExclusive(async () => {
+        setIsImporting(true);
+        toast(t("certs.importing"));
         try {
           const payload = await fileToBase64(file);
           const result = await installCustom(payload);
@@ -97,6 +100,8 @@ export function useCertActions() {
           void dispatch(refreshStatus(SILENT_REFRESH));
         } catch {
           toast(c.importReadFail, "bad");
+        } finally {
+          setIsImporting(false);
         }
       });
       return false;
@@ -107,19 +112,25 @@ export function useCertActions() {
   const handleImportPreset = useCallback(
     (kind: AppPresetKind) => {
       void runExclusive(async () => {
-        const result = await importAppPreset(kind);
-        if (isCliFailure(result)) {
-          toast(errorFromResult(result.stdout, result.stderr), "bad");
-          return;
+        setIsImporting(true);
+        toast(t("certs.importing"));
+        try {
+          const result = await importAppPreset(kind);
+          if (isCliFailure(result)) {
+            toast(errorFromResult(result.stdout, result.stderr), "bad");
+            return;
+          }
+          const kv = parseKv(result.stdout || "");
+          dispatch(mergeStatus(kv));
+          if (kv.unchanged === FLAG_ON) {
+            toast(c.presetUnchanged, "ok");
+          } else {
+            toastByRebootFlag(kv, t("certs.importedReboot"), t("certs.importedOk"));
+          }
+          void dispatch(refreshStatus(SILENT_REFRESH));
+        } finally {
+          setIsImporting(false);
         }
-        const kv = parseKv(result.stdout || "");
-        dispatch(mergeStatus(kv));
-        if (kv.unchanged === FLAG_ON) {
-          toast(c.presetUnchanged, "ok");
-        } else {
-          toastByRebootFlag(kv, t("certs.importedReboot"), t("certs.importedOk"));
-        }
-        void dispatch(refreshStatus(SILENT_REFRESH));
       });
     },
     [c.presetUnchanged, dispatch, runExclusive, t],
@@ -269,6 +280,7 @@ export function useCertActions() {
 
   return {
     isPending,
+    isImporting,
     handleToggleBuiltin,
     handleImportFile,
     handleImportPreset,

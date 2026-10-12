@@ -25,6 +25,7 @@ export const DEFAULT_VOICE = {
     builtin: "应用证书",
     custom: "自定义",
     import: "导入文件",
+    importing: "导入中…",
     refresh: "同步状态",
     hot: "临时挂载",
     empty: "还没有自定义证书",

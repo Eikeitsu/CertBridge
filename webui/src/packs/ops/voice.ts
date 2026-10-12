@@ -26,6 +26,7 @@ export const OPS_VOICE = {
     builtin: "内置",
     custom: "自定义",
     import: "导入",
+    importing: "导入中…",
     refresh: "同步",
     hot: "临时挂载",
     empty: "还没有自定义证书",

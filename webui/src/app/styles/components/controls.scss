@@ -201,4 +201,18 @@
 .bf-btn--busy {
   position: relative;
   pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.bf-btn__spin {
+  width: 14px;
+  height: 14px;
+  border: 2px solid color-mix(in srgb, currentcolor 32%, transparent);
+  border-top-color: currentcolor;
+  border-radius: 50%;
+  animation: bf-spin 0.7s linear infinite;
+  flex-shrink: 0;
 }

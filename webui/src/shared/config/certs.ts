@@ -3,7 +3,27 @@ import { BuiltinCertKind, HotMountMode, ResolvedTheme } from "@/entities/module/
 export type DnAttributeKey =
   "cn" | "o" | "ou" | "l" | "st" | "c" | "email" | "dc" | "uid";
 
-export const CERT_IMPORT_ACCEPT = [".pem", ".crt", ".cer", ".der", ".0"] as const;
+// Android 自带 DocumentsUI 常按 MIME 过滤，仅写扩展名会把 .pem/.crt 灰掉。
+// 扩展名 + 常见证书 MIME + */*，系统选择器可选；无效文件仍由 install_custom 校验。
+export const CERT_IMPORT_ACCEPT = [
+  "*/*",
+  ".pem",
+  ".crt",
+  ".cer",
+  ".der",
+  ".0",
+  ".zip",
+  "application/x-x509-ca-cert",
+  "application/x-x509-user-cert",
+  "application/pkix-cert",
+  "application/x-pem-file",
+  "application/pkcs8",
+  "application/pkcs10",
+  "text/plain",
+  "application/octet-stream",
+] as const;
+
+export const CERT_IMPORT_ACCEPT_ATTR = CERT_IMPORT_ACCEPT.join(",");
 
 export const CERT_EXPIRY_WARN_DAYS = 30;
 export const MS_PER_DAY = 86_400_000;

@@ -91,6 +91,7 @@
     "customTitle": "Custom",
     "customEmpty": "None",
     "importLabel": "Import",
+    "importing": "Importing…",
     "detailLabel": "Info",
     "refresh": "Refresh",
     "hotTitle": "Hot mount",

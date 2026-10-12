@@ -91,6 +91,7 @@
     "customTitle": "自定义证书",
     "customEmpty": "暂无自定义",
     "importLabel": "导入",
+    "importing": "导入中…",
     "detailLabel": "详情",
     "refresh": "刷新",
     "hotTitle": "临时挂载",

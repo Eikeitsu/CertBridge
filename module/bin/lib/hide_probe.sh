@@ -189,6 +189,15 @@ hide_kernel_has_susfs() {
   return 1
 }
 
+# 是否为已加载的 SuSFS LKM（看 ko / sysfs，不看 modules 目录是否安装）
+# susfs_guard_lkm 加载后会出现 /sys/module/susfs_guard_lkm
+hide_susfs_lkm_loaded() {
+  [ -d /sys/module/susfs_guard_lkm ] && return 0
+  # 少数构建模块名略有差异
+  [ -d /sys/module/susfs4ksu_lkm ] && return 0
+  return 1
+}
+
 # sidex15 susfs4ksu 是否已安装（modules 目录在即可，含 disable）
 hide_susfs4ksu_module_installed() {
   [ -d /data/adb/modules/susfs4ksu ] || [ -d /data/adb/modules_update/susfs4ksu ]

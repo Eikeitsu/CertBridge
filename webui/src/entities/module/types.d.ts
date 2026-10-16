@@ -89,6 +89,8 @@ export type ModuleStatus = {
   hide_susfs?: string;
   /** 内核 SuSFS 版本，如 v1.5.12 / v2.0.0；探测不到则为空 */
   hide_susfs_version?: string;
+  /** 1=已加载 susfs_guard_lkm 等 LKM（看 /sys/module，不看 modules 目录） */
+  hide_susfs_lkm?: string;
   hide_ksud_umount?: string;
   hide_nohello?: string;
   hide_kernel_umount_feature?: string;

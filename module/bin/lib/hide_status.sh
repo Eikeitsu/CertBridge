@@ -216,6 +216,7 @@ emit_hide_status_quick() {
   echo "hide_probe_pending=1"
   echo "hide_susfs="
   echo "hide_susfs_version="
+  echo "hide_susfs_lkm="
   echo "hide_ksud_umount="
   echo "hide_nohello="
   echo "hide_kernel_umount_feature="
@@ -262,12 +263,16 @@ emit_hide_status() {
   hide_ku=0
   hide_ku_known=0
   _hsv=
+  _hsl=0
   if hide_assist_enabled; then
     # 各贵重探测只跑一次，再拼 assistants / summary
     _hs=0
     hide_susfs_available && _hs=1
     _hsv=
     [ "$_hs" = "1" ] && _hsv=$(hide_susfs_version_get 2>/dev/null) || _hsv=
+    # LKM：只认已加载的 ko（/sys/module/…），不看 modules 目录
+    _hsl=0
+    [ "$_hs" = "1" ] && hide_susfs_lkm_loaded && _hsl=1
     _hk=0
     hide_ksud_kernel_umount_available && _hk=1
     _hn=0
@@ -294,10 +299,12 @@ emit_hide_status() {
     # 关闭隐藏协助：不跑 ksud/SuSFS CLI；SuSFS 不作假阳性猜测
     hide_probe_presence_only
     _hsv=
+    _hsl=0
   fi
 
   echo "hide_susfs=$_hs"
   echo "hide_susfs_version=${_hsv:-}"
+  echo "hide_susfs_lkm=$_hsl"
   echo "hide_ksud_umount=$_hk"
   echo "hide_nohello=$_hn"
   echo "hide_kernel_umount_feature=$hide_ku"
@@ -335,6 +342,7 @@ emit_hide_status() {
     echo "stage_root=$RUNTIME_MOUNT_ROOT"
     echo "hide_susfs=$_hs"
     echo "hide_susfs_version=${_hsv:-}"
+    echo "hide_susfs_lkm=$_hsl"
     echo "hide_ksud_umount=$_hk"
     echo "hide_nohello=$_hn"
     echo "hide_kernel_umount_feature=$hide_ku"

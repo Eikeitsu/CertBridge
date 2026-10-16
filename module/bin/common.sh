@@ -121,6 +121,7 @@ certbridge_load_libs_runtime() {
       echo "stage_root=$RUNTIME_MOUNT_ROOT"
       echo "hide_susfs=0"
       echo "hide_susfs_version="
+      echo "hide_susfs_lkm=0"
       echo "hide_ksud_umount=0"
       echo "hide_nohello=0"
       echo "hide_assistants=none"

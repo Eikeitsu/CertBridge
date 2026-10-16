@@ -361,7 +361,7 @@
       "probing": "探测中…",
       "probingAssistants": "正在探测隐藏助手…",
       "susfsReady": "内核已集成",
-      "susfsVersion": "{{version}}",
+      "susfsLkmReady": "LKM 已加载",
       "susfsLabel": "SuSFS",
       "noHelloReady": "已安装",
       "noHelloPointReady": "已安装（可登记 point）",

@@ -361,7 +361,7 @@
       "probing": "Probing…",
       "probingAssistants": "Probing hide assistants…",
       "susfsReady": "In kernel",
-      "susfsVersion": "{{version}}",
+      "susfsLkmReady": "LKM loaded",
       "susfsLabel": "SuSFS",
       "noHelloReady": "Installed",
       "noHelloPointReady": "Installed (point capable)",

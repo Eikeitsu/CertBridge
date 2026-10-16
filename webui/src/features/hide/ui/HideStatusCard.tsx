@@ -48,6 +48,7 @@ export function HideStatusCard({ variant = "list", title }: HideStatusCardProps)
   const hideApplied = isFlagOn(status.hide_applied);
   const hideSusfs = isFlagOn(status.hide_susfs);
   const hideSusfsVersion = (status.hide_susfs_version || "").trim();
+  const hideSusfsLkm = isFlagOn(status.hide_susfs_lkm);
   const hideKsud = isFlagOn(status.hide_ksud_umount);
   const hideNohello = isFlagOn(status.hide_nohello);
   const hideKuFeat = isFlagOn(status.hide_kernel_umount_feature);
@@ -110,10 +111,12 @@ export function HideStatusCard({ variant = "list", title }: HideStatusCardProps)
     // 细项优先（按助手类型给状态文案）；CSV / 底座补齐其余
     const statusOf = (id: string) => {
       switch (id) {
-        case "susfs":
-          return hideSusfsVersion
-            ? t("hide.status.susfsVersion", { version: hideSusfsVersion })
+        case "susfs": {
+          const base = hideSusfsLkm
+            ? t("hide.status.susfsLkmReady")
             : t("hide.status.susfsReady");
+          return hideSusfsVersion ? `${base} · ${hideSusfsVersion}` : base;
+        }
         case "nohello":
           return t("hide.status.noHelloPointReady");
         case "ksud":
@@ -188,6 +191,7 @@ export function HideStatusCard({ variant = "list", title }: HideStatusCardProps)
     status.zygisk_loader_ok,
     hideSusfs,
     hideSusfsVersion,
+    hideSusfsLkm,
     hideNohello,
     hideKsud,
     hideKuFeat,

@@ -127,6 +127,8 @@ orphan_tmpfs_stage() {
 #（如已关闭的 ProxyPin 243f0bfb.0）当成「系统基线」再次拷进 generation。
 detach_runtime_cacert_binds() {
   # 冷启动常见：无残留则整段跳过（不改双模式语义）
+  # 软重启不换内核 mount：上一轮 bind 常仍挂在 init ns；若只看符号路径
+  # /apex/.../cacerts 而漏掉 conscrypt@版本，会跳过 detach 再叠一层 → 双 Mount。
   _detach_need=0
   if [ -n "${RUNTIME_MOUNT_ROOT:-}" ] && [ -d "$RUNTIME_MOUNT_ROOT" ]; then
     if mountpoint -q "$RUNTIME_MOUNT_ROOT" 2>/dev/null; then
@@ -145,6 +147,25 @@ detach_runtime_cacert_binds() {
     for _t in "$APEX_CACERTS" "$SYSTEM_CACERTS"; do
       [ -d "$_t" ] || continue
       if is_certbridge_runtime_bind "$_t" 2>/dev/null; then
+        _detach_need=1
+        break
+      fi
+    done
+  fi
+  # 软重启：叠层可能只挂在 @版本 路径上，符号路径检查会漏
+  if [ "$_detach_need" = "0" ]; then
+    for _t in /apex/com.android.conscrypt@*/cacerts; do
+      [ -d "$_t" ] || continue
+      if is_certbridge_runtime_bind "$_t" 2>/dev/null; then
+        _detach_need=1
+        break
+      fi
+    done
+  fi
+  # 以 init mountinfo 为准：凡 cacerts 上仍是本模块 runtime 层即需卸
+  if [ "$_detach_need" = "0" ] && [ -f /proc/1/mountinfo ]; then
+    for _t in $(awk '$5 ~ /\/cacerts$/ { print $5 }' /proc/1/mountinfo 2>/dev/null | sort -u); do
+      if is_certbridge_runtime_bind "$_t" /proc/1/mountinfo 2>/dev/null; then
         _detach_need=1
         break
       fi
@@ -169,8 +190,21 @@ detach_runtime_cacert_binds() {
     targets="$targets $apex_dir"
     seen="$seen$apex_dir|"
   done
+  # mountinfo 实况路径（软重启残留可能落在目录枚举之外）
+  if [ -f /proc/1/mountinfo ]; then
+    for target in $(awk '$5 ~ /\/cacerts$/ { print $5 }' /proc/1/mountinfo 2>/dev/null | sort -u); do
+      case "$seen" in *"|$target|"*) continue ;; esac
+      if is_certbridge_runtime_bind "$target" /proc/1/mountinfo 2>/dev/null || \
+          is_tmpfs_cacert_overlay "$target" /proc/1/mountinfo 2>/dev/null; then
+        targets="$targets $target"
+        seen="$seen$target|"
+      fi
+    done
+  fi
 
   detached=0
+  # 软重启可能叠多层；多剥几轮，优先非 lazy，失败再 -l
+  _detach_max=8
   for target in $targets; do
     # magic：勿拆 Magisk/管理器对 system 的 Magic Mount 叠层
     if ! binds_system_cacerts; then
@@ -179,19 +213,30 @@ detach_runtime_cacert_binds() {
       esac
     fi
     tries=0
-    while [ "$tries" -lt 3 ] && is_certbridge_runtime_bind "$target"; do
-      umount "$target" 2>/dev/null || umount -l "$target" 2>/dev/null || break
+    while [ "$tries" -lt "$_detach_max" ] && is_certbridge_runtime_bind "$target"; do
+      if umount "$target" 2>/dev/null; then
+        :
+      elif umount -l "$target" 2>/dev/null; then
+        :
+      else
+        break
+      fi
       detached=$((detached + 1))
       tries=$((tries + 1))
     done
     if command -v nsenter >/dev/null 2>&1 && [ -d /proc/1/ns/mnt ]; then
       tries=0
       mi_tmp="$STATEDIR/.detach-mi.$$"
-      while [ "$tries" -lt 3 ]; do
+      while [ "$tries" -lt "$_detach_max" ]; do
         nsenter --mount=/proc/1/ns/mnt -- cat /proc/self/mountinfo >"$mi_tmp" 2>/dev/null || break
         is_certbridge_runtime_bind "$target" "$mi_tmp" || break
-        nsenter --mount=/proc/1/ns/mnt -- umount "$target" 2>/dev/null || \
-          nsenter --mount=/proc/1/ns/mnt -- umount -l "$target" 2>/dev/null || break
+        if nsenter --mount=/proc/1/ns/mnt -- umount "$target" 2>/dev/null; then
+          :
+        elif nsenter --mount=/proc/1/ns/mnt -- umount -l "$target" 2>/dev/null; then
+          :
+        else
+          break
+        fi
         detached=$((detached + 1))
         tries=$((tries + 1))
       done

@@ -77,6 +77,7 @@ cmd_status() {
     # 刷新时重探「通道」类缓存（SuSFS/ksud 能力）；开关态已每次实读
     hide_probe_cache_unset ksud_umount 2>/dev/null || true
     hide_probe_cache_unset susfs_kernel 2>/dev/null || true
+    hide_probe_cache_unset susfs_version 2>/dev/null || true
     hide_probe_cache_unset nohello 2>/dev/null || true
     hide_probe_cache_unset ksud_feat 2>/dev/null || true
     # Root 分支指纹也可能随热更/换管理器变化

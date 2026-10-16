@@ -38,6 +38,8 @@
 
 无助手时：mountinfo 上的 bind 仍可能被检测发现。页面「隐藏助手」会并列展示本机可用的 SuSFS / ksud / NoHello / ZygiskNext 等（可同时生效，无互斥优先级）；隐藏协助由本模块直接调用 `ksud kernel umount` / `ksu_susfs add_try_umount` 登记路径。
 
+SuSFS 探测**只认 CLI 与内核/LKM 对话**（不读 `susfs_version` 文件、不解 `/proc/config.gz`）：优先 `ksud susfs version`（SukiSU ≥4.1 等新管理器），否则 `ksu_susfs show version`（经典路径，自早期 SusFS 起；内建内核与 susfs_guard_lkm / susfs4ksu_lkm 等同 ABI）。隐藏页在探测成功时展示版本号。`hide_allow=0` 时不跑上述 CLI，也不根据残留文件猜测。
+
 ## Zygisk 挂载痕迹过滤 {#zygisk-挂载痕迹过滤}
 
 发布包可含 `zygisk/<abi>.so`。**默认安装不装**；自定义安装可选。勾选后 `zn_hide_allow` 默认开。

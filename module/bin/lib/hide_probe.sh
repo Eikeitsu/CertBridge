@@ -34,7 +34,7 @@ hide_module_enabled() {
   [ ! -f "$moddir/disable" ] && [ ! -f "$moddir/remove" ]
 }
 
-# 解析 ksu_susfs：不限官方 susfs4ksu；SukiSU / KSU-Next / ReSuFS 等也可能自带
+# 解析 ksu_susfs：内建内核 / susfs4ksu / ReSuFS / LKM 加载器模块都可能自带
 hide_resolve_susfs_bin() {
   if [ -n "${SUSFS_BIN:-}" ] && [ -x "$SUSFS_BIN" ]; then
     echo "$SUSFS_BIN"
@@ -45,6 +45,10 @@ hide_resolve_susfs_bin() {
     /data/adb/ksud/bin/ksu_susfs \
     /data/adb/modules/susfs4ksu/tools/ksu_susfs \
     /data/adb/modules/susfs4ksu/bin/ksu_susfs \
+    /data/adb/modules/susfs4ksu_lkm/tools/ksu_susfs \
+    /data/adb/modules/susfs4ksu_lkm/bin/ksu_susfs \
+    /data/adb/modules/susfs_guard_lkm/tools/ksu_susfs \
+    /data/adb/modules/susfs_guard_lkm/bin/ksu_susfs \
     /data/adb/modules/resusfs/tools/ksu_susfs \
     /data/adb/modules/resusfs/bin/ksu_susfs \
     /data/adb/modules/ReSuFS/tools/ksu_susfs \
@@ -54,7 +58,7 @@ hide_resolve_susfs_bin() {
       return 0
     fi
   done
-  # 任意已启用模块里的 tools/bin
+  # 任意已启用模块里的 tools/bin（含 LKM 变体目录名）
   for cand in /data/adb/modules/*/tools/ksu_susfs /data/adb/modules/*/bin/ksu_susfs; do
     [ -x "$cand" ] || continue
     moddir=$(dirname "$(dirname "$cand")")
@@ -67,39 +71,67 @@ hide_resolve_susfs_bin() {
   return 1
 }
 
-# 解压 /proc/config.gz（Android 常无 zcat，改用 gzip/toybox）
-hide_read_proc_config() {
-  if [ -f /proc/config ]; then
-    cat /proc/config 2>/dev/null
+# 规范化 SuSFS 版本串：输出 vX.Y…，失败返回 1
+hide_normalize_susfs_ver() {
+  _raw=$(printf '%s' "$1" | tr -d '\r' | head -n1)
+  _raw=$(printf '%s' "$_raw" | sed -E 's/^[[:space:]]+//;s/[[:space:]]+$//')
+  [ -n "$_raw" ] || return 1
+  case "$_raw" in
+    *Requires*|*requires*|*'[-]'*|*'not support'*|*'unsupported'*|*Usage*|*usage:*|*unknown*|*Unknown*)
+      return 1
+      ;;
+  esac
+  # 整行即版本，或从杂音里抠 v1.5.x / 1.5.x
+  if printf '%s' "$_raw" | grep -qE '^v?[0-9]+\.[0-9]+([.0-9A-Za-z_-]*)$'; then
+    case "$_raw" in
+      v*) echo "$_raw" ;;
+      *) echo "v$_raw" ;;
+    esac
     return 0
   fi
-  [ -f /proc/config.gz ] || return 1
-  if command -v gzip >/dev/null 2>&1; then
-    gzip -d -c /proc/config.gz 2>/dev/null && return 0
-  fi
-  if command -v toybox >/dev/null 2>&1; then
-    toybox zcat /proc/config.gz 2>/dev/null && return 0
-  fi
-  zcat /proc/config.gz 2>/dev/null
+  _m=$(printf '%s' "$_raw" | grep -oE 'v?[0-9]+\.[0-9]+([.0-9A-Za-z_-]*)' | head -n1)
+  [ -n "$_m" ] || return 1
+  case "$_m" in
+    v*) echo "$_m" ;;
+    *) echo "v$_m" ;;
+  esac
 }
 
-# CLI 能否与内核 SuSFS 通信（证明内核侧有 SuSFS，不代表依赖某管理器模块）
-# 最多试 1～2 次轻量 CLI，避免连打多个子命令
+# SukiSU ≥4.1 / 部分 KSU-Next：ksud 内建 susfs（新路径；旧 ksud 无此子命令）
+#   ksud susfs version | support | variant | features
+# 成功时 stdout 为规范化版本（vX.Y…）
+hide_ksud_susfs_version() {
+  _ksud=$(hide_resolve_ksud) || return 1
+  _ver=$("$_ksud" susfs version 2>&1) || _ver=
+  hide_normalize_susfs_ver "$_ver"
+}
+
+# ksud 侧是否已确认有 SuSFS（可无版本号）
+hide_ksud_susfs_supported() {
+  if _v=$(hide_ksud_susfs_version 2>/dev/null); then
+    [ -n "$_v" ] && hide_probe_cache_set susfs_version "$_v"
+    return 0
+  fi
+  _ksud=$(hide_resolve_ksud) || return 1
+  _sup=$("$_ksud" susfs support 2>&1) || _sup=
+  case "$_sup" in
+    *[Uu]nsupport*|*[Nn]ot\ [Ss]upport*|*'not support'*) return 1 ;;
+    *[Ss]upported*|*CONFIG_KSU_SUSFS*) return 0 ;;
+  esac
+  return 1
+}
+
+# ksu_susfs 与内核/LKM 通信（经典路径：自早期 SusFS 起即有；LKM 与 reboot supercall 对齐）
+# 成功时若能解析出版本则打印到 stdout
 hide_susfs_cli_talks() {
   bin="$1"
   [ -n "$bin" ] && [ -x "$bin" ] || return 1
 
-  # 优先 show version（输出短）；失败再试 enabled_features / version
   ver=$("$bin" show version 2>&1) || ver=
-  ver=$(printf '%s' "$ver" | tr -d '\r' | head -n1)
-  case "$ver" in
-    *Requires*|*requires*|*'[-]'*|*'not support'*|*'unsupported'*) ;;
-    *)
-      if printf '%s' "$ver" | grep -qE 'v?[0-9]+\.[0-9]+'; then
-        return 0
-      fi
-      ;;
-  esac
+  if _nv=$(hide_normalize_susfs_ver "$ver"); then
+    echo "$_nv"
+    return 0
+  fi
 
   feats=$("$bin" show enabled_features 2>/dev/null) || feats=
   if [ -n "$feats" ] && printf '%s\n' "$feats" | grep -q 'CONFIG_KSU_SUSFS'; then
@@ -107,42 +139,52 @@ hide_susfs_cli_talks() {
   fi
 
   ver=$("$bin" version 2>&1) || ver=
-  ver=$(printf '%s' "$ver" | tr -d '\r' | head -n1)
-  case "$ver" in
-    *Requires*|*requires*|*'[-]'*) ;;
-    *)
-      if printf '%s' "$ver" | grep -qE 'v?[0-9]+\.[0-9]+'; then
-        return 0
-      fi
-      ;;
-  esac
+  if _nv=$(hide_normalize_susfs_ver "$ver"); then
+    echo "$_nv"
+    return 0
+  fi
 
   return 1
 }
 
-# 内核是否编入 SuSFS：廉价路径优先，整包解压 config.gz 放最后
+# 取出可展示的 SuSFS 版本：仅 CLI（不读版本文件 / config.gz）
+hide_susfs_version_get() {
+  cached=$(hide_probe_cache_get susfs_version 2>/dev/null) || cached=
+  if [ -n "$cached" ] && [ "$cached" != "-" ]; then
+    echo "$cached"
+    return 0
+  fi
+  if [ "$cached" = "-" ]; then
+    return 1
+  fi
+
+  _v=
+  if _v=$(hide_ksud_susfs_version 2>/dev/null); then
+    :
+  elif SUSFS_BIN=$(hide_resolve_susfs_bin); then
+    export SUSFS_BIN
+    _v=$(hide_susfs_cli_talks "$SUSFS_BIN" 2>/dev/null) || _v=
+  fi
+
+  if [ -n "$_v" ]; then
+    hide_probe_cache_set susfs_version "$_v"
+    echo "$_v"
+    return 0
+  fi
+  hide_probe_cache_set susfs_version "-"
+  return 1
+}
+
+# 内核/LKM 是否具备 SuSFS：只认能与内核对话的 CLI
+# 1) ksud susfs（新管理器）  2) ksu_susfs show version（经典 + LKM 同 ABI）
+# 不读 susfs_version 文件（换内核后易假阳性）；不读 config.gz
 hide_kernel_has_susfs() {
-  # 1) 版本文件（读几十字节）
-  for f in \
-    /data/adb/ksu/susfs_version \
-    /data/adb/susfs4ksu/susfs_version \
-    /data/adb/resusfs/susfs_version; do
-    [ -f "$f" ] || continue
-    _sv=$(tr -d '\r \t' <"$f" 2>/dev/null | head -n1)
-    if printf '%s' "$_sv" | grep -qE '^v?[0-9]+\.[0-9]+'; then
-      return 0
-    fi
-  done
-  # 2) ksu_susfs 与内核通信（有二进制才跑）
+  if hide_ksud_susfs_supported; then
+    return 0
+  fi
   if SUSFS_BIN=$(hide_resolve_susfs_bin); then
     export SUSFS_BIN
-    hide_susfs_cli_talks "$SUSFS_BIN" && return 0
-  fi
-  # 3) 最后才解压 /proc/config.gz（最重）
-  if cfg=$(hide_read_proc_config); then
-    if printf '%s\n' "$cfg" | grep -qE '^CONFIG_KSU_SUSFS(=y|_.*=y)'; then
-      return 0
-    fi
+    hide_susfs_cli_talks "$SUSFS_BIN" >/dev/null && return 0
   fi
   return 1
 }

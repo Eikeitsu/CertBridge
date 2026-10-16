@@ -47,6 +47,7 @@ export function HideStatusCard({ variant = "list", title }: HideStatusCardProps)
   const hideProbing = isFlagOn(status.hide_probe_pending);
   const hideApplied = isFlagOn(status.hide_applied);
   const hideSusfs = isFlagOn(status.hide_susfs);
+  const hideSusfsVersion = (status.hide_susfs_version || "").trim();
   const hideKsud = isFlagOn(status.hide_ksud_umount);
   const hideNohello = isFlagOn(status.hide_nohello);
   const hideKuFeat = isFlagOn(status.hide_kernel_umount_feature);
@@ -110,7 +111,9 @@ export function HideStatusCard({ variant = "list", title }: HideStatusCardProps)
     const statusOf = (id: string) => {
       switch (id) {
         case "susfs":
-          return t("hide.status.susfsReady");
+          return hideSusfsVersion
+            ? t("hide.status.susfsVersion", { version: hideSusfsVersion })
+            : t("hide.status.susfsReady");
         case "nohello":
           return t("hide.status.noHelloPointReady");
         case "ksud":
@@ -184,6 +187,7 @@ export function HideStatusCard({ variant = "list", title }: HideStatusCardProps)
     status.zygisk_loader_label,
     status.zygisk_loader_ok,
     hideSusfs,
+    hideSusfsVersion,
     hideNohello,
     hideKsud,
     hideKuFeat,

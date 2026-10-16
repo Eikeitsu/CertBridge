@@ -87,6 +87,8 @@ export type ModuleStatus = {
   hide_assistants_label?: string;
   hide_applied?: string;
   hide_susfs?: string;
+  /** 内核 SuSFS 版本，如 v1.5.12 / v2.0.0；探测不到则为空 */
+  hide_susfs_version?: string;
   hide_ksud_umount?: string;
   hide_nohello?: string;
   hide_kernel_umount_feature?: string;

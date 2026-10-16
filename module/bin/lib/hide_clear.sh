@@ -18,7 +18,8 @@ hide_probe_cache_clear() {
 
 # 结果按 boot 缓存；失败不缓存，避免 post-fs 过早探测失败后整轮开机不再登记
 
-# 从内核 try_umount 列表删除单路径（KSU-Next：ksud kernel umount del）
+# 从内核 try_umount 列表删除单路径
+# SukiSU：ksud umount remove；KSU-Next/官方：kernel umount del
 hide_try_ksud_umount_del() {
   target="$1"
   [ -n "$target" ] || return 1
@@ -26,7 +27,9 @@ hide_try_ksud_umount_del() {
     */) target=${target%/} ;;
   esac
   _ksud=$(hide_resolve_ksud) || return 1
-  "$_ksud" kernel umount del "$target" >/dev/null 2>&1
+  "$_ksud" umount remove "$target" >/dev/null 2>&1 || \
+    "$_ksud" umount del "$target" >/dev/null 2>&1 || true
+  "$_ksud" kernel umount del "$target" >/dev/null 2>&1 || true
   # BakaSU 持久配置（无此子命令则忽略）
   "$_ksud" umount-config del "$target" >/dev/null 2>&1 || true
 }

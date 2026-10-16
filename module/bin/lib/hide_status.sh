@@ -175,11 +175,13 @@ hide_collect_registered_umount_paths() {
   {
     # 0) 本模块登记时记下的路径（不依赖管理器 UI / susfs4ksu 目录）
     hide_read_recorded_paths 2>/dev/null
-    # 1) ksud kernel umount list（BakaSU 多为 JSON；其它可能是纯路径行）
+    # 1) ksud umount list（SukiSU）或 kernel umount list（KSU-Next/BakaSU，多为 JSON）
     _ksud=$(hide_resolve_ksud 2>/dev/null) || _ksud=
     if [ -n "$_ksud" ]; then
-      _list=$("$_ksud" kernel umount list 2>/dev/null) || _list=
-      printf '%s\n' "$_list" | grep -oE '/[^[:space:]",{}]+/cacerts' 2>/dev/null
+      {
+        "$_ksud" umount list 2>/dev/null
+        "$_ksud" kernel umount list 2>/dev/null
+      } | grep -oE '/[^[:space:]",{}]+/cacerts' 2>/dev/null
     fi
     # 2) 仅当真正装了 susfs4ksu/resusfs 等时读其 try_umount.txt
     _tumount=$(hide_resolve_susfs_try_umount_file 2>/dev/null) || _tumount=

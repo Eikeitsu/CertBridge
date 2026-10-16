@@ -424,12 +424,17 @@ hide_ksud_kernel_umount_available() {
         1|0) ok=1 ;;
       esac
     fi
+    # SukiSU：顶层 umount 子命令（add/list/remove），不是 kernel umount
+    if [ "$ok" != "1" ] && \
+        "$_ksud" umount 2>&1 | grep -qiE '(^|[[:space:]])(add|list|remove|del|save|apply)([[:space:]/]|$)'; then
+      ok=1
+    fi
     if [ "$ok" != "1" ] && \
         "$_ksud" kernel 2>&1 | grep -qiE '(^|[[:space:]])umount([[:space:]/]|$)'; then
       ok=1
     fi
     if [ "$ok" != "1" ] && \
-        "$_ksud" kernel umount 2>&1 | grep -qiE '(^|[[:space:]])(add|delete|remove|list)([[:space:]/]|$)'; then
+        "$_ksud" kernel umount 2>&1 | grep -qiE '(^|[[:space:]])(add|delete|remove|list|del)([[:space:]/]|$)'; then
       ok=1
     fi
   fi

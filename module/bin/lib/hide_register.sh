@@ -11,28 +11,65 @@ _hide_umount_err_is_exists() {
     'already|exist|exists|duplicate|duplicated|has been added|in (the )?list|registered'
 }
 
+# 是否已在 umount 列表（兼容 SukiSU: ksud umount list；KSU-Next/BakaSU: kernel umount list）
+hide_ksud_umount_list_has() {
+  target="$1"
+  _ksud="$2"
+  [ -n "$target" ] && [ -n "$_ksud" ] || return 1
+  _list=$("$_ksud" umount list 2>/dev/null) || _list=
+  printf '%s\n' "$_list" | grep -qxF "$target" && return 0
+  _list=$("$_ksud" kernel umount list 2>/dev/null) || _list=
+  printf '%s\n' "$_list" | grep -qxF "$target" && return 0
+  # list 输出可能是 JSON / 带前缀：宽松匹配路径
+  printf '%s\n' "$_list" | grep -Fq "$target" && return 0
+  return 1
+}
+
+# 登记 umount 路径：先 SukiSU 顶层 `umount add`，再 `kernel umount add`
 hide_try_ksud_umount_add() {
   target="$1"
   HIDE_UMOUNT_ERR=
   [ -n "$target" ] || return 1
   _ksud=$(hide_resolve_ksud) || return 1
   hide_ensure_ksud_umount_feature 2>/dev/null || true
-  _out=$("$_ksud" kernel umount add "$target" --flags 2 2>&1)
+
+  _ok=0
+  _out=
+  # 1) SukiSU：ksud umount add（无 list/kernel 子命令的构建）
+  _out=$("$_ksud" umount add "$target" --flags 2 2>&1)
   _rc=$?
+  if [ "$_rc" != "0" ]; then
+    _out2=$("$_ksud" umount add "$target" 2>&1)
+    _rc2=$?
+    if [ "$_rc2" = "0" ]; then
+      _out=$_out2
+      _rc=0
+    elif [ -n "$_out2" ]; then
+      _out=$_out2
+      _rc=$_rc2
+    fi
+  fi
+  if [ "$_rc" = "0" ] || _hide_umount_err_is_exists "$_out"; then
+    _ok=1
+  fi
+
+  # 2) KSU-Next / 官方 / BakaSU：ksud kernel umount add
+  if [ "$_ok" != "1" ]; then
+    _out=$("$_ksud" kernel umount add "$target" --flags 2 2>&1)
+    _rc=$?
+    if [ "$_rc" = "0" ] || _hide_umount_err_is_exists "$_out"; then
+      _ok=1
+    fi
+  fi
+
   HIDE_UMOUNT_ERR=$(printf '%s' "$_out" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
-  if [ "$_rc" = "0" ]; then
-    # BakaSU：再写入 umount-config，管理器「卸载路径」页会标为持久并开机重载
+  if [ "$_ok" = "1" ]; then
     hide_try_ksud_umount_config_add "$target" 2>/dev/null || true
     return 0
   fi
-  # 无退出码时仍可能 stderr 表示已在列表
-  if _hide_umount_err_is_exists "$HIDE_UMOUNT_ERR"; then
-    hide_try_ksud_umount_config_add "$target" 2>/dev/null || true
-    return 2
-  fi
-  # 部分构建：已存在也返回非 0 且无文案；用 list 确认
-  if "$_ksud" kernel umount list 2>/dev/null | grep -qxF "$target"; then
-    HIDE_UMOUNT_ERR="${HIDE_UMOUNT_ERR:-already in kernel umount list}"
+  # 部分构建：已存在也返回非 0；用 list 确认
+  if hide_ksud_umount_list_has "$target" "$_ksud"; then
+    HIDE_UMOUNT_ERR="${HIDE_UMOUNT_ERR:-already in umount list}"
     hide_try_ksud_umount_config_add "$target" 2>/dev/null || true
     return 2
   fi

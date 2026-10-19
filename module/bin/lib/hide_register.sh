@@ -11,21 +11,117 @@ _hide_umount_err_is_exists() {
     'already|exist|exists|duplicate|duplicated|has been added|in (the )?list|registered'
 }
 
-# 是否已在 umount 列表（兼容 SukiSU: ksud umount list；KSU-Next/BakaSU: kernel umount list）
+# list 行是否含目标路径（可能为「path」或「path flags」等多列）
+_hide_umount_list_line_has() {
+  _needle="$1"
+  _text="$2"
+  [ -n "$_needle" ] && [ -n "$_text" ] || return 1
+  printf '%s\n' "$_text" | awk -v t="$_needle" '
+    {
+      gsub(/\r/, "")
+      if ($0 == t || $1 == t) { found=1; exit }
+      q = "\"" t "\""
+      if (index($0, q) > 0) { found=1; exit }
+    }
+    END { exit found ? 0 : 1 }
+  ' && return 0
+  printf '%s\n' "$_text" | grep -F "$_needle" >/dev/null 2>&1 || return 1
+  printf '%s\n' "$_text" | awk -v t="$_needle" '
+    index($0, t) == 0 { next }
+    {
+      gsub(/\r/, "")
+      n = split($0, a, /[[:space:]",={}]+/)
+      for (i = 1; i <= n; i++) if (a[i] == t) { found=1; exit }
+    }
+    END { exit found ? 0 : 1 }
+  '
+}
+
+# 是否已在 umount 列表（探测顶层 umount list 与 kernel umount list，有则用）
 hide_ksud_umount_list_has() {
   target="$1"
   _ksud="$2"
   [ -n "$target" ] && [ -n "$_ksud" ] || return 1
   _list=$("$_ksud" umount list 2>/dev/null) || _list=
-  printf '%s\n' "$_list" | grep -qxF "$target" && return 0
+  _hide_umount_list_line_has "$target" "$_list" && return 0
   _list=$("$_ksud" kernel umount list 2>/dev/null) || _list=
-  printf '%s\n' "$_list" | grep -qxF "$target" && return 0
-  # list 输出可能是 JSON / 带前缀：宽松匹配路径
-  printf '%s\n' "$_list" | grep -Fq "$target" && return 0
+  _hide_umount_list_line_has "$target" "$_list" && return 0
   return 1
 }
 
-# 登记 umount 路径：先 SukiSU 顶层 `umount add`，再 `kernel umount add`
+# 单次 add：优先官方 `kernel umount`，再试顶层 `umount`；--flags 2(MNT_DETACH) 失败再无 flags
+_hide_ksud_umount_add_once() {
+  _ksud="$1"
+  _mode="$2"
+  _path="$3"
+  _out=
+  _rc=1
+  case "$_mode" in
+    kernel)
+      _out=$("$_ksud" kernel umount add "$_path" --flags 2 2>&1)
+      _rc=$?
+      if [ "$_rc" != "0" ]; then
+        _out2=$("$_ksud" kernel umount add "$_path" 2>&1)
+        _rc2=$?
+        if [ "$_rc2" = "0" ] || [ -n "$_out2" ]; then
+          _out=$_out2
+          _rc=$_rc2
+        fi
+      fi
+      ;;
+    top)
+      _out=$("$_ksud" umount add "$_path" --flags 2 2>&1)
+      _rc=$?
+      if [ "$_rc" != "0" ]; then
+        _out2=$("$_ksud" umount add "$_path" 2>&1)
+        _rc2=$?
+        if [ "$_rc2" = "0" ] || [ -n "$_out2" ]; then
+          _out=$_out2
+          _rc=$_rc2
+        fi
+      fi
+      ;;
+  esac
+  HIDE_UMOUNT_ERR=$(printf '%s' "$_out" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
+  if [ "$_rc" = "0" ] || _hide_umount_err_is_exists "$_out"; then
+    return 0
+  fi
+  return 1
+}
+
+# 上游：先 notify-module-mounted，再 umount add（无子命令则忽略）
+hide_ksud_notify_module_mounted() {
+  _ksud=$(hide_resolve_ksud) || return 1
+  "$_ksud" kernel notify-module-mounted >/dev/null 2>&1
+}
+
+# 若管理器提供 umount apply：把已落盘列表灌回内核（无则忽略）
+hide_ksud_umount_apply_saved() {
+  _ksud=$(hide_resolve_ksud) || return 1
+  if "$_ksud" umount apply >/dev/null 2>&1; then
+    log_info "hide: ksud umount apply"
+    return 0
+  fi
+  return 1
+}
+
+# 若管理器提供落盘 CLI：umount save / feature save（无则忽略）
+hide_ksud_umount_persist() {
+  _ksud=$(hide_resolve_ksud) || return 1
+  _did=0
+  if "$_ksud" umount save >/dev/null 2>&1; then
+    log_info "hide: ksud umount save"
+    _did=1
+  fi
+  "$_ksud" feature save >/dev/null 2>&1 && _did=1
+  [ "$_did" = "1" ] && return 0
+  return 1
+}
+
+# 登记 umount 路径（能力探测）：
+# 1) kernel umount add（上游主路径）
+# 2) 顶层 umount add（部分管理器）
+# 3) 可选 umount-config add（有则写，无则跳过）
 hide_try_ksud_umount_add() {
   target="$1"
   HIDE_UMOUNT_ERR=
@@ -34,40 +130,23 @@ hide_try_ksud_umount_add() {
   hide_ensure_ksud_umount_feature 2>/dev/null || true
 
   _ok=0
-  _out=
-  # 1) SukiSU：ksud umount add（无 list/kernel 子命令的构建）
-  _out=$("$_ksud" umount add "$target" --flags 2 2>&1)
-  _rc=$?
-  if [ "$_rc" != "0" ]; then
-    _out2=$("$_ksud" umount add "$target" 2>&1)
-    _rc2=$?
-    if [ "$_rc2" = "0" ]; then
-      _out=$_out2
-      _rc=0
-    elif [ -n "$_out2" ]; then
-      _out=$_out2
-      _rc=$_rc2
-    fi
+  if hide_ksud_umount_list_has "$target" "$_ksud"; then
+    hide_try_ksud_umount_config_add "$target" 2>/dev/null || true
+    HIDE_UMOUNT_ERR="already in umount list"
+    return 2
   fi
-  if [ "$_rc" = "0" ] || _hide_umount_err_is_exists "$_out"; then
+
+  if _hide_ksud_umount_add_once "$_ksud" kernel "$target"; then
+    _ok=1
+  fi
+  if _hide_ksud_umount_add_once "$_ksud" top "$target"; then
     _ok=1
   fi
 
-  # 2) KSU-Next / 官方 / BakaSU：ksud kernel umount add
-  if [ "$_ok" != "1" ]; then
-    _out=$("$_ksud" kernel umount add "$target" --flags 2 2>&1)
-    _rc=$?
-    if [ "$_rc" = "0" ] || _hide_umount_err_is_exists "$_out"; then
-      _ok=1
-    fi
-  fi
-
-  HIDE_UMOUNT_ERR=$(printf '%s' "$_out" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
   if [ "$_ok" = "1" ]; then
     hide_try_ksud_umount_config_add "$target" 2>/dev/null || true
     return 0
   fi
-  # 部分构建：已存在也返回非 0；用 list 确认
   if hide_ksud_umount_list_has "$target" "$_ksud"; then
     HIDE_UMOUNT_ERR="${HIDE_UMOUNT_ERR:-already in umount list}"
     hide_try_ksud_umount_config_add "$target" 2>/dev/null || true
@@ -76,8 +155,7 @@ hide_try_ksud_umount_add() {
   return 1
 }
 
-# BakaSU / 部分分支：ksud umount-config → /data/adb/ksu/.umount（管理器持久列表）
-# 无此子命令时静默跳过（官方 KSU / SukiSU 等）
+# 可选：ksud umount-config（无此子命令则静默跳过）
 hide_try_ksud_umount_config_add() {
   target="$1"
   [ -n "$target" ] || return 1
@@ -119,8 +197,6 @@ hide_try_susfs_umount_add() {
   fi
   return 1
 }
-
-# 从内核 try_umount 列表删除单路径（KSU-Next：ksud kernel umount del）
 
 # 生成 NoHello 单条 point 规则（整行精确匹配，便于增删）
 hide_nohello_rule_line() {
@@ -225,6 +301,9 @@ $target"
     log_warn "hide: NoHello umount rule write failed ($target)"
     return 1
   }
+  # Magisk/APatch：标记按 companion 评估 MRS，避免 whitelist+规则时每进程重算
+  touch "$NOHELLO_DIR/umount_persist" 2>/dev/null || \
+    touch "$NOHELLO_DIR/umount_persists" 2>/dev/null || true
   log_debug "hide: NoHello umount rule registered ($target)"
   return 0
 }
@@ -307,7 +386,7 @@ hide_assist_for_target() {
     file_ok=1
   fi
 
-  # 2) 当场登记：仅当 ksu_susfs 仍支持 add_try_umount（BakaSU 等多已迁到 ksud）
+  # 2) 经典 ksu_susfs add_try_umount（有则用；多数新构建已迁到 ksud）
   if hide_susfs_bin_present; then
     hide_try_susfs_umount_add "$target"
     _s_rc=$?
@@ -326,24 +405,24 @@ hide_assist_for_target() {
     fi
   fi
 
-  # 3) ksud kernel umount（先确保 feature 开启；SuSFS v2 / KSU-Next / BakaSU 主路径）
+  # 3) ksud umount 列表（上游主路径；有顶层 CLI 时一并尝试）
   if hide_resolve_ksud >/dev/null 2>&1; then
     hide_try_ksud_umount_add "$target"
     _k_rc=$?
     if [ "$_k_rc" = "0" ]; then
-      log_info "hide: ksud kernel umount registered ($target)"
+      log_info "hide: ksud umount registered ($target)"
       hide_probe_cache_set ksud_umount 1
       live=1
     elif [ "$_k_rc" = "2" ]; then
-      log_debug "hide: ksud kernel umount already present ($target)"
+      log_debug "hide: ksud umount already present ($target)"
       hide_probe_cache_set ksud_umount 1
       live=1
     else
-      log_warn "hide: ksud kernel umount add failed ($target)${HIDE_UMOUNT_ERR:+: $HIDE_UMOUNT_ERR}"
+      log_warn "hide: ksud umount add failed ($target)${HIDE_UMOUNT_ERR:+: $HIDE_UMOUNT_ERR}"
     fi
   fi
 
-  # 4) NoHello point 规则（Magisk / APatch）
+  # 4) NoHello point 规则（无 ksud 路径 API 时的 Magisk / APatch 通道）
   if hide_nohello_available; then
     if hide_nohello_persist "$target"; then
       live=1
@@ -380,6 +459,9 @@ hide_assist_after_inject() {
   }
   hide_probe_cache_clear 2>/dev/null || true
   hide_ensure_ksud_umount_feature 2>/dev/null || true
+  # 上游顺序：先 notify，再灌已落盘列表，再 add
+  hide_ksud_notify_module_mounted 2>/dev/null || true
+  hide_ksud_umount_apply_saved 2>/dev/null || true
 
   seen="|"
   for target in $(list_target_stores); do
@@ -418,4 +500,7 @@ hide_assist_after_inject() {
       done
     done
   fi
+
+  # 全部路径登记完再落盘（有 umount save / feature save 则写）
+  hide_ksud_umount_persist 2>/dev/null || true
 }

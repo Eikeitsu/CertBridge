@@ -8,6 +8,13 @@ hide_clear_applied() {
   hide_unregister_kernel_try_umount_all 2>/dev/null || true
   hide_unpersist_all_try_umount
   hide_nohello_unpersist_all
+  # 有 umount save 时落盘，避免下次 apply 灌回已删路径
+  if type hide_ksud_umount_persist >/dev/null 2>&1; then
+    hide_ksud_umount_persist 2>/dev/null || true
+  else
+    _ksud=$(hide_resolve_ksud 2>/dev/null) || _ksud=
+    [ -n "$_ksud" ] && "$_ksud" umount save >/dev/null 2>&1 || true
+  fi
   rm -f "$HIDE_STATE_FILE" 2>/dev/null
 }
 
@@ -18,8 +25,7 @@ hide_probe_cache_clear() {
 
 # 结果按 boot 缓存；失败不缓存，避免 post-fs 过早探测失败后整轮开机不再登记
 
-# 从内核 try_umount 列表删除单路径
-# SukiSU：ksud umount remove；KSU-Next/官方：kernel umount del
+# 从内核 try_umount 列表删除单路径（探测各 CLI，有则调用）
 hide_try_ksud_umount_del() {
   target="$1"
   [ -n "$target" ] || return 1
@@ -30,7 +36,6 @@ hide_try_ksud_umount_del() {
   "$_ksud" umount remove "$target" >/dev/null 2>&1 || \
     "$_ksud" umount del "$target" >/dev/null 2>&1 || true
   "$_ksud" kernel umount del "$target" >/dev/null 2>&1 || true
-  # BakaSU 持久配置（无此子命令则忽略）
   "$_ksud" umount-config del "$target" >/dev/null 2>&1 || true
 }
 

@@ -31,12 +31,29 @@ When missing: no assist scripts on device; if Zygisk filtering is also missing, 
 When installed:
 
 - Hide page switch (`hide_allow`)
-- On: successful inject / hot-mount registers with SuSFS, `ksud kernel umount`, NoHello, etc.
-- Off: clears registration immediately (with `ksud`, `umount del` for known paths; **no** full wipe)
+- On: successful inject / hot-mount registers umount via **available CLIs** (below)
+- Off: clears registration immediately (with `ksud`, `umount remove` / `del`, then `umount save` if present; **no** full wipe)
 - Switch writes conf and returns; registration runs in the background
 - To verify unmount: **force-stop and reopen** the target app
 
 Without helpers, bind mounts may still appear in mountinfo. The page lists available SuSFS / ksud / NoHello / ZygiskNext assistants (can coexist).
+
+### Umount registration (capability probe)
+
+On KernelSU-family roots with `hide_allow=1`, CertBridge tries the following and **skips missing subcommands**:
+
+1. `ksud kernel notify-module-mounted` (upstream: notify before list updates)
+2. `ksud umount apply` (if the manager persists a saved list)
+3. `ksud kernel umount add <path> --flags 2` (upstream primary; `2` = `MNT_DETACH`)
+4. `ksud umount add …` (top-level CLI on some managers)
+5. Optional `umount-config add`, `umount save`, `feature save`
+6. Classic `ksu_susfs add_try_umount` when still present
+
+Magisk / APatch have **no** ksud path API: write NoHello `point` rules under `/data/adb/nohello/umount` (needs ZygiskNext/ReZygisk etc., and the app must be on the denylist / exclude list).
+
+Live cacerts overlays from `/proc/1/mountinfo` (including `@version` paths) are also registered so a symlink-only entry is not missed.
+
+SuSFS probing talks to CLI / LKM only (no version files / `config.gz`): prefer `ksud susfs version`, else `ksu_susfs show version`. The Hide page shows the version when probing succeeds. With `hide_allow=0`, those CLIs are not run.
 
 ## Zygisk mount-trace filtering {#zygisk-mount-trace-filtering}
 
@@ -70,25 +87,26 @@ Script inject copies certs to a short tmpfs path (default `/dev/.fs0`) then bind
 
 ## By Root solution
 
-### KernelSU / SukiSU
+### KernelSU / SukiSU / BakaSU / KSU-Next
 
-1. Enable **Unmount modules** only for apps that need evasion
+1. Enable **Unmount modules** only for apps that need evasion; keep **kernel_umount** on
 2. **Do not** enable for Reqable / ProxyPin / capture targets
-3. With SuSFS, `hide_allow=1` auto `add_try_umount`
+3. With `hide_allow=1`, CertBridge registers cacerts paths via the capability probe above
 4. For in-process mountinfo filtering, install Zygisk filtering + a compatible loader, then add packages to the target list
+5. If mounts look wrong after a soft reboot, use a **cold reboot** as the baseline
 
 ### Magisk
 
 1. DenyList / Shamiko / Zygisk umount: same rule—keep capture path off unmount lists
-2. ZygiskNext / ReZygisk / NeoZygisk (often disable built-in Zygisk)
-3. NoHello / Zygisk Assistant: `hide_allow=1` can write cacerts `point` rules
-4. Magisk has no official `ksud kernel umount` equivalent
+2. ZygiskNext / ReZygisk / NeoZygisk (often disable built-in Zygisk; leave Enforce DenyList off)
+3. NoHello: `hide_allow=1` writes cacerts `point` rules and an `umount_persist` marker
+4. Magisk has no official path-level umount API; script binds need NoHello / Zygisk filtering, not DenyList alone
 
 ### APatch
 
 1. Enable **Exclude modifications** only for evasion targets
 2. Do not enable for the capture path
-3. NeoZygisk / ReZygisk / ZygiskNext; or NoHello assist
+3. NeoZygisk / ReZygisk / ZygiskNext + **NoHello**; `hide_allow` registers points, the exclude list decides umount
 
 ## WebUI Hide page
 

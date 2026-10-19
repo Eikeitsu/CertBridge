@@ -38,14 +38,19 @@ else
     for target in \
       /apex/com.android.conscrypt/cacerts \
       /system/etc/security/cacerts; do
+      "$_ksud" umount remove "$target" >/dev/null 2>&1 || \
+        "$_ksud" umount del "$target" >/dev/null 2>&1 || true
       "$_ksud" kernel umount del "$target" >/dev/null 2>&1 || true
       "$_ksud" umount-config del "$target" >/dev/null 2>&1 || true
     done
     for apex_dir in /apex/com.android.conscrypt@*/cacerts; do
       [ -d "$apex_dir" ] || continue
+      "$_ksud" umount remove "$apex_dir" >/dev/null 2>&1 || \
+        "$_ksud" umount del "$apex_dir" >/dev/null 2>&1 || true
       "$_ksud" kernel umount del "$apex_dir" >/dev/null 2>&1 || true
       "$_ksud" umount-config del "$apex_dir" >/dev/null 2>&1 || true
     done
+    "$_ksud" umount save >/dev/null 2>&1 || true
   fi
 fi
 

@@ -31,14 +31,29 @@
 已安装时：
 
 - WebUI「隐藏」页有启用开关（`hide_allow`）
-- 开启后：注入 / 热挂载成功会向 SuSFS、`ksud kernel umount`、NoHello 等登记
-- 关闭时：立刻清登记（有 `ksud` 时对已知路径 `umount del`，**不** wipe 全表）
+- 开启后：注入 / 热挂载成功会按本机**可用 CLI** 登记 umount（见下）
+- 关闭时：立刻清登记（有 `ksud` 时对已知路径 `umount remove` / `del`，有 `umount save` 再落盘；**不** wipe 全表）
 - 开关只同步写 conf 并立刻返回；登记在后台做，不堵 UI
 - 验证卸载：对目标 App **强停再开**即可，不必仅为登记反复重启
 
-无助手时：mountinfo 上的 bind 仍可能被检测发现。页面「隐藏助手」会并列展示本机可用的 SuSFS / ksud / NoHello / ZygiskNext 等（可同时生效，无互斥优先级）；隐藏协助由本模块直接调用 `ksud kernel umount` / `ksu_susfs add_try_umount` 登记路径。
+无助手时：mountinfo 上的 bind 仍可能被检测发现。页面「隐藏助手」会并列展示本机可用的 SuSFS / ksud / NoHello / ZygiskNext 等（可同时生效，无互斥优先级）。
 
-SuSFS 探测**只认 CLI 与内核/LKM 对话**（不读 `susfs_version` 文件、不解 `/proc/config.gz`）：优先 `ksud susfs version`（SukiSU ≥4.1 等新管理器），否则 `ksu_susfs show version`（经典路径，自早期 SusFS 起；内建内核与 susfs_guard_lkm / susfs4ksu_lkm 等同 ABI）。隐藏页在探测成功时展示版本号。`hide_allow=0` 时不跑上述 CLI，也不根据残留文件猜测。
+### umount 登记（能力探测）
+
+KernelSU 系（含各下游）在 `hide_allow=1` 时大致按此顺序尝试，**子命令不存在则跳过**：
+
+1. `ksud kernel notify-module-mounted`（上游要求：先通知再登记列表）
+2. `ksud umount apply`（若管理器提供已落盘列表）
+3. `ksud kernel umount add <path> --flags 2`（上游主路径；`2` = `MNT_DETACH`）
+4. `ksud umount add …`（部分管理器顶层 CLI）
+5. 可选 `umount-config add`、`umount save`、`feature save`
+6. 若仍有 `ksu_susfs add_try_umount` 则一并调用
+
+Magisk / APatch **无** ksud 路径 API：改写 NoHello `/data/adb/nohello/umount` 的 `point` 规则（需 ZygiskNext/ReZygisk 等，且 App 在排除/卸载列表内才真正 umount）。
+
+还会按 `/proc/1/mountinfo` 实况补登当前 cacerts 叠层路径（含 `@版本`），避免只登符号路径漏一条。
+
+SuSFS 探测**只认 CLI 与内核/LKM 对话**（不读版本文件、不解 `config.gz`）：优先 `ksud susfs version`，否则 `ksu_susfs show version`。隐藏页在探测成功时展示版本号。`hide_allow=0` 时不跑上述 CLI。
 
 ## Zygisk 挂载痕迹过滤 {#zygisk-挂载痕迹过滤}
 
@@ -74,25 +89,26 @@ SuSFS 探测**只认 CLI 与内核/LKM 对话**（不读 `susfs_version` 文件�
 
 ## 按 Root 方案
 
-### KernelSU / SukiSU
+### KernelSU / SukiSU / BakaSU / KSU-Next
 
-1. 仅对需躲检测的 App 开 **「卸载模块」**
+1. 仅对需躲检测的 App 开 **「卸载模块」**，并确保管理器里 **内核级卸载 / kernel_umount** 为开
 2. **不要**对 Reqable / ProxyPin / 被抓包目标开启
-3. 有 SuSFS 时，`hide_allow=1` 会自动 `add_try_umount`
+3. `hide_allow=1`：按上一节能力探测自动登记 cacerts 路径
 4. 需要进程内过滤 mountinfo 时，另装 Zygisk 过滤并启用兼容加载器，再把包名写入过滤目标
+5. 软重启后挂载异常时，优先用**冷重启**做基线验证
 
 ### Magisk
 
 1. 用 **DenyList** / Shamiko / Zygisk umount 时，同样勿把抓包链路列入卸载
-2. 可使用 **ZygiskNext / ReZygisk / NeoZygisk**（常需关内置 Zygisk）
-3. **NoHello** / Zygisk Assistant：`hide_allow=1` 时可写 cacerts `point` 规则
-4. Magisk **没有**官方 `ksud kernel umount` 等价物；脚本 bind 依赖上述助手或 Zygisk 过滤
+2. 可使用 **ZygiskNext / ReZygisk / NeoZygisk**（常需关内置 Zygisk；Enforce DenyList 建议关）
+3. **NoHello**：`hide_allow=1` 时写 cacerts `point` 规则，并放置 `umount_persist` 标记
+4. Magisk **没有**官方路径级 umount API；脚本 bind 依赖 NoHello / Zygisk 过滤，不能指望仅 DenyList
 
 ### APatch
 
 1. 仅对需躲检测的 App 开 **「排除修改」**
 2. 勿对抓包链路开启
-3. 可装 NeoZygisk / ReZygisk / ZygiskNext；或 NoHello 辅助
+3. 装 NeoZygisk / ReZygisk / ZygiskNext + **NoHello**；`hide_allow` 登记 point，由排除名单决定是否 umount
 
 ## WebUI「隐藏」页
 

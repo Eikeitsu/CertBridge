@@ -87,7 +87,7 @@ detect_hide_provider() {
 hide_provider_label() {
   case "$1" in
     susfs) echo "SuSFS" ;;
-    ksud) echo "ksud kernel umount" ;;
+    ksud) echo "ksud umount" ;;
     rezygisk) echo "ReZygisk" ;;
     neozygisk) echo "NeoZygisk" ;;
     zygisknext) echo "ZygiskNext" ;;
@@ -175,7 +175,7 @@ hide_collect_registered_umount_paths() {
   {
     # 0) 本模块登记时记下的路径（不依赖管理器 UI / susfs4ksu 目录）
     hide_read_recorded_paths 2>/dev/null
-    # 1) ksud umount list（SukiSU）或 kernel umount list（KSU-Next/BakaSU，多为 JSON）
+    # 1) ksud umount list / kernel umount list（有则读；输出可能含 flags 或 JSON）
     _ksud=$(hide_resolve_ksud 2>/dev/null) || _ksud=
     if [ -n "$_ksud" ]; then
       {

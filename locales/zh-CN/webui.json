@@ -431,18 +431,18 @@
           "排除列表替代旧 MagiskHide；只加入需要隐藏 Root 的 App。",
           "强制执行排除列表主要停用 Zygisk 模块，不等于完整隐藏 bind；配合 Shamiko / NoHello 时通常关闭。",
           "不要把 Reqable、ProxyPin 或被抓包目标放进启用 umount 的列表。",
-          "推荐 ZygiskNext/ReZygisk + NoHello；hide_allow 登记 cacerts point，App 列表决定是否 umount。",
-          "Magisk 官方没有路径级 umount 登记 API。"
+          "推荐 ZygiskNext/ReZygisk + NoHello；hide_allow 登记 cacerts point 并写 umount_persist，App 列表决定是否 umount。",
+          "Magisk 官方没有路径级 umount 登记 API；仅 DenyList 卸不掉脚本 bind。"
         ]
       },
       "ksu": {
-        "title": "KernelSU / SukiSU / MKSU",
+        "title": "KernelSU / SukiSU / BakaSU / KSU-Next",
         "body": [
-          "仅对需要躲检测的 App 开启卸载模块，并确保内核支持 path_umount。",
+          "仅对需要躲检测的 App 开启卸载模块，并打开内核级卸载（kernel_umount）。",
           "Reqable、ProxyPin 和被抓包目标应关闭卸载模块。",
-          "安装 SuSFS 并开启 hide_allow 后，bind 成功会 add_try_umount 登记 cacerts。",
-          "可叠加 NeoZygisk、ReZygisk 或 ZygiskNext umount-only，但不要用于抓包链路 App。",
-          "避免与 Magical OverlayFS 等冲突模块同时启用。"
+          "hide_allow 会按本机可用 CLI 登记：notify-module-mounted、kernel umount / umount add，以及可选 save、apply、add_try_umount。",
+          "软重启后挂载异常时，请用冷重启做基线验证。",
+          "可叠加 NeoZygisk、ReZygisk 或 ZygiskNext umount-only，但不要用于抓包链路 App。"
         ]
       },
       "apatch": {
@@ -553,7 +553,7 @@
     },
     "providers": {
       "susfs": "SuSFS",
-      "ksud": "ksud kernel umount",
+      "ksud": "ksud umount",
       "rezygisk": "ReZygisk",
       "neozygisk": "NeoZygisk",
       "zygisknext": "ZygiskNext",

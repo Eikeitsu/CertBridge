@@ -17,7 +17,7 @@ hide_assist_enabled() {
 }
 
 # 仅 susfs4ksu / resusfs 等「模块」会开机读此文件重登记。
-# SukiSU/BakaSU 自带 SuSFS 管理页不读这里（读 App SharedPreferences），无对应模块时写了也无效。
+# 部分管理器 SuSFS 页读 App SharedPreferences，不读此目录；无对应模块时写了也无效。
 SUSFS_TRY_UMOUNT_FILE="${SUSFS_TRY_UMOUNT_FILE:-/data/adb/susfs4ksu/try_umount.txt}"
 # NoHello Mount Rule System（≥0.0.5）：按 App 排除列表 umount 时匹配这些 point
 NOHELLO_DIR="${NOHELLO_DIR:-/data/adb/nohello}"
@@ -97,7 +97,7 @@ hide_normalize_susfs_ver() {
   esac
 }
 
-# SukiSU ≥4.1 / 部分 KSU-Next：ksud 内建 susfs（新路径；旧 ksud 无此子命令）
+# 部分新管理器：ksud 内建 susfs（旧 ksud 无此子命令）
 #   ksud susfs version | support | variant | features
 # 成功时 stdout 为规范化版本（vX.Y…）
 hide_ksud_susfs_version() {
@@ -353,7 +353,7 @@ hide_susfs_bin_present() {
   return 1
 }
 
-# 该 ksu_susfs 是否仍提供 add_try_umount（BakaSU 等已迁到 ksud，无此子命令）
+# 该 ksu_susfs 是否仍提供 add_try_umount（新构建多已迁到 ksud，无则返回失败）
 hide_susfs_supports_try_umount() {
   cached=$(hide_probe_cache_get susfs_try_umount_cmd 2>/dev/null) || cached=
   case "$cached" in
@@ -383,7 +383,7 @@ hide_susfs4ksu_module_present() {
 hide_susfs_manager_hint() {
   hide_susfs_persist_dir_hint
 }
-# 解析 ksud 二进制：官方 / KSU-Next / SukiSU / BakaSU(原 ReSukiSU) 等均落在 ksu 工作目录
+# 解析 ksud 二进制（各 KernelSU 系管理器通常落在 ksu 工作目录）
 hide_resolve_ksud() {
   if [ -n "${KSUD_BIN:-}" ] && [ -x "$KSUD_BIN" ]; then
     echo "$KSUD_BIN"
@@ -433,7 +433,7 @@ hide_ksud_kernel_umount_available() {
         1|0) ok=1 ;;
       esac
     fi
-    # SukiSU：顶层 umount 子命令（add/list/remove），不是 kernel umount
+    # 顶层 umount 子命令（add/list/remove/save/apply 等）
     if [ "$ok" != "1" ] && \
         "$_ksud" umount 2>&1 | grep -qiE '(^|[[:space:]])(add|list|remove|del|save|apply)([[:space:]/]|$)'; then
       ok=1
@@ -455,7 +455,7 @@ hide_ksud_kernel_umount_available() {
 }
 
 # 解析 feature get / list 输出 → on|off|na
-# SukiSU/KSU-Next 典型 get：
+# feature get 典型输出：
 #   Feature: kernel_umount (1)
 #   Value: 1
 #   Status: enabled
@@ -544,7 +544,7 @@ hide_ksud_feature_list_ku_line() {
 }
 
 # 探测「内核级卸载 / Kernel umount」全局开关
-# 有 feature 子系统的构建（官方新版 KernelSU / KSU-Next / SukiSU / BakaSU 等）：
+# 有 feature 子系统的构建：
 #   名 kernel_umount，id=1；get 输出 Value:/Status: 或 list 行 [ENABLED]/DISABLED]
 # 无 feature 的老官方 KernelSU：返回 na（不展示此项；应用级「卸载模块」见助手 ksu_umount）
 # 开关可随时改：不缓存 on/off

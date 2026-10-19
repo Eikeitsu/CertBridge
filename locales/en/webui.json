@@ -431,18 +431,18 @@
           "DenyList replaces old MagiskHide. Add only apps that need Root hiding.",
           "Enforce DenyList mainly blocks Zygisk modules; it is not full bind-mount hiding and usually stays off with Shamiko or NoHello.",
           "Keep Reqable, ProxyPin, and capture targets out of umount-enabled lists.",
-          "Recommended: ZygiskNext or ReZygisk + NoHello. hide_allow registers cacerts point rules; the app list controls umount.",
-          "Official Magisk has no path-level umount registration API."
+          "Recommended: ZygiskNext or ReZygisk + NoHello. hide_allow registers cacerts point rules and umount_persist; the app list controls umount.",
+          "Official Magisk has no path-level umount API; DenyList alone does not remove script binds."
         ]
       },
       "ksu": {
-        "title": "KernelSU / SukiSU / MKSU",
+        "title": "KernelSU / SukiSU / BakaSU / KSU-Next",
         "body": [
-          "Enable Umount modules only for apps that need hiding, and use a kernel with path_umount support.",
+          "Enable Umount modules only for apps that need hiding, and turn on kernel_umount.",
           "Disable it for Reqable, ProxyPin, and capture targets.",
-          "With SuSFS and hide_allow, CertBridge registers cacerts with add_try_umount after a successful bind.",
-          "NeoZygisk, ReZygisk, or ZygiskNext umount-only can be combined, but not for capture-path apps.",
-          "Avoid conflicting overlay modules such as Magical OverlayFS."
+          "hide_allow registers via available CLIs: notify-module-mounted, kernel umount / umount add, and optional save, apply, add_try_umount.",
+          "If mounts look wrong after a soft reboot, verify with a cold reboot.",
+          "NeoZygisk, ReZygisk, or ZygiskNext umount-only can be combined, but not for capture-path apps."
         ]
       },
       "apatch": {
@@ -553,7 +553,7 @@
     },
     "providers": {
       "susfs": "SuSFS",
-      "ksud": "ksud kernel umount",
+      "ksud": "ksud umount",
       "rezygisk": "ReZygisk",
       "neozygisk": "NeoZygisk",
       "zygisknext": "ZygiskNext",

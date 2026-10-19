@@ -3,13 +3,6 @@
 # 挂载隐藏协助（可选组件）
 # try_umount 登记与注入后回调
 
-hide_assist_available() {
-  return 0
-}
-
-# conf hide_allow=1 时才真正注册 try_umount / 写状态文件
-# 默认安装写入 hide_allow=0；自定义安装勾选隐藏时写入 hide_allow=1
-
 # conf hide_allow=1 时才真正注册 try_umount / 写状态文件
 # 默认安装写入 hide_allow=0；自定义安装勾选隐藏时写入 hide_allow=1
 hide_assist_enabled() {
@@ -34,31 +27,18 @@ hide_module_enabled() {
   [ ! -f "$moddir/disable" ] && [ ! -f "$moddir/remove" ]
 }
 
-# 解析 ksu_susfs：内建内核 / susfs4ksu / ReSuFS / LKM 加载器模块都可能自带
+# 解析 ksu_susfs：ksu 工作目录 → 已启用模块 tools/bin → PATH
 hide_resolve_susfs_bin() {
   if [ -n "${SUSFS_BIN:-}" ] && [ -x "$SUSFS_BIN" ]; then
     echo "$SUSFS_BIN"
     return 0
   fi
-  for cand in \
-    /data/adb/ksu/bin/ksu_susfs \
-    /data/adb/ksud/bin/ksu_susfs \
-    /data/adb/modules/susfs4ksu/tools/ksu_susfs \
-    /data/adb/modules/susfs4ksu/bin/ksu_susfs \
-    /data/adb/modules/susfs4ksu_lkm/tools/ksu_susfs \
-    /data/adb/modules/susfs4ksu_lkm/bin/ksu_susfs \
-    /data/adb/modules/susfs_guard_lkm/tools/ksu_susfs \
-    /data/adb/modules/susfs_guard_lkm/bin/ksu_susfs \
-    /data/adb/modules/resusfs/tools/ksu_susfs \
-    /data/adb/modules/resusfs/bin/ksu_susfs \
-    /data/adb/modules/ReSuFS/tools/ksu_susfs \
-    /data/adb/modules/ReSuFS/bin/ksu_susfs; do
+  for cand in /data/adb/ksu/bin/ksu_susfs /data/adb/ksud/bin/ksu_susfs; do
     if [ -x "$cand" ]; then
       echo "$cand"
       return 0
     fi
   done
-  # 任意已启用模块里的 tools/bin（含 LKM 变体目录名）
   for cand in /data/adb/modules/*/tools/ksu_susfs /data/adb/modules/*/bin/ksu_susfs; do
     [ -x "$cand" ] || continue
     moddir=$(dirname "$(dirname "$cand")")
@@ -374,15 +354,6 @@ hide_susfs_supports_try_umount() {
   return 1
 }
 
-# 兼容旧名：是否有可写的管理器配置目录（仅持久化用）
-hide_susfs4ksu_module_present() {
-  hide_susfs_persist_dir_hint
-}
-
-# 旧名兼容（若其它脚本仍调用）
-hide_susfs_manager_hint() {
-  hide_susfs_persist_dir_hint
-}
 # 解析 ksud 二进制（各 KernelSU 系管理器通常落在 ksu 工作目录）
 hide_resolve_ksud() {
   if [ -n "${KSUD_BIN:-}" ] && [ -x "$KSUD_BIN" ]; then
@@ -414,43 +385,58 @@ hide_ksud_feature_check_ku() {
   return 1
 }
 
+# 本 boot 缓存 CLI 风格：kernel（上游 kernel umount）| top（顶层 umount）| none
+# 登记/清除/列表只走这一条，避免每次 help grep + 双路径试探
+hide_ksud_umount_style() {
+  cached=$(hide_probe_cache_get ksud_umount_style 2>/dev/null) || cached=
+  case "$cached" in
+    kernel|top|none)
+      echo "$cached"
+      return 0
+      ;;
+  esac
+
+  _ksud=$(hide_resolve_ksud) || _ksud=
+  _style=none
+  if [ -n "$_ksud" ]; then
+    # 上游主路径：kernel umount
+    if "$_ksud" kernel umount 2>&1 | grep -qiE \
+        '(^|[[:space:]])(add|delete|remove|list|del)([[:space:]/]|$)'; then
+      _style=kernel
+    elif "$_ksud" kernel 2>&1 | grep -qiE '(^|[[:space:]])umount([[:space:]/]|$)'; then
+      _style=kernel
+    elif hide_ksud_feature_check_ku >/dev/null 2>&1; then
+      _style=kernel
+    else
+      _st=$(hide_ksud_umount_feature_probe 2>/dev/null) || _st=n
+      case "$_st" in
+        1|0) _style=kernel ;;
+      esac
+    fi
+    # 部分管理器只有顶层 umount
+    if [ "$_style" = "none" ] && \
+        "$_ksud" umount 2>&1 | grep -qiE \
+          '(^|[[:space:]])(add|list|remove|del|save|apply)([[:space:]/]|$)'; then
+      _style=top
+    fi
+  fi
+
+  hide_probe_cache_set ksud_umount_style "$_style"
+  if [ "$_style" != "none" ]; then
+    hide_probe_cache_set ksud_umount 1
+  fi
+  echo "$_style"
+}
+
 # 结果按 boot 缓存「通道可用」；开关状态不在此缓存（见 feature_probe）
 hide_ksud_kernel_umount_available() {
   cached=$(hide_probe_cache_get ksud_umount 2>/dev/null) || cached=
   if [ "$cached" = "1" ]; then
     return 0
   fi
-  ok=0
-  _ksud=$(hide_resolve_ksud) || _ksud=
-  if [ -n "$_ksud" ]; then
-    # feature 子系统存在（check 回包 / get 能解析）
-    if hide_ksud_feature_check_ku >/dev/null 2>&1; then
-      ok=1
-    fi
-    if [ "$ok" != "1" ]; then
-      _st=$(hide_ksud_umount_feature_probe 2>/dev/null) || _st=n
-      case "$_st" in
-        1|0) ok=1 ;;
-      esac
-    fi
-    # 顶层 umount 子命令（add/list/remove/save/apply 等）
-    if [ "$ok" != "1" ] && \
-        "$_ksud" umount 2>&1 | grep -qiE '(^|[[:space:]])(add|list|remove|del|save|apply)([[:space:]/]|$)'; then
-      ok=1
-    fi
-    if [ "$ok" != "1" ] && \
-        "$_ksud" kernel 2>&1 | grep -qiE '(^|[[:space:]])umount([[:space:]/]|$)'; then
-      ok=1
-    fi
-    if [ "$ok" != "1" ] && \
-        "$_ksud" kernel umount 2>&1 | grep -qiE '(^|[[:space:]])(add|delete|remove|list|del)([[:space:]/]|$)'; then
-      ok=1
-    fi
-  fi
-  if [ "$ok" = "1" ]; then
-    hide_probe_cache_set ksud_umount 1
-    return 0
-  fi
+  case "$(hide_ksud_umount_style 2>/dev/null)" in
+    kernel|top) return 0 ;;
+  esac
   return 1
 }
 

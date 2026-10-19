@@ -1,47 +1,28 @@
-import { useMemo, useDeferredValue } from "react";
-import { useTranslation } from "react-i18next";
-import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
-import { clearActivityLog, fetchActivityLog } from "@/features/log/model/logSlice";
-import { selectActivityLog } from "@/features/log/model/selectors";
-import { useLogLevelFilter } from "@/features/log/hooks/useLogLevelFilter";
-import { useLogWrap } from "@/features/log/hooks/useLogWrap";
-import { useEnsureActivityLog } from "@/features/log/hooks/useEnsureActivityLog";
-import { formatByteSize } from "@/features/log/lib/formatByteSize";
+import { useLogPageModel } from "@/features/log/hooks/useLogPageModel";
 import { toast } from "@/shared/api/ksu";
 import { confirmAction } from "@/shared/lib/confirmAction";
-import { filterLogEntries, parseLogText } from "@/shared/lib/log";
-import { LogLevel } from "@/entities/module/enums";
 import { Loader } from "@/shared/ui/Loader";
 import { Switch } from "@/shared/ui/primitives";
-import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
 
 export function DefaultLogPage() {
-  const { t } = useTranslation("webui");
-  const chrome = usePackChrome();
-  const dispatch = useAppDispatch();
-  const { text, loading, bytes, lines } = useAppSelector(selectActivityLog);
-  const [levelFilter, setLevelFilter] = useLogLevelFilter();
-  const [wrap, setWrap] = useLogWrap();
-  useEnsureActivityLog();
-  const deferredText = useDeferredValue(text);
-  const v = chrome.log;
-  const entries = useMemo(() => parseLogText(deferredText), [deferredText]);
-  const filtered = useMemo(
-    () => filterLogEntries(entries, levelFilter),
-    [entries, levelFilter],
-  );
-  const parsing = deferredText !== text;
-
-  const levels = useMemo(
-    () => [
-      { id: "", label: t("log.levelAll") },
-      { id: LogLevel.Info, label: t("log.levelInfo") },
-      { id: LogLevel.Warn, label: t("log.levelWarn") },
-      { id: LogLevel.Error, label: t("log.levelError") },
-      { id: LogLevel.Debug, label: t("log.levelDebug") },
-    ],
-    [t],
-  );
+  const {
+    t,
+    dispatch,
+    loading,
+    bytes,
+    lines,
+    levelFilter,
+    setLevelFilter,
+    wrap,
+    setWrap,
+    v,
+    filtered,
+    parsing,
+    levels,
+    formatByteSize,
+    clearActivityLog,
+    fetchActivityLog,
+  } = useLogPageModel();
 
   return (
     <div className="pk-def-page">

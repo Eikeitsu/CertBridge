@@ -1,21 +1,13 @@
-import { useState } from "react";
 import { AppearancePanel } from "@/features/settings/ui/appearance/AppearancePanel";
 import { UpdateChannelPanel } from "@/features/settings/ui/UpdateChannelPanel";
 import { AboutSection } from "@/features/about/ui/AboutSection";
 import { MoreNavRow, MoreSubHeader } from "@/features/settings/ui/MoreNav";
 import { ShowHideTabCard } from "@/features/settings/ui/ShowHideTabCard";
 import { MountInjectPanels } from "@/features/settings/ui/MountInjectPanels";
-import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
-import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
-
-type MoreView = "hub" | "appearance" | "mount";
+import { useMorePageModel } from "@/features/settings/hooks/useMorePageModel";
 
 export function ConsoleMorePage() {
-  const chrome = usePackChrome();
-  const { voice } = usePackVoice();
-  const m = voice.more;
-  const v = chrome.more;
-  const [view, setView] = useState<MoreView>("hub");
+  const { chrome, m, v, view, setView } = useMorePageModel();
 
   if (view === "appearance") {
     return (

@@ -23,9 +23,7 @@ hide_probe_cache_clear() {
   rm -f "${HIDE_STATUS_CACHE:-$STATEDIR/hide-status.cache}" 2>/dev/null
 }
 
-# 结果按 boot 缓存；失败不缓存，避免 post-fs 过早探测失败后整轮开机不再登记
-
-# 从内核 try_umount 列表删除单路径（探测各 CLI，有则调用）
+# 从内核 umount 列表删除单路径（只走本 boot 缓存的 CLI 风格）
 hide_try_ksud_umount_del() {
   target="$1"
   [ -n "$target" ] || return 1
@@ -33,13 +31,21 @@ hide_try_ksud_umount_del() {
     */) target=${target%/} ;;
   esac
   _ksud=$(hide_resolve_ksud) || return 1
-  "$_ksud" umount remove "$target" >/dev/null 2>&1 || \
-    "$_ksud" umount del "$target" >/dev/null 2>&1 || true
-  "$_ksud" kernel umount del "$target" >/dev/null 2>&1 || true
+  _style=$(hide_ksud_umount_style 2>/dev/null) || _style=none
+  case "$_style" in
+    kernel)
+      "$_ksud" kernel umount del "$target" >/dev/null 2>&1 || true
+      ;;
+    top)
+      "$_ksud" umount remove "$target" >/dev/null 2>&1 || \
+        "$_ksud" umount del "$target" >/dev/null 2>&1 || true
+      ;;
+    *) return 1 ;;
+  esac
+  # 可选配置表：无子命令则静默失败
   "$_ksud" umount-config del "$target" >/dev/null 2>&1 || true
+  return 0
 }
-
-# 关闭 hide_allow 时：对已知 cacerts 路径做内核 del（不 wipe 全表，避免误伤其它模块）
 
 # 关闭 hide_allow 时：对已知 cacerts 路径做内核 del（不 wipe 全表，避免误伤其它模块）
 hide_unregister_kernel_try_umount_all() {

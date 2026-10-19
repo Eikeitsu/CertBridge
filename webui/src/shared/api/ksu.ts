@@ -94,5 +94,14 @@ export function openUrl(url: string): Promise<ExecResult> {
 export function toast(message: string, tone: SnackTone = "info") {
   const kind: HapticKind = tone === "bad" ? "error" : tone === "ok" ? "success" : "light";
   haptic(kind);
+  const bridge = getBridge();
+  if (typeof bridge?.toast === "function") {
+    try {
+      bridge.toast(message);
+      return;
+    } catch {
+      /* fall through to in-app snack */
+    }
+  }
   showSnack(message, tone);
 }

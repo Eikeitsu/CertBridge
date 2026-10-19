@@ -17,6 +17,8 @@ function unixMode(rel) {
   if (name === "update-binary") return 0o100755;
   if (rel.endsWith(".sh")) return 0o100755;
   if (rel.startsWith("bin/openssl/") && name.startsWith("openssl-")) return 0o100755;
+  // 安装期 volkey：必须可执行，否则 keys.sh 的 -x 检查失败会静默回退 getevent（弹音量条）
+  if (name.startsWith("volkey-")) return 0o100755;
   return 0o100644;
 }
 

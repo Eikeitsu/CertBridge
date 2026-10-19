@@ -1,34 +1,20 @@
-import { useTranslation } from "react-i18next";
-import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
-import { selectCustomCertificates } from "@/features/status/model/selectors";
 import { refreshStatus } from "@/features/status/model/statusSlice";
-import { useCertActions } from "@/features/certs/hooks/useCertActions";
-import { useBuiltinCerts } from "@/features/certs/hooks/useBuiltinCerts";
-import { useCertDetail } from "@/features/certs/hooks/useCertDetail";
-import type { AppPresetKind } from "@/shared/api/cli";
+import { useCertsPageModel } from "@/features/certs/hooks/useCertsPageModel";
 import { CERT_IMPORT_ACCEPT_ATTR } from "@/shared/config/certs";
 import { Switch } from "@/shared/ui/primitives";
 import { CertDetailSheet } from "@/features/certs/ui/CertDetailSheet";
 import { HotMountPanel } from "@/features/certs/ui/HotMountPanel";
-import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
-
-const PRESET_KINDS: AppPresetKind[] = [
-  "httpcanary",
-  "adguard",
-  "charles",
-  "mitmproxy",
-  "pcapdroid",
-];
 
 export function DefaultCertsPage() {
-  const { t } = useTranslation("webui");
-  const chrome = usePackChrome();
-  const dispatch = useAppDispatch();
-  const customs = useAppSelector(selectCustomCertificates);
-  const builtins = useBuiltinCerts();
-  const detail = useCertDetail();
-  const v = chrome.certs;
   const {
+    t,
+    dispatch,
+    customs,
+    builtins,
+    detail,
+    v,
+    statusLabel,
+    presetKinds: PRESET_KINDS,
     isPending,
     isImporting,
     handleToggleBuiltin,
@@ -39,18 +25,7 @@ export function DefaultCertsPage() {
     handleSetHotAllow,
     handleHotMount,
     handleHotUnmount,
-  } = useCertActions();
-
-  const statusLabel = (cert: {
-    isActive: boolean;
-    isEnabled: boolean;
-    isAvailable: boolean;
-  }) => {
-    if (cert.isActive) return t("certs.statusActive");
-    if (cert.isEnabled) return t("certs.statusPending");
-    if (cert.isAvailable) return t("certs.statusAvailable");
-    return t("certs.statusMissing");
-  };
+  } = useCertsPageModel();
 
   return (
     <div className="pk-def-page">

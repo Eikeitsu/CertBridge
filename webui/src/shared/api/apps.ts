@@ -44,19 +44,26 @@ function labelMapFromInfos(infos: PackageInfo[] | null | undefined): Map<string,
 
 async function labelsFromDumpsys(pkgs: string[]): Promise<Map<string, string>> {
   const map = new Map<string, string>();
-  if (!pkgs.length) return map;
+  // 只查缺标签的包，且封顶；全量 dumpsys package 会堵死 WebUI 桥
+  const capped = pkgs.filter(Boolean).slice(0, 40);
+  if (!capped.length) return map;
   try {
-    const result = await exec(`dumpsys package 2>/dev/null`, 45_000);
-    const want = new Set(pkgs);
+    const quoted = capped.map((p) => `'${p.replace(/'/g, "")}'`).join(" ");
+    const result = await exec(
+      `for p in ${quoted}; do ` +
+        `echo "__PKG__$p"; ` +
+        `dumpsys package "$p" 2>/dev/null | grep -m1 'applicationLabel=' || true; ` +
+        `done`,
+      CLI_TIMEOUT_MS.IMPORT,
+    );
     let pkg = "";
     for (const raw of result.stdout.split(/\r?\n/)) {
       const line = raw.trim();
-      const m = line.match(/^Package\s*\[([^\]]+)\]/);
-      if (m) {
-        pkg = m[1] || "";
+      if (line.startsWith("__PKG__")) {
+        pkg = line.slice("__PKG__".length);
         continue;
       }
-      if (!pkg || !want.has(pkg)) continue;
+      if (!pkg) continue;
       const li = line.indexOf("applicationLabel=");
       if (li < 0) continue;
       const label = line.slice(li + "applicationLabel=".length).trim();

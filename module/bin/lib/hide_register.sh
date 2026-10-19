@@ -37,16 +37,24 @@ _hide_umount_list_line_has() {
   '
 }
 
-# 是否已在 umount 列表（探测顶层 umount list 与 kernel umount list，有则用）
+# 是否已在 umount 列表（只查本 boot 探测到的 CLI 风格）
 hide_ksud_umount_list_has() {
   target="$1"
   _ksud="$2"
+  _style="${3:-}"
   [ -n "$target" ] && [ -n "$_ksud" ] || return 1
-  _list=$("$_ksud" umount list 2>/dev/null) || _list=
-  _hide_umount_list_line_has "$target" "$_list" && return 0
-  _list=$("$_ksud" kernel umount list 2>/dev/null) || _list=
-  _hide_umount_list_line_has "$target" "$_list" && return 0
-  return 1
+  [ -n "$_style" ] || _style=$(hide_ksud_umount_style 2>/dev/null) || _style=none
+  case "$_style" in
+    kernel)
+      _list=$("$_ksud" kernel umount list 2>/dev/null) || _list=
+      _hide_umount_list_line_has "$target" "$_list"
+      ;;
+    top)
+      _list=$("$_ksud" umount list 2>/dev/null) || _list=
+      _hide_umount_list_line_has "$target" "$_list"
+      ;;
+    *) return 1 ;;
+  esac
 }
 
 # 单次 add：优先官方 `kernel umount`，再试顶层 `umount`；--flags 2(MNT_DETACH) 失败再无 flags
@@ -118,36 +126,30 @@ hide_ksud_umount_persist() {
   return 1
 }
 
-# 登记 umount 路径（能力探测）：
-# 1) kernel umount add（上游主路径）
-# 2) 顶层 umount add（部分管理器）
-# 3) 可选 umount-config add（有则写，无则跳过）
+# 登记 umount 路径：只走本 boot 缓存的 CLI 风格（kernel|top）；可选 umount-config
 hide_try_ksud_umount_add() {
   target="$1"
   HIDE_UMOUNT_ERR=
   [ -n "$target" ] || return 1
   _ksud=$(hide_resolve_ksud) || return 1
   hide_ensure_ksud_umount_feature 2>/dev/null || true
+  _style=$(hide_ksud_umount_style 2>/dev/null) || _style=none
+  [ "$_style" = "none" ] && {
+    HIDE_UMOUNT_ERR="ksud umount unavailable"
+    return 1
+  }
 
-  _ok=0
-  if hide_ksud_umount_list_has "$target" "$_ksud"; then
+  if hide_ksud_umount_list_has "$target" "$_ksud" "$_style"; then
     hide_try_ksud_umount_config_add "$target" 2>/dev/null || true
     HIDE_UMOUNT_ERR="already in umount list"
     return 2
   fi
 
-  if _hide_ksud_umount_add_once "$_ksud" kernel "$target"; then
-    _ok=1
-  fi
-  if _hide_ksud_umount_add_once "$_ksud" top "$target"; then
-    _ok=1
-  fi
-
-  if [ "$_ok" = "1" ]; then
+  if _hide_ksud_umount_add_once "$_ksud" "$_style" "$target"; then
     hide_try_ksud_umount_config_add "$target" 2>/dev/null || true
     return 0
   fi
-  if hide_ksud_umount_list_has "$target" "$_ksud"; then
+  if hide_ksud_umount_list_has "$target" "$_ksud" "$_style"; then
     HIDE_UMOUNT_ERR="${HIDE_UMOUNT_ERR:-already in umount list}"
     hide_try_ksud_umount_config_add "$target" 2>/dev/null || true
     return 2
@@ -434,7 +436,7 @@ hide_assist_for_target() {
     hide_record_applied "$target"
   elif [ "$file_ok" = "1" ]; then
     log_info "hide: path only in try_umount.txt ($target); need susfs4ksu module to re-apply at boot"
-  elif ! hide_susfs_bin_present && ! hide_susfs4ksu_module_present && \
+  elif ! hide_susfs_bin_present && ! hide_susfs_persist_dir_hint && \
       ! hide_resolve_ksud >/dev/null 2>&1 && ! hide_nohello_available; then
     log_warn "hide: hide_allow=1 but no SuSFS/ksud/NoHello; Magisk/APatch 请装 NoHello 或 ZygiskNext umount"
   fi

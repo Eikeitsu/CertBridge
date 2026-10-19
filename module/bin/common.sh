@@ -110,7 +110,6 @@ certbridge_load_libs_runtime() {
   if [ -f "$LIBDIR/hide_assist.sh" ]; then
     certbridge_load_lib hide_assist.sh
   else
-    hide_assist_available() { return 1; }
     hide_assist_enabled() { return 1; }
     hide_assist_for_target() { return 0; }
     hide_assist_after_inject() { return 0; }

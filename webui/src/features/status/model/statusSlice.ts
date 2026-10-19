@@ -40,15 +40,16 @@ export type RefreshStatusArg =
   | undefined;
 
 function resolveRefreshArg(arg: RefreshStatusArg) {
+  // 手动刷新(true)才默认同步 App 源；静默/定时刷新勿跑 sync_apps（卡顿主因之一）
   if (arg === true) return { toast: true, syncApps: true, live: true };
   if (arg && typeof arg === "object") {
     return {
       toast: Boolean(arg.toast),
-      syncApps: arg.syncApps !== false,
+      syncApps: Boolean(arg.syncApps),
       live: Boolean(arg.live),
     };
   }
-  return { toast: false, syncApps: true, live: false };
+  return { toast: false, syncApps: false, live: false };
 }
 
 /** CLI 回包里的 reboot_required 优先于 pending_reboot，并过滤非状态键 */

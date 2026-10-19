@@ -1,84 +1,101 @@
 #!/system/bin/sh
 # 由 install_flow 加载；安装阶段专用
 # 安装摘要与主流程
+
+_certbridge_sum() {
+  i18n_fmt "$1" "v=$2" 2>/dev/null || i18n_msg "$1" 2>/dev/null || echo "$2"
+}
+
 certbridge_install_print_summary() {
-  [ "$INSTALL_MODE" = "default" ] && MODE_LABEL="默认安装" || MODE_LABEL="自定义安装"
-  if [ "$INSTALL_REQABLE" = "1" ]; then
-    REQABLE_LABEL="已从 App 导入"
+  if [ "$INSTALL_MODE" = "default" ]; then
+    MODE_LABEL="$(i18n_msg install.sum_mode_default 2>/dev/null || echo '默认安装')"
   else
-    REQABLE_LABEL="未启用"
+    MODE_LABEL="$(i18n_msg install.sum_mode_custom 2>/dev/null || echo '自定义安装')"
+  fi
+  if [ "$INSTALL_REQABLE" = "1" ]; then
+    REQABLE_LABEL="$(i18n_msg install.sum_from_app 2>/dev/null || echo '已从 App 导入')"
+  else
+    REQABLE_LABEL="$(i18n_msg install.sum_off 2>/dev/null || echo '未启用')"
   fi
   case "$PROXYPIN_SRC" in
-    app) PROXYPIN_LABEL="已从 App 导入" ;;
-    builtin) PROXYPIN_LABEL="内置兜底" ;;
-    *) PROXYPIN_LABEL="未启用" ;;
+    app) PROXYPIN_LABEL="$(i18n_msg install.sum_from_app 2>/dev/null || echo '已从 App 导入')" ;;
+    builtin) PROXYPIN_LABEL="$(i18n_msg install.sum_builtin 2>/dev/null || echo '内置兜底')" ;;
+    *) PROXYPIN_LABEL="$(i18n_msg install.sum_off 2>/dev/null || echo '未启用')" ;;
   esac
-  [ "$INSTALL_WEBUI" = "1" ] && WEBUI_LABEL="已安装" || WEBUI_LABEL="未安装"
-  [ "$INSTALL_HOT" = "1" ] && HOT_LABEL="已安装" || HOT_LABEL="未安装"
+  if [ "$INSTALL_WEBUI" = "1" ]; then
+    WEBUI_LABEL="$(i18n_msg install.sum_on 2>/dev/null || echo '已安装')"
+  else
+    WEBUI_LABEL="$(i18n_msg install.sum_not_installed 2>/dev/null || echo '未安装')"
+  fi
+  if [ "$INSTALL_HOT" = "1" ]; then
+    HOT_LABEL="$(i18n_msg install.sum_on 2>/dev/null || echo '已安装')"
+  else
+    HOT_LABEL="$(i18n_msg install.sum_not_installed 2>/dev/null || echo '未安装')"
+  fi
   if [ "$INSTALL_HIDE" = "1" ]; then
     if [ "$INSTALL_HIDE_ALLOW" = "1" ]; then
-      HIDE_LABEL="已安装（默认开启，可在 WebUI 关闭）"
+      HIDE_LABEL="$(i18n_msg install.sum_hide_on 2>/dev/null || echo '已安装（默认开启）')"
     else
-      HIDE_LABEL="已安装（默认关闭，可在 WebUI 开启）"
+      HIDE_LABEL="$(i18n_msg install.sum_hide_off 2>/dev/null || echo '已安装（默认关闭）')"
     fi
   else
-    HIDE_LABEL="未安装"
+    HIDE_LABEL="$(i18n_msg install.sum_not_installed 2>/dev/null || echo '未安装')"
   fi
   if [ "$INSTALL_ZN_HIDE" = "1" ]; then
     if [ "$INSTALL_ZN_HIDE_ALLOW" = "1" ]; then
-      ZN_HIDE_LABEL="已安装（默认开启，可在 WebUI 关闭）"
+      ZN_HIDE_LABEL="$(i18n_msg install.sum_hide_on 2>/dev/null || echo '已安装（默认开启）')"
     else
-      ZN_HIDE_LABEL="已安装（默认关闭，可在 WebUI 开启）"
+      ZN_HIDE_LABEL="$(i18n_msg install.sum_hide_off 2>/dev/null || echo '已安装（默认关闭）')"
     fi
   else
-    ZN_HIDE_LABEL="未安装"
+    ZN_HIDE_LABEL="$(i18n_msg install.sum_not_installed 2>/dev/null || echo '未安装')"
   fi
   if [ "$INSTALL_MOUNT_MODE" = "magic" ]; then
-    MOUNT_LABEL="轻量 Magic Mount"
+    MOUNT_LABEL="$(i18n_msg install.sum_mount_magic 2>/dev/null || echo '轻量 Magic Mount')"
   else
-    MOUNT_LABEL="完整兼容（运行时 bind）"
+    MOUNT_LABEL="$(i18n_msg install.sum_mount_compat 2>/dev/null || echo '完整兼容（运行时 bind）')"
   fi
 
   ui_print "--------------------------------"
-  ui_print " 安装方案：$MODE_LABEL"
-  ui_print " 挂载模式：$MOUNT_LABEL"
-  ui_print " Reqable：$REQABLE_LABEL"
-  ui_print " ProxyPin：$PROXYPIN_LABEL"
-  ui_print " WebUI：$WEBUI_LABEL"
-  ui_print " 免重启热挂载：$HOT_LABEL"
-  ui_print " 挂载隐藏协助：$HIDE_LABEL"
-  ui_print " Zygisk 挂载过滤：$ZN_HIDE_LABEL"
+  ui_print "$(_certbridge_sum install.sum_line_mode "$MODE_LABEL")"
+  ui_print "$(_certbridge_sum install.sum_line_mount "$MOUNT_LABEL")"
+  ui_print "$(_certbridge_sum install.sum_line_reqable "$REQABLE_LABEL")"
+  ui_print "$(_certbridge_sum install.sum_line_proxypin "$PROXYPIN_LABEL")"
+  ui_print "$(_certbridge_sum install.sum_line_webui "$WEBUI_LABEL")"
+  ui_print "$(_certbridge_sum install.sum_line_hot "$HOT_LABEL")"
+  ui_print "$(_certbridge_sum install.sum_line_hide "$HIDE_LABEL")"
+  ui_print "$(_certbridge_sum install.sum_line_zn "$ZN_HIDE_LABEL")"
   log_info "安装选项：方案=$MODE_LABEL，挂载=$MOUNT_LABEL，Reqable=$REQABLE_LABEL，ProxyPin=$PROXYPIN_LABEL，WebUI=$WEBUI_LABEL，免重启热挂载=$HOT_LABEL，挂载隐藏=$HIDE_LABEL，Zygisk过滤=$ZN_HIDE_LABEL"
   ui_print "--------------------------------"
-  ui_print " 开机将再次尝试从 App 刷新 CA"
+  ui_print " $(i18n_msg install.sum_boot_refresh 2>/dev/null || echo '开机将再次尝试从 App 刷新 CA')"
   if [ "$INSTALL_MOUNT_MODE" = "magic" ]; then
-    ui_print " 轻量 Magic：system/ 仅叠启用的 addon 证书"
-    ui_print " Magisk 通常无需元模块；KernelSU 建议确认"
-    ui_print " 已启用正确的 Magic Mount / 挂载元模块"
+    ui_print " $(i18n_msg install.sum_magic_1 2>/dev/null || echo '轻量 Magic：system/ 仅叠启用的 addon 证书')"
+    ui_print " $(i18n_msg install.sum_magic_2 2>/dev/null || echo 'Magisk 通常无需元模块；KernelSU 建议确认')"
+    ui_print " $(i18n_msg install.sum_magic_3 2>/dev/null || echo '已启用正确的 Magic Mount / 挂载元模块')"
   else
-    ui_print " 完整兼容：不写 system 覆盖目录，运行时 bind"
-    ui_print " 不依赖 Magic Mount 元模块"
+    ui_print " $(i18n_msg install.sum_compat_1 2>/dev/null || echo '完整兼容：不写 system 覆盖目录，运行时 bind')"
+    ui_print " $(i18n_msg install.sum_compat_2 2>/dev/null || echo '不依赖 Magic Mount 元模块')"
   fi
   if [ "$INSTALL_HOT" = "1" ]; then
-    ui_print " 永久配置重启生效；临时证书支持免重启"
+    ui_print " $(i18n_msg install.sum_hot_yes 2>/dev/null || echo '永久配置重启生效；临时证书支持免重启')"
   else
-    ui_print " 永久配置重启生效；未安装临时热挂载"
+    ui_print " $(i18n_msg install.sum_hot_no 2>/dev/null || echo '永久配置重启生效；未安装临时热挂载')"
   fi
   if [ "$INSTALL_HIDE" = "1" ]; then
     if [ "$INSTALL_HIDE_ALLOW" = "1" ]; then
-      ui_print " 隐藏协助已安装：默认开启 try_umount"
-      ui_print " WebUI「隐藏」页可关闭；抓包勿对 Reqable"
+      ui_print " $(i18n_msg install.sum_hide_on_1 2>/dev/null || echo '隐藏协助已安装：默认开启 try_umount')"
+      ui_print " $(i18n_msg install.sum_hide_on_2 2>/dev/null || echo 'WebUI「隐藏」页可关闭；抓包勿对 Reqable')"
     else
-      ui_print " 隐藏协助已安装：默认关闭 try_umount"
-      ui_print " 需要时在 WebUI「隐藏」页开启；抓包勿对 Reqable"
+      ui_print " $(i18n_msg install.sum_hide_off_1 2>/dev/null || echo '隐藏协助已安装：默认关闭 try_umount')"
+      ui_print " $(i18n_msg install.sum_hide_off_2 2>/dev/null || echo '需要时在 WebUI「隐藏」页开启；抓包勿对 Reqable')"
     fi
-    ui_print " 与被抓包 App 开「卸载模块」"
+    ui_print " $(i18n_msg install.sum_hide_umount 2>/dev/null || echo '与被抓包 App 开「卸载模块」')"
   fi
   if [ "$INSTALL_ZN_HIDE" = "1" ]; then
-    ui_print " Zygisk 过滤：需启用 Zygisk / ZygiskNext 等"
-    ui_print " WebUI「隐藏」页可开关 zn_hide_allow；重启后生效"
+    ui_print " $(i18n_msg install.sum_zn_1 2>/dev/null || echo 'Zygisk 过滤：需启用 Zygisk / ZygiskNext 等')"
+    ui_print " $(i18n_msg install.sum_zn_2 2>/dev/null || echo 'WebUI「隐藏」页可开关 zn_hide_allow；重启后生效')"
   fi
-  ui_print " Android 14+ 自动注入 APEX"
+  ui_print " $(i18n_msg install.sum_apex 2>/dev/null || echo 'Android 14+ 自动注入 APEX')"
   ui_print "--------------------------------"
 }
 
@@ -120,6 +137,20 @@ certbridge_install_try_hot_update() {
     return 0
   fi
   return 1
+}
+
+# 与 hide_cleanup_orphan_susfs_persist_dirs 同语义；隐藏组件被裁掉时仍可清误留目录
+certbridge_install_cleanup_orphan_susfs() {
+  if type hide_cleanup_orphan_susfs_persist_dirs >/dev/null 2>&1; then
+    hide_cleanup_orphan_susfs_persist_dirs 2>/dev/null || true
+    return 0
+  fi
+  if [ -d /data/adb/susfs4ksu ] && \
+      [ ! -d /data/adb/modules/susfs4ksu ] && \
+      [ ! -d /data/adb/modules_update/susfs4ksu ]; then
+    rm -rf /data/adb/susfs4ksu 2>/dev/null || true
+    log_info "install: removed orphan /data/adb/susfs4ksu (susfs4ksu module not installed)"
+  fi
 }
 
 # Magisk customize 主流程（权限设置仍由 customize.sh 完成）
@@ -166,13 +197,7 @@ certbridge_run_install() {
   tr -d '\r\n' </proc/sys/kernel/random/boot_id >"$INSTALL_BOOT_FILE" 2>/dev/null
   certbridge_install_dump_tree
   certbridge_install_print_summary
-  # 安装阶段即清误留的 susfs4ksu 配置（未装该模块时；不依赖隐藏组件是否勾选）
-  if [ -d /data/adb/susfs4ksu ] && \
-      [ ! -d /data/adb/modules/susfs4ksu ] && \
-      [ ! -d /data/adb/modules_update/susfs4ksu ]; then
-    rm -rf /data/adb/susfs4ksu 2>/dev/null || true
-    log_info "install: removed orphan /data/adb/susfs4ksu (susfs4ksu module not installed)"
-  fi
+  certbridge_install_cleanup_orphan_susfs
   certbridge_install_try_hot_update
   # 安装期工具 / 片段：zip 需要，装完从模块目录清掉（运行期不用）
   if [ -n "${MODPATH:-}" ] && [ -d "$MODPATH" ]; then

@@ -1,6 +1,4 @@
-import { useHideAllow } from "@/features/hide/hooks/useHideAllow";
-import { useZnHideAllow } from "@/features/hide/hooks/useZnHideAllow";
-import { useEnsureHideStatus } from "@/features/hide/hooks/useEnsureHideStatus";
+import { useHidePageModel } from "@/features/hide/hooks/useHidePageModel";
 import { HideAllowRow } from "@/features/hide/ui/HideAllowRow";
 import { HideCaptureWarning } from "@/features/hide/ui/HideCaptureWarning";
 import { HideStatusCard } from "@/features/hide/ui/HideStatusCard";
@@ -8,16 +6,9 @@ import { HideRootNotes } from "@/features/hide/ui/HideRootNotes";
 import { HideGuidePanel } from "@/features/hide/ui/HideGuidePanel";
 import { ZnFilterBlock } from "@/features/hide/ui/ZnFilterBlock";
 import { HideExperimentPanel } from "@/features/hide/ui/HideExperimentPanel";
-import { usePackVoice } from "@/features/theme/hooks/usePackVoice";
-import { usePackChrome } from "@/features/theme/hooks/usePackChrome";
 
 export function OpsHidePage() {
-  const chrome = usePackChrome();
-  const hide = useHideAllow();
-  const zn = useZnHideAllow();
-  useEnsureHideStatus();
-  const { voice } = usePackVoice();
-  const h = voice.hide;
+  const { chrome, hide, zn, h } = useHidePageModel();
 
   return (
     <div className="pk-ops-page pk-ops-page--hide">

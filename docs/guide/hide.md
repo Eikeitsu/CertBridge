@@ -44,7 +44,7 @@ KernelSU 系（含各下游）在 `hide_allow=1` 时大致按此顺序尝试，*
 
 1. `ksud kernel notify-module-mounted`（上游要求：先通知再登记列表）
 2. `ksud umount apply`（若管理器提供已落盘列表）
-3. `ksud kernel umount add <path> --flags 2`（上游主路径；`2` = `MNT_DETACH`）
+3. `ksud kernel umount add <path> --flags 0`（上游主路径。`2` = `MNT_DETACH`，当前内核对证书挂载会返回 -39，条目仍留在 mountinfo。路径已在名单里时先 `del` 再以 0 写入）
 4. `ksud umount add …`（部分管理器顶层 CLI）
 5. 可选 `umount-config add`、`umount save`、`feature save`
 6. 若仍有 `ksu_susfs add_try_umount` 则一并调用

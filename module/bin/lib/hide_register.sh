@@ -57,7 +57,9 @@ hide_ksud_umount_list_has() {
   esac
 }
 
-# 单次 add：优先官方 `kernel umount`，再试顶层 `umount`；--flags 2(MNT_DETACH) 失败再无 flags
+# 单次 add。退出码：0=已写入 flags 0；2=路径已在名单（flags 未改）；1=失败
+# 上游 path_umount 对 MNT_DETACH(2) 会返回 -39，挂载仍留在 mountinfo。
+# 不带 --flags 时 ksud 默认也是 0；显式 0 失败再退回默认。
 _hide_ksud_umount_add_once() {
   _ksud="$1"
   _mode="$2"
@@ -66,33 +68,32 @@ _hide_ksud_umount_add_once() {
   _rc=1
   case "$_mode" in
     kernel)
-      _out=$("$_ksud" kernel umount add "$_path" --flags 2 2>&1)
+      _out=$("$_ksud" kernel umount add "$_path" --flags 0 2>&1)
       _rc=$?
-      if [ "$_rc" != "0" ]; then
-        _out2=$("$_ksud" kernel umount add "$_path" 2>&1)
-        _rc2=$?
-        if [ "$_rc2" = "0" ] || [ -n "$_out2" ]; then
-          _out=$_out2
-          _rc=$_rc2
-        fi
-      fi
       ;;
     top)
-      _out=$("$_ksud" umount add "$_path" --flags 2 2>&1)
+      _out=$("$_ksud" umount add "$_path" --flags 0 2>&1)
       _rc=$?
-      if [ "$_rc" != "0" ]; then
-        _out2=$("$_ksud" umount add "$_path" 2>&1)
-        _rc2=$?
-        if [ "$_rc2" = "0" ] || [ -n "$_out2" ]; then
-          _out=$_out2
-          _rc=$_rc2
-        fi
-      fi
       ;;
+    *) return 1 ;;
   esac
+  if [ "$_rc" != "0" ] && ! _hide_umount_err_is_exists "$_out"; then
+    case "$_mode" in
+      kernel) _out2=$("$_ksud" kernel umount add "$_path" 2>&1) ;;
+      top) _out2=$("$_ksud" umount add "$_path" 2>&1) ;;
+    esac
+    _rc2=$?
+    if [ "$_rc2" = "0" ] || [ -n "$_out2" ]; then
+      _out=$_out2
+      _rc=$_rc2
+    fi
+  fi
   HIDE_UMOUNT_ERR=$(printf '%s' "$_out" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
-  if [ "$_rc" = "0" ] || _hide_umount_err_is_exists "$_out"; then
+  if [ "$_rc" = "0" ]; then
     return 0
+  fi
+  if _hide_umount_err_is_exists "$_out"; then
+    return 2
   fi
   return 1
 }
@@ -139,18 +140,29 @@ hide_try_ksud_umount_add() {
     return 1
   }
 
-  if hide_ksud_umount_list_has "$target" "$_ksud" "$_style"; then
-    hide_try_ksud_umount_config_add "$target" 2>/dev/null || true
-    HIDE_UMOUNT_ERR="already in umount list"
-    return 2
+  _hide_ksud_umount_add_once "$_ksud" "$_style" "$target"
+  _add_rc=$?
+  # 已在名单时内核不会改 flags。旧登记是 MNT_DETACH(2) 时，先删再以 0 写入。
+  if [ "$_add_rc" = "2" ]; then
+    if type hide_try_ksud_umount_del >/dev/null 2>&1; then
+      hide_try_ksud_umount_del "$target" >/dev/null 2>&1 || true
+    else
+      case "$_style" in
+        kernel) "$_ksud" kernel umount del "$target" >/dev/null 2>&1 || true ;;
+        top) "$_ksud" umount del "$target" >/dev/null 2>&1 || true ;;
+      esac
+    fi
+    _hide_ksud_umount_add_once "$_ksud" "$_style" "$target"
+    _add_rc=$?
+    if [ "$_add_rc" = "2" ] && type log_warn >/dev/null 2>&1; then
+      log_warn "hide: umount entry kept previous flags ($target)"
+    fi
   fi
-
-  if _hide_ksud_umount_add_once "$_ksud" "$_style" "$target"; then
+  if [ "$_add_rc" = "0" ]; then
     hide_try_ksud_umount_config_add "$target" 2>/dev/null || true
     return 0
   fi
-  if hide_ksud_umount_list_has "$target" "$_ksud" "$_style"; then
-    HIDE_UMOUNT_ERR="${HIDE_UMOUNT_ERR:-already in umount list}"
+  if [ "$_add_rc" = "2" ]; then
     hide_try_ksud_umount_config_add "$target" 2>/dev/null || true
     return 2
   fi
@@ -162,7 +174,8 @@ hide_try_ksud_umount_config_add() {
   target="$1"
   [ -n "$target" ] || return 1
   _ksud=$(hide_resolve_ksud) || return 1
-  "$_ksud" umount-config add "$target" --flags 2 >/dev/null 2>&1 || \
+  "$_ksud" umount-config del "$target" >/dev/null 2>&1 || true
+  "$_ksud" umount-config add "$target" --flags 0 >/dev/null 2>&1 || \
     "$_ksud" umount-config add "$target" >/dev/null 2>&1
 }
 

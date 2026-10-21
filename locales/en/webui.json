@@ -553,7 +553,7 @@
     },
     "providers": {
       "susfs": "SuSFS",
-      "ksud": "ksud umount",
+      "ksud": "ksud kernel umount",
       "rezygisk": "ReZygisk",
       "neozygisk": "NeoZygisk",
       "zygisknext": "ZygiskNext",

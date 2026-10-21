@@ -87,7 +87,7 @@ detect_hide_provider() {
 hide_provider_label() {
   case "$1" in
     susfs) echo "SuSFS" ;;
-    ksud) echo "ksud umount" ;;
+    ksud) echo "ksud kernel umount" ;;
     rezygisk) echo "ReZygisk" ;;
     neozygisk) echo "NeoZygisk" ;;
     zygisknext) echo "ZygiskNext" ;;

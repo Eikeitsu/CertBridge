@@ -44,7 +44,7 @@ On KernelSU-family roots with `hide_allow=1`, CertBridge tries the following and
 
 1. `ksud kernel notify-module-mounted` (upstream: notify before list updates)
 2. `ksud umount apply` (if the manager persists a saved list)
-3. `ksud kernel umount add <path> --flags 2` (upstream primary; `2` = `MNT_DETACH`)
+3. `ksud kernel umount add <path> --flags 0` (upstream primary. `2` = `MNT_DETACH`; current kernels return -39 for these cert mounts and leave them in mountinfo. An existing list entry is deleted and added again with 0)
 4. `ksud umount add …` (top-level CLI on some managers)
 5. Optional `umount-config add`, `umount save`, `feature save`
 6. Classic `ksu_susfs add_try_umount` when still present

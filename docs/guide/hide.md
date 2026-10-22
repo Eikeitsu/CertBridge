@@ -44,7 +44,7 @@ KernelSU 系（含各下游）在 `hide_allow=1` 时大致按此顺序尝试，*
 
 1. `ksud kernel notify-module-mounted`（上游要求：先通知再登记列表）
 2. `ksud umount apply`（若管理器提供已落盘列表）
-3. `ksud kernel umount add <path> --flags 0`（上游主路径。`2` = `MNT_DETACH`，当前内核对证书挂载会返回 -39，条目仍留在 mountinfo。路径已在名单里时先 `del` 再以 0 写入）
+3. `ksud kernel umount add <path> --flags 0`（非 apex 路径。apex 证书 bind 在改成 zygote 内 private、并从 init 卸掉之后改记 `2` = `MNT_DETACH`。传播中的 apex 挂载用 `2` 会得到 -39，用 `0` 又因目录忙拆不掉，应用的 mountinfo 里会留下 `/apex/.../cacerts`）
 4. `ksud umount add …`（部分管理器顶层 CLI）
 5. 可选 `umount-config add`、`umount save`、`feature save`
 6. 若仍有 `ksu_susfs add_try_umount` 则一并调用
@@ -93,7 +93,7 @@ SuSFS 探测**只认 CLI 与内核/LKM 对话**（不读版本文件、不解 `c
 
 1. 仅对需躲检测的 App 开 **「卸载模块」**，并确保管理器里 **内核级卸载 / kernel_umount** 为开
 2. **不要**对 Reqable / ProxyPin / 被抓包目标开启
-3. `hide_allow=1`：按上一节能力探测自动登记 cacerts 路径
+3. `hide_allow=1`：按上一节能力探测自动登记 cacerts 路径。开机完成后 apex 这条会从 init 卸掉，只留 zygote 里的 private 挂载，再以 `MNT_DETACH` 登记；检测 App 需在「卸载模块」名单里，并强停后重新打开
 4. 需要进程内过滤 mountinfo 时，另装 Zygisk 过滤并启用兼容加载器，再把包名写入过滤目标
 5. 软重启后挂载异常时，优先用**冷重启**做基线验证
 
@@ -102,13 +102,13 @@ SuSFS 探测**只认 CLI 与内核/LKM 对话**（不读版本文件、不解 `c
 1. 用 **DenyList** / Shamiko / Zygisk umount 时，同样勿把抓包链路列入卸载
 2. 可使用 **ZygiskNext / ReZygisk / NeoZygisk**（常需关内置 Zygisk；Enforce DenyList 建议关）
 3. **NoHello**：`hide_allow=1` 时写 cacerts `point` 规则，并放置 `umount_persist` 标记
-4. Magisk **没有**官方路径级 umount API；脚本 bind 依赖 NoHello / Zygisk 过滤，不能指望仅 DenyList
+4. Magisk **没有**官方路径级 umount API。apex 上的脚本 bind 一样会出现在 mountinfo；开机后会从 init 卸掉，进程里要靠 NoHello / Zygisk umount 才会消失，不能指望仅 DenyList
 
 ### APatch
 
 1. 仅对需躲检测的 App 开 **「排除修改」**
 2. 勿对抓包链路开启
-3. 装 NeoZygisk / ReZygisk / ZygiskNext + **NoHello**；`hide_allow` 登记 point，由排除名单决定是否 umount
+3. 装 NeoZygisk / ReZygisk / ZygiskNext + **NoHello**；`hide_allow` 登记 point，由排除名单决定是否 umount。apex 挂载与 Magisk 相同：init 上会卸掉，进程内仍靠这份 umount
 
 ## WebUI「隐藏」页
 

@@ -1,6 +1,125 @@
 #!/system/bin/sh
 # 由 apex_inject.sh 加载
 # boot / namespaces 注入编排
+
+# 指定进程的 mountinfo 里，这条 apex cacerts 是否仍是 tmpfs/overlay
+apex_pid_has_cert_overlay() {
+  _pid="$1"
+  _target="$2"
+  [ -n "$_pid" ] && [ -n "$_target" ] && [ -f "/proc/$_pid/mountinfo" ] || return 1
+  awk -v t="$_target" '
+    $5 == t {
+      for (i = 1; i <= NF; i++) if ($i == "-") {
+        if ($(i + 1) == "tmpfs" || $(i + 1) == "overlay") found = 1
+        break
+      }
+    }
+    END { exit found ? 0 : 1 }
+  ' "/proc/$_pid/mountinfo" 2>/dev/null
+}
+
+# 在该进程命名空间内确保 apex 证书挂载存在，并改成 private（不再跟 init 同一传播组）
+apex_make_private_pid() {
+  _pid="$1"
+  _target="$2"
+  [ -d "/proc/$_pid/ns" ] || return 1
+  if ! apex_pid_has_cert_overlay "$_pid" "$_target"; then
+    nsenter --mount=/proc/"$_pid"/ns/mnt -- \
+      mount --bind "/proc/1/root$_target" "$_target" 2>/dev/null || return 1
+  fi
+  nsenter --mount=/proc/"$_pid"/ns/mnt -- \
+    mount --make-private "$_target" 2>/dev/null || return 1
+  apex_pid_has_cert_overlay "$_pid" "$_target"
+}
+
+# make-private 之后不应再带 shared/master。仍在传播组里就不要卸 init，否则会把 zygote 上的证书一起拆掉。
+apex_mount_is_private() {
+  _pid="$1"
+  _target="$2"
+  [ -f "/proc/$_pid/mountinfo" ] || return 1
+  awk -v t="$_target" '
+    $5 == t {
+      priv = 1
+      for (i = 6; i <= NF; i++) {
+        if ($i == "-") break
+        if ($i ~ /^(shared|master|propagate_from):/) priv = 0
+      }
+      if (priv) found = 1
+    }
+    END { exit found ? 0 : 1 }
+  ' "/proc/$_pid/mountinfo" 2>/dev/null
+}
+
+# 开机时 apex 证书 bind 先落在 init，好让后启动的 zygote 继承。
+# 这份传播挂载上游 path_umount 拆不掉（MNT_DETACH 得到 -39，flags 0 又因忙失败），
+# 应用 mountinfo 里会一直看到 /apex/.../cacerts。
+# zygote 起来后：把它改成 private，再从 init 卸掉。pid 1 的表里不再有这条；
+# 新应用继承的是可卸载挂载，随后用 MNT_DETACH 登记给 ksud。
+isolate_apex_cert_mounts() {
+  command -v nsenter >/dev/null 2>&1 || return 0
+  [ -f /proc/1/mountinfo ] || return 0
+
+  _targets=$(awk '
+    $5 ~ /^\/apex\/com\.android\.conscrypt(@[^/]+)?\/cacerts$/ { print $5 }
+  ' /proc/1/mountinfo 2>/dev/null | sort -u)
+  [ -n "$_targets" ] || return 0
+
+  for _target in $_targets; do
+    is_tmpfs_cacert_overlay "$_target" /proc/1/mountinfo 2>/dev/null || continue
+    _kept=0
+    _seen_pids="|"
+    for _proc in zygote zygote64 webview_zygote; do
+      for _pid in $(pidof "$_proc" 2>/dev/null); do
+        [ -n "$_pid" ] || continue
+        case "$_seen_pids" in *"|$_pid|"*) continue ;; esac
+        _seen_pids="${_seen_pids}${_pid}|"
+        if apex_make_private_pid "$_pid" "$_target"; then
+          _kept=1
+        else
+          log_warn "inject: apex make-private failed pid=$_pid ($_target)"
+        fi
+      done
+    done
+    if [ "$_kept" != "1" ]; then
+      log_info "inject: apex isolate deferred ($_target, zygote not ready)"
+      continue
+    fi
+    _private=0
+    for _pid in $(printf '%s' "$_seen_pids" | tr '|' ' '); do
+      [ -n "$_pid" ] || continue
+      apex_mount_is_private "$_pid" "$_target" && _private=1 && break
+    done
+    if [ "$_private" != "1" ]; then
+      log_warn "inject: apex mount still shared, keep init ($_target)"
+      continue
+    fi
+    if ! nsenter --mount=/proc/1/ns/mnt -- mount --make-private "$_target" 2>/dev/null; then
+      log_warn "inject: apex init make-private failed, keep init mount ($_target)"
+      continue
+    fi
+    if ! nsenter --mount=/proc/1/ns/mnt -- umount "$_target" 2>/dev/null; then
+      nsenter --mount=/proc/1/ns/mnt -- umount -l "$_target" 2>/dev/null || {
+        log_warn "inject: apex init umount failed ($_target)"
+        continue
+      }
+    fi
+    _still=0
+    for _pid in $(printf '%s' "$_seen_pids" | tr '|' ' '); do
+      [ -n "$_pid" ] || continue
+      apex_pid_has_cert_overlay "$_pid" "$_target" && _still=1 && break
+    done
+    if [ "$_still" != "1" ]; then
+      log_error "inject: apex isolate removed zygote mount ($_target)"
+      continue
+    fi
+    log_info "inject: apex cert mount private in zygote, dropped from init ($_target)"
+    if type hide_reregister_apex_umount >/dev/null 2>&1; then
+      hide_reregister_apex_umount "$_target" || true
+    fi
+  done
+  return 0
+}
+
 inject_one_target() {
   target="$1"
   mode="$2"
@@ -151,6 +270,7 @@ inject_boot_namespaces() {
   }
   # 再扫一遍登记，覆盖「单目标 rc 失败但挂载已在」的窗口
   hide_assist_after_inject
+  isolate_apex_cert_mounts || true
   return "$rc"
 }
 
@@ -191,6 +311,7 @@ inject_app_namespaces() {
   }
   # service 晚注入时 SusFS/ksud 通常已就绪：强制再登记一次
   hide_assist_after_inject
+  isolate_apex_cert_mounts || true
   if [ "$rc" != "0" ]; then
     # 若尚未记下更具体原因，记为命名空间部分失败
     [ -f "$INJECT_FAIL_FILE" ] || record_inject_fail namespace_partial

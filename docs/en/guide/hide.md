@@ -44,7 +44,7 @@ On KernelSU-family roots with `hide_allow=1`, CertBridge tries the following and
 
 1. `ksud kernel notify-module-mounted` (upstream: notify before list updates)
 2. `ksud umount apply` (if the manager persists a saved list)
-3. `ksud kernel umount add <path> --flags 0` (upstream primary. `2` = `MNT_DETACH`; current kernels return -39 for these cert mounts and leave them in mountinfo. An existing list entry is deleted and added again with 0)
+3. `ksud kernel umount add <path> --flags 0` (non-apex paths. After the apex cert bind is made private inside zygote and dropped from init, it is re-added with `2` = `MNT_DETACH`. On a still-propagated apex mount, `2` returns -39 and `0` fails because the directory is busy, so `/apex/.../cacerts` stays in the app mountinfo)
 4. `ksud umount add …` (top-level CLI on some managers)
 5. Optional `umount-config add`, `umount save`, `feature save`
 6. Classic `ksu_susfs add_try_umount` when still present
@@ -91,7 +91,7 @@ Script inject copies certs to a short tmpfs path (default `/dev/.fs0`) then bind
 
 1. Enable **Unmount modules** only for apps that need evasion; keep **kernel_umount** on
 2. **Do not** enable for Reqable / ProxyPin / capture targets
-3. With `hide_allow=1`, CertBridge registers cacerts paths via the capability probe above
+3. With `hide_allow=1`, CertBridge registers cacerts paths via the capability probe above. After boot the apex bind is dropped from init and kept private in zygote, then registered with `MNT_DETACH`. Put the detector on the umount list and force-stop it once
 4. For in-process mountinfo filtering, install Zygisk filtering + a compatible loader, then add packages to the target list
 5. If mounts look wrong after a soft reboot, use a **cold reboot** as the baseline
 
@@ -100,13 +100,13 @@ Script inject copies certs to a short tmpfs path (default `/dev/.fs0`) then bind
 1. DenyList / Shamiko / Zygisk umount: same rule—keep capture path off unmount lists
 2. ZygiskNext / ReZygisk / NeoZygisk (often disable built-in Zygisk; leave Enforce DenyList off)
 3. NoHello: `hide_allow=1` writes cacerts `point` rules and an `umount_persist` marker
-4. Magisk has no official path-level umount API; script binds need NoHello / Zygisk filtering, not DenyList alone
+4. Magisk has no path-level umount API. The apex script bind shows up in mountinfo the same way; after boot it is dropped from init. Inside an app it stays until NoHello / Zygisk umount runs—DenyList alone does not remove it
 
 ### APatch
 
 1. Enable **Exclude modifications** only for evasion targets
 2. Do not enable for the capture path
-3. NeoZygisk / ReZygisk / ZygiskNext + **NoHello**; `hide_allow` registers points, the exclude list decides umount
+3. NeoZygisk / ReZygisk / ZygiskNext + **NoHello**; `hide_allow` registers points, the exclude list decides umount. The apex mount matches Magisk: dropped from init, still visible in-process until that umount runs
 
 ## WebUI Hide page
 

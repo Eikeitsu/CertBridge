@@ -114,6 +114,19 @@ init_store_operational_lean() {
   if [ -d "$target" ] && verify_direct_store "$target" 2>/dev/null; then
     return 0
   fi
+  # apex bind 在开机后从 init 拆走，只留在 zygote。读 mountinfo 文件，不 nsenter。
+  case "$target" in
+    /apex/*)
+      for _zname in zygote zygote64; do
+        _zpid=$(pidof "$_zname" 2>/dev/null | awk '{print $1; exit}')
+        [ -n "$_zpid" ] || continue
+        if apex_cert_overlay_in_mountinfo "/proc/$_zpid/mountinfo" 2>/dev/null; then
+          log_debug "verify: lean zygote mountinfo has apex cert bind ($target)"
+          return 0
+        fi
+      done
+      ;;
+  esac
   return 1
 }
 

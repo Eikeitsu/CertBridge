@@ -56,6 +56,13 @@ else
   log_msg "service: late_inject=0, skip namespaces inject (boot-only)"
 fi
 
+# zygote 已在。把 apex 证书挂载改成 private 并从 init 卸掉，再按 MNT_DETACH 登记。
+# post-fs 时 zygote 往往还没起来，所以这里再做一次（init 上已没有则直接返回）。
+log_msg "service: isolate apex cert mounts"
+if ! sh "$MODDIR/bin/apex_inject.sh" isolate; then
+  log_msg "service: apex isolate soft-fail"
+fi
+
 release_write_lock
 SERVICE_HAS_LOCK=0
 finalize_runtime_status service >/dev/null

@@ -72,6 +72,21 @@ is_tmpfs_cacert_overlay() {
   ' "$mountinfo" 2>/dev/null
 }
 
+# init 卸掉 apex bind 之后，符号路径和 conscrypt@版本 都算证书层
+apex_cert_overlay_in_mountinfo() {
+  mountinfo="${1:-/proc/self/mountinfo}"
+  [ -f "$mountinfo" ] || return 1
+  awk '
+    $5 ~ /^\/apex\/com\.android\.conscrypt(@[^/]+)?\/cacerts$/ {
+      for (i = 1; i <= NF; i++) if ($i == "-") {
+        if ($(i + 1) == "tmpfs" || $(i + 1) == "overlay") found = 1
+        break
+      }
+    }
+    END { exit found ? 0 : 1 }
+  ' "$mountinfo" 2>/dev/null
+}
+
 # 当前命名空间里，target 是否仍绑着本模块 runtime 层（含已拆除挂载点后的 tmpfs）
 is_certbridge_runtime_bind() {
   target="$1"

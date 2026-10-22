@@ -57,27 +57,32 @@ hide_ksud_umount_list_has() {
   esac
 }
 
-# 单次 add。退出码：0=已写入 flags 0；2=路径已在名单（flags 未改）；1=失败
-# 上游 path_umount 对 MNT_DETACH(2) 会返回 -39，挂载仍留在 mountinfo。
-# 不带 --flags 时 ksud 默认也是 0；显式 0 失败再退回默认。
+# 单次 add。退出码：0=已写入；2=路径已在名单（flags 未改）；1=失败
+# flags：0=普通 umount；2=MNT_DETACH。传播中的 apex 挂载用 2 会得到 -39，
+# 必须等挂载改为 private 后再登记 2（见 isolate_apex_cert_mounts）。
 _hide_ksud_umount_add_once() {
   _ksud="$1"
   _mode="$2"
   _path="$3"
+  _flags="${4:-0}"
+  case "$_flags" in
+    ''|*[!0-9]*) _flags=0 ;;
+  esac
   _out=
   _rc=1
   case "$_mode" in
     kernel)
-      _out=$("$_ksud" kernel umount add "$_path" --flags 0 2>&1)
+      _out=$("$_ksud" kernel umount add "$_path" --flags "$_flags" 2>&1)
       _rc=$?
       ;;
     top)
-      _out=$("$_ksud" umount add "$_path" --flags 0 2>&1)
+      _out=$("$_ksud" umount add "$_path" --flags "$_flags" 2>&1)
       _rc=$?
       ;;
     *) return 1 ;;
   esac
-  if [ "$_rc" != "0" ] && ! _hide_umount_err_is_exists "$_out"; then
+  # 仅 flags 0 失败时再试一次默认参数；显式 2 失败就保持失败，避免退回拆不掉的登记
+  if [ "$_flags" = "0" ] && [ "$_rc" != "0" ] && ! _hide_umount_err_is_exists "$_out"; then
     case "$_mode" in
       kernel) _out2=$("$_ksud" kernel umount add "$_path" 2>&1) ;;
       top) _out2=$("$_ksud" umount add "$_path" 2>&1) ;;
@@ -128,10 +133,15 @@ hide_ksud_umount_persist() {
 }
 
 # 登记 umount 路径：只走本 boot 缓存的 CLI 风格（kernel|top）；可选 umount-config
+# 第二参数为 flags（默认 0）。apex 在改为 private 之后传 2。
 hide_try_ksud_umount_add() {
   target="$1"
+  _flags="${2:-0}"
   HIDE_UMOUNT_ERR=
   [ -n "$target" ] || return 1
+  case "$_flags" in
+    ''|*[!0-9]*) _flags=0 ;;
+  esac
   _ksud=$(hide_resolve_ksud) || return 1
   hide_ensure_ksud_umount_feature 2>/dev/null || true
   _style=$(hide_ksud_umount_style 2>/dev/null) || _style=none
@@ -140,9 +150,9 @@ hide_try_ksud_umount_add() {
     return 1
   }
 
-  _hide_ksud_umount_add_once "$_ksud" "$_style" "$target"
+  _hide_ksud_umount_add_once "$_ksud" "$_style" "$target" "$_flags"
   _add_rc=$?
-  # 已在名单时内核不会改 flags。旧登记是 MNT_DETACH(2) 时，先删再以 0 写入。
+  # 已在名单时内核不会改 flags。先删再按本次 flags 写入。
   if [ "$_add_rc" = "2" ]; then
     if type hide_try_ksud_umount_del >/dev/null 2>&1; then
       hide_try_ksud_umount_del "$target" >/dev/null 2>&1 || true
@@ -152,30 +162,51 @@ hide_try_ksud_umount_add() {
         top) "$_ksud" umount del "$target" >/dev/null 2>&1 || true ;;
       esac
     fi
-    _hide_ksud_umount_add_once "$_ksud" "$_style" "$target"
+    _hide_ksud_umount_add_once "$_ksud" "$_style" "$target" "$_flags"
     _add_rc=$?
     if [ "$_add_rc" = "2" ] && type log_warn >/dev/null 2>&1; then
       log_warn "hide: umount entry kept previous flags ($target)"
     fi
   fi
   if [ "$_add_rc" = "0" ]; then
-    hide_try_ksud_umount_config_add "$target" 2>/dev/null || true
+    hide_try_ksud_umount_config_add "$target" "$_flags" 2>/dev/null || true
     return 0
   fi
   if [ "$_add_rc" = "2" ]; then
-    hide_try_ksud_umount_config_add "$target" 2>/dev/null || true
+    hide_try_ksud_umount_config_add "$target" "$_flags" 2>/dev/null || true
     return 2
   fi
+  return 1
+}
+
+# apex 挂载已改为 zygote 内 private、并从 init 卸掉之后：用 MNT_DETACH 重登记。
+# 传播挂载上的 flags 2 会 -39；这份调用只给 isolate 成功的路径。
+hide_reregister_apex_umount() {
+  target="$1"
+  [ -n "$target" ] || return 0
+  hide_assist_enabled || return 0
+  hide_try_ksud_umount_add "$target" 2
+  _rc=$?
+  if [ "$_rc" = "0" ] || [ "$_rc" = "2" ]; then
+    log_info "hide: apex umount registered MNT_DETACH ($target)"
+    hide_record_applied "$target" 2>/dev/null || true
+    return 0
+  fi
+  log_warn "hide: apex MNT_DETACH register failed ($target)${HIDE_UMOUNT_ERR:+: $HIDE_UMOUNT_ERR}"
   return 1
 }
 
 # 可选：ksud umount-config（无此子命令则静默跳过）
 hide_try_ksud_umount_config_add() {
   target="$1"
+  _flags="${2:-0}"
   [ -n "$target" ] || return 1
+  case "$_flags" in
+    ''|*[!0-9]*) _flags=0 ;;
+  esac
   _ksud=$(hide_resolve_ksud) || return 1
   "$_ksud" umount-config del "$target" >/dev/null 2>&1 || true
-  "$_ksud" umount-config add "$target" --flags 0 >/dev/null 2>&1 || \
+  "$_ksud" umount-config add "$target" --flags "$_flags" >/dev/null 2>&1 || \
     "$_ksud" umount-config add "$target" >/dev/null 2>&1
 }
 

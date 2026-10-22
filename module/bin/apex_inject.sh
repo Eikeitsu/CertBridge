@@ -17,9 +17,10 @@ MODDIR=${MODDIR:-${0%/*}/..}
 case "${1:-boot}" in
   boot) inject_boot_namespaces ;;
   namespaces) inject_app_namespaces ;;
+  isolate) isolate_apex_cert_mounts ;;
   verify) [ "$(check_store_injected)" != "0" ] ;;
   *)
-    echo "usage: apex_inject.sh {boot|namespaces|verify}"
+    echo "usage: apex_inject.sh {boot|namespaces|isolate|verify}"
     exit 1
     ;;
 esac

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **apex 证书挂载从 init 拆走**：boot_completed 后把 zygote 里的 `/apex/.../cacerts` 改成 private，确认已离开传播组再从 init 卸掉。`/proc/1/mountinfo` 不再留下这条 tmpfs。上游对传播中的 apex bind 做 `path_umount` 会失败（`MNT_DETACH` 为 -39，flags 0 又因挂载忙失败），应用表里就一直看得到。private 之后改按 `MNT_DETACH` 重登记，给「卸载模块」名单里的新进程拆掉。改前已在跑的 App 需强停再开。Magisk / APatch 同样先去掉 init 上的这条，进程内是否卸掉仍取决于 NoHello / Zygisk umount 和排除名单
 - **证书挂载卸载 flags**：ksud `umount add` / `umount-config` 改记 flags 0。上游对 `MNT_DETACH`(2) 的 `path_umount` 会返回 -39，挂载仍留在 mountinfo；名单已有该项时不会改 flags，故先删再以 0 写入。已在跑的 App 需强停后才会按新 flags 卸
 - **隐藏登记跟进上游 ksud**：`notify-module-mounted` → `kernel umount add`（主）/ 顶层 `umount add`（有则）→ 可选 `save`/`apply`/`umount-config`；去掉已弃用的 `add_sus_mount`；mountinfo 实况补登；按能力探测而非品牌分支
 - **ksud umount CLI 风格缓存**：本 boot 一次探测 `kernel|top|none`，登记/清除/列表只走对应路径，减少重复 help grep 与双路试探

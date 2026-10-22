@@ -113,6 +113,7 @@ certbridge_load_libs_runtime() {
     hide_assist_enabled() { return 1; }
     hide_assist_for_target() { return 0; }
     hide_assist_after_inject() { return 0; }
+    hide_reregister_apex_umount() { return 0; }
     hide_cleanup_orphan_susfs_persist_dirs() { return 0; }
     emit_hide_status() {
       echo "hide_supported=0"

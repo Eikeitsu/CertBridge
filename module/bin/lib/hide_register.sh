@@ -417,6 +417,7 @@ hide_persist_try_umount() {
 }
 
 # 对单个 cacerts 目标注册 try_umount（bind 成功后调用；需开启 hide_allow）
+# 无 SuSFS 也可登记：优先 ksud；SuSFS 仅为可选通道。
 hide_assist_for_target() {
   target="$1"
   [ -n "$target" ] || return 0
@@ -427,9 +428,21 @@ hide_assist_for_target() {
   live=0
   file_ok=0
 
-  # 1) 先持久化：susfs4ksu post-mount / boot-completed 会读 try_umount.txt
-  if hide_persist_try_umount "$target"; then
-    file_ok=1
+  # 1) ksud umount（不要求 SuSFS）
+  if hide_resolve_ksud >/dev/null 2>&1; then
+    hide_try_ksud_umount_add "$target"
+    _k_rc=$?
+    if [ "$_k_rc" = "0" ]; then
+      log_info "hide: ksud umount registered ($target)"
+      hide_probe_cache_set ksud_umount 1
+      live=1
+    elif [ "$_k_rc" = "2" ]; then
+      log_debug "hide: ksud umount already present ($target)"
+      hide_probe_cache_set ksud_umount 1
+      live=1
+    else
+      log_warn "hide: ksud umount add failed ($target)${HIDE_UMOUNT_ERR:+: $HIDE_UMOUNT_ERR}"
+    fi
   fi
 
   # 2) 经典 ksu_susfs add_try_umount（有则用；多数新构建已迁到 ksud）
@@ -451,21 +464,9 @@ hide_assist_for_target() {
     fi
   fi
 
-  # 3) ksud umount 列表（上游主路径；有顶层 CLI 时一并尝试）
-  if hide_resolve_ksud >/dev/null 2>&1; then
-    hide_try_ksud_umount_add "$target"
-    _k_rc=$?
-    if [ "$_k_rc" = "0" ]; then
-      log_info "hide: ksud umount registered ($target)"
-      hide_probe_cache_set ksud_umount 1
-      live=1
-    elif [ "$_k_rc" = "2" ]; then
-      log_debug "hide: ksud umount already present ($target)"
-      hide_probe_cache_set ksud_umount 1
-      live=1
-    else
-      log_warn "hide: ksud umount add failed ($target)${HIDE_UMOUNT_ERR:+: $HIDE_UMOUNT_ERR}"
-    fi
+  # 3) 可选：susfs4ksu post-mount / boot-completed 读 try_umount.txt
+  if hide_persist_try_umount "$target"; then
+    file_ok=1
   fi
 
   # 4) NoHello point 规则（无 ksud 路径 API 时的 Magisk / APatch 通道）

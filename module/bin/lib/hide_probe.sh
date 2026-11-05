@@ -387,10 +387,11 @@ hide_ksud_feature_check_ku() {
 
 # 本 boot 缓存 CLI 风格：kernel（上游 kernel umount）| top（顶层 umount）| none
 # 登记/清除/列表只走这一条，避免每次 help grep + 双路径试探
+# 阳性才缓存；none 不缓存（早期探测失败后本 boot 仍可再探）
 hide_ksud_umount_style() {
   cached=$(hide_probe_cache_get ksud_umount_style 2>/dev/null) || cached=
   case "$cached" in
-    kernel|top|none)
+    kernel|top)
       echo "$cached"
       return 0
       ;;
@@ -399,7 +400,7 @@ hide_ksud_umount_style() {
   _ksud=$(hide_resolve_ksud) || _ksud=
   _style=none
   if [ -n "$_ksud" ]; then
-    # 上游主路径：kernel umount
+    # 上游主路径：kernel umount（不要求 SuSFS）
     if "$_ksud" kernel umount 2>&1 | grep -qiE \
         '(^|[[:space:]])(add|delete|remove|list|del)([[:space:]/]|$)'; then
       _style=kernel
@@ -421,8 +422,8 @@ hide_ksud_umount_style() {
     fi
   fi
 
-  hide_probe_cache_set ksud_umount_style "$_style"
   if [ "$_style" != "none" ]; then
+    hide_probe_cache_set ksud_umount_style "$_style"
     hide_probe_cache_set ksud_umount 1
   fi
   echo "$_style"

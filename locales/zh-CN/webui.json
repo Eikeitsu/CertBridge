@@ -440,7 +440,7 @@
         "body": [
           "仅对需要躲检测的 App 开启卸载模块，并打开内核级卸载（kernel_umount）。",
           "Reqable、ProxyPin 和被抓包目标应关闭卸载模块。",
-          "hide_allow 会按本机可用 CLI 登记：notify-module-mounted、kernel umount / umount add，以及可选 save、apply、add_try_umount。",
+          "hide_allow 登记不依赖 SuSFS：优先 ksud（kernel umount / umount add，可选 save / umount-config）；有 SuSFS 时再并行 add_try_umount。",
           "软重启后挂载异常时，请用冷重启做基线验证。",
           "可叠加 NeoZygisk、ReZygisk 或 ZygiskNext umount-only，但不要用于抓包链路 App。"
         ]

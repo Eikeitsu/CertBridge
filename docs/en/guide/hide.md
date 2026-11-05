@@ -40,6 +40,8 @@ Without helpers, bind mounts may still appear in mountinfo. The page lists avail
 
 ### Umount registration (capability probe)
 
+**SuSFS is not required.** Kernel umount via `ksud` is enough; SuSFS is an optional parallel path.
+
 On KernelSU-family roots with `hide_allow=1`, CertBridge tries the following and **skips missing subcommands**:
 
 1. `ksud kernel notify-module-mounted` (upstream: notify before list updates)
@@ -47,7 +49,7 @@ On KernelSU-family roots with `hide_allow=1`, CertBridge tries the following and
 3. `ksud kernel umount add <path> --flags 0` (non-apex paths. After the apex cert bind is made private inside zygote and dropped from init, it is re-added with `2` = `MNT_DETACH`. On a still-propagated apex mount, `2` returns -39 and `0` fails because the directory is busy, so `/apex/.../cacerts` stays in the app mountinfo)
 4. `ksud umount add …` (top-level CLI on some managers)
 5. Optional `umount-config add`, `umount save`, `feature save`
-6. Classic `ksu_susfs add_try_umount` when still present
+6. Classic `ksu_susfs add_try_umount` / susfs4ksu `try_umount.txt` when present
 
 Magisk / APatch have **no** ksud path API: write NoHello `point` rules under `/data/adb/nohello/umount` (needs ZygiskNext/ReZygisk etc., and the app must be on the denylist / exclude list).
 

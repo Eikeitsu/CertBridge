@@ -440,7 +440,7 @@
         "body": [
           "Enable Umount modules only for apps that need hiding, and turn on kernel_umount.",
           "Disable it for Reqable, ProxyPin, and capture targets.",
-          "hide_allow registers via available CLIs: notify-module-mounted, kernel umount / umount add, and optional save, apply, add_try_umount.",
+          "hide_allow does not need SuSFS: prefers ksud (kernel umount / umount add, optional save / umount-config); SuSFS add_try_umount runs in parallel when present.",
           "If mounts look wrong after a soft reboot, verify with a cold reboot.",
           "NeoZygisk, ReZygisk, or ZygiskNext umount-only can be combined, but not for capture-path apps."
         ]

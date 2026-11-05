@@ -40,6 +40,8 @@
 
 ### umount 登记（能力探测）
 
+**不要求 SuSFS。** 有 `ksud` 内核 umount 即可登记；SuSFS 只是可选并行通道。
+
 KernelSU 系（含各下游）在 `hide_allow=1` 时大致按此顺序尝试，**子命令不存在则跳过**：
 
 1. `ksud kernel notify-module-mounted`（上游要求：先通知再登记列表）
@@ -47,7 +49,7 @@ KernelSU 系（含各下游）在 `hide_allow=1` 时大致按此顺序尝试，*
 3. `ksud kernel umount add <path> --flags 0`（非 apex 路径。apex 证书 bind 在改成 zygote 内 private、并从 init 卸掉之后改记 `2` = `MNT_DETACH`。传播中的 apex 挂载用 `2` 会得到 -39，用 `0` 又因目录忙拆不掉，应用的 mountinfo 里会留下 `/apex/.../cacerts`）
 4. `ksud umount add …`（部分管理器顶层 CLI）
 5. 可选 `umount-config add`、`umount save`、`feature save`
-6. 若仍有 `ksu_susfs add_try_umount` 则一并调用
+6. 若仍有 `ksu_susfs add_try_umount` / 已装 susfs4ksu 的 `try_umount.txt` 则一并写入
 
 Magisk / APatch **无** ksud 路径 API：改写 NoHello `/data/adb/nohello/umount` 的 `point` 规则（需 ZygiskNext/ReZygisk 等，且 App 在排除/卸载列表内才真正 umount）。
 

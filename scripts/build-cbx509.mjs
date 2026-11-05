@@ -50,39 +50,50 @@ async function download(url, dest) {
   log(`saved ${(statSync(dest).size / 1024 / 1024).toFixed(1)} MB`);
 }
 
+// Portable JDK for local/CI tooling (lint + cbx509). Keep in sync with runner-era JDKs
+// so google-java-format 1.35+ (needs JDK 21+ javac) works without a system install.
+const PORTABLE_JDK = {
+  ver: "25.0.5+8",
+  tag: "jdk-25.0.5%2B8",
+  dir: "jdk-25.0.5+8",
+  archiveStem: "jdk25",
+};
+
 function hostJdkAsset() {
   const plat = process.platform;
   const arch = process.arch;
+  const { tag, dir } = PORTABLE_JDK;
+  const base = `https://github.com/adoptium/temurin25-binaries/releases/download/${tag}`;
   if (plat === "win32" && arch === "x64") {
     return {
-      url: "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.14%2B7/OpenJDK17U-jdk_x64_windows_hotspot_17.0.14_7.zip",
+      url: `${base}/OpenJDK25U-jdk_x64_windows_hotspot_25.0.5_8.zip`,
       kind: "zip",
-      javacRel: ["jdk-17.0.14+7", "bin", "javac.exe"],
-      javaRel: ["jdk-17.0.14+7", "bin", "java.exe"],
+      javacRel: [dir, "bin", "javac.exe"],
+      javaRel: [dir, "bin", "java.exe"],
     };
   }
   if (plat === "linux" && arch === "x64") {
     return {
-      url: "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.14%2B7/OpenJDK17U-jdk_x64_linux_hotspot_17.0.14_7.tar.gz",
+      url: `${base}/OpenJDK25U-jdk_x64_linux_hotspot_25.0.5_8.tar.gz`,
       kind: "targz",
-      javacRel: ["jdk-17.0.14+7", "bin", "javac"],
-      javaRel: ["jdk-17.0.14+7", "bin", "java"],
+      javacRel: [dir, "bin", "javac"],
+      javaRel: [dir, "bin", "java"],
     };
   }
   if (plat === "darwin" && arch === "arm64") {
     return {
-      url: "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.14%2B7/OpenJDK17U-jdk_aarch64_mac_hotspot_17.0.14_7.tar.gz",
+      url: `${base}/OpenJDK25U-jdk_aarch64_mac_hotspot_25.0.5_8.tar.gz`,
       kind: "targz",
-      javacRel: ["jdk-17.0.14+7", "Contents", "Home", "bin", "javac"],
-      javaRel: ["jdk-17.0.14+7", "Contents", "Home", "bin", "java"],
+      javacRel: [dir, "Contents", "Home", "bin", "javac"],
+      javaRel: [dir, "Contents", "Home", "bin", "java"],
     };
   }
   if (plat === "darwin" && arch === "x64") {
     return {
-      url: "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.14%2B7/OpenJDK17U-jdk_x64_mac_hotspot_17.0.14_7.tar.gz",
+      url: `${base}/OpenJDK25U-jdk_x64_mac_hotspot_25.0.5_8.tar.gz`,
       kind: "targz",
-      javacRel: ["jdk-17.0.14+7", "Contents", "Home", "bin", "javac"],
-      javaRel: ["jdk-17.0.14+7", "Contents", "Home", "bin", "java"],
+      javacRel: [dir, "Contents", "Home", "bin", "javac"],
+      javaRel: [dir, "Contents", "Home", "bin", "java"],
     };
   }
   throw new Error(`unsupported host for portable JDK: ${plat}/${arch}`);
@@ -90,7 +101,12 @@ function hostJdkAsset() {
 
 async function ensureJdk() {
   const asset = hostJdkAsset();
-  const archive = join(cacheDir, asset.kind === "zip" ? "jdk17.zip" : "jdk17.tar.gz");
+  const archive = join(
+    cacheDir,
+    asset.kind === "zip"
+      ? `${PORTABLE_JDK.archiveStem}.zip`
+      : `${PORTABLE_JDK.archiveStem}.tar.gz`,
+  );
   const home = join(cacheDir, "jdk");
   const javac = join(home, ...asset.javacRel);
   if (existsSync(javac)) return { javac, java: join(home, ...asset.javaRel) };

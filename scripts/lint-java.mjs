@@ -12,8 +12,9 @@ import { get } from "node:https";
 const fix = process.argv.includes("--fix");
 const requireFmt = process.env.CI === "true" || process.env.REQUIRE_JAVA_FORMAT === "1";
 
-// Follow the runner JDK (ubuntu-latest may be 25+). 1.22 hits NoSuchMethodError
-// on DeferredDiagnosticHandler.getDiagnostics(); 1.35+ tracks current JDK internals.
+// CI runner JDK may be 25+ (1.22 → NoSuchMethodError on getDiagnostics).
+// 1.35 tracks current JDK internals; needs project-cached Temurin 25
+// (.build/cbx509-cache/jdk via build-cbx509) or a system JDK 21+.
 const GJF_VER = "1.35.0";
 const GJF_URL = `https://github.com/google/google-java-format/releases/download/v${GJF_VER}/google-java-format-${GJF_VER}-all-deps.jar`;
 

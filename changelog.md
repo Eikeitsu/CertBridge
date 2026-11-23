@@ -1,6 +1,8 @@
 # CertBridge CI
 
 
+- **SukiSU Nova**：管理器包名改为 `com.sukisu.nova`（兼容旧 `com.sukisu.ultra`）；Root 分支探测与 WebUI 打开管理器列表已同步
+- **安装导入证书（Android 14+ / 17）**：Reqable / ProxyPin 探测补齐 `/data/data`、`user_ce`、无 `certificate/` 子目录、ProxyPin `app_flutter/` 与 Download 导出；管理器隔离 mount ns 下经 init ns / 目标进程 `/proc/<pid>/root` 再探，避免「已装 App 却提示未找到证书」
 - **卸载路径登记不依赖 SuSFS**：优先 `ksud` 当场登记（`umount-config` / `umount save` 有则一并写）；SuSFS 仅为可选通道。`ksud umount` 风格探测阴性不缓存，避免早开机一次失败整次 boot 不再试
 - **apex 证书挂载从 init 拆走**：boot_completed 后把 zygote 里的 `/apex/.../cacerts` 改成 private，确认已离开传播组再从 init 卸掉。`/proc/1/mountinfo` 不再留下这条 tmpfs。上游对传播中的 apex bind 做 `path_umount` 会失败（`MNT_DETACH` 为 -39，flags 0 又因挂载忙失败），应用表里就一直看得到。private 之后改按 `MNT_DETACH` 重登记，给「卸载模块」名单里的新进程拆掉。改前已在跑的 App 需强停再开。Magisk / APatch 同样先去掉 init 上的这条，进程内是否卸掉仍取决于 NoHello / Zygisk umount 和排除名单
 - **证书挂载卸载 flags**：ksud `umount add` / `umount-config` 改记 flags 0。上游对 `MNT_DETACH`(2) 的 `path_umount` 会返回 -39，挂载仍留在 mountinfo；名单已有该项时不会改 flags，故先删再以 0 写入。已在跑的 App 需强停后才会按新 flags 卸

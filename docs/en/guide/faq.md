@@ -37,6 +37,14 @@ Default installation does not install this component; custom installation offers
 
 An in-place upgrade attempts to preserve `certs.conf` and custom certificates, but volume-key component choices are asked again during installation. WebUI **More** can switch between stable and CI update channels.
 
+### Install says “App certificate not found,” but Reqable / ProxyPin is already installed?
+
+Common on **Android 14+ (including 17)** when flashing from a manager with an isolated mount namespace: older path lists were too narrow, or other apps’ private dirs were invisible.
+
+1. Open Reqable / ProxyPin once so a root CA exists
+2. Reflash a build that re-probes via init ns / the target process view and covers `/data/data`, `user_ce`, ProxyPin `app_flutter/`, etc.
+3. If it still fails: after reboot use WebUI sync / `cb sync_apps`, or import the PEM as a custom certificate
+
 ## Capture and certificates
 
 ### Reqable says “root certificate not installed,” or capture breaks networking {#root-cert-missing}

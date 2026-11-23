@@ -30,6 +30,7 @@ const MANAGER_PACKAGES = [
   "com.topjohnwu.magisk",
   "io.github.vvb2060.magisk",
   "me.bmax.apatch",
+  "com.sukisu.nova",
   "com.sukisu.ultra",
   "org.bakasu.bakasu",
   "com.resukisu.resukisu",

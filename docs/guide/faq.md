@@ -37,6 +37,14 @@
 
 同模块覆盖升级会尽量保留 `certs.conf` 与自定义证书；安装时音量键仍会再问组件。WebUI「更多」可切换正式 / CI 更新通道。
 
+### 刷入时提示「未找到 App 证书」，但手机已装 Reqable / ProxyPin？
+
+常见于 **Android 14+（含 17）** 且从管理器隔离 mount ns 刷入：旧探测路径偏窄，或看不到其它 App 私有目录。
+
+1. 先打开一次 Reqable / ProxyPin，确认已生成根证（Reqable 证书页；ProxyPin 至少启动过一次）
+2. 用本仓库较新版本重刷；安装阶段会再经 init ns / 目标进程视图查找，并覆盖 `/data/data`、`user_ce`、ProxyPin `app_flutter/` 等路径
+3. 仍失败：重启后在 WebUI 点同步 / 执行 `cb sync_apps`，或把 PEM 自定义导入
+
 ## 抓包与证书
 
 ### Reqable 显示「根证书未安装」，或一开抓包就断网？ {#root-cert-missing}

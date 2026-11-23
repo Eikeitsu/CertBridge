@@ -11,7 +11,7 @@
 <br />
 
 [![Release](https://img.shields.io/github/v/release/Eikeitsu/CertBridge?style=for-the-badge&label=Release)](https://github.com/Eikeitsu/CertBridge/releases)
-[![Android](https://img.shields.io/badge/Android-7%E2%80%9316-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://eikeitsu.github.io/CertBridge/guide/install)
+[![Android](https://img.shields.io/badge/Android-7%E2%80%9317-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://eikeitsu.github.io/CertBridge/guide/install)
 [![Root](https://img.shields.io/badge/Root-Magisk%20%7C%20KSU%20%7C%20APatch-orange?style=for-the-badge)](https://eikeitsu.github.io/CertBridge/)
 [![License](https://img.shields.io/github/license/Eikeitsu/CertBridge?style=for-the-badge)](./LICENSE)
 

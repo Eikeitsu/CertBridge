@@ -71,6 +71,7 @@ EOF
 # L1 root（大类）：Magisk | KernelSU | APatch | Unknown
 # L2 root_flavor（分支）：official | SukiSU | BakaSU | KernelSU-Next | …
 # BakaSU 原名 ReSukiSU（旧包名 com.resukisu.resukisu，新 org.bakasu.bakasu）
+# SukiSU Ultra → SukiSU Nova（包名 com.sukisu.nova；旧 com.sukisu.ultra 仍识别）
 
 _root_resolve_ksud() {
   if type hide_resolve_ksud >/dev/null 2>&1; then
@@ -142,7 +143,10 @@ detect_ksu_flavor() {
     echo BakaSU
     return 0
   fi
-  if _root_mgr_pkg_installed com.sukisu.ultra || \
+  # SukiSU Ultra → SukiSU Nova（包名 com.sukisu.nova）；旧包名仍识别
+  if _root_mgr_pkg_installed com.sukisu.nova || \
+      _root_mgr_pkg_installed com.sukisu.nova.debug || \
+      _root_mgr_pkg_installed com.sukisu.ultra || \
       _root_mgr_pkg_installed com.sukisu.ultra.debug; then
     echo SukiSU
     return 0
@@ -168,6 +172,7 @@ detect_ksu_flavor() {
       return 0
     fi
     if _root_blob_has "$_ksud" 'sukisu' || \
+        _root_blob_has "$_ksud" 'com.sukisu.nova' || \
         _root_blob_has "$_ksud" 'com.sukisu.ultra'; then
       _hit=SukiSU
     elif _root_blob_has "$_ksud" 'kernelsu-next' || \

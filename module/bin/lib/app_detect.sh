@@ -130,22 +130,41 @@ find_live_app_cert() {
   _APP_CERT_TRY_INIT_NS="$try_init_ns"
   case "$kind" in
     reqable)
-      # 固定候选：含旧 Android/data、新 /data/data，以及有无 certificate/ 子目录
+      # 固定候选：旧 reqable-root.crt + 新版 reqable-ca.crt；
+      # 含 /data/data、user_ce、外置 Android/data，以及有无 certificate/ 子目录
       if path=$(_app_cert_first_existing \
+        "/data/user/0/com.reqable.android/files/certificate/reqable-ca.crt" \
+        "/data/user/0/com.reqable.android.pro/files/certificate/reqable-ca.crt" \
+        "/data/data/com.reqable.android/files/certificate/reqable-ca.crt" \
+        "/data/data/com.reqable.android.pro/files/certificate/reqable-ca.crt" \
+        "/data/user_ce/0/com.reqable.android/files/certificate/reqable-ca.crt" \
+        "/data/user_ce/0/com.reqable.android.pro/files/certificate/reqable-ca.crt" \
         "/data/user/0/com.reqable.android/files/certificate/reqable-root.crt" \
         "/data/user/0/com.reqable.android.pro/files/certificate/reqable-root.crt" \
         "/data/data/com.reqable.android/files/certificate/reqable-root.crt" \
         "/data/data/com.reqable.android.pro/files/certificate/reqable-root.crt" \
         "/data/user_ce/0/com.reqable.android/files/certificate/reqable-root.crt" \
         "/data/user_ce/0/com.reqable.android.pro/files/certificate/reqable-root.crt" \
+        "/data/user/0/com.reqable.android/files/reqable-ca.crt" \
+        "/data/user/0/com.reqable.android.pro/files/reqable-ca.crt" \
+        "/data/data/com.reqable.android/files/reqable-ca.crt" \
+        "/data/data/com.reqable.android.pro/files/reqable-ca.crt" \
         "/data/user/0/com.reqable.android/files/reqable-root.crt" \
         "/data/user/0/com.reqable.android.pro/files/reqable-root.crt" \
         "/data/data/com.reqable.android/files/reqable-root.crt" \
         "/data/data/com.reqable.android.pro/files/reqable-root.crt" \
+        "/storage/emulated/0/Android/data/com.reqable.android/files/certificate/reqable-ca.crt" \
+        "/storage/emulated/0/Android/data/com.reqable.android.pro/files/certificate/reqable-ca.crt" \
+        "/data/media/0/Android/data/com.reqable.android/files/certificate/reqable-ca.crt" \
+        "/data/media/0/Android/data/com.reqable.android.pro/files/certificate/reqable-ca.crt" \
         "/storage/emulated/0/Android/data/com.reqable.android/files/certificate/reqable-root.crt" \
         "/storage/emulated/0/Android/data/com.reqable.android.pro/files/certificate/reqable-root.crt" \
         "/data/media/0/Android/data/com.reqable.android/files/certificate/reqable-root.crt" \
         "/data/media/0/Android/data/com.reqable.android.pro/files/certificate/reqable-root.crt" \
+        "/storage/emulated/0/Android/data/com.reqable.android/files/reqable-ca.crt" \
+        "/storage/emulated/0/Android/data/com.reqable.android.pro/files/reqable-ca.crt" \
+        "/data/media/0/Android/data/com.reqable.android/files/reqable-ca.crt" \
+        "/data/media/0/Android/data/com.reqable.android.pro/files/reqable-ca.crt" \
         "/storage/emulated/0/Android/data/com.reqable.android/files/reqable-root.crt" \
         "/storage/emulated/0/Android/data/com.reqable.android.pro/files/reqable-root.crt" \
         "/data/media/0/Android/data/com.reqable.android/files/reqable-root.crt" \
@@ -155,16 +174,19 @@ find_live_app_cert() {
       fi
       # 管理器隔离 ns：经运行中的 Reqable 进程视图读取
       if path=$(_app_cert_via_pkg_proc com.reqable.android \
-          "files/certificate/reqable-root.crt" "files/reqable-root.crt") || \
+          "files/certificate/reqable-ca.crt" "files/certificate/reqable-root.crt" \
+          "files/reqable-ca.crt" "files/reqable-root.crt") || \
          path=$(_app_cert_via_pkg_proc com.reqable.android.pro \
-          "files/certificate/reqable-root.crt" "files/reqable-root.crt"); then
+          "files/certificate/reqable-ca.crt" "files/certificate/reqable-root.crt" \
+          "files/reqable-ca.crt" "files/reqable-root.crt"); then
         echo "$path"
         return 0
       fi
       # 浅层按文件名搜索（路径再变也能捡到）
       for _pkg in com.reqable.android com.reqable.android.pro; do
         # shellcheck disable=SC2046
-        if path=$(_app_cert_find_named reqable-root.crt $(_app_cert_pkg_roots "$_pkg")); then
+        if path=$(_app_cert_find_named reqable-ca.crt $(_app_cert_pkg_roots "$_pkg")) || \
+           path=$(_app_cert_find_named reqable-root.crt $(_app_cert_pkg_roots "$_pkg")); then
           echo "$path"
           return 0
         fi

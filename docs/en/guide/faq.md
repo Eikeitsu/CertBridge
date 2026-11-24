@@ -39,10 +39,10 @@ An in-place upgrade attempts to preserve `certs.conf` and custom certificates, b
 
 ### Install says “App certificate not found,” but Reqable / ProxyPin is already installed?
 
-Common on **Android 14+ (including 17)** when flashing from a manager with an isolated mount namespace: older path lists were too narrow, or other apps’ private dirs were invisible.
+Common on **Android 14+ (including 17)** when flashing from a manager with an isolated mount namespace: older path lists were too narrow, or other apps’ private dirs were invisible. Also: newer Reqable may use `reqable-ca.crt` (legacy name was `reqable-root.crt`); recent builds accept both.
 
 1. Open Reqable / ProxyPin once so a root CA exists
-2. Reflash a build that re-probes via init ns / the target process view and covers `/data/data`, `user_ce`, ProxyPin `app_flutter/`, etc.
+2. Reflash a build that re-probes via init ns / the target process view and covers `/data/data`, `user_ce`, ProxyPin `app_flutter/`, and both `reqable-ca.crt` / `reqable-root.crt`
 3. If it still fails: after reboot use WebUI sync / `cb sync_apps`, or import the PEM as a custom certificate
 
 ## Capture and certificates
@@ -77,7 +77,7 @@ Use refresh/verify or `cb sync_apps`, or import the CA as a custom certificate a
 
 Reqable, HttpCanary, and similar tools generate a MITM root in **each app data directory**. Reinstalling, tapping **regenerate certificate**, or first launch in a **clone instance** often produces a **new fingerprint**. Main-space Reqable shows “installed” when the system / APEX store contains **the root it is currently using** (usually from CertBridge’s Reqable sync or your custom import). Clone Reqable checks **its own** root—if that fingerprint is not in the system store, it shows “not installed”. That is a **mismatch**, not “CertBridge failed to write any CA”.
 
-`sync_apps` / install import reads **user 0 (primary)** paths only, **not** the clone copy’s `reqable-root.crt`.
+`sync_apps` / install import reads **user 0 (primary)** paths only, **not** the clone copy’s `reqable-ca.crt` / `reqable-root.crt`.
 
 | Goal                                                        | What to do                                                                                                                                                                                                                                                                                                   |
 | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |

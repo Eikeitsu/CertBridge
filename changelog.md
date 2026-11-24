@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Reqable 新版证书文件名**：探测兼容 `reqable-ca.crt`（仍支持旧名 `reqable-root.crt`），避免安装/同步时报未找到
 - **SukiSU Nova**：管理器包名改为 `com.sukisu.nova`（兼容旧 `com.sukisu.ultra`）；Root 分支探测与 WebUI 打开管理器列表已同步
 - **安装导入证书（Android 14+ / 17）**：Reqable / ProxyPin 探测补齐 `/data/data`、`user_ce`、无 `certificate/` 子目录、ProxyPin `app_flutter/` 与 Download 导出；管理器隔离 mount ns 下经 init ns / 目标进程 `/proc/<pid>/root` 再探，避免「已装 App 却提示未找到证书」
 - **卸载路径登记不依赖 SuSFS**：优先 `ksud` 当场登记（`umount-config` / `umount save` 有则一并写）；SuSFS 仅为可选通道。`ksud umount` 风格探测阴性不缓存，避免早开机一次失败整次 boot 不再试

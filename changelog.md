@@ -3,6 +3,7 @@
 
 > Reqable 近期的更新将增强模式列入了VIP功能，所以开启抓包会显示未知应用，此问题与证书桥模块无关
 
+- **安装写 conf 防 NUL**：`$MODPATH/config/certs.conf` 不再 `sed -i`（与 `user.conf` 同 awk→tmp→mv）；启动自愈含 NUL 的 conf
 - **优化 [#39](https://github.com/Eikeitsu/CertBridge/issues/39)**：开机减 fork（`${var##*/}`、整目录 `cp -a`、日志少子 shell）；APEX 按 mount id 去重无版本 / `@版本` cacerts
 - **修复 [#38](https://github.com/Eikeitsu/CertBridge/issues/38)**：AdGuard Personal → 系统自定义、Intermediate → 用户库；安装 / 同步 / 预设成对写入；手动导入与热挂载用户区 / `all` 均不把 Intermediate 提进系统库
 - **体验 [#40](https://github.com/Eikeitsu/CertBridge/issues/40)**：运行正常时模块 `description` 字面 `\n` 双行（计数 + 证书名）；异常仍单行；`module.prop` 用 ENVIRON 写入，避免 awk 解成真换行

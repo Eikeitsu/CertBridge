@@ -91,16 +91,8 @@ compose_module_description() {
     esac
   fi
 
-  if summary=$(compose_applied_cert_summary); then
-    parse_cert_summary "$summary"
-    n=$_sum_n
-    names=$_sum_names
-    case "$n" in
-      ""|*[!0-9]*) n=$(count_applied_certs) ;;
-    esac
-    format_module_description "$(i18n_msg status.tag_ok)" \
-      "$(i18n_fmt status.body_mounted n="$n")" \
-      "$(i18n_fmt status.body_active names="$names")"
+  if compose_applied_cert_detail; then
+    format_ok_dual_description "$_sum_active" "$_sum_custom" "$_sum_base" "$_sum_names"
     return 0
   fi
 
@@ -108,20 +100,8 @@ compose_module_description() {
 }
 
 compose_webui_running_description() {
-  [ -s "$APPLIED_MAP" ] || return 1
-  webui_names=""
-  webui_total=0
-  while IFS='|' read -r label name checksum display; do
-    [ -n "$label" ] || continue
-    webui_total=$((webui_total + 1))
-    case "$label" in
-      reqable|proxypin) display=$(applied_cert_fallback_display "$label" "$name") ;;
-      *) [ -n "$display" ] || display=$(applied_cert_fallback_display "$label" "$name") ;;
-    esac
-    webui_names="${webui_names}${webui_names:+、}${display}"
-  done <"$APPLIED_MAP"
-  [ "$webui_total" -gt 0 ] || return 1
-  echo "[$(i18n_msg status.tag_ok)|$(i18n_fmt status.body_mounted n="$webui_total")] $(i18n_fmt status.body_active names="$webui_names")"
+  compose_applied_cert_detail || return 1
+  format_ok_dual_description "$_sum_active" "$_sum_custom" "$_sum_base" "$_sum_names"
 }
 
 # 正常运行：直接拼 WebUI 描述，避免先 compose_module_description 再扫一遍 APPLIED_MAP

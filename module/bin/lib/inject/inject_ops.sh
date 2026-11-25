@@ -128,9 +128,12 @@ inject_one_target() {
     return 0
   }
 
+  _pidprobe "  [target] entry: $target"
   stage=$(prepare_target_stage "$target") || return 1
+  _pidprobe "  [target] after-prepare_target_stage"
   rc=0
   bind_current_once "$target" "$stage" || rc=1
+  _pidprobe "  [target] after-bind_current_once"
 
   if command -v nsenter >/dev/null 2>&1; then
     # boot：注入 init + zygote（子进程继承）。

@@ -2,21 +2,19 @@
 
 ## Unreleased
 
-- **Reqable 新版证书文件名**：探测兼容 `reqable-ca.crt`（仍支持旧名 `reqable-root.crt`），避免安装/同步时报未找到
-- **SukiSU Nova**：管理器包名改为 `com.sukisu.nova`（兼容旧 `com.sukisu.ultra`）；Root 分支探测与 WebUI 打开管理器列表已同步
-- **安装导入证书（Android 14+ / 17）**：Reqable / ProxyPin 探测补齐 `/data/data`、`user_ce`、无 `certificate/` 子目录、ProxyPin `app_flutter/` 与 Download 导出；管理器隔离 mount ns 下经 init ns / 目标进程 `/proc/<pid>/root` 再探，避免「已装 App 却提示未找到证书」
-- **卸载路径登记不依赖 SuSFS**：优先 `ksud` 当场登记（`umount-config` / `umount save` 有则一并写）；SuSFS 仅为可选通道。`ksud umount` 风格探测阴性不缓存，避免早开机一次失败整次 boot 不再试
-- **apex 证书挂载从 init 拆走**：boot_completed 后把 zygote 里的 `/apex/.../cacerts` 改成 private，确认已离开传播组再从 init 卸掉。`/proc/1/mountinfo` 不再留下这条 tmpfs。上游对传播中的 apex bind 做 `path_umount` 会失败（`MNT_DETACH` 为 -39，flags 0 又因挂载忙失败），应用表里就一直看得到。private 之后改按 `MNT_DETACH` 重登记，给「卸载模块」名单里的新进程拆掉。改前已在跑的 App 需强停再开。Magisk / APatch 同样先去掉 init 上的这条，进程内是否卸掉仍取决于 NoHello / Zygisk umount 和排除名单
-- **证书挂载卸载 flags**：ksud `umount add` / `umount-config` 改记 flags 0。上游对 `MNT_DETACH`(2) 的 `path_umount` 会返回 -39，挂载仍留在 mountinfo；名单已有该项时不会改 flags，故先删再以 0 写入。已在跑的 App 需强停后才会按新 flags 卸
-- **隐藏登记跟进上游 ksud**：`notify-module-mounted` → `kernel umount add`（主）/ 顶层 `umount add`（有则）→ 可选 `save`/`apply`/`umount-config`；去掉已弃用的 `add_sus_mount`；mountinfo 实况补登；按能力探测而非品牌分支
-- **ksud umount CLI 风格缓存**：本 boot 一次探测 `kernel|top|none`，登记/清除/列表只走对应路径，减少重复 help grep 与双路试探
-- **文档 / 隐藏页文案**：改为中性能力说明，去掉针对具体下游的对比表述
-- **安装音量键**：zip 为 `volkey-*` 写入可执行位；`keys.sh` 装机时再 `chmod 0755`，避免无 +x 静默回退 `getevent` 弹出系统音量条
-- **WebUI 减卡顿**：静默刷新默认不再跑 `sync_apps`；App 标签兜底改为按缺失包查询（不再全量 `dumpsys package`）；优先 `bridge.toast`
-- **清理死代码**：删除未接入路由的 `AppShell` 与旧 feature 页入口；SuSFS 二进制解析改为「ksu 路径 + 模块 glob」；音量键 getevent 回退精简并优先 Magisk `chooseport`
-- **隐藏探测**：去掉恒返 / 兼容别名（`hide_assist_available`、`hide_susfs4ksu_module_present` 等）
-- **WebUI packs**：Hide/Certs/Log/More 共用 `use*PageModel`，去掉三套重复钩子
-- **安装摘要 i18n**：`install_finish` 摘要走 `i18n_msg`（zh-CN/en）；orphan susfs4ksu 清理统一 helper
+> Reqable 近期的更新将增强模式列入了VIP功能，所以开启抓包会显示未知应用，此问题与证书桥模块无关
+
+- **优化 [#39](https://github.com/Eikeitsu/CertBridge/issues/39)**：开机减 fork（`${var##*/}`、整目录 `cp -a`、日志少子 shell）；APEX 按 mount id 去重无版本 / `@版本` cacerts
+- **修复 [#38](https://github.com/Eikeitsu/CertBridge/issues/38)**：AdGuard Personal → 系统自定义、Intermediate → 用户库；安装 / 同步 / 预设成对写入；手动导入与热挂载用户区 / `all` 均不把 Intermediate 提进系统库
+- **体验 [#40](https://github.com/Eikeitsu/CertBridge/issues/40)**：运行正常时模块 `description` 字面 `\n` 双行（计数 + 证书名）；异常仍单行；`module.prop` 用 ENVIRON 写入，避免 awk 解成真换行
+- **Reqable 证书新文件名**：兼容新版本Reqable证书 `reqable-ca.crt`（仍支持旧版证书 `reqable-root.crt`）
+- **SukiSU Nova**：识别 `com.sukisu.nova`（兼容旧 `ultra`）；Root 探测与 WebUI「打开管理器」已跟上
+- **安装导入更稳（Android 14+ / 17）**：Reqable / ProxyPin 补 `/data/data`、`user_ce`、无 `certificate/`、`app_flutter/` 与 Download；隔离 mount ns 下经 init / 目标进程 root 再探
+- **隐藏登记跟进 ksud**：优先当场 `umount add`（可选 `save` / `umount-config`），SuSFS 仅可选；登记 flags 改 0（上游对 `MNT_DETACH` 会 -39）；CLI 风格本 boot 缓存；去掉已弃用 `add_sus_mount`
+- **apex 挂载从 init 拆走**：boot_completed 后 zygote 侧改 private 再卸 init；`/proc/1/mountinfo` 不再留该 tmpfs；已跑 App 需强停。进程内是否卸掉仍看 umount / 排除名单
+- **安装音量键**：打包保证 `volkey-*` 可执行，装机再 `chmod`，减少回退 `getevent` 弹出系统音量条
+- **WebUI 减卡顿**：静默刷新默认不跑 `sync_apps`；App 标签按缺失包查询；优先 `bridge.toast`；Hide / Certs / Log / More 共用 `use*PageModel`
+- **内部整理**：删未接入的 `AppShell` / 旧入口；隐藏探测去掉恒返别名；安装摘要 i18n；文档 / 隐藏页改中性表述
 
 ## v5.1.2
 

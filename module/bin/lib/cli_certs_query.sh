@@ -4,7 +4,7 @@
 cmd_list_custom() {
   for cert in "$CUSTOM_DIR"/*.*; do
     [ -f "$cert" ] || continue
-    name=$(basename "$cert")
+    name=${cert##*/}
     is_cert_filename "$name" || continue
     display=$(read_cert_meta_display "$cert" "$name")
     display=$(echo "$display" | tr '|' '/')

@@ -47,6 +47,17 @@ Common on **Android 14+ (including 17)** when flashing from a manager with an is
 
 ## Capture and certificates
 
+### AdGuard shows certificate errors / Intermediate “Obsolete”? {#adguard-intermediate}
+
+AdGuard 4.2+ uses **two certificates** for Chrome CT:
+
+| Certificate         | Correct location    | Role                                                        |
+| ------------------- | ------------------- | ----------------------------------------------------------- |
+| **Personal CA**     | System store        | HTTPS filtering for apps that reject user CAs               |
+| **Intermediate CA** | **User store only** | Chromium short path; avoids CT requirements on system roots |
+
+CertBridge installs them as a pair: Personal → system custom store; Intermediate → Android user store (`cacerts-added`). Dragging Intermediate into the system store is still rejected. **Even with user-cert hot mount (`hot_allow` / mount user store) enabled, Intermediate is never promoted into the system trust store**—every path skips it. If Intermediate is already under custom certs, delete it, reboot, then run the AdGuard preset/sync again.
+
 ### Reqable says “root certificate not installed,” or capture breaks networking {#root-cert-missing}
 
 First check whether root hiding removed the certificate mount:

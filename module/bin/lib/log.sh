@@ -82,30 +82,57 @@ log_reset() {
   esac
 }
 
+# 轮转检查：每 50 次写入才检查一次，避免每条日志都 fork wc
+_cb_log_rotate_tick=0
+_cb_log_dir_ready=""
 _cb_log_rotate_if_huge() {
   _f="$1"
   [ -f "$_f" ] || return 0
+  _cb_log_rotate_tick=$((_cb_log_rotate_tick + 1))
+  [ "$_cb_log_rotate_tick" -ge 50 ] || return 0
+  _cb_log_rotate_tick=0
   size=$(wc -c <"$_f" 2>/dev/null)
   [ "${size:-0}" -gt 524288 ] && mv -f "$_f" "$_f.1" 2>/dev/null
+  return 0
 }
 
 _cb_log_write() {
   lvl="$1"
   shift
-  mkdir -p "$DATADIR" 2>/dev/null
-  _f=$(_cb_log_active_file)
+  # 目录只在首次写入时建，避免每次 fork mkdir
+  if [ -z "${_cb_log_dir_ready:-}" ]; then
+    mkdir -p "$DATADIR" 2>/dev/null
+    _cb_log_dir_ready=1
+  fi
+  # 通道选择用纯变量，去掉 $(_cb_log_active_file) 子 shell
+  case "${LOG_CHANNEL:-runtime}" in
+    install) _f="${INSTALL_LOG_FILE:-$LOG_FILE}" ;;
+    *) _f="${RUNTIME_LOG_FILE:-$LOG_FILE}" ;;
+  esac
   _cb_log_rotate_if_huge "$_f"
+  # date 仍是唯一必需的外部命令（保留时间戳）
   printf '%s\n' "[$(date '+%Y-%m-%d %H:%M:%S')] [$lvl] $*" >>"$_f"
 }
 
 log_msg() {
-  local lvl=""
-  lvl=$(_cb_log_level "${1:-}") || true
-  if [ -n "$lvl" ]; then
-    shift
-  else
-    lvl=$(_cb_log_infer "${1:-}")
-  fi
+  # 等级判断全部内建 case，去掉 _cb_log_level / _cb_log_infer 的 $( ) fork
+  case "${1:-}" in
+    info|INFO) lvl=INFO; shift ;;
+    warn|WARN) lvl=WARN; shift ;;
+    error|ERROR) lvl=ERROR; shift ;;
+    debug|DEBUG) lvl=DEBUG; shift ;;
+    *)
+      case "${1:-}" in
+        *failed*|*Failed*|*refuse*|*invalid*|*timeout*|*missing*|*error*|*Error*|*cannot*|*unavailable*)
+          lvl=ERROR ;;
+        *soft-fail*|*skipped*|*skip\ *|*warn*|*Warn*|*stale*)
+          lvl=WARN ;;
+        *debug*|*Debug*)
+          lvl=DEBUG ;;
+        *) lvl=INFO ;;
+      esac
+      ;;
+  esac
   _cb_log_write "$lvl" "$@"
 }
 

@@ -9,6 +9,45 @@ sync_optional_custom_apps() {
   opt_miss=0
   for kind in $(optional_custom_app_kinds); do
     label=$(app_cert_label "$kind")
+    # AdGuard：Personal→系统自定义 + Intermediate→用户库
+    if [ "$kind" = "adguard" ]; then
+      if ! find_adguard_cert_by_role personal >/dev/null 2>&1 && \
+         ! find_adguard_cert_by_role intermediate >/dev/null 2>&1; then
+        echo "optional_adguard=miss"
+        opt_miss=$((opt_miss + 1))
+        continue
+      fi
+      if ! find_openssl >/dev/null 2>&1; then
+        echo "optional_adguard=openssl_unavailable"
+        continue
+      fi
+      if dual=$(adguard_install_dual_certs "$CUSTOM_DIR" 0 2>/dev/null); then
+        echo "$dual" | grep -q '^ok=1' || {
+          echo "optional_adguard=import_failed"
+          continue
+        }
+        # 仅当实际新写入系统或用户库时算 updated
+        if echo "$dual" | grep -q '^user_file=' || \
+           (echo "$dual" | grep -q '^system_file=' && ! echo "$dual" | grep -q '^system_unchanged='); then
+          echo "optional_adguard=updated"
+          opt_updated=$((opt_updated + 1))
+          log_info "sync: AdGuard dual certs installed"
+        else
+          echo "optional_adguard=unchanged"
+          opt_kept=$((opt_kept + 1))
+        fi
+        echo "$dual" | while IFS= read -r line; do
+          case "$line" in
+            system_file=*|system_unchanged=*|user_file=*|user_unchanged=*|system_skip=*|user_skip=*)
+              echo "optional_adguard_${line}"
+              ;;
+          esac
+        done
+      else
+        echo "optional_adguard=import_failed"
+      fi
+      continue
+    fi
     live=$(find_live_app_cert "$kind" 2>/dev/null) || {
       echo "optional_${kind}=miss"
       opt_miss=$((opt_miss + 1))
@@ -48,6 +87,7 @@ sync_optional_custom_apps() {
 }
 
 # 按预设 kind 从现场路径导入一张自定义 CA（WebUI 一键）
+# AdGuard：双证（Personal→系统自定义，Intermediate→用户库）
 import_optional_app_preset() {
   kind="$1"
   case "$kind" in
@@ -57,6 +97,33 @@ import_optional_app_preset() {
       return 1
       ;;
   esac
+  if [ "$kind" = "adguard" ]; then
+    if ! find_openssl >/dev/null 2>&1; then
+      echo "error=openssl_unavailable"
+      return 1
+    fi
+    acquire_write_lock || {
+      echo "error=busy"
+      return 1
+    }
+    mkdir -p "$CUSTOM_DIR"
+    chmod 0700 "$CUSTOM_DIR" 2>/dev/null
+    if ! dual=$(adguard_install_dual_certs "$CUSTOM_DIR" 0); then
+      release_write_lock
+      echo "$dual"
+      return 1
+    fi
+    pending_line=$(note_conf_dirty)
+    if needs_system_magic_overlay; then
+      sync_magic_overlay "$MODDIR" >/dev/null 2>&1 || true
+    fi
+    release_write_lock
+    log_info "preset: AdGuard dual certs installed"
+    echo "$dual"
+    echo "kind=adguard"
+    [ -n "$pending_line" ] && echo "$pending_line"
+    return 0
+  fi
   label=$(app_cert_label "$kind")
   live=$(find_live_app_cert "$kind" 2>/dev/null) || {
     echo "error=preset_cert_not_found"
@@ -80,7 +147,7 @@ import_optional_app_preset() {
         echo "ok=1"
         echo "unchanged=1"
         echo "kind=$kind"
-        echo "file=$(basename "$c")"
+        echo "file=${c##*/}"
         echo "path=$live"
         return 0
       fi

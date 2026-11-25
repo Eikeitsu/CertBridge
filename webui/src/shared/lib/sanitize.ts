@@ -93,5 +93,8 @@ function stripStatusEmoji(text: string): string {
 
 function cleanStatusBody(body?: string): string {
   if (!body) return "";
-  return body.replace(/^\[[^\]]*\]\s*/, "").trim();
+  return body
+    .replace(/\\n/g, " · ")
+    .replace(/^\[[^\]]*\]\s*/, "")
+    .trim();
 }

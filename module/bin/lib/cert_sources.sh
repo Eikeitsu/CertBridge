@@ -19,7 +19,7 @@ _sources_dir_has_cert() {
   for cert in "$dir"/*.*; do
     [ -f "$cert" ] || continue
     case "$cert" in *.meta) continue ;; esac
-    is_cert_filename "$(basename "$cert")" && return 0
+    is_cert_filename "${cert##*/}" && return 0
   done
   return 1
 }
@@ -35,7 +35,7 @@ _sources_copy_certs() {
     [ -e "$f" ] || continue
     case "$f" in *.meta) continue ;; esac
     [ -f "$f" ] || continue
-    base=$(basename "$f")
+    base=${f##*/}
     is_cert_filename "$base" || continue
     if [ ! -e "$to_dir/$base" ]; then
       cp -f "$f" "$to_dir/$base" 2>/dev/null || continue
@@ -58,7 +58,7 @@ _sources_store_one() {
   SOURCES_DIR="${SOURCES_DIR:-$CB_EXT_DIR/addon-sources}"
   dest_dir="$SOURCES_DIR/$kind"
   mkdir -p "$dest_dir" 2>/dev/null || return 1
-  name=$(basename "$src" | tr -d '\r')
+  name=${src##*/}
   is_cert_filename "$name" || return 1
   [ -f "$dest_dir/$name" ] && return 0
   cp -f "$src" "$dest_dir/$name" 2>/dev/null || return 1

@@ -92,6 +92,16 @@ import_ca_into_dir() {
     echo "不是 CA 证书（缺少 CA:TRUE）" >&2
     return 1
   }
+  # AdGuard Intermediate 不得进系统库（官方双证：Personal→系统，Intermediate→用户库）
+  _ag_subj=$($openssl_cmd x509 $inform -in "$src" -noout -subject -nameopt RFC2253 2>/dev/null | sed 's/^subject=//')
+  _ag_iss=$($openssl_cmd x509 $inform -in "$src" -noout -issuer -nameopt RFC2253 2>/dev/null | sed 's/^issuer=//')
+  case "$fallback_name $_ag_subj $_ag_iss" in
+    *[Aa][Dd][Gg]uard*)
+      if type adguard_allow_system_import >/dev/null 2>&1; then
+        adguard_allow_system_import "$src" || return 1
+      fi
+      ;;
+  esac
   hash=$(openssl_subject_hash "$openssl_cmd" "$inform" "$src") || {
     echo "无法计算系统库文件名" >&2
     return 1

@@ -47,6 +47,17 @@
 
 ## 抓包与证书
 
+### AdGuard 提示证书异常 / Intermediate「Obsolete」？ {#adguard-intermediate}
+
+AdGuard 4.2+ 为 Chrome CT 使用**双证**：
+
+| 证书                | 正确位置     | 作用                                 |
+| ------------------- | ------------ | ------------------------------------ |
+| **Personal CA**     | 系统库       | 给不信任用户 CA 的 App 做 HTTPS 过滤 |
+| **Intermediate CA** | **仅用户库** | Chromium 走用户库短链，绕过系统根 CT |
+
+证书桥会**成对安装**：Personal → 系统自定义区；Intermediate → Android 用户库（`cacerts-added`）。手动往系统库拖 Intermediate 仍会拒绝。**即使用户证书热挂载（`hot_allow` / 挂用户区）开启，也不会把 Intermediate 提进系统信任库**——任何路径都会跳过。若自定义区已有 Intermediate，删除后重启，再跑一次 AdGuard 预设/同步即可。
+
 ### Reqable 显示「根证书未安装」，或一开抓包就断网？ {#root-cert-missing}
 
 优先查 **Root 隐藏是否卸掉了证书挂载**：

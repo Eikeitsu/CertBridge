@@ -77,7 +77,7 @@ sync_source_from_app() {
   if old=$(find_source_cert "$kind" 2>/dev/null); then
     if cert_same_fingerprint "$old" "$new_cert"; then
       rm -rf "$stage"
-      log_debug "sources: $kind unchanged fingerprint, keep $(basename "$old")"
+      log_debug "sources: $kind unchanged fingerprint, keep ${old##*/}"
       echo "$old"
       return 0
     fi
@@ -150,7 +150,7 @@ find_source_cert() {
   for cert in "$dir"/*.*; do
     [ -f "$cert" ] || continue
     case "$cert" in *.meta) continue ;; esac
-    is_cert_filename "$(basename "$cert")" || continue
+    is_cert_filename "${cert##*/}" || continue
     echo "$cert"
     return 0
   done
@@ -193,7 +193,7 @@ ensure_source_from_applied() {
   src=$(find_applied_gen_cert "$kind") || return 1
   dest_dir="$SOURCES_DIR/$kind"
   mkdir -p "$dest_dir" 2>/dev/null || return 1
-  name=$(basename "$src" | tr -d '\r')
+  name=${src##*/}
   cp -f "$src" "$dest_dir/$name" 2>/dev/null || return 1
   chmod 0644 "$dest_dir/$name" 2>/dev/null
   display=$(get_applied_display "$kind" "$kind")

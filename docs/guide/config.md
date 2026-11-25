@@ -129,6 +129,8 @@ WebUI「更多 → 挂载与注入」挂载模式下方也有同样摘要。隐�
 
 临时层会合并当前已启用的永久 addon，避免盖掉 Reqable / ProxyPin。重启后临时会话消失。CLI：`cb hot_mount` / `cb hot_unmount`。
 
+**例外**：AdGuard Intermediate（双证里必须留在用户库的那张）**永远不会**被热挂载进系统信任库，即使用户区模式或 `all`。
+
 ## Zygisk 黑白名单
 
 由 `zn_filter_mode` 决定读哪份名单（两文件互不混用）：

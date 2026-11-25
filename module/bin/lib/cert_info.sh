@@ -114,12 +114,12 @@ cert_info_from_file() {
     return 1
   fi
 
-  display=$(cert_display_name_from_file "$file" "$(basename "$file")")
+  display=$(cert_display_name_from_file "$file" "${file##*/}")
   dump=$($openssl_cmd x509 $inform -in "$file" -noout -certbridge_info 2>/dev/null)
   if echo "$dump" | grep -q '^ok=1'; then
     echo "$dump"
     cert_info_kv display_name "$display"
-    cert_info_kv filename "$(basename "$file")"
+    cert_info_kv filename "${file##*/}"
     return 0
   fi
 
@@ -142,7 +142,7 @@ cert_info_from_file() {
   cert_info_kv fingerprint_sha256 "$fp"
   cert_info_kv fingerprint_sha1 "$fp1"
   cert_info_kv serial "$serial"
-  cert_info_kv filename "$(basename "$file")"
+  cert_info_kv filename "${file##*/}"
   if [ -n "$subject" ] && [ "$subject" = "$issuer" ]; then
     echo "self_signed=1"
   fi

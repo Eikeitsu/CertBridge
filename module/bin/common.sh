@@ -80,6 +80,7 @@ certbridge_load_cert_domain() {
   certbridge_load_lib certs.sh
   certbridge_load_lib app_detect.sh
   certbridge_load_lib cert_parse.sh
+  certbridge_load_lib cert_user_store.sh
   certbridge_load_lib cert_sources.sh
   certbridge_load_lib cert_optional.sh
 }
@@ -157,3 +158,12 @@ esac
 migrate_experimental_14_system_conf 2>/dev/null || true
 apply_tmpfs_style
 CERTBRIDGE_LIBS_LOADED="$CERTBRIDGE_PROFILE"
+
+# pidprobe：正式包无此文件时为空操作；debug 包带 bin/pidprobe.sh 时可开启打点
+_pidprobe() { :; }
+_pidprobe_init() { :; }
+_pidprobe_done() { :; }
+if [ -f "${BINDIR:-$MODDIR/bin}/pidprobe.sh" ]; then
+  # shellcheck disable=SC1090
+  . "${BINDIR:-$MODDIR/bin}/pidprobe.sh"
+fi

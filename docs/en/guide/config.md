@@ -129,6 +129,8 @@ This requires the hot-mount component and `hot_allow=1`.
 
 The temporary layer also merges all currently enabled permanent add-ons so it does not hide Reqable or ProxyPin. It disappears after reboot. CLI commands are `cb hot_mount` and `cb hot_unmount`.
 
+**Exception:** AdGuard Intermediate (the dual-CA cert that must stay in the user store) is **never** hot-mounted into the system trust store, including user mode and `all`.
+
 ## Zygisk black / white lists
 
 `zn_filter_mode` selects which file applies (the two lists are not mixed):

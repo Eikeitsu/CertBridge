@@ -219,7 +219,7 @@ hide_susfs_persist_dir_hint() {
     hide_module_enabled "$moddir" || continue
     id=$(awk -F= '$1=="id"{sub(/^[^=]*=/,""); print; exit}' "$prop" 2>/dev/null | tr -d '\r')
     name=$(awk -F= '$1=="name"{sub(/^[^=]*=/,""); print; exit}' "$prop" 2>/dev/null | tr -d '\r')
-    blob=$(printf '%s %s %s' "$id" "$name" "$(basename "$moddir")" | tr 'A-Z' 'a-z')
+    blob=$(printf '%s %s %s' "$id" "$name" "${moddir##*/}" | tr 'A-Z' 'a-z')
     case "$blob" in
       *susfs*) return 0 ;;
     esac

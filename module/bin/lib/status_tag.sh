@@ -112,6 +112,27 @@ compute_status_tag() {
   format_running_ok_tag
 }
 
+# 写入 module.prop 的 description/name。
+# 用 ENVIRON 而非 awk -v：避免 awk 把字面 \n 解成真换行弄坏 prop。
+_write_module_prop_fields() {
+  prop="$1"
+  desc="$2"
+  name="$3"
+  [ -f "$prop" ] || return 0
+  tmp="$prop.tmp.$$"
+  CB_PROP_DESC="$desc" CB_PROP_NAME="$name" awk -F= '
+    BEGIN { d=0; n=0 }
+    $1 == "description" { print "description=" ENVIRON["CB_PROP_DESC"]; d=1; next }
+    $1 == "name" { print "name=" ENVIRON["CB_PROP_NAME"]; n=1; next }
+    { print }
+    END {
+      if (!n) print "name=" ENVIRON["CB_PROP_NAME"]
+      if (!d) print "description=" ENVIRON["CB_PROP_DESC"]
+    }
+  ' "$prop" >"$tmp" && mv -f "$tmp" "$prop"
+  chmod 0644 "$prop" 2>/dev/null
+}
+
 update_module_description() {
   prop="$MODDIR/module.prop"
   [ -f "$prop" ] || return 0
@@ -122,18 +143,7 @@ update_module_description() {
   fi
   # 同步 name 到当前语言品牌
   name=$(i18n_msg status.prop_name 2>/dev/null || echo CertBridge)
-  tmp="$prop.tmp.$$"
-  awk -F= -v desc="$desc" -v name="$name" '
-    BEGIN { d=0; n=0 }
-    $1 == "description" { print "description=" desc; d=1; next }
-    $1 == "name" { print "name=" name; n=1; next }
-    { print }
-    END {
-      if (!n) print "name=" name
-      if (!d) print "description=" desc
-    }
-  ' "$prop" >"$tmp" && mv -f "$tmp" "$prop"
-  chmod 0644 "$prop" 2>/dev/null
+  _write_module_prop_fields "$prop" "$desc" "$name"
 }
 
 refresh_module_description() {
@@ -164,14 +174,8 @@ refresh_module_description_light() {
   else
     desc=$(compose_module_prop_description_light "$tag" 2>/dev/null || echo "$tag")
   fi
-  tmp="$prop.tmp.$$"
-  awk -F= -v desc="$desc" '
-    BEGIN { done=0 }
-    $1 == "description" { print "description=" desc; done=1; next }
-    { print }
-    END { if (!done) print "description=" desc }
-  ' "$prop" >"$tmp" && mv -f "$tmp" "$prop"
-  chmod 0644 "$prop" 2>/dev/null
+  name=$(i18n_msg status.prop_name 2>/dev/null || echo CertBridge)
+  _write_module_prop_fields "$prop" "$desc" "$name"
   echo "$tag"
 }
 

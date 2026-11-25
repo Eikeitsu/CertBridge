@@ -152,6 +152,19 @@ cmd_install_custom() {
       echo "error=not_ca_certificate"
       return 1
     }
+  if type adguard_allow_system_import >/dev/null 2>&1; then
+    _ag_subj=$($openssl_cmd x509 $inform -in "$raw" -noout -subject -nameopt RFC2253 2>/dev/null | sed 's/^subject=//')
+    case "$_ag_subj" in
+      *[Aa][Dd][Gg]uard*)
+        if ! adguard_allow_system_import "$raw" 2>/dev/null; then
+          rm -f "$raw" "$normalized"
+          echo "error=adguard_intermediate"
+          echo "hint=请用 AdGuard 预设/同步：Personal→系统，Intermediate→用户库；勿手动把 Intermediate 导入系统库"
+          return 1
+        fi
+        ;;
+    esac
+  fi
   hash=$(openssl_subject_hash "$openssl_cmd" "$inform" "$raw") || {
     rm -f "$raw" "$normalized"
     echo "error=hash_failed"

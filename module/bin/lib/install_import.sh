@@ -93,15 +93,42 @@ certbridge_install_import_proxypin() {
 certbridge_install_ask_optional_apps() {
   for opt_kind in $(optional_custom_app_kinds); do
     opt_label=$(app_cert_label "$opt_kind")
-    live=$(find_live_app_cert "$opt_kind") || {
-      log_debug "install: $opt_kind not installed / no cert path"
-      continue
-    }
+    if [ "$opt_kind" = "adguard" ]; then
+      if ! find_adguard_cert_by_role personal >/dev/null 2>&1 && \
+         ! find_adguard_cert_by_role intermediate >/dev/null 2>&1; then
+        log_debug "install: adguard not installed / no cert path"
+        continue
+      fi
+      live="adguard-dual"
+    else
+      live=$(find_live_app_cert "$opt_kind") || {
+        log_debug "install: $opt_kind not installed / no cert path"
+        continue
+      }
+    fi
     log_info "install: $opt_kind detected live=$live"
     if certbridge_ask_import_detected "$opt_label"; then
       if ! find_openssl >/dev/null 2>&1; then
         ui_print "! ${opt_label}：OpenSSL 不可用，跳过导入"
         log_warn "install: $opt_kind skip import, openssl unavailable"
+        continue
+      fi
+      if [ "$opt_kind" = "adguard" ]; then
+        if dual=$(adguard_install_dual_certs "$MODPATH/certs/custom" 0); then
+          echo "$dual" | grep -q '^system_file=' && \
+            ui_print "- AdGuard Personal → 系统自定义 $(echo "$dual" | awk -F= '$1=="system_file"{print $2; exit}')"
+          if echo "$dual" | grep -q '^user_file='; then
+            ui_print "- AdGuard Intermediate → 用户库 $(echo "$dual" | awk -F= '$1=="user_file"{print $2; exit}')"
+          elif echo "$dual" | grep -q '^user_unchanged='; then
+            ui_print "- AdGuard Intermediate：用户库已有"
+          elif echo "$dual" | grep -q '^user_skip='; then
+            ui_print "! AdGuard Intermediate 未找到（Chrome 过滤可能不完整）"
+          fi
+          log_info "install: adguard dual ok ($dual)"
+        else
+          ui_print "! AdGuard 双证安装失败，已跳过"
+          log_error "install: adguard_install_dual_certs failed"
+        fi
         continue
       fi
       if name=$(import_ca_into_dir "$live" "$MODPATH/certs/custom" "$opt_label"); then
@@ -135,7 +162,7 @@ certbridge_install_dump_tree() {
       [ -f "$f" ] || continue
       case "$f" in *.meta) continue ;; esac
       count=$((count + 1))
-      list="${list}${list:+, }$(basename "$f")"
+      list="${list}${list:+, }${f##*/}"
     done
     if [ "$count" -eq 0 ]; then
       ui_print " · $sub：空"

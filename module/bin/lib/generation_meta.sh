@@ -47,7 +47,7 @@ custom_certs_fingerprint() {
   (
     for f in "$CUSTOM_DIR"/*.*; do
       [ -f "$f" ] || continue
-      base=$(basename "$f")
+      base=${f##*/}
       case "$base" in *.meta) continue ;; esac
       is_cert_filename "$base" 2>/dev/null || continue
       cksum "$f" 2>/dev/null | awk '{print $1 ":" $2}'

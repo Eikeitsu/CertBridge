@@ -14,6 +14,8 @@ MODDIR=${MODDIR:-${0%/*}/..}
 # shellcheck disable=SC1090
 . "$LIBDIR/inject/inject_ops.sh"
 
+_pidprobe "INJECT-start (args=${1:-boot})"
+
 case "${1:-boot}" in
   boot) inject_boot_namespaces ;;
   namespaces) inject_app_namespaces ;;
@@ -24,3 +26,4 @@ case "${1:-boot}" in
     exit 1
     ;;
 esac
+_pidprobe_done

@@ -241,30 +241,8 @@ find_live_app_cert() {
         "/data/data/com.guoshi.httpcanary.premium/cache/HttpCanary.pem"
       ;;
     adguard)
-      if path=$(_app_cert_first_existing \
-        "/data/user/0/com.adguard.android/files/ca.crt" \
-        "/data/user/0/com.adguard.android/files/certificate.crt" \
-        "/data/user/0/com.adguard.android.contentblocker/files/ca.crt" \
-        "/data/data/com.adguard.android/files/ca.crt" \
-        "/data/user/0/com.network.adg/files/ca.crt" \
-        "/data/user/0/com.network.adg/files/certificate.crt" \
-        "/data/user/0/com.adg.catcher/files/ca.crt" \
-        "/data/data/com.network.adg/files/ca.crt"); then
-        echo "$path"
-        return 0
-      fi
-      for dir in /data/user/0/com.adguard* /data/data/com.adguard* \
-        /data/user/0/*adg* /data/data/*adg*; do
-        [ -d "$dir" ] || continue
-        path=$(_app_cert_first_existing \
-          "$dir/files/ca.crt" \
-          "$dir/files/certificate.crt" \
-          "$dir/cache/ca.pem" \
-          "$dir/cache/HttpCanary.pem") || continue
-        echo "$path"
-        return 0
-      done
-      return 1
+      # 默认返回 Personal（供系统库）；Intermediate 用 find_adguard_cert_by_role
+      find_adguard_cert_by_role personal
       ;;
     charles)
       _app_cert_first_existing \
@@ -310,6 +288,236 @@ app_cert_label() {
     pcapdroid) echo "PCAPdroid" ;;
     *) echo "$1" ;;
   esac
+}
+
+# 枚举 AdGuard 相关证书候选路径（App 私有目录 + 已装用户库）
+_adguard_cert_candidate_paths() {
+  for path in \
+    "/data/user/0/com.adguard.android/files/ca.crt" \
+    "/data/user/0/com.adguard.android/files/certificate.crt" \
+    "/data/user/0/com.adguard.android/files/personal_ca.crt" \
+    "/data/user/0/com.adguard.android/files/intermediate_ca.crt" \
+    "/data/user/0/com.adguard.android.contentblocker/files/ca.crt" \
+    "/data/data/com.adguard.android/files/ca.crt" \
+    "/data/data/com.adguard.android/files/certificate.crt" \
+    "/data/user/0/com.network.adg/files/ca.crt" \
+    "/data/user/0/com.network.adg/files/certificate.crt" \
+    "/data/user/0/com.adg.catcher/files/ca.crt" \
+    "/data/data/com.network.adg/files/ca.crt"
+  do
+    echo "$path"
+  done
+  for dir in /data/user/0/com.adguard* /data/data/com.adguard* \
+    /data/user/0/*adg* /data/data/*adg*; do
+    [ -d "$dir" ] || continue
+    for path in \
+      "$dir/files/ca.crt" \
+      "$dir/files/certificate.crt" \
+      "$dir/files/personal_ca.crt" \
+      "$dir/files/intermediate_ca.crt" \
+      "$dir/cache/ca.pem"
+    do
+      echo "$path"
+    done
+  done
+  # 仅纳入 subject/issuer 含 AdGuard 的用户库项，避免误认其它交叉签名 CA
+  for path in /data/misc/user/*/cacerts-added/*; do
+    [ -f "$path" ] || continue
+    openssl_cmd=$(find_openssl 2>/dev/null) || continue
+    inform=""
+    if $openssl_cmd x509 -inform DER -in "$path" -noout >/dev/null 2>&1; then
+      inform="-inform DER"
+    elif $openssl_cmd x509 -in "$path" -noout >/dev/null 2>&1; then
+      inform=""
+    else
+      continue
+    fi
+    blob=$($openssl_cmd x509 $inform -in "$path" -noout -subject -issuer -nameopt RFC2253 2>/dev/null) || continue
+    case "$blob" in
+      *[Aa][Dd][Gg]uard*|*ADGuard*|*Adguard*) echo "$path" ;;
+    esac
+  done
+}
+
+# 按角色查找 AdGuard CA：personal | intermediate
+find_adguard_cert_by_role() {
+  want="$1"
+  case "$want" in personal|intermediate) ;; *) return 1 ;; esac
+  _fallback=""
+  for path in $(_adguard_cert_candidate_paths); do
+    readable=$(ensure_readable_cert_file "$path" 2>/dev/null) || continue
+    role=$(classify_adguard_ca_file "$readable")
+    if [ "$role" = "$want" ]; then
+      echo "$readable"
+      return 0
+    fi
+    if [ "$want" = "personal" ] && [ "$role" = "unknown" ] && [ -z "$_fallback" ]; then
+      _fallback=$readable
+    fi
+  done
+  # Personal 允许回落未知自签；Intermediate 必须明确识别，避免误装
+  if [ "$want" = "personal" ] && [ -n "$_fallback" ]; then
+    echo "$_fallback"
+    return 0
+  fi
+  return 1
+}
+
+# AdGuard CA 角色（对齐官方 adguardcert / 双证设计）
+# stdout: personal | intermediate | unknown
+classify_adguard_ca_file() {
+  f="$1"
+  [ -n "$f" ] && [ -f "$f" ] || {
+    echo unknown
+    return 1
+  }
+  base=${f##*/}
+  case "$base" in
+    *[Ii]ntermediate*)
+      echo intermediate
+      return 0
+      ;;
+    *[Pp]ersonal*)
+      echo personal
+      return 0
+      ;;
+  esac
+  openssl_cmd=$(find_openssl 2>/dev/null) || {
+    echo unknown
+    return 0
+  }
+  inform=""
+  if $openssl_cmd x509 -in "$f" -noout >/dev/null 2>&1; then
+    inform=""
+  elif $openssl_cmd x509 -inform DER -in "$f" -noout >/dev/null 2>&1; then
+    inform="-inform DER"
+  else
+    echo unknown
+    return 0
+  fi
+  subject=$($openssl_cmd x509 $inform -in "$f" -noout -subject -nameopt RFC2253 2>/dev/null | sed 's/^subject=//')
+  issuer=$($openssl_cmd x509 $inform -in "$f" -noout -issuer -nameopt RFC2253 2>/dev/null | sed 's/^issuer=//')
+  blob=$(printf '%s %s' "$subject" "$issuer")
+  case "$blob" in
+    *[Ii]ntermediate*)
+      echo intermediate
+      return 0
+      ;;
+    *[Pp]ersonal*)
+      echo personal
+      return 0
+      ;;
+  esac
+  # Personal CA 自签；Intermediate 为交叉签名（issuer≠subject）
+  if [ -n "$subject" ] && [ "$subject" = "$issuer" ]; then
+    echo personal
+    return 0
+  fi
+  if [ -n "$subject" ] && [ -n "$issuer" ] && [ "$subject" != "$issuer" ]; then
+    echo intermediate
+    return 0
+  fi
+  echo unknown
+}
+
+# 系统库导入前拦截 Intermediate（应写入用户库，见 install_ca_into_user_store）
+# 成功（可导入系统）返回 0；拒绝返回 1 并在 stderr 写原因
+adguard_allow_system_import() {
+  f="$1"
+  case "$(classify_adguard_ca_file "$f")" in
+    intermediate)
+      echo "AdGuard Intermediate CA 应写入用户库而非系统库" >&2
+      return 1
+      ;;
+  esac
+  return 0
+}
+
+# 目标目录是否已有与 src 同指纹的 CA（系统自定义区）
+_dir_has_same_cert() {
+  src="$1"
+  dest_dir="$2"
+  [ -d "$dest_dir" ] || return 1
+  src_fp=$(cert_fingerprint_sha256 "$src" 2>/dev/null) || return 1
+  [ -n "$src_fp" ] || return 1
+  for c in "$dest_dir"/*.*; do
+    [ -f "$c" ] || continue
+    case "$c" in *.meta) continue ;; esac
+    cfp=$(cert_fingerprint_sha256 "$c" 2>/dev/null) || continue
+    [ "$cfp" = "$src_fp" ] && {
+      echo "${c##*/}"
+      return 0
+    }
+  done
+  return 1
+}
+
+# AdGuard 双证一次装齐：Personal→系统自定义；Intermediate→用户 cacerts-added
+# stdout：若干 key=value（ok / system_file / system_unchanged / user_file / …）
+adguard_install_dual_certs() {
+  system_dir="${1:-$CUSTOM_DIR}"
+  uid="${2:-0}"
+  personal=$(find_adguard_cert_by_role personal 2>/dev/null) || personal=""
+  intermediate=$(find_adguard_cert_by_role intermediate 2>/dev/null) || intermediate=""
+  if [ -z "$personal" ] && [ -z "$intermediate" ]; then
+    echo "error=adguard_certs_not_found"
+    echo "hint=请先在 AdGuard「安全证书」中生成并导出 Personal / Intermediate"
+    return 1
+  fi
+  if ! find_openssl >/dev/null 2>&1; then
+    echo "error=openssl_unavailable"
+    return 1
+  fi
+  sys_name=""
+  user_name=""
+  if [ -n "$personal" ]; then
+    if ! adguard_allow_system_import "$personal" 2>/dev/null; then
+      echo "error=adguard_personal_invalid"
+      echo "path=$personal"
+      return 1
+    fi
+    mkdir -p "$system_dir" 2>/dev/null
+    if existing=$(_dir_has_same_cert "$personal" "$system_dir" 2>/dev/null); then
+      sys_name=$existing
+      echo "system_unchanged=1"
+      echo "system_file=$sys_name"
+      echo "system_path=$personal"
+    else
+      sys_name=$(import_ca_into_dir "$personal" "$system_dir" "ADGuard Personal CA") || {
+        echo "error=system_import_failed"
+        echo "path=$personal"
+        return 1
+      }
+      echo "system_file=$sys_name"
+      echo "system_path=$personal"
+    fi
+  else
+    echo "system_skip=1"
+    echo "hint_system=未找到 Personal CA，系统库未写入"
+  fi
+  if [ -n "$intermediate" ]; then
+    if user_store_has_same_cert "$intermediate" "$uid" 2>/dev/null; then
+      echo "user_unchanged=1"
+      echo "user_path=$intermediate"
+    else
+      user_name=$(install_ca_into_user_store "$intermediate" "$uid") || {
+        echo "error=user_import_failed"
+        echo "path=$intermediate"
+        [ -n "$sys_name" ] && echo "system_file=$sys_name"
+        return 1
+      }
+      echo "user_file=$user_name"
+      echo "user_path=$intermediate"
+    fi
+    # 登记拒绝表：热挂载 user/all 也绝不能把它提进系统库
+    user_ca_record_system_mount_deny "$intermediate" 2>/dev/null || true
+    echo "user_system_mount=forbid"
+  else
+    echo "user_skip=1"
+    echo "hint_user=未找到 Intermediate CA；Chrome 过滤可能仍需在 AdGuard 内安装到用户库"
+  fi
+  echo "ok=1"
+  return 0
 }
 
 optional_custom_app_kinds() {

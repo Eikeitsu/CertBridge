@@ -18,7 +18,7 @@ count_certs() {
   n=0
   for cert in "$dir"/*.*; do
     [ -f "$cert" ] || continue
-    is_cert_filename "$(basename "$cert")" && n=$((n + 1))
+    is_cert_filename "${cert##*/}" && n=$((n + 1))
   done
   echo "$n"
 }
@@ -38,14 +38,14 @@ copy_cert_store() {
         rm -rf "$f" 2>/dev/null
         continue
       fi
-      is_cert_filename "$(basename "$f")" || rm -f "$f"
+      is_cert_filename "${f##*/}" || rm -f "$f"
     done
     [ "$(count_certs "$dest")" -eq "$source_n" ] && return 0
     rm -f "$dest"/* 2>/dev/null
   fi
   for cert in "$src"/*.*; do
     [ -f "$cert" ] || continue
-    name=$(basename "$cert")
+    name=${cert##*/}
     is_cert_filename "$name" || continue
     cp -f "$cert" "$dest/$name" 2>/dev/null || return 1
   done
@@ -78,12 +78,12 @@ install_one_addon() {
   dest="$2"
   label="$3"
   display="${4:-}"
-  name=$(next_collision_name "$src" "$dest" "$(basename "$src")") || return 1
+  name=$(next_collision_name "$src" "$dest" "${src##*/}") || return 1
   [ -f "$dest/$name" ] || cp -f "$src" "$dest/$name" 2>/dev/null || return 1
   checksum=$(cksum "$dest/$name" 2>/dev/null | awk '{print $1 ":" $2}')
   [ -n "$checksum" ] || return 1
   if [ -z "$display" ]; then
-    display=$(read_cert_meta_display "$src" "$(basename "$src")")
+    display=$(read_cert_meta_display "$src" "${src##*/}")
   fi
   display=$(echo "$display" | tr '|' '/' | tr -d '\r\n')
   echo "$label|$name|$checksum|$display" >>"$MAP_TMP"
@@ -96,7 +96,7 @@ find_builtin_cert() {
   [ -d "$dir" ] || return 1
   for cert in "$dir"/*.*; do
     [ -f "$cert" ] || continue
-    is_cert_filename "$(basename "$cert")" || continue
+    is_cert_filename "${cert##*/}" || continue
     echo "$cert"
     return 0
   done
@@ -129,7 +129,7 @@ install_addon_certs_into() {
   fi
   for cert in "$CUSTOM_DIR"/*.*; do
     [ -f "$cert" ] || continue
-    name=$(basename "$cert")
+    name=${cert##*/}
     is_cert_filename "$name" || continue
     display=$(read_cert_meta_display "$cert" "$name")
     install_one_addon "$cert" "$dest" "custom:$name" "$display" || return 1
@@ -146,7 +146,7 @@ count_addon_certs() {
   fi
   for cert in "$CUSTOM_DIR"/*.*; do
     [ -f "$cert" ] || continue
-    is_cert_filename "$(basename "$cert")" && n=$((n + 1))
+    is_cert_filename "${cert##*/}" && n=$((n + 1))
   done
   echo "$n"
 }

@@ -1,19 +1,19 @@
 # Related software
 
-CertBridge only writes CAs into the **system trust store**; it does not provide a traffic-capture proxy. The following tools are detected for automatic or prompted import, or are commonly imported manually.
+CertBridge mainly writes CAs into the **system trust store** (AdGuard Intermediate also goes to the user store). It does not provide a traffic-capture proxy. The following tools are detected for automatic or prompted import, or are commonly imported manually.
 
 If an individual app still fails due to certificate pinning, see [LSPosed modules](./lsposed).
 
 ## Automatic or installation-time import
 
-| Software       | Link                                                 | CertBridge integration                                                                                                                      |
-| -------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Reqable**    | [reqable.com](https://reqable.com)                   | Reads the root CA from the installed app; no sample is bundled. Can be toggled and resynchronized at boot or refresh                        |
-| **ProxyPin**   | [GitHub](https://github.com/wanghongenpin/proxypin)  | Prefers the installed app's CA. If none is detected and ProxyPin was enabled during installation, uses the bundled fallback. Can be toggled |
-| **HttpCanary** | [GitHub](https://github.com/MegatronKing/HttpCanary) | May be offered for import as a **custom** certificate during installation only                                                              |
-| **ADGuard**    | [adguard.com](https://adguard.com)                   | May be offered for import as a **custom** certificate during installation only                                                              |
+| Software       | Link                                                 | CertBridge integration                                                                                                                                                                 |
+| -------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Reqable**    | [reqable.com](https://reqable.com)                   | Reads the root CA from the installed app; no sample is bundled. Can be toggled and resynchronized at boot or refresh                                                                   |
+| **ProxyPin**   | [GitHub](https://github.com/wanghongenpin/proxypin)  | Prefers the installed app's CA. If none is detected and ProxyPin was enabled during installation, uses the bundled fallback. Can be toggled                                            |
+| **HttpCanary** | [GitHub](https://github.com/MegatronKing/HttpCanary) | May be offered for import as a **custom** certificate during installation only                                                                                                         |
+| **ADGuard**    | [adguard.com](https://adguard.com)                   | **Personal CA** → system custom; **Intermediate CA** → user store (`cacerts-added`). Install/sync/preset handle both; user hot mount never promotes Intermediate into the system store |
 
-When WebUI refreshes, it may also detect a current HttpCanary or ADGuard CA whose fingerprint has not been seen and offer to import it as a custom certificate.
+When WebUI refreshes, it may also detect a current HttpCanary or ADGuard CA whose fingerprint has not been seen and offer to import it. AdGuard uses dual install: Personal to system, Intermediate to the user store.
 
 ## Manual import
 

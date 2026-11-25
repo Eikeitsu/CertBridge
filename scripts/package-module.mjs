@@ -68,6 +68,7 @@ const BIN_LIBS = [
   "bin/lib/cert_parse.sh",
   "bin/lib/cert_info.sh",
   "bin/lib/cert_import.sh",
+  "bin/lib/cert_user_store.sh",
   "bin/lib/cert_sources.sh",
   "bin/lib/cert_source_sync.sh",
   "bin/lib/cert_source_stash.sh",
@@ -178,6 +179,15 @@ function wantFatPackage() {
   const v = (process.env.PACKAGE_FAT ?? "0").trim().toLowerCase();
   return v === "1" || v === "true" || v === "yes";
 }
+
+/** PACKAGE_DEBUG=1 或 --debug → 打入 bin/pidprobe.sh，zip 名带 _debug（正式包不含） */
+function wantDebugPackage() {
+  if (process.argv.includes("--debug")) return true;
+  const v = (process.env.PACKAGE_DEBUG ?? "0").trim().toLowerCase();
+  return v === "1" || v === "true" || v === "yes";
+}
+
+const PACKAGE_DEBUG = wantDebugPackage();
 
 const PACKAGE_ABIS = resolvePackageAbis();
 const OPENSSL_BINARIES = binariesForAbis(PACKAGE_ABIS);
@@ -472,13 +482,14 @@ function applyEdition(edition, { keepBinaries, abi }) {
 }
 
 async function packageOne(edition, version, abi = null) {
+  const debugSuffix = PACKAGE_DEBUG ? "_debug" : "";
   let zipName;
   if (edition === "lite") {
-    zipName = `CertBridge_${version}_lite.zip`;
+    zipName = `CertBridge_${version}_lite${debugSuffix}.zip`;
   } else if (abi) {
-    zipName = `CertBridge_${version}_${abi}.zip`;
+    zipName = `CertBridge_${version}_${abi}${debugSuffix}.zip`;
   } else {
-    zipName = `CertBridge_${version}_fat.zip`;
+    zipName = `CertBridge_${version}_fat${debugSuffix}.zip`;
   }
   const zipPath = join(releaseDir, zipName);
   const keepBinaries =
@@ -494,6 +505,26 @@ async function packageOne(edition, version, abi = null) {
   copyDirFromModule("config");
   copyDirFromModule("bin");
   copyDirFromModule("certs");
+  // 正式包去掉 fork 探针；仅 PACKAGE_DEBUG=1 保留
+  {
+    const probe = join(staging, "bin", "pidprobe.sh");
+    if (PACKAGE_DEBUG) {
+      if (!existsSync(probe)) {
+        throw new Error("PACKAGE_DEBUG=1 but module/bin/pidprobe.sh missing");
+      }
+      const probeText = readFileSync(probe, "utf8");
+      if (probeText.includes("\r\n")) {
+        throw new Error("CRLF is not allowed in shell script: bin/pidprobe.sh");
+      }
+      if (!probeText.startsWith("#!/system/bin/sh")) {
+        throw new Error("invalid shell shebang: bin/pidprobe.sh");
+      }
+      log("debug package: include bin/pidprobe.sh");
+    } else if (existsSync(probe)) {
+      rmSync(probe);
+      log("release package: omit bin/pidprobe.sh");
+    }
+  }
   // 安装期工具（volkey 等）；装机结束会从 MODPATH 清掉 install/
   if (existsSync(join(moduleRoot, "install"))) {
     copyDirFromModule("install");
@@ -551,6 +582,9 @@ async function packageOne(edition, version, abi = null) {
 const version = readVersion();
 const editions = resolvePackageEditions();
 const fat = wantFatPackage();
+if (PACKAGE_DEBUG) {
+  log("PACKAGE_DEBUG=1 — pidprobe included; zip names use _debug");
+}
 mkdirSync(releaseDir, { recursive: true });
 
 if (editions.includes("lite")) {

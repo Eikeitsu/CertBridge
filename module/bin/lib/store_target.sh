@@ -283,36 +283,74 @@ detach_runtime_cacert_binds() {
   return 0
 }
 
+# 取 path 所属挂载的 mount id（mountinfo 字段 1）。
+# cacerts 常是 apex 根挂载下的子目录，故取「最长前缀匹配」的挂载点。
+# 仅当 mount id 相同才视为同一挂载；不同 id 即使内容相同也必须各自 bind。
+cacert_mount_id() {
+  path="$1"
+  mi="${2:-/proc/self/mountinfo}"
+  [ -n "$path" ] && [ -f "$mi" ] || return 1
+  awk -v p="$path" '
+    BEGIN { best = -1 }
+    {
+      mp = $5
+      if (mp == p || index(p, mp "/") == 1) {
+        if (length(mp) >= best) {
+          best = length(mp)
+          id = $1
+        }
+      }
+    }
+    END { if (best >= 0) print id }
+  ' "$mi" 2>/dev/null
+}
+
+# 向目标列表追加路径；同路径或同 mount id 则跳过（#39）
+_emit_target_store() {
+  _t="$1"
+  [ -n "$_t" ] && [ -d "$_t" ] || return 0
+  case "$_CB_SEEN_PATHS" in *"|$_t|"*) return 0 ;; esac
+  _mid=$(cacert_mount_id "$_t" "${_CB_MI:-/proc/1/mountinfo}" 2>/dev/null || \
+    cacert_mount_id "$_t" /proc/self/mountinfo 2>/dev/null || true)
+  if [ -n "$_mid" ]; then
+    case "$_CB_SEEN_MIDS" in
+      *"|$_mid|"*)
+        log_debug "store: skip duplicate cacerts mount $_t (mount_id=$_mid)"
+        return 0
+        ;;
+    esac
+    _CB_SEEN_MIDS="${_CB_SEEN_MIDS}${_mid}|"
+  fi
+  _CB_SEEN_PATHS="${_CB_SEEN_PATHS}${_t}|"
+  echo "$_t"
+}
+
 # 目标信任库（按 API 分两支 + 按挂载模式）：
 # - API >= 34（Android 14+）：APEX 始终脚本 bind（管理器无法 Magic Mount /apex）
 # - API < 34（Android 7–13）：无 APEX 信任库路径
 # - compatible：再 bind /system/etc/security/cacerts（整库，不依赖元模块）
 # - magic：system 不 bind，交给模块 system/ 的 Magic Mount 叠层
 # - experimental_14_system=skip（仅 API>=34）：两种模式都跳过 system
+# - 无版本与 @版本路径：仅当 mountinfo 中 mount id 相同才去重；不同挂载点仍各自注入
 list_target_stores() {
-  seen="|"
+  _CB_SEEN_PATHS="|"
+  _CB_SEEN_MIDS="|"
+  if [ -f /proc/1/mountinfo ]; then
+    _CB_MI=/proc/1/mountinfo
+  else
+    _CB_MI=/proc/self/mountinfo
+  fi
   if [ "$(get_api)" -ge 34 ]; then
-    if [ -d "$APEX_CACERTS" ]; then
-      echo "$APEX_CACERTS"
-      seen="$seen$APEX_CACERTS|"
-    fi
+    _emit_target_store "$APEX_CACERTS"
     for apex_dir in /apex/com.android.conscrypt@*/cacerts; do
-      [ -d "$apex_dir" ] || continue
-      case "$seen" in *"|$apex_dir|"*) continue ;; esac
-      echo "$apex_dir"
-      seen="$seen$apex_dir|"
+      _emit_target_store "$apex_dir"
     done
   fi
   # magic：system 留给 Magic Mount，避免盖掉叠层
   if ! binds_system_cacerts; then
     return 0
   fi
-  if [ -d "$SYSTEM_CACERTS" ]; then
-    case "$seen" in *"|$SYSTEM_CACERTS|"*) ;; *)
-      echo "$SYSTEM_CACERTS"
-      ;;
-    esac
-  fi
+  _emit_target_store "$SYSTEM_CACERTS"
 }
 
 # boot_multi_apex=0（默认）：14+ 仅主 APEX（跳过 @版本与 system）；7–13 仍绑 system

@@ -16,7 +16,7 @@ stash_has_cert() {
   for cert in "$STASH_DIR/$kind"/*.*; do
     [ -f "$cert" ] || continue
     case "$cert" in *.meta) continue ;; esac
-    is_cert_filename "$(basename "$cert")" && return 0
+    is_cert_filename "${cert##*/}" && return 0
   done
   return 1
 }
@@ -28,7 +28,7 @@ _stash_store_file() {
   [ -f "$src" ] || return 1
   dest_dir="$STASH_DIR/$kind"
   mkdir -p "$dest_dir" 2>/dev/null || return 1
-  name=$(basename "$src" | tr -d '\r')
+  name=${src##*/}
   is_cert_filename "$name" || return 1
   stage="$dest_dir/.stage.$$"
   rm -rf "$stage"
@@ -62,7 +62,7 @@ _stash_store_file() {
       *.meta) continue ;;
     esac
     # 只清其它证书文件，保留刚写入的
-    is_cert_filename "$(basename "$old")" || continue
+    is_cert_filename "${old##*/}" || continue
     rm -f "$old" "$old.meta" 2>/dev/null
   done
   return 0
@@ -105,14 +105,14 @@ restore_addon_source_from_stash() {
   for cert in "$stash"/*.*; do
     [ -f "$cert" ] || continue
     case "$cert" in *.meta) continue ;; esac
-    is_cert_filename "$(basename "$cert")" || continue
+    is_cert_filename "${cert##*/}" || continue
     src="$cert"
     break
   done
   [ -n "$src" ] || return 1
   dest_dir="$SOURCES_DIR/$kind"
   mkdir -p "$dest_dir" 2>/dev/null || return 1
-  name=$(basename "$src")
+  name=${src##*/}
   cp -f "$src" "$dest_dir/$name" 2>/dev/null || return 1
   chmod 0644 "$dest_dir/$name" 2>/dev/null
   if [ -f "$src.meta" ]; then
@@ -143,10 +143,10 @@ prepare_addon_local() {
     for f in "$src_dir"/*.*; do
       [ -f "$f" ] || continue
       case "$f" in *.meta) continue ;; esac
-      is_cert_filename "$(basename "$f")" || continue
+      name=${f##*/}
+      is_cert_filename "$name" || continue
       dest_dir="$SOURCES_DIR/$kind"
       mkdir -p "$dest_dir" 2>/dev/null || continue
-      name=$(basename "$f")
       cp -f "$f" "$dest_dir/$name" 2>/dev/null || continue
       [ -f "$f.meta" ] && cp -f "$f.meta" "$dest_dir/$name.meta" 2>/dev/null || true
       chmod 0644 "$dest_dir/$name" 2>/dev/null

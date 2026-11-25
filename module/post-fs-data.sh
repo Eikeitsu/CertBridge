@@ -1,6 +1,8 @@
 #!/system/bin/sh
 MODDIR=${0%/*}
 . "$MODDIR/bin/common.sh"
+_pidprobe_init
+_pidprobe "after-common.sh"
 
 POST_HAS_LOCK=0
 post_cleanup() {
@@ -19,6 +21,7 @@ log_msg "post-fs-data start (api=$(get_api))"
 # 软重启不换内核 boot_id：先递增 epoch，立刻让旧 runtime-status / 热会话缓存失效
 bump_boot_epoch
 update_module_description "启动中"
+_pidprobe "after-log_reset+bump_epoch+update_desc"
 if ! acquire_write_lock; then
   write_inject_error lock_timeout
   log_msg "post-fs-data: lifecycle lock timeout"
@@ -26,6 +29,7 @@ if ! acquire_write_lock; then
   exit 1
 fi
 POST_HAS_LOCK=1
+_pidprobe "after-acquire_write_lock"
 # 无热会话状态且热临时层未挂载时跳过完整 unmount（加速冷启动）
 if [ -x "$BINDIR/hot_mount.sh" ]; then
   _hot_need_clean=0
@@ -47,6 +51,7 @@ if [ -x "$BINDIR/hot_mount.sh" ]; then
 else
   log_msg "post-fs-data: hot reload component not installed"
 fi
+_pidprobe "after-hot-unmount-block"
 # 按挂载模式准备 / 清理模块 system 叠层（magic 仅 addon；compatible 必须清空）
 if ! prepare_mount_mode_overlay "$MODDIR"; then
   write_inject_error overlay_prepare_failed
@@ -54,12 +59,14 @@ if ! prepare_mount_mode_overlay "$MODDIR"; then
   finalize_runtime_status post-fs-data >/dev/null
   exit 1
 fi
+_pidprobe "after-prepare_mount_mode_overlay"
 # 软重启后上一轮 apex/system bind 可能仍在；先卸掉再读真实系统 CA，
 # 否则已关闭的 ProxyPin 等 addon 会污染新 generation（日志里仍出现 243f0bfb.0）
 detach_runtime_cacert_binds || \
   log_msg "post-fs-data: detach runtime binds soft-fail"
 # 重建前播种外置 sources，避免热更新后开关仍开却丢 addon
 certbridge_ensure_state_sources >/dev/null 2>&1 || true
+_pidprobe "after-detach_binds+ensure_sources"
 if ! build_boot_generation; then
   write_inject_error generation_failed
   log_msg "post-fs-data: live generation failed, original store preserved"
@@ -76,21 +83,25 @@ if ! build_boot_generation; then
   finalize_runtime_status post-fs-data >/dev/null
   exit 1
 fi
+_pidprobe "after-build_boot_generation"
 # generation 后再次同步 magic 叠层，确保与本轮 applied 一致（skip 时不叠 system）
 if needs_system_magic_overlay; then
   sync_magic_overlay "$MODDIR" >/dev/null || \
     log_msg "post-fs-data: magic overlay resync soft-fail"
 fi
 rm -f "$INJECT_FAIL_FILE"
+_pidprobe "before-apex_inject-boot"
 if sh "$MODDIR/bin/apex_inject.sh" boot; then
   clear_inject_error
 else
   commit_inject_fail boot_inject_failed
   log_msg "post-fs-data: boot injection failed"
 fi
+_pidprobe "after-apex_inject-boot"
 # 仅标记中间态；不要在此处跑 check_store_injected（zygote 常未就绪，会把 apex_ok 误写成 0）
 # 最终「运行正常 / 证书注入失败」必须由 service 的 finalize_runtime_status 写入
 write_runtime_status post-fs-data 2 "注入中"
 update_module_description "注入中"
 post_cleanup
 log_msg "post-fs-data done"
+_pidprobe_done

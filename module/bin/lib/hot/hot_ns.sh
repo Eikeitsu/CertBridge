@@ -54,7 +54,7 @@ hot_prepare_bind_stage() {
   done
   for HOT_F in "$HOT_CERTS"/*; do
     [ -f "$HOT_F" ] || continue
-    cp -f "$HOT_F" "$HOT_BIND_ROOT/$(basename "$HOT_F")" 2>/dev/null || return 1
+    cp -f "$HOT_F" "$HOT_BIND_ROOT/${HOT_F##*/}" 2>/dev/null || return 1
   done
   [ -f "$HOT_CERTS/$HOT_MARKER" ] || return 1
   [ -f "$HOT_BIND_ROOT/$HOT_MARKER" ] || \

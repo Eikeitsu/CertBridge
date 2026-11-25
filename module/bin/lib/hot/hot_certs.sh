@@ -52,6 +52,12 @@ hot_add_one() {
     HOT_SKIPPED=$((HOT_SKIPPED + 1))
     return 0
   }
+  # AdGuard Intermediate 等：任何热挂载模式都不得并入系统信任库
+  if type user_ca_forbid_system_mount >/dev/null 2>&1 && \
+     user_ca_forbid_system_mount "$HOT_READ_FILE" 2>/dev/null; then
+    HOT_SKIPPED=$((HOT_SKIPPED + 1))
+    return 0
+  fi
   HOT_FILE_ID_BEFORE=$(path_identity "$HOT_READ_FILE")
   [ -n "$HOT_FILE_ID_BEFORE" ] || {
     HOT_SKIPPED=$((HOT_SKIPPED + 1))
@@ -93,7 +99,10 @@ hot_add_user_certs() {
   HOT_OPENSSL="$3"
   for HOT_USER_DIR in /data/misc/user/*/cacerts-added; do
     [ -d "$HOT_USER_DIR" ] || continue
-    HOT_USER_ID=$(basename "$(dirname "$HOT_USER_DIR")")
+    # dirname+basename 各一次 fork；内建展开等价（路径无尾斜杠）
+    _hud=${HOT_USER_DIR%/}
+    HOT_USER_ID=${_hud%/*}
+    HOT_USER_ID=${HOT_USER_ID##*/}
     for HOT_FILE in "$HOT_USER_DIR"/*.*; do
       [ -f "$HOT_FILE" ] || continue
       hot_add_one "$HOT_FILE" "user:$HOT_USER_ID" \
@@ -143,7 +152,7 @@ hot_add_sd_certs() {
       *.0|*.pem|*.crt|*.cer|*.der|*.PEM|*.CRT|*.CER|*.DER) ;;
       *) continue ;;
     esac
-    hot_add_one "$HOT_FILE" "sd:$(basename "$HOT_FILE")" \
+    hot_add_one "$HOT_FILE" "sd:${HOT_FILE##*/}" \
       "$HOT_STAGE_CERTS" "$HOT_STAGE_MAP" "$HOT_OPENSSL" || {
       rm -f "$HOT_LIST"
       return 1

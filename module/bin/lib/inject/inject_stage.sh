@@ -62,9 +62,26 @@ fill_stage_from_generation() {
   fi
   fail_name=""
   rm -f "$stage"/* 2>/dev/null
+  # 整目录一次 cp -a（少 fork）替代逐文件循环；失败或数量不对则回退逐文件
+  if cp -a "$GEN_CERTS"/. "$stage"/ 2>/dev/null; then
+    for cert in "$stage"/*; do
+      [ -e "$cert" ] || continue
+      if [ ! -f "$cert" ]; then
+        rm -rf "$cert" 2>/dev/null
+        continue
+      fi
+      name=${cert##*/}
+      is_cert_filename "$name" || { rm -f "$cert" 2>/dev/null; continue; }
+    done
+    if [ "$(count_certs "$stage")" -eq "$expected" ]; then
+      return 0
+    fi
+    fail_name="count-mismatch"
+    rm -f "$stage"/* 2>/dev/null
+  fi
   for cert in "$GEN_CERTS"/*.*; do
     [ -f "$cert" ] || continue
-    name=$(basename "$cert")
+    name=${cert##*/}
     is_cert_filename "$name" || continue
     if ! cp -f "$cert" "$stage/$name" 2>/dev/null; then
       fail_name="$name"
@@ -87,6 +104,7 @@ prepare_target_stage() {
   mkdir -p "$RUNTIME_MOUNT_ROOT" || return 1
 
   ensure_stage_tmpfs "$stage" || return 1
+  _pidprobe "    [stage] after-ensure_tmpfs"
 
   # Refresh contents from immutable generation；失败则拆掉旧 tmpfs 重建一次
   if ! fill_stage_from_generation "$stage"; then
@@ -96,6 +114,7 @@ prepare_target_stage() {
     ensure_stage_tmpfs "$stage" || return 1
     fill_stage_from_generation "$stage" || return 1
   fi
+  _pidprobe "    [stage] after-fill_from_generation"
 
   chown -R 0:0 "$stage" 2>/dev/null
   chmod 0755 "$stage" 2>/dev/null
@@ -103,7 +122,7 @@ prepare_target_stage() {
   # Critical for Flutter/Reqable reading /system/etc/security/cacerts
   set_selinux_context "$target" "$stage" || {
     log_error "inject: SELinux context for $target failed"
-    record_inject_fail selinux_failed "$(basename "$target")"
+    record_inject_fail selinux_failed "${target##*/}"
     return 1
   }
   echo "$stage"

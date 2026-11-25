@@ -7,6 +7,37 @@
 USER_CONF="${USER_CONF:-${CB_EXT_DIR:-/data/adb/certbridge}/user.conf}"
 USER_CONF_LEGACY="${USER_CONF_LEGACY:-$STATEDIR/user.conf}"
 
+# Magisk 目录上 sed -i 偶发把 conf 写成「大段 NUL + 尾部文本」；启动时剥掉。
+_conf_heal_nul_file() {
+  _hf="$1"
+  [ -n "$_hf" ] && [ -f "$_hf" ] || return 0
+  _sz1=$(wc -c <"$_hf" 2>/dev/null | tr -d ' ')
+  _sz2=$(tr -d '\000' <"$_hf" 2>/dev/null | wc -c | tr -d ' ')
+  case "$_sz1" in ""|*[!0-9]*) return 0 ;; esac
+  case "$_sz2" in ""|*[!0-9]*) return 0 ;; esac
+  [ "$_sz1" -eq "$_sz2" ] 2>/dev/null && return 0
+  if ! tr -d '\000' <"$_hf" 2>/dev/null | grep -E '^[A-Za-z0-9_]+=.' >/dev/null 2>&1; then
+    return 1
+  fi
+  _htmp="${_hf}.heal.$$"
+  tr -d '\000' <"$_hf" 2>/dev/null | sed '/^$/d' >"$_htmp" 2>/dev/null || {
+    rm -f "$_htmp"
+    return 1
+  }
+  mv -f "$_htmp" "$_hf" 2>/dev/null || {
+    rm -f "$_htmp"
+    return 1
+  }
+  type log_warn >/dev/null 2>&1 && log_warn "conf: healed NUL sparse file $_hf" || true
+  return 0
+}
+
+heal_conf_nul_files() {
+  _conf_heal_nul_file "${CONF:-}"
+  _conf_heal_nul_file "${USER_CONF:-}"
+  _conf_heal_nul_file "${USER_CONF_LEGACY:-}"
+}
+
 _conf_get_from_file() {
   file="$1"
   key="$2"

@@ -154,7 +154,8 @@ case "$CERTBRIDGE_PROFILE" in
   install) certbridge_load_libs_install ;;
   runtime|*) certbridge_load_libs_runtime ;;
 esac
-# conf.sh 已加载后：迁旧实验键，再按配置覆盖临时挂载根路径
+# conf.sh 已加载后：先自愈 Magisk+sed -i 偶发 NUL，再迁旧键、覆盖 tmpfs 根
+heal_conf_nul_files 2>/dev/null || true
 migrate_experimental_14_system_conf 2>/dev/null || true
 apply_tmpfs_style
 CERTBRIDGE_LIBS_LOADED="$CERTBRIDGE_PROFILE"

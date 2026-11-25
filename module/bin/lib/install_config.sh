@@ -1,7 +1,11 @@
 #!/system/bin/sh
 # 由 install_flow 加载；安装阶段专用
 # 写 certs.conf 与组件裁剪
-# 将 key=value 写入外置 user.conf（运行时真源）；文件可尚不存在
+#
+# Magisk 模块目录上 sed -i 偶发打出「大段 NUL + 尾部文本」；
+# 凡写 $MODPATH/config/*.conf 与外置 user.conf 一律 awk→tmp→mv。
+
+# 将 key=value 原子写入任意 conf（文件可尚不存在）
 _certbridge_install_uc_put() {
   _uc_file="$1"
   _uc_key="$2"
@@ -30,8 +34,9 @@ _certbridge_install_uc_del() {
 }
 
 certbridge_install_write_config() {
-  sed -i "s/^reqable=.*/reqable=$INSTALL_REQABLE/" "$MODPATH/config/certs.conf"
-  sed -i "s/^proxypin=.*/proxypin=$INSTALL_PROXYPIN/" "$MODPATH/config/certs.conf"
+  _cfg="$MODPATH/config/certs.conf"
+  _certbridge_install_uc_put "$_cfg" reqable "$INSTALL_REQABLE"
+  _certbridge_install_uc_put "$_cfg" proxypin "$INSTALL_PROXYPIN"
   # 安装选项同步到模块外 user.conf（与运行时 write_conf 同路径）
   mkdir -p /data/adb/certbridge "$MODPATH/data/state" 2>/dev/null || true
   _uc="/data/adb/certbridge/user.conf"
@@ -42,83 +47,56 @@ certbridge_install_write_config() {
   _certbridge_install_uc_put "$_uc" proxypin "$INSTALL_PROXYPIN"
   _certbridge_install_uc_put "$_uc" mount_mode "$INSTALL_MOUNT_MODE"
   cp -f "$_uc" "$MODPATH/data/state/user.conf" 2>/dev/null || true
-  if grep -q '^mount_mode=' "$MODPATH/config/certs.conf" 2>/dev/null; then
-    sed -i "s/^mount_mode=.*/mount_mode=$INSTALL_MOUNT_MODE/" "$MODPATH/config/certs.conf"
-  else
-    echo "mount_mode=$INSTALL_MOUNT_MODE" >>"$MODPATH/config/certs.conf"
+  _certbridge_install_uc_put "$_cfg" mount_mode "$INSTALL_MOUNT_MODE"
+  _certbridge_install_uc_put "$_cfg" schema_version 4
+  if ! grep -q '^tmpfs_style=' "$_cfg" 2>/dev/null; then
+    _certbridge_install_uc_put "$_cfg" tmpfs_style dev
   fi
-  if grep -q '^schema_version=' "$MODPATH/config/certs.conf" 2>/dev/null; then
-    sed -i "s/^schema_version=.*/schema_version=4/" "$MODPATH/config/certs.conf"
-  else
-    echo "schema_version=4" >>"$MODPATH/config/certs.conf"
-  fi
-  if ! grep -q '^tmpfs_style=' "$MODPATH/config/certs.conf" 2>/dev/null; then
-    echo "tmpfs_style=dev" >>"$MODPATH/config/certs.conf"
-  fi
-  if ! grep -q '^quiet_prop=' "$MODPATH/config/certs.conf" 2>/dev/null; then
-    echo "quiet_prop=0" >>"$MODPATH/config/certs.conf"
+  if ! grep -q '^quiet_prop=' "$_cfg" 2>/dev/null; then
+    _certbridge_install_uc_put "$_cfg" quiet_prop 0
   fi
   # 旧键迁移 / 缺省实验项
-  if grep -q '^experimental_14_apex_only=' "$MODPATH/config/certs.conf" 2>/dev/null && \
-      ! grep -q '^experimental_14_system=' "$MODPATH/config/certs.conf" 2>/dev/null; then
-    case "$(awk -F= '$1=="experimental_14_apex_only"{print $2; exit}' "$MODPATH/config/certs.conf" | tr 'A-Z' 'a-z')" in
-      1|true|yes|on) echo "experimental_14_system=skip" >>"$MODPATH/config/certs.conf" ;;
-      *) echo "experimental_14_system=skip" >>"$MODPATH/config/certs.conf" ;;
+  if grep -q '^experimental_14_apex_only=' "$_cfg" 2>/dev/null && \
+      ! grep -q '^experimental_14_system=' "$_cfg" 2>/dev/null; then
+    case "$(awk -F= '$1=="experimental_14_apex_only"{print $2; exit}' "$_cfg" | tr 'A-Z' 'a-z')" in
+      1|true|yes|on) _certbridge_install_uc_put "$_cfg" experimental_14_system skip ;;
+      *) _certbridge_install_uc_put "$_cfg" experimental_14_system skip ;;
     esac
   fi
   # 旧值归一
-  if grep -qE '^experimental_14_system=(off|overlay|default|follow)' "$MODPATH/config/certs.conf" 2>/dev/null; then
-    sed -i 's/^experimental_14_system=.*/experimental_14_system=auto/' "$MODPATH/config/certs.conf"
+  if grep -qE '^experimental_14_system=(off|overlay|default|follow)' "$_cfg" 2>/dev/null; then
+    _certbridge_install_uc_put "$_cfg" experimental_14_system auto
   fi
-  if grep -qE '^experimental_14_system=(none|apex_only)' "$MODPATH/config/certs.conf" 2>/dev/null; then
-    sed -i 's/^experimental_14_system=.*/experimental_14_system=skip/' "$MODPATH/config/certs.conf"
+  if grep -qE '^experimental_14_system=(none|apex_only)' "$_cfg" 2>/dev/null; then
+    _certbridge_install_uc_put "$_cfg" experimental_14_system skip
   fi
-  if ! grep -q '^experimental_14_system=' "$MODPATH/config/certs.conf" 2>/dev/null; then
-    echo "experimental_14_system=skip" >>"$MODPATH/config/certs.conf"
+  if ! grep -q '^experimental_14_system=' "$_cfg" 2>/dev/null; then
+    _certbridge_install_uc_put "$_cfg" experimental_14_system skip
   fi
-  if grep -q '^experimental_14_apex_only=' "$MODPATH/config/certs.conf" 2>/dev/null; then
-    tmp_cfg="$MODPATH/config/.certs.conf.mig.$$"
-    awk -F= '$1 != "experimental_14_apex_only" { print }' "$MODPATH/config/certs.conf" >"$tmp_cfg" 2>/dev/null && \
-      cat "$tmp_cfg" >"$MODPATH/config/certs.conf"
-    rm -f "$tmp_cfg"
+  if grep -q '^experimental_14_apex_only=' "$_cfg" 2>/dev/null; then
+    _certbridge_install_uc_del "$_cfg" experimental_14_apex_only
   fi
   if [ "$INSTALL_HOT" = "1" ]; then
-    if grep -q '^hot_allow=' "$MODPATH/config/certs.conf" 2>/dev/null; then
-      sed -i "s/^hot_allow=.*/hot_allow=1/" "$MODPATH/config/certs.conf"
-    else
-      echo "hot_allow=1" >>"$MODPATH/config/certs.conf"
-    fi
+    _certbridge_install_uc_put "$_cfg" hot_allow 1
     # 默认安装升级时 preserve 会再写回用户旧值；此处先落模板默认
     _certbridge_install_uc_put "$_uc" hot_allow 1
   else
     _certbridge_install_uc_del "$_uc" hot_allow
   fi
   if [ "$INSTALL_HIDE" = "1" ]; then
-    if grep -q '^hide_allow=' "$MODPATH/config/certs.conf" 2>/dev/null; then
-      sed -i "s/^hide_allow=.*/hide_allow=$INSTALL_HIDE_ALLOW/" "$MODPATH/config/certs.conf"
-    else
-      echo "hide_allow=$INSTALL_HIDE_ALLOW" >>"$MODPATH/config/certs.conf"
-    fi
+    _certbridge_install_uc_put "$_cfg" hide_allow "$INSTALL_HIDE_ALLOW"
     _certbridge_install_uc_put "$_uc" hide_allow "$INSTALL_HIDE_ALLOW"
   else
     # 未安装隐藏组件：不保留 hide_allow，避免误导
-    if grep -q '^hide_allow=' "$MODPATH/config/certs.conf" 2>/dev/null; then
-      sed -i '/^hide_allow=/d' "$MODPATH/config/certs.conf"
-    fi
+    _certbridge_install_uc_del "$_cfg" hide_allow
     _certbridge_install_uc_del "$_uc" hide_allow
     rm -f "$MODPATH/data/state/hide-assist.conf" 2>/dev/null
   fi
   if [ "$INSTALL_ZN_HIDE" = "1" ]; then
-    if grep -q '^zn_hide_allow=' "$MODPATH/config/certs.conf" 2>/dev/null; then
-      sed -i "s/^zn_hide_allow=.*/zn_hide_allow=$INSTALL_ZN_HIDE_ALLOW/" "$MODPATH/config/certs.conf"
-    else
-      echo "zn_hide_allow=$INSTALL_ZN_HIDE_ALLOW" >>"$MODPATH/config/certs.conf"
-    fi
+    _certbridge_install_uc_put "$_cfg" zn_hide_allow "$INSTALL_ZN_HIDE_ALLOW"
     _certbridge_install_uc_put "$_uc" zn_hide_allow "$INSTALL_ZN_HIDE_ALLOW"
   else
-    if grep -q '^zn_hide_allow=' "$MODPATH/config/certs.conf" 2>/dev/null; then
-      sed -i '/^zn_hide_allow=/d' "$MODPATH/config/certs.conf"
-    fi
+    _certbridge_install_uc_del "$_cfg" zn_hide_allow
     _certbridge_install_uc_del "$_uc" zn_hide_allow
   fi
   chmod 0600 "$_uc" 2>/dev/null || true

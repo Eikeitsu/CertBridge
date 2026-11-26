@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v5.2.0
+
 > Reqable 近期的更新将增强模式列入了VIP功能，所以开启抓包会显示未知应用，此问题与证书桥模块无关
 
 - **修复安装易失败**：热更新改为 `set_perm` / `t_module` 之后再启动；清理 `modules_update` 须见 `.cb_install_ready` 且 `module.prop` 与本轮一致；新开刷包会先停旧 worker，避免误删暂存导致管理器报 `module.prop` 丢失

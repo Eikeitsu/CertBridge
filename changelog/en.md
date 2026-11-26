@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+## v5.2.0
+
+> Recent updates to Reqable have added Enhanced Mode to the VIP features, so enabling packet capture will show unknown applications. This issue is not related to the certificate bridge module.
+
+- **Repair installation is likely to fail**: Restart after changing the hot update to `set_perm` / `t_module`; Cleaning `modules_update` requires `.cb_install_ready` to be visible and `module.prop` to be consistent with this round; A new flash package will first stop the old worker to avoid accidental deletion of temporary storage, which would cause the manager to report `module.prop` as missing.
+- **Install write conf to prevent NUL**: `$MODPATH/config/certs.conf` no longer `sed -i` (with `user.conf` same awk→tmp→mv); start self-healing conf containing NUL
+- **Optimization [#39](https://github.com/Eikeitsu/CertBridge/issues/39)**: Startup fork reduction (`${var##*/}`, full directory `cp -a`, fewer subshells for logs); APEX deduplication by mount ID without version / `@版本` cacerts
+- **Fix [#38](https://github.com/Eikeitsu/CertBridge/issues/38)**: AdGuard Personal → System Customization, Intermediate → User Library; Installation / Synchronization / Preset Paired Writing; Manual Import and Hot-Mount User Area / `all` do not promote Intermediate to the System Library.
+- **Experience [#40](https://github.com/Eikeitsu/CertBridge/issues/40)**: When operating normally, the module `description` displays `\n` in two lines (count + certificate name); it remains in a single line when abnormal; `module.prop` is written using ENVIRON to avoid awk interpreting it as a real newline.
+- **Reqable Certificate New File Name**: Compatible with the new version of the Reqable certificate `reqable-ca.crt` (still supports the old version of the certificate `reqable-root.crt`)
+- **SukiSU Nova**: Recognizes `com.sukisu.nova` (compatible with old `ultra`); Root detection and WebUI "Open Manager" have been updated.
+- **Installation and import are more stable (Android 14+ / 17)**: Reqable / ProxyPin patch `/data/data`, `user_ce`, no `certificate/`, `app_flutter/` and Download; Further investigation into isolation under mount ns via init / target process root
+- **Hidden registration follow-up ksud**: Prioritize on-site `umount add` (optional `save` / `umount-config`), SuSFS is only optional; Change registration flags to 0 (upstream to `MNT_DETACH` will be -39); CLI-style boot cache; Remove deprecated `add_sus_mount`
+- **Apex mount is removed from init**: After boot_completed, the zygote side changes to private and then unmounts init; `/proc/1/mountinfo` no longer retains this tmpfs; running apps need to be forcibly stopped. Whether to unmount within the process still depends on umount / exclusion list
+- **Install Volume Key**: Ensure packaging `volkey-*` is executable; install again `chmod`, reduce rollback `getevent`, pop up system volume bar
+- **WebUI Lag Reduction**: Silent refresh does not run by default `sync_apps`; App labels are queried by missing packages; Prioritize `bridge.toast`; Hide / Certs / Log / More share `use*PageModel`
+- **Internal Cleanup**: Removed unconnected `AppShell` / old entry; removed constant return alias from hidden detection; added installation summary i18n; changed language in documents / hidden pages to neutral expressions
+
 ## v5.1.2
 
 - **KernelSU Next module banner**: `module.prop` Add `banner=banner.png`, package into the root directory background image (manager module card background)

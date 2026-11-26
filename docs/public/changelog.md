@@ -5,6 +5,44 @@
 
 ---
 
+## v5.2.0
+
+### 中文
+
+> Reqable 近期的更新将增强模式列入了VIP功能，所以开启抓包会显示未知应用，此问题与证书桥模块无关
+
+- **修复安装易失败**：热更新改为 `set_perm` / `t_module` 之后再启动；清理 `modules_update` 须见 `.cb_install_ready` 且 `module.prop` 与本轮一致；新开刷包会先停旧 worker，避免误删暂存导致管理器报 `module.prop` 丢失
+- **安装写 conf 防 NUL**：`$MODPATH/config/certs.conf` 不再 `sed -i`（与 `user.conf` 同 awk→tmp→mv）；启动自愈含 NUL 的 conf
+- **优化 [#39](https://github.com/Eikeitsu/CertBridge/issues/39)**：开机减 fork（`${var##*/}`、整目录 `cp -a`、日志少子 shell）；APEX 按 mount id 去重无版本 / `@版本` cacerts
+- **修复 [#38](https://github.com/Eikeitsu/CertBridge/issues/38)**：AdGuard Personal → 系统自定义、Intermediate → 用户库；安装 / 同步 / 预设成对写入；手动导入与热挂载用户区 / `all` 均不把 Intermediate 提进系统库
+- **体验 [#40](https://github.com/Eikeitsu/CertBridge/issues/40)**：运行正常时模块 `description` 字面 `\n` 双行（计数 + 证书名）；异常仍单行；`module.prop` 用 ENVIRON 写入，避免 awk 解成真换行
+- **Reqable 证书新文件名**：兼容新版本Reqable证书 `reqable-ca.crt`（仍支持旧版证书 `reqable-root.crt`）
+- **SukiSU Nova**：识别 `com.sukisu.nova`（兼容旧 `ultra`）；Root 探测与 WebUI「打开管理器」已跟上
+- **安装导入更稳（Android 14+ / 17）**：Reqable / ProxyPin 补 `/data/data`、`user_ce`、无 `certificate/`、`app_flutter/` 与 Download；隔离 mount ns 下经 init / 目标进程 root 再探
+- **隐藏登记跟进 ksud**：优先当场 `umount add`（可选 `save` / `umount-config`），SuSFS 仅可选；登记 flags 改 0（上游对 `MNT_DETACH` 会 -39）；CLI 风格本 boot 缓存；去掉已弃用 `add_sus_mount`
+- **apex 挂载从 init 拆走**：boot_completed 后 zygote 侧改 private 再卸 init；`/proc/1/mountinfo` 不再留该 tmpfs；已跑 App 需强停。进程内是否卸掉仍看 umount / 排除名单
+- **安装音量键**：打包保证 `volkey-*` 可执行，装机再 `chmod`，减少回退 `getevent` 弹出系统音量条
+- **WebUI 减卡顿**：静默刷新默认不跑 `sync_apps`；App 标签按缺失包查询；优先 `bridge.toast`；Hide / Certs / Log / More 共用 `use*PageModel`
+- **内部整理**：删未接入的 `AppShell` / 旧入口；隐藏探测去掉恒返别名；安装摘要 i18n；文档 / 隐藏页改中性表述
+
+### English
+
+> Recent updates to Reqable have added Enhanced Mode to the VIP features, so enabling packet capture will show unknown applications. This issue is not related to the certificate bridge module.
+
+- **Repair installation is likely to fail**: Restart after changing the hot update to `set_perm` / `t_module`; Cleaning `modules_update` requires `.cb_install_ready` to be visible and `module.prop` to be consistent with this round; A new flash package will first stop the old worker to avoid accidental deletion of temporary storage, which would cause the manager to report `module.prop` as missing.
+- **Install write conf to prevent NUL**: `$MODPATH/config/certs.conf` no longer `sed -i` (with `user.conf` same awk→tmp→mv); start self-healing conf containing NUL
+- **Optimization [#39](https://github.com/Eikeitsu/CertBridge/issues/39)**: Startup fork reduction (`${var##*/}`, full directory `cp -a`, fewer subshells for logs); APEX deduplication by mount ID without version / `@版本` cacerts
+- **Fix [#38](https://github.com/Eikeitsu/CertBridge/issues/38)**: AdGuard Personal → System Customization, Intermediate → User Library; Installation / Synchronization / Preset Paired Writing; Manual Import and Hot-Mount User Area / `all` do not promote Intermediate to the System Library.
+- **Experience [#40](https://github.com/Eikeitsu/CertBridge/issues/40)**: When operating normally, the module `description` displays `\n` in two lines (count + certificate name); it remains in a single line when abnormal; `module.prop` is written using ENVIRON to avoid awk interpreting it as a real newline.
+- **Reqable Certificate New File Name**: Compatible with the new version of the Reqable certificate `reqable-ca.crt` (still supports the old version of the certificate `reqable-root.crt`)
+- **SukiSU Nova**: Recognizes `com.sukisu.nova` (compatible with old `ultra`); Root detection and WebUI "Open Manager" have been updated.
+- **Installation and import are more stable (Android 14+ / 17)**: Reqable / ProxyPin patch `/data/data`, `user_ce`, no `certificate/`, `app_flutter/` and Download; Further investigation into isolation under mount ns via init / target process root
+- **Hidden registration follow-up ksud**: Prioritize on-site `umount add` (optional `save` / `umount-config`), SuSFS is only optional; Change registration flags to 0 (upstream to `MNT_DETACH` will be -39); CLI-style boot cache; Remove deprecated `add_sus_mount`
+- **Apex mount is removed from init**: After boot_completed, the zygote side changes to private and then unmounts init; `/proc/1/mountinfo` no longer retains this tmpfs; running apps need to be forcibly stopped. Whether to unmount within the process still depends on umount / exclusion list
+- **Install Volume Key**: Ensure packaging `volkey-*` is executable; install again `chmod`, reduce rollback `getevent`, pop up system volume bar
+- **WebUI Lag Reduction**: Silent refresh does not run by default `sync_apps`; App labels are queried by missing packages; Prioritize `bridge.toast`; Hide / Certs / Log / More share `use*PageModel`
+- **Internal Cleanup**: Removed unconnected `AppShell` / old entry; removed constant return alias from hidden detection; added installation summary i18n; changed language in documents / hidden pages to neutral expressions
+
 ## v5.1.2
 
 ### 中文

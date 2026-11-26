@@ -103,8 +103,8 @@ export default defineConfig({
   title: "CertBridge",
   description: "System CA inject for Magisk / KernelSU / APatch",
   base: `/${repoName}/`,
-  // public/apps/*.apk 等静态资源不是页面路由，死链检查会误报
-  ignoreDeadLinks: [/\/apps\//],
+  // public/apks/*.apk 用绝对下载链，不走页面路由
+  ignoreDeadLinks: [/\/apks\//],
   head: [
     ["link", { rel: "icon", type: "image/png", href: `/${repoName}/icon.png` }],
     ["link", { rel: "apple-touch-icon", href: `/${repoName}/icon.png` }],

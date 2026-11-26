@@ -40,11 +40,11 @@
 
 下列 APK 来自**酷安社区**，文档站仅作镜像方便下载。**出处、问题反馈、安全性与后续维护均与证书桥无关**——有问题请到作者酷安主页反馈，不要开证书桥 Issue。
 
-| 模块                 | 作用简述                                                                                                                                      | 作者                                              | 下载                                        |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------- |
-| **黄鸡防断网**       | 辅助抓包：减轻部分场景下开 VPN / 代理后的异常断网                                                                                             | [@奶茶糖](https://www.coolapk.com/u/14044740)     | [APK](/apps/huangji-anti-disconnect.apk)    |
-| **TrustMeAlready**   | 辅助抓包：放宽 SSL / 证书校验（社区分发版；上游亦可看 GitHub）                                                                                | [@cam3500](https://www.coolapk.com/u/3781991)     | [APK](/apps/TrustMeAlready.apk)             |
-| **Reqable 归属解锁** | 新版 Reqable 将「增强模式」列入 VIP 后，未开 VIP / 未开增强模式时请求常显示为「未知应用」；本模块用于缓解该归属显示问题（**与证书注入无关**） | [@广东老乡van](https://www.coolapk.com/u/1751341) | [APK](/apps/reqable-attribution-unlock.apk) |
+| 模块                 | 作用简述                                                                                                                                      | 作者                                              | 下载                                                                                                                                  |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| **黄鸡防断网**       | 辅助抓包：减轻部分场景下开 VPN / 代理后的异常断网                                                                                             | [@奶茶糖](https://www.coolapk.com/u/14044740)     | <a href="https://eikeitsu.github.io/CertBridge/apks/huangji-anti-disconnect.apk" download="huangji-anti-disconnect.apk">APK</a>       |
+| **TrustMeAlready**   | 辅助抓包：放宽 SSL / 证书校验（社区分发版；上游亦可看 GitHub）                                                                                | [@cam3500](https://www.coolapk.com/u/3781991)     | <a href="https://eikeitsu.github.io/CertBridge/apks/TrustMeAlready.apk" download="TrustMeAlready.apk">APK</a>                         |
+| **Reqable 归属解锁** | 新版 Reqable 将「增强模式」列入 VIP 后，未开 VIP / 未开增强模式时请求常显示为「未知应用」；本模块用于缓解该归属显示问题（**与证书注入无关**） | [@广东老乡van](https://www.coolapk.com/u/1751341) | <a href="https://eikeitsu.github.io/CertBridge/apks/reqable-attribution-unlock.apk" download="reqable-attribution-unlock.apk">APK</a> |
 
 安装后在 LSPosed 中启用并按各模块说明勾选作用域；强停相关 App 后再测。文件名与版本以 APK 为准，更新请关注作者酷安动态。
 

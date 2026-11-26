@@ -36,6 +36,18 @@ See [FAQ · system CA works but one app still fails](./faq#cert-pinning). Compat
 2. Force-stop the target app, then capture again; try another module above, or the capture tool's own SSL / pinning bypass if present.
 3. With CertBridge: confirm system CA and fingerprints first, then enable unpinning. Unpin modules do not replace system-trust injection.
 
+## Coolapk community helpers {#coolapk-helpers}
+
+The APKs below come from the **Coolapk** community; this docs site only mirrors them for convenience. **Origin, support, security, and maintenance are unrelated to CertBridge**—contact the authors on Coolapk; do not open CertBridge issues for these modules.
+
+| Module                         | Role                                                                                                                                                                                            | Author                                           | Download                                                                                      |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| **Huangji anti-disconnect**    | Capture helper: reduces unexpected disconnects in some VPN / proxy scenarios                                                                                                                    | [奶茶糖](https://www.coolapk.com/u/14044740)     | [APK](/apps/%E9%BB%84%E9%B8%A1%E9%98%B2%E6%96%AD%E7%BD%91%E6%A8%A1%E5%9D%97-1.41%20final.apk) |
+| **TrustMeAlready**             | Capture helper: relaxes SSL / certificate checks (Coolapk build; see also GitHub upstreams)                                                                                                     | [cam3500](https://www.coolapk.com/u/3781991)     | [APK](/apps/TrustMeAlready.apk)                                                               |
+| **Reqable attribution unlock** | Newer Reqable treats Enhanced Mode as VIP; without VIP / Enhanced Mode, requests often show as “Unknown app”. This module mitigates that attribution UI issue (**not** related to CA injection) | [广东老乡van](https://www.coolapk.com/u/1751341) | [APK](/apps/Reqable%E5%BD%92%E5%B1%9E%E8%A7%A3%E9%94%81.apk)                                  |
+
+Enable in LSPosed and follow each module’s scope notes; force-stop related apps before retesting. Filenames / versions follow the APKs; watch the authors’ Coolapk posts for updates.
+
 ## Clones, dual apps, and VPN capture {#clone-vpn}
 
 **CertBridge does not manage VPN or proxy routing**—it only installs system CAs. It will not extend a capture app's `VpnService` / TUN to every user profile or clone instance.

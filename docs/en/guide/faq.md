@@ -58,6 +58,10 @@ AdGuard 4.2+ uses **two certificates** for Chrome CT:
 
 CertBridge installs them as a pair: Personal → system custom store; Intermediate → Android user store (`cacerts-added`). Dragging Intermediate into the system store is still rejected. **Even with user-cert hot mount (`hot_allow` / mount user store) enabled, Intermediate is never promoted into the system trust store**—every path skips it. If Intermediate is already under custom certs, delete it, reboot, then run the AdGuard preset/sync again.
 
+### Reqable shows every request as “Unknown app”? {#reqable-unknown-app}
+
+Newer Reqable moved **Enhanced Mode** behind VIP. Without VIP / Enhanced Mode, traffic attribution often shows as “Unknown app”. **This is unrelated to CertBridge** (system CA injection does not affect that UI). A Coolapk LSPosed helper can mitigate it—see [LSPosed modules · Coolapk helpers](./lsposed#coolapk-helpers) (Reqable attribution unlock); contact that module’s author for support.
+
 ### Reqable says “root certificate not installed,” or capture breaks networking {#root-cert-missing}
 
 First check whether root hiding removed the certificate mount:

@@ -129,7 +129,20 @@ hu_version() {
 	sed -n 's/^versionCode=//p' "$1" 2>/dev/null | head -n1 | tr -d ' \r'
 }
 
-# 等管理器写完：指纹连续 3 次（约 3s）不变即认为收尾结束
+hu_prop_sum() {
+	cksum "$1" 2>/dev/null | awk '{print $1":"$2}'
+}
+
+# 仅清理「本轮热更新留下的」同内容暂存；内容不同 / 未就绪 = 用户又在刷包，立刻停手
+hu_new_is_our_leftover() {
+	[ -d "$NEW" ] || return 1
+	[ -f "$NEW/.cb_install_ready" ] || return 1
+	[ -f "$NEW/module.prop" ] || return 1
+	_nv="$(hu_version "$NEW/module.prop")"
+	[ "$_nv" = "$RUN_VERSION" ] || return 1
+	_ns="$(hu_prop_sum "$NEW/module.prop")"
+	[ -n "$_ns" ] && [ "$_ns" = "$RUN_PROP_SUM" ]
+}
 
 # 等管理器写完：指纹连续 3 次（约 3s）不变即认为收尾结束
 hu_wait_stable() {
@@ -175,6 +188,8 @@ for f in module.prop post-fs-data.sh service.sh bin/common.sh hotinstall.sh; do
 done
 RUN_VERSION="$(hu_version "$SRC/module.prop")"
 case "$RUN_VERSION" in "" | *[!0-9]*) hu_log "abort: 更新源版本号无效，保留标准更新标记"; exit 0 ;; esac
+RUN_PROP_SUM="$(hu_prop_sum "$SRC/module.prop")"
+[ -n "$RUN_PROP_SUM" ] || { hu_log "abort: 无法校验更新源 module.prop，保留标准更新标记"; exit 0; }
 
 # 就地覆盖（只增改不删），全程不出现空模块窗口。
 # webroot 含打包产物：先整目录替换，避免旧 js/css 残留。
@@ -225,15 +240,13 @@ else
 	exit 1
 fi
 
-# 等安装器不再改动暂存（最少约 10s），再删同版本 modules_update。
-
-# 等安装器不再改动暂存（最少约 10s），再删同版本 modules_update。
+# 等安装器/管理器收尾（最少约 15s），再删本轮同内容 modules_update。
 hu_wait_installer_idle() {
 	_prev=""
 	_same=0
 	_i=0
-	_min_wait=10
-	while [ "$_i" -lt 45 ]; do
+	_min_wait=15
+	while [ "$_i" -lt 60 ]; do
 		sleep 1
 		_i=$((_i + 1))
 		[ -d "$NEW" ] || return 0
@@ -255,10 +268,9 @@ if [ -d "$NEW" ]; then
 	if hu_wait_installer_idle; then
 		hu_log "info: 安装器收尾已空闲，开始清理暂存"
 	else
-		hu_log "warn: 等待安装器超时，仍尝试清理同版本暂存"
+		hu_log "warn: 等待安装器超时，仍尝试清理本轮同内容暂存"
 	fi
-	_pending_version="$(hu_version "$NEW/module.prop")"
-	if [ "$_pending_version" = "$RUN_VERSION" ] || [ ! -f "$NEW/module.prop" ]; then
+	if hu_new_is_our_leftover; then
 		rm -rf "$NEW" 2>/dev/null
 		if [ -e "$NEW" ]; then
 			hu_log "warn: 首次清理 $NEW 未成功，将在观察期重试"
@@ -266,7 +278,7 @@ if [ -d "$NEW" ]; then
 			hu_log "ok: 已清理 $NEW"
 		fi
 	else
-		hu_log "info: 检测到其他待更新版本 ${_pending_version:-未知}，暂不清理"
+		hu_log "info: 暂存不是本轮残留（新刷包或未就绪），不清理 modules_update"
 	fi
 fi
 
@@ -285,22 +297,32 @@ hu_cleanup_lock
 rm -f "$EXT_DIR/hot_update.sh" "$LEGACY_WORKER" 2>/dev/null
 rmdir "$EXT_DIR" 2>/dev/null
 
-# 管理器可能在我们之后才 touch update / 回写暂存，持续观察一段时间。
-# 只清理同一版本的残留；发现版本更高或尚未写完整的更新就立即停止，
-# 避免把用户随后刷入的新包误删。
+# 管理器可能在我们之后才 touch update / 回写暂存。
+# 只清「本轮同内容」残留；内容不同或未就绪 = 用户又在刷，立即停手。
 _i=0
 _seen_update=0
-while [ "$_i" -lt 120 ]; do
+while [ "$_i" -lt 90 ]; do
 	if [ -e "$NEW" ]; then
-		_pending_version="$(hu_version "$NEW/module.prop")"
-		if [ "$_pending_version" = "$RUN_VERSION" ] || [ ! -f "$NEW/module.prop" ]; then
+		if hu_new_is_our_leftover; then
 			rm -rf "$NEW" 2>/dev/null
 			[ ! -e "$NEW" ] || break
 			rm -f "$OLD/update" "$OLD/remove" 2>/dev/null
 			_seen_update=$((_seen_update + 1))
 		else
-			hu_log "info: 检测到其他待更新版本 ${_pending_version:-未知}，停止清理"
-			break
+			# 缺 ready 标记、prop 对不上、或版本更高：可能是新安装进行中
+			if [ -f "$NEW/module.prop" ]; then
+				_pending_version="$(hu_version "$NEW/module.prop")"
+				_pending_sum="$(hu_prop_sum "$NEW/module.prop")"
+				if [ -n "$_pending_version" ] && [ "$_pending_version" != "$RUN_VERSION" ]; then
+					hu_log "info: 检测到其他待更新版本 $_pending_version，停止清理"
+					break
+				fi
+				if [ -n "$_pending_sum" ] && [ "$_pending_sum" != "$RUN_PROP_SUM" ]; then
+					hu_log "info: 检测到新的同版本刷入（module.prop 已变），停止清理"
+					break
+				fi
+			fi
+			# 未就绪：多半还在解压/customize，绝不删
 		fi
 	elif [ -f "$OLD/update" ]; then
 		rm -f "$OLD/update" "$OLD/remove" 2>/dev/null

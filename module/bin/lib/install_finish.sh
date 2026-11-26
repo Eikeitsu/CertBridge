@@ -198,7 +198,8 @@ certbridge_run_install() {
   certbridge_install_dump_tree
   certbridge_install_print_summary
   certbridge_install_cleanup_orphan_susfs
-  certbridge_install_try_hot_update
+  # 热更新不在这里启动：须等 customize 写完 t_module / set_perm，
+  # 且管理器仍能读到 modules_update/module.prop，否则会误报安装失败。
   # 安装期工具 / 片段：zip 需要，装完从模块目录清掉（运行期不用）
   if [ -n "${MODPATH:-}" ] && [ -d "$MODPATH" ]; then
     rm -rf "$MODPATH/install" "$MODPATH/META-INF" 2>/dev/null || true
